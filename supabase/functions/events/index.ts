@@ -15,31 +15,25 @@ interface EventItem {
 
 function parseEventsFromHtml(html: string): EventItem[] {
   const events: EventItem[] = [];
-
-  // HTML structure: rsDateHeader anchors contain date in href like #2026-03-05
-  // Following rsAptContent divs contain event links
-  // We track current date from rsDateHeader, then collect events until next date
-  
   let currentDate = "";
-  
-  // Find all date headers and event links
-  // rsDateHeader: <a href="#2026-03-01" title="..." class="rsDateHeader">
-  // Event links: <a target="_blank" href="https://www.imo.org.tr/TR,XXXXX/...">TITLE</a>
-  const tokenRegex = /href="#(\d{4}-\d{2}-\d{2})"[^>]*class="rsDateHeader"|<a[^>]*target="_blank"[^>]*href="(https?:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+
+  // Scan for: 1) date headers  2) rsApt divs with title  3) event links inside rsAptContent
+  // Use a combined regex to find all tokens sequentially
+  const tokenRegex = /href="#(\d{4}-\d{2}-\d{2})"[^>]*class="rsDateHeader"|class="rsApt"[^>]*title="([^"]+)"|href="((?:https?:\/\/www\.imo\.org\.tr)?\/TR,\d+\/[^"]+)"[^>]*>([^<]+)<\/a>/g;
   let m;
-  
+
   while ((m = tokenRegex.exec(html)) !== null) {
     if (m[1]) {
-      // Date header found
       currentDate = m[1];
-    } else if (m[2] && m[3]) {
-      // Event link found
-      const link = m[2];
-      const title = m[3].replace(/<[^>]*>/g, "").trim();
-      
+    } else if (m[3] && m[4]) {
+      const rawLink = m[3];
+      const title = m[4].replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&#039;/g, "'").trim();
+
       if (!title || title.length < 3 || title.toLowerCase() === "delete") continue;
-      if (link.includes("etkinlik-takvimi")) continue;
-      
+      if (rawLink.includes("etkinlik-takvimi")) continue;
+
+      const link = rawLink.startsWith("http") ? rawLink : `https://www.imo.org.tr${rawLink}`;
+
       let type = "etkinlik";
       const tl = title.toLocaleLowerCase("tr");
       if (tl.includes("seminer")) type = "seminer";
@@ -47,7 +41,7 @@ function parseEventsFromHtml(html: string): EventItem[] {
       else if (tl.includes("gezi")) type = "gezi";
       else if (tl.includes("genel kurul") || tl.includes("seçim")) type = "toplantı";
       else if (tl.includes("kongre") || tl.includes("konferans")) type = "kongre";
-      
+
       events.push({ title, date: currentDate || new Date().toISOString().split("T")[0], link, type });
     }
   }
