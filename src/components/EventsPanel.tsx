@@ -70,14 +70,18 @@ function EventCard({ event }: { event: EventItem }) {
 const EventsPanel = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadEvents = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchEvents();
       setEvents(data.events);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Etkinlikler alınamadı");
+      const msg = e instanceof Error ? e.message : "Etkinlikler alınamadı";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -119,12 +123,19 @@ const EventsPanel = () => {
       {!loading && events.length === 0 && (
         <div className="text-center py-16">
           <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Yaklaşan etkinlik bulunamadı</p>
+          <p className="text-sm text-muted-foreground">
+            {error ? `Hata: ${error}` : "Yaklaşan etkinlik bulunamadı"}
+          </p>
+          {error && (
+            <button onClick={loadEvents} className="text-xs text-primary hover:underline mt-2 inline-block">
+              Tekrar dene
+            </button>
+          )}
           <a
             href="https://www.imo.org.tr/TR,76726/etkinlik-takvimi.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline mt-2 inline-block"
+            className="text-xs text-primary hover:underline mt-2 block"
           >
             İMO Etkinlik Takvimi →
           </a>
