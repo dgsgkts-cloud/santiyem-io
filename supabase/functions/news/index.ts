@@ -274,8 +274,21 @@ serve(async (req) => {
 
     console.log(`Fetched ${allItems.length} total items from feeds`);
 
-    // Classify sector relevance for "sektör" tagged items
-    for (const item of allItems) {
+    // Deduplicate by title similarity
+    const seen = new Set<string>();
+    const dedupedItems = allItems.filter((item) => {
+      const key = item.title.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
+      if (seen.has(key)) return false;
+      // Also check shortened key (first 60 chars) to catch near-duplicates
+      const shortKey = key.slice(0, 60);
+      if (seen.has(shortKey)) return false;
+      seen.add(key);
+      seen.add(shortKey);
+      return true;
+    });
+
+    // Classify sector relevance
+    for (const item of dedupedItems) {
       item.category = classifySectorRelevance(item);
     }
 
