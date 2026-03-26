@@ -16,7 +16,7 @@ import { toast } from "sonner";
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc" | "render">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -144,6 +144,17 @@ const Index = () => {
               <Calculator className="w-3.5 h-3.5" />
               Hesap
             </button>
+            <button
+              onClick={() => setActiveTab("render")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "render"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <Paintbrush className="w-3.5 h-3.5" />
+              Render
+            </button>
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
@@ -176,8 +187,10 @@ const Index = () => {
           <NewsPanel />
         ) : activeTab === "events" ? (
           <EventsPanel />
-        ) : (
+        ) : activeTab === "calc" ? (
           <CalculatorsPanel />
+        ) : (
+          <RenderPanel />
         )}
       </div>
 
