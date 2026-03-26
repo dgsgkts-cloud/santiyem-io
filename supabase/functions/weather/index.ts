@@ -139,9 +139,24 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenWeatherMap error:", response.status, errorText);
+
+      if (response.status === 401) {
+        return new Response(
+          JSON.stringify({ error: "OpenWeatherMap API key geçersiz veya henüz aktif değil. Anahtarı kontrol edin ya da birkaç saat sonra tekrar deneyin." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Hava durumu servisi istek limiti aşıldı. Lütfen biraz sonra tekrar deneyin." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
-        JSON.stringify({ error: "Hava durumu verisi alınamadı" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Hava durumu sağlayıcısından veri alınamadı." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
