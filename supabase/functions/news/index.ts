@@ -317,9 +317,7 @@ serve(async (req) => {
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
       { url: "https://www.donanimhaber.com/rss/tum/", source: "DonanımHaber", category: "genel" },
       { url: "https://www.hurriyet.com.tr/rss/gundem", source: "Hürriyet", category: "genel" },
-      { url: "https://www.hurriyet.com.tr/rss/ekonomi", source: "Hürriyet Ekonomi", category: "genel" },
       { url: "https://www.milliyet.com.tr/rss/rssNew/gundemRss.xml", source: "Milliyet", category: "genel" },
-      { url: "https://www.milliyet.com.tr/rss/rssNew/ekonomiRss.xml", source: "Milliyet Ekonomi", category: "genel" },
       { url: "https://www.dha.com.tr/rss/", source: "DHA", category: "genel" },
     ];
 
