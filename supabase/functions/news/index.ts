@@ -15,9 +15,6 @@ interface NewsItem {
   snippet: string;
 }
 
-// Use Google Custom Search JSON API (free tier: 100 queries/day)
-// Or fallback to curated static + RSS approach
-
 function extractItemsFromAtom(xml: string, source: string, category: string): NewsItem[] {
   const items: NewsItem[] = [];
   const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
@@ -26,7 +23,7 @@ function extractItemsFromAtom(xml: string, source: string, category: string): Ne
   while ((match = entryRegex.exec(xml)) !== null) {
     const block = match[1];
     const title = block.match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1]?.trim() || "";
-    const link = block.match(/<link[^>]*href="([^"]*)"/) ?.[1] || "";
+    const link = block.match(/<link[^>]*href="([^"]*)"/)?.[1] || "";
     const updated = block.match(/<updated>(.*?)<\/updated>/)?.[1] ||
                     block.match(/<published>(.*?)<\/published>/)?.[1] || "";
     const summary = block.match(/<summary[^>]*>([\s\S]*?)<\/summary>/)?.[1]?.replace(/<[^>]*>/g, "").trim() || "";
@@ -89,14 +86,11 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
     const items: NewsItem[] = [];
     const seen = new Set<string>();
 
-    // Find all <a> blocks that link to IMO article pages and contain <b> or <strong>
-    const aRegex = /<a[^>]*href="((?:https?:\/\/www\.imo\.org\.tr)?\/TR,(\d+)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+    const aRegex = /<a[^>]*href="((?:https?:\/\/www\.imo\.org\.tr)?\/TR,(\d+)\/[^\"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
     let cm;
     while ((cm = aRegex.exec(html)) !== null) {
       const rawLink = cm[1];
       const block = cm[3];
-
-      // Must contain bold text (the title)
       const boldMatch = block.match(/<b>([\s\S]*?)<\/b>/i) || block.match(/<strong>([\s\S]*?)<\/strong>/i);
       if (!boldMatch) continue;
 
@@ -104,21 +98,17 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
       if (!title || title.length < 10) continue;
 
       const link = rawLink.startsWith("http") ? rawLink : `https://www.imo.org.tr${rawLink}`;
-      
-      // Skip nav/self links
       if (link.includes("genel-merkez-guncel-haberler") || link.includes("ana-sayfa") || link.includes("iletisim")) continue;
       if (seen.has(link)) continue;
       seen.add(link);
 
-      // Extract snippet from text after bold
       const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
       const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").replace(/\s+/g, " ").trim().slice(0, 200);
 
-      // Try to extract date from snippet text (e.g. "12.03.2026", "12 Mart 2026")
       const fullText = block.replace(/<[^>]*>/g, " ");
       const dateRegex = /(\d{1,2})[.\s]+((?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)|\d{1,2})[.\s]+(\d{4})/i;
       const dateFound = fullText.match(dateRegex);
-      let itemDate: string;
+      let itemDate = "";
       if (dateFound) {
         const months: Record<string, number> = { ocak: 0, şubat: 1, mart: 2, nisan: 3, mayıs: 4, haziran: 5, temmuz: 6, ağustos: 7, eylül: 8, ekim: 9, kasım: 10, aralık: 11 };
         const day = parseInt(dateFound[1]);
@@ -126,9 +116,6 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
         const month = months[monthStr] !== undefined ? months[monthStr] : parseInt(dateFound[2]) - 1;
         const year = parseInt(dateFound[3]);
         itemDate = new Date(year, month, day).toISOString();
-      } else {
-        // No date found — leave empty string so frontend shows nothing instead of "0 dk önce"
-        itemDate = "";
       }
 
       items.push({
@@ -158,18 +145,13 @@ async function scrapeResmiGazete(): Promise<NewsItem[]> {
     if (!resp.ok) return [];
     const html = await resp.text();
     const items: NewsItem[] = [];
-
-    // Extract date from page
     const dateMatch = html.match(/(\d{1,2}\s+\w+\s+\d{4})\s+Tarihli/);
     const dateStr = dateMatch ? dateMatch[1] : "";
-
-    // Find all links to resmigazete items (yönetmelik, tebliğ, karar etc.)
     const linkRegex = /<a[^>]*href="(https?:\/\/www\.resmigazete\.gov\.tr\/eskiler\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     let m;
     while ((m = linkRegex.exec(html)) !== null) {
       const link = m[1];
       let title = m[2].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-      // Remove leading dash
       title = title.replace(/^––\s*/, "").replace(/^–\s*/, "").trim();
       if (!title || title.length < 15) continue;
 
@@ -184,7 +166,7 @@ async function scrapeResmiGazete(): Promise<NewsItem[]> {
     }
 
     console.log(`Scraped ${items.length} Resmi Gazete items`);
-    return items.slice(0, 15); // Top 15
+    return items.slice(0, 15);
   } catch (e) {
     console.error("Resmi Gazete scrape error:", e);
     return [];
@@ -205,8 +187,6 @@ async function fetchFeed(url: string, source: string, category: string): Promise
       return [];
     }
     const xml = await resp.text();
-
-    // Detect Atom vs RSS
     if (xml.includes("<feed") && xml.includes("<entry>")) {
       return extractItemsFromAtom(xml, source, category);
     }
@@ -232,10 +212,96 @@ const SECTOR_KEYWORDS = [
 
 function classifySectorRelevance(item: NewsItem): string {
   if (item.category === "mevzuat" || item.category === "duyuru") return item.category;
-
   const text = `${item.title} ${item.snippet}`.toLocaleLowerCase("tr");
   const isSector = SECTOR_KEYWORDS.some((kw) => text.includes(kw));
   return isSector ? "sektör" : "genel";
+}
+
+const DUPLICATE_STOPWORDS = new Set([
+  "ve", "veya", "ile", "için", "icin", "bir", "bu", "şu", "su", "da", "de", "mi", "mı", "mu", "mü",
+  "son", "dakika", "haber", "gündem", "gundem", "ekonomi", "video", "foto", "galeri", "kararı", "karar",
+  "dair", "yapılmasına", "yapilmasina", "değişiklik", "degisiklik", "yönetmelik", "yonetmelik", "yönetmeliğinde",
+  "yonetmeliginde", "yayımlandı", "yayimlandi", "resmi", "gazete", "açıklama", "aciklama", "detaylar"
+]);
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&#39;|&rsquo;|&lsquo;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, " ve ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&uuml;/gi, "ü")
+    .replace(/&ouml;/gi, "ö")
+    .replace(/&ccedil;/gi, "ç")
+    .replace(/&Ccedil;/g, "Ç")
+    .replace(/&Uuml;/g, "Ü")
+    .replace(/&Ouml;/g, "Ö")
+    .replace(/&nbsp;/gi, " ");
+}
+
+function normalizeComparisonText(text: string): string {
+  return decodeEntities(text)
+    .replace(/<[^>]*>/g, " ")
+    .toLocaleLowerCase("tr")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeNewsText(item: NewsItem): string[] {
+  const combined = normalizeComparisonText(`${item.title} ${item.snippet}`);
+  const tokens = combined
+    .split(" ")
+    .filter((token) => token.length >= 4 && !DUPLICATE_STOPWORDS.has(token));
+  return [...new Set(tokens)];
+}
+
+function haveCloseDates(a: string, b: string): boolean {
+  if (!a || !b) return true;
+  const first = new Date(a).getTime();
+  const second = new Date(b).getTime();
+  if (Number.isNaN(first) || Number.isNaN(second)) return true;
+  return Math.abs(first - second) <= 1000 * 60 * 60 * 24 * 3;
+}
+
+function areLikelyDuplicateNews(a: NewsItem, b: NewsItem): boolean {
+  if (a.link && b.link && a.link === b.link) return true;
+
+  const titleA = normalizeComparisonText(a.title);
+  const titleB = normalizeComparisonText(b.title);
+  if (titleA === titleB) return true;
+  if (titleA.length > 24 && titleB.length > 24 && (titleA.includes(titleB) || titleB.includes(titleA))) return true;
+
+  const tokensA = tokenizeNewsText(a);
+  const tokensB = tokenizeNewsText(b);
+  if (tokensA.length === 0 || tokensB.length === 0) return false;
+
+  const setB = new Set(tokensB);
+  const overlap = tokensA.filter((token) => setB.has(token));
+  const minTokenCount = Math.min(tokensA.length, tokensB.length);
+
+  return haveCloseDates(a.date, b.date) && (
+    overlap.length >= 5 ||
+    (overlap.length >= 4 && minTokenCount <= 6) ||
+    (overlap.length >= 3 && minTokenCount <= 4)
+  );
+}
+
+function dedupeNewsItems(items: NewsItem[]): NewsItem[] {
+  const sorted = [...items].sort((a, b) => {
+    const first = new Date(a.date).getTime();
+    const second = new Date(b.date).getTime();
+    const safeFirst = Number.isNaN(first) ? 0 : first;
+    const safeSecond = Number.isNaN(second) ? 0 : second;
+    return safeSecond - safeFirst;
+  });
+
+  const deduped: NewsItem[] = [];
+  for (const item of sorted) {
+    const isDuplicate = deduped.some((existing) => areLikelyDuplicateNews(item, existing));
+    if (!isDuplicate) deduped.push(item);
+  }
+  return deduped;
 }
 
 serve(async (req) => {
@@ -245,15 +311,11 @@ serve(async (req) => {
 
   try {
     const feeds = [
-      // Mevzuat
       { url: "https://www.csb.gov.tr/rss", source: "Çevre ve Şehircilik Bakanlığı", category: "mevzuat" },
-      // Sektör - Mühendislik & İnşaat
       { url: "https://www.yapi.com.tr/rss/haberler.xml", source: "Yapı Dergisi", category: "sektör" },
       { url: "https://www.emlakkulisi.com/rss", source: "Emlak Kulisi", category: "sektör" },
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
-      // Teknoloji & Mühendislik
       { url: "https://www.donanimhaber.com/rss/tum/", source: "DonanımHaber", category: "genel" },
-      // Ana akım haber ajansları - Genel haberler
       { url: "https://www.hurriyet.com.tr/rss/gundem", source: "Hürriyet", category: "genel" },
       { url: "https://www.hurriyet.com.tr/rss/ekonomi", source: "Hürriyet Ekonomi", category: "genel" },
       { url: "https://www.milliyet.com.tr/rss/rssNew/gundemRss.xml", source: "Milliyet", category: "genel" },
@@ -274,25 +336,11 @@ serve(async (req) => {
 
     console.log(`Fetched ${allItems.length} total items from feeds`);
 
-    // Deduplicate by title similarity
-    const seen = new Set<string>();
-    const dedupedItems = allItems.filter((item) => {
-      const key = item.title.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
-      if (seen.has(key)) return false;
-      // Also check shortened key (first 60 chars) to catch near-duplicates
-      const shortKey = key.slice(0, 60);
-      if (seen.has(shortKey)) return false;
-      seen.add(key);
-      seen.add(shortKey);
-      return true;
-    });
-
-    // Classify sector relevance
+    const dedupedItems = dedupeNewsItems(allItems);
     for (const item of dedupedItems) {
       item.category = classifySectorRelevance(item);
     }
 
-    // If no RSS feeds returned data, provide curated fallback
     if (dedupedItems.length === 0) {
       const now = new Date().toISOString();
       dedupedItems.push(
@@ -323,7 +371,6 @@ serve(async (req) => {
       );
     }
 
-    dedupedItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const news = dedupedItems.slice(0, 100);
 
     return new Response(
