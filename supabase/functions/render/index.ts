@@ -15,31 +15,50 @@ serve(async (req) => {
 
     if (!prompt) throw new Error("Prompt is required");
 
+    const hasReference = Boolean(image_base64 && file_type !== "dwg");
+
     const systemPrompt = `You are an expert architectural renderer specializing in faithful visualization of real building projects.
 
-CRITICAL RULES:
-- When given a building photo or architectural plan, you MUST faithfully reproduce the EXACT building geometry, proportions, window placements, balcony positions, floor count, and facade layout from the source.
-- Do NOT add, remove, or relocate any architectural elements (balconies, windows, doors, columns, overhangs). Keep them exactly where they appear in the source image.
-- Match the exact number of floors, the exact balcony shapes and positions, and the exact window grid pattern.
-- Only enhance: materials, textures, lighting, landscaping, sky, and atmosphere based on the user's prompt.
-- If the source shows a specific architectural style, preserve it precisely.
-- Think of yourself as a photorealistic renderer, not a redesigner. Your job is to make the existing design look beautiful, not to change it.
+CORE MODE:
+- If a reference file is provided, you are performing CONTROLLED RENDERING, not redesign.
+- Treat the uploaded source as the single source of truth for geometry.
 
-If no image is provided, generate an architectural visualization purely from the text description.`;
+NON-NEGOTIABLE RULES WHEN A SOURCE EXISTS:
+- Preserve the EXACT floor count.
+- Preserve the EXACT building massing, outline, width, height, and facade proportions.
+- Preserve the EXACT locations, sizes, counts, and spacing of balconies, windows, doors, roof edges, parapets, columns, and recesses.
+- Do NOT add new balconies, remove balconies, shift balconies, merge floors, invent terraces, or change facade rhythm.
+- Do NOT change the camera viewpoint if the source is a facade photo.
+- Only improve render quality: materials, color palette, glazing finish, shadows, realistic lighting, landscape, sky, pavement, and atmosphere.
+- If any user instruction conflicts with the source geometry, follow the source geometry and ignore the conflicting part.
 
-    const userContent: any[] = [{ type: "text", text: prompt }];
+WHEN THE SOURCE IS A PLAN / ELEVATION / PDF:
+- Infer the 3D form from the drawing conservatively.
+- Do not invent extra floors or facade elements not supported by the drawing.
+- Keep opening rhythm, balcony lines, and overall dimensions consistent with the drawing.
 
-    if (image_base64 && file_type !== "dwg") {
+If no source is provided, generate from text only.`;
+
+    const lockedPrompt = hasReference
+      ? `KAYNAK DOSYAYA BİREBİR SADIK KAL.
+Kat sayısını, cephe uzunluklarını, balkon yerlerini, pencere akslarını, kütle oranlarını ve tüm mimari elemanların konumunu ASLA değiştirme.
+Sadece malzeme, ışık, çevre, peyzaj ve render kalitesini iyileştir.
+
+Kullanıcı isteği: ${prompt}`
+      : prompt;
+
+    const userContent: any[] = [{ type: "text", text: lockedPrompt }];
+
+    if (hasReference) {
       const mimeType = file_type === "pdf" ? "application/pdf" : "image/png";
       userContent.push({
         type: "image_url",
         image_url: { url: `data:${mimeType};base64,${image_base64}` },
       });
     }
-    
+
     if (file_type === "dwg") {
-      // DWG is binary and can't be sent to AI directly — enhance prompt instead
-      userContent[0].text = `${prompt}\n\n[Bu bir DWG/DXF CAD projesidir. Dosya adından ve kullanıcının açıklamasından yola çıkarak mimari render oluştur. Vaziyet planı, kat planı veya cephe görseli olarak yorumla.]`;
+      userContent[0].text = `Bu bir DWG/DXF CAD projesidir. DWG içeriğini doğrudan okuyamadığın için yalnızca kullanıcının açıklamasına göre konsept üret. Geometri uydurma.\n\nKullanıcı isteği: ${prompt}`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -49,7 +68,7 @@ If no image is provided, generate an architectural visualization purely from the
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
+        model: hasReference ? "google/gemini-3.1-flash-image-preview" : "google/gemini-3-pro-image-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
