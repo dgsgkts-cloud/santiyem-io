@@ -54,11 +54,9 @@ export async function streamChat({
 
       try {
         const parsed = JSON.parse(jsonStr);
-        // Anthropic streaming format
-        if (parsed.type === "content_block_delta") {
-          const text = parsed.delta?.text;
-          if (text) onDelta(text);
-        }
+        // OpenAI-compatible streaming format (Lovable AI Gateway)
+        const text = parsed.choices?.[0]?.delta?.content;
+        if (text) onDelta(text);
       } catch {
         // partial JSON, skip
       }
