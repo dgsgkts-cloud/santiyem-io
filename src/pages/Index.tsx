@@ -8,15 +8,16 @@ import NewsPanel from "@/components/NewsPanel";
 import EventsPanel from "@/components/EventsPanel";
 import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
+import RemindersPanel from "@/components/RemindersPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator, Paintbrush } from "lucide-react";
+import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator, Paintbrush, CalendarClock } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc" | "render">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -156,6 +157,17 @@ const Index = () => {
               <Paintbrush className="w-3.5 h-3.5" />
               Render
             </button>
+            <button
+              onClick={() => setActiveTab("reminders")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "reminders"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <CalendarClock className="w-3.5 h-3.5" />
+              Hatırlatıcı
+            </button>
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
@@ -190,8 +202,10 @@ const Index = () => {
           <EventsPanel />
         ) : activeTab === "calc" ? (
           <CalculatorsPanel />
-        ) : (
+        ) : activeTab === "render" ? (
           <RenderPanel />
+        ) : (
+          <RemindersPanel />
         )}
       </div>
 
