@@ -86,6 +86,11 @@ serve(async (req) => {
 
     const html = await resp.text();
     console.log("Fetched IMO page, length:", html.length);
+    console.log("Has rsDateHeader:", html.includes("rsDateHeader"));
+    console.log("Has target=_blank:", html.includes('target="_blank"'));
+    // Log a small snippet around first rsDateHeader
+    const idx = html.indexOf("rsDateHeader");
+    if (idx > -1) console.log("rsDateHeader context:", html.substring(Math.max(0, idx - 100), idx + 100));
     
     const events = parseEventsFromHtml(html);
     console.log("Parsed events:", events.length);
