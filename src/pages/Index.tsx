@@ -173,8 +173,10 @@ const Index = () => {
           <WeatherPanel />
         ) : activeTab === "news" ? (
           <NewsPanel />
-        ) : (
+        ) : activeTab === "events" ? (
           <EventsPanel />
+        ) : (
+          <CalculatorsPanel />
         )}
       </div>
 
