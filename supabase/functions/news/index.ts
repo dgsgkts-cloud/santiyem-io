@@ -180,12 +180,13 @@ serve(async (req) => {
       { url: "https://www.mmotmmob.org.tr/rss", source: "Makina Müh. Odası", category: "duyuru" },
     ];
 
-    const results = await Promise.allSettled(
-      feeds.map((f) => fetchFeed(f.url, f.source, f.category))
-    );
+    const [rssResults, imoNews] = await Promise.all([
+      Promise.allSettled(feeds.map((f) => fetchFeed(f.url, f.source, f.category))),
+      scrapeImoNews(),
+    ]);
 
-    const allItems: NewsItem[] = [];
-    for (const r of results) {
+    const allItems: NewsItem[] = [...imoNews];
+    for (const r of rssResults) {
       if (r.status === "fulfilled") allItems.push(...r.value);
     }
 
