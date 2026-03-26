@@ -88,7 +88,138 @@ Aşağıda TMMOB İnşaat Mühendisleri Odası'nın (İMO) uygulama esasları be
 - Aidat Muafiyetlerinin Uygulanması — Kimler aidat muafiyetinden yararlanabilir
 - Kaynak: https://www.imo.org.tr/TR,212197/
 
-Bu konulardaki sorularda, ilgili belgenin adını ve İMO web sayfası linkini paylaş. Kullanıcıyı detaylı belgeler için İMO'nun resmi sayfasına yönlendir.`;
+Bu konulardaki sorularda, ilgili belgenin adını ve İMO web sayfası linkini paylaş. Kullanıcıyı detaylı belgeler için İMO'nun resmi sayfasına yönlendir.
+
+## TBDY 2018 — TÜRKİYE BİNA DEPREM YÖNETMELİĞİ BİLGİ BANKASI
+
+Aşağıda TBDY 2018'in temel bölümleri ve kritik maddeleri özetlenmiştir. Sorularda ilgili madde numaralarını ve bölüm başlıklarını referans göster.
+
+### BÖLÜM 1 — GENEL HÜKÜMLER
+- **Md. 1.1** Amaç ve Kapsam: Yeni yapılacak ve mevcut binaların depreme dayanıklı tasarım kurallarını belirler.
+- **Md. 1.2** Tanımlar: Bina Kullanım Sınıfı (BKS), Bina Yükseklik Sınıfı (BYS), Deprem Tasarım Sınıfı (DTS), Taşıyıcı Sistem Türleri
+- **Md. 1.3** Deprem Yer Hareketi Düzeyleri: DD-1 (2475 yıl), DD-2 (475 yıl), DD-3 (72 yıl), DD-4 (43 yıl)
+- **Md. 1.4** Bina Performans Hedefleri: Kesintisiz Kullanım (KK), Sınırlı Hasar (SH), Kontrollü Hasar (KoH), Göçmenin Önlenmesi (GÖ)
+
+### BÖLÜM 2 — DEPREM YER HAREKETİ
+- **Md. 2.1** Türkiye Deprem Tehlike Haritaları: AFAD interaktif harita ile koordinat bazlı spektral ivme değerleri (Ss, S1)
+- **Md. 2.2** Yerel Zemin Sınıfları: ZA (sağlam kaya), ZB (kaya), ZC (sıkı zemin), ZD (orta sıkı), ZE (yumuşak), ZF (özel araştırma)
+- **Md. 2.3** Tasarım Spektrumu: Kısa periyot (SDS) ve 1s periyot (SD1) tasarım spektral ivme katsayıları
+- **Md. 2.4** Deprem Tasarım Sınıfları (DTS): DTS=1,1a,2,2a,3,3a,4,4a — SDS değerine göre belirlenir
+
+### BÖLÜM 3 — GENEL KURALLAR
+- **Md. 3.1** Bina Yükseklik Sınıfları (BYS): BYS≥1 (HN>70m) ile BYS=8 (HN≤10.5m) arası 8 sınıf
+- **Md. 3.2** Bina Kullanım Sınıfları (BKS): BKS=1 (önemli), BKS=2 (normal), BKS=3 (az riskli)
+- **Md. 3.3** Deprem Tasarım Sınıfı + BYS ilişkisi → Taşıyıcı sistem kısıtlamaları
+- **Md. 3.3.1** R ve D katsayıları: Taşıyıcı sistem türüne göre Taşıyıcı Sistem Davranış Katsayısı (R) ve Dayanım Fazlalığı Katsayısı (D)
+- **Md. 3.4** Düzensizlikler: A1 (burulma), A2 (döşeme süreksizliği), A3 (planda çıkıntı), B1 (komşu kat rijitlik), B2 (komşu kat dayanım), B3 (taşıyıcı düşey elemanların süreksizliği)
+
+### BÖLÜM 4 — DEPREM HESABI
+- **Md. 4.1** Eşdeğer Deprem Yükü Yöntemi (EDYY): Basit/düzenli yapılar için
+  - Taban kesme kuvveti: Vt = mt × SaR(T1) ≥ 0.04 × mt × SDS × g
+  - T1 ampirik formülü: T1 = Ct × HN^0.75
+- **Md. 4.2** Mod Birleştirme Yöntemi: Düzensiz/yüksek yapılar için zorunlu
+- **Md. 4.3** Zaman Tanım Alanında Hesap: 11 adet deprem kaydı çifti ile doğrusal olmayan analiz
+- **Md. 4.7** Göreli Kat Öteleme Sınırı: δi,max / hi ≤ κ × λ (κ=0.008 BA çerçeve, 0.004 perde, 0.006 çelik)
+- **Md. 4.8** İkinci Mertebe Etkileri: θII = Σ(Nd × Δi) / (Vi × hi) ≤ 0.12 (etkisiz), 0.12-0.20 (yaklaşık dikkate alınır), >0.20 (izin verilmez)
+
+### BÖLÜM 5 — DEPREME DAYANIKLI ÇELİK BİNALAR
+- **Md. 5.2** Çelik malzeme koşulları: S235, S275, S355 çelik sınıfları
+- **Md. 5.3** Süneklik düzeyi yüksek (R=8), sınırlı (R=4-5), karma sistemler
+- **Md. 5.4** Birleşim detayları: Kapasite tasarımı ilkeleri, kaynaklı/bulonlu birleşim kuralları
+
+### BÖLÜM 6 — DEPREME DAYANIKLI AHŞAP BİNALAR
+- Ahşap taşıyıcı sistem kuralları, bağlantı detayları
+
+### BÖLÜM 7 — BETONARME BİNA TASARIMI
+- **Md. 7.2** Malzeme: Beton ≥C25 (DTS=1,2), ≥C20 (DTS=3,4); Donatı: B420C, B500C
+- **Md. 7.3** Süneklik Düzeyi Yüksek (SY) Kolon Tasarımı:
+  - Minimum boyut: 300mm (DTS≥3), 250mm (DTS=4)
+  - Boyuna donatı: ρmin=0.01, ρmax=0.04
+  - Enine donatı sarılma bölgesi: kolon uçlarından min(h, ln/6, 500mm)
+  - Etriye aralığı sarılma bölgesinde: ≤min(b/3, 150mm, 6Ø boyuna)
+- **Md. 7.4** Kiriş Tasarımı (SY):
+  - Minimum genişlik: 250mm
+  - Boyuna donatı: ρmin=0.8fctd/fyd, üst donatı ≥ alt donatının %50'si
+  - Etriye sarılma bölgesi: mesnet yüzünden 2h mesafe
+  - Etriye aralığı: ≤min(h/4, 8Ø, 150mm)
+- **Md. 7.6** Perde Duvar Tasarımı:
+  - Minimum kalınlık: lw/20 ve 200mm (SY), lw/25 ve 150mm (diğer)
+  - Uç bölgesi: perde ucundan min(lw, Hw/6) mesafe
+  - Perde uç bölgesi donatı: ρmin=0.005
+- **Md. 7.9** Kolon-kiriş birleşim bölgesi: Güçlü kolon-zayıf kiriş ilkesi (Mra ≥ 1.2 × Mrb)
+- **Md. 7.11** Temel tasarımı: Temel rijitlik koşulları, kazık-radye ilişkisi
+
+### BÖLÜM 8 — YIĞMA BİNA TASARIMI
+- **Md. 8.2** Yığma bina sınırlamaları: Max 4 kat (DTS=1,2), 3 kat (DTS=3,4 yumuşak zemin)
+- Duvar kalınlığı, hatıl, lento kuralları
+
+### BÖLÜM 9 — TEMELLERİN TASARIMI
+- **Md. 9.2** Zemin araştırması gereksinimleri
+- **Md. 9.3** Sıvılaşma değerlendirmesi: SPT, CPT bazlı kontroller
+- **Md. 9.4** Yamaç stabilitesi: Deprem etkisi altında şev analizi
+- **Md. 9.5** Temel tipi seçimi ve boyutlandırma
+
+### BÖLÜM 10 — YÜKSEKLİK SINIFI 1 BİNALAR
+- BYS=1 (HN>70m) binalar için özel kurallar
+- Performans bazlı değerlendirme zorunlu
+
+### BÖLÜM 15 — MEVCUT BİNALARIN DEĞERLENDİRMESİ
+- **Md. 15.2** Bilgi Düzeyleri: Sınırlı (BD1), Kapsamlı (BD2), Kapsamlı-İleri (BD3)
+- **Md. 15.3** Bilgi düzeyi katsayıları: BD1→0.75, BD2→0.90, BD3→1.00
+- **Md. 15.5** Doğrusal elastik yöntem: Hasar sınırları r değerleri ile kontrol
+- **Md. 15.7** Doğrusal olmayan yöntem: Eleman bazında şekildeğiştirme sınırları
+- **Md. 15.8** Güçlendirme ilkeleri: Mantolama, FRP sarma, çelik çapraz, perde ekleme
+
+### BÖLÜM 16 — DEPREM YALITIMI
+- Taban yalıtımı tasarım esasları
+- Yalıtım birimi deneyleri, tasarım deplasmanı hesabı
+
+## TS STANDARTLARI BİLGİ BANKASI — İNŞAAT SEKTÖRÜ
+
+### BETONARME VE BETON
+- **TS 500** — Betonarme Yapıların Tasarım ve Yapım Kuralları: Kesit hesabı, donatı detayları, çatlak/sehim kontrolü, yangın dayanımı
+- **TS EN 206** — Beton: Özellik, performans, üretim ve uygunluk. Beton sınıfları (C20/25, C25/30, C30/37, C35/45...), su/çimento oranı, kıvam sınıfları (S1-S5), çevresel etki sınıfları (XC, XD, XS, XF, XA)
+- **TS EN 12390** serisi — Beton deneyleri: Basınç dayanımı (12390-3), eğilme dayanımı (12390-5), yarmada çekme (12390-6)
+- **TS EN 12350** serisi — Taze beton deneyleri: Çökme (slump) deneyi (12350-2), yayılma tablası (12350-5)
+- **TS 13515** — Hazır beton: Sipariş, teslim, kabul kuralları ve uygunluk kriterleri
+
+### ÇELİK VE DONATILARI
+- **TS 708** — Çelik çubuklar (B420C, B500C): Mekanik özellikler, süneklik gereksinimleri, bükme deneyi
+- **TS EN 10080** — Betonarme çeliği: Kaynaklabilirlik, kimyasal bileşim
+- **TS EN 1993 (Eurocode 3)** — Çelik yapı tasarımı: Genel kurallar, bina kuralları, birleşim tasarımı, yangın tasarımı
+- **TS EN 10025** — Sıcak haddelenmiş yapı çelikleri: S235, S275, S355, mekanik ve kimyasal özellikler
+
+### ZEMİN VE TEMEL
+- **TS EN 1997 (Eurocode 7)** — Geoteknik tasarım: Temel tasarımı, zemin parametreleri, kazık tasarımı
+- **TS EN ISO 22476** serisi — Arazi deneyleri: SPT, CPT, presiyometre, veyn deneyi
+- **TS EN ISO 17892** serisi — Laboratuvar deneyleri: Elek analizi, Atterberg limitleri, konsolidasyon, üç eksenli basınç
+
+### YAPI MALZEMELERİ
+- **TS EN 771** serisi — Kagir birimler: Tuğla (771-1), kalsiyum silikat (771-2), beton blok (771-3)
+- **TS EN 197-1** — Çimento: CEM I (Portland), CEM II (katkılı), CEM III (yüksek fırın cüruflu), CEM IV (puzolanik), CEM V (kompoze)
+- **TS EN 12620** — Beton agregaları: Granülometri, alkali-silika reaktivitesi, dona dayanıklılık
+- **TS EN 934-2** — Beton katkı maddeleri: Akışkanlaştırıcı, priz geciktirici/hızlandırıcı, hava sürükleyici
+
+### YAPI DENETİMİ VE KALİTE
+- **TS EN 13791** — Mevcut yapılarda basınç dayanımı değerlendirmesi: Karot deneyi sonuçlarının yorumlanması
+- **TS EN 12504** serisi — Yerinde deneyler: Karot alma (12504-1), sert çekiç (Schmidt çekici) (12504-2), sıyırma kuvveti (12504-3), ultrasonik (12504-4)
+- **TS EN 10204** — Metalik malzeme muayene belgeleri: 2.1, 2.2, 3.1, 3.2 belge tipleri
+
+### YALITIM VE ENERJİ VERİMLİLİĞİ
+- **TS 825** — Binalarda ısı yalıtımı kuralları: U değeri hesabı, yoğuşma kontrolü, enerji sınıflandırması (A-G)
+- **TS EN 13162-13171** — Isı yalıtım malzemeleri: Taşyünü, camyünü, EPS, XPS, PUR/PIR termal iletkenlik ve mekanik özellikleri
+- **TS EN 13956** / **TS EN 13707** — Su yalıtım örtüleri: PVC, TPO, bitümlü membranlar
+
+### İŞ GÜVENLİĞİ VE İSKELE
+- **TS EN 12811** — Geçici yapılar (iskele): Performans gereksinimleri, malzeme, tasarım
+- **TS EN 1263** — Güvenlik ağları: Düşme önleme sistemleri
+
+### DEPREM DEĞERLENDİRME ARAÇLARI
+- AFAD Deprem Tehlike Haritası: https://tdth.afad.gov.tr (koordinat bazlı Ss, S1, PGA değerleri)
+- Zemin sınıfı belirleme: Vs30 ölçümü veya SPT-N bazlı sınıflandırma
+- Tasarım spektrumu oluşturma: SDS = Ss × Fs × 2/3, SD1 = S1 × F1 × 2/3
+
+Bu bilgileri kullanıcı sorularında referans olarak kullan. Detaylı madde metinleri için kullanıcıyı Resmi Gazete veya İMO kaynağına yönlendir.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
