@@ -87,32 +87,32 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
     if (!resp.ok) return [];
     const html = await resp.text();
     const items: NewsItem[] = [];
+    const seen = new Set<string>();
 
-    // Each news item is a table row linking to a detail page with bold title and optional description
-    const blockRegex = /href="(https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]+)"[^>]*>\s*\|[^|]*\|[^|]*\|\s*\*\*([^*]+)\*\*/g;
-    // Fallback: match <a> tags with bold titles in table cells
-    const linkRegex = /<a[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,(\d+)\/[^"]+)"[^>]*>[\s\S]*?<\/a>/g;
-    const titleRegex = /<b>([\s\S]*?)<\/b>|<strong>([\s\S]*?)<\/strong>/;
-
-    // Strategy: find table cells with images + bold text + links
-    const cellRegex = /<a[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]*)"[^>]*>\s*<table[\s\S]*?<\/table>\s*<\/a>/gi;
+    // Find all <a> blocks that link to IMO article pages and contain <b> or <strong>
+    const aRegex = /<a[^>]*href="((?:https?:\/\/www\.imo\.org\.tr)?\/TR,(\d+)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
     let cm;
-    while ((cm = cellRegex.exec(html)) !== null) {
-      const link = cm[1];
-      const block = cm[0];
+    while ((cm = aRegex.exec(html)) !== null) {
+      const rawLink = cm[1];
+      const block = cm[3];
 
-      // Skip navigation links
-      if (link.includes("genel-merkez-guncel-haberler")) continue;
-
-      // Extract bold title
+      // Must contain bold text (the title)
       const boldMatch = block.match(/<b>([\s\S]*?)<\/b>/i) || block.match(/<strong>([\s\S]*?)<\/strong>/i);
       if (!boldMatch) continue;
+
       const title = boldMatch[1].replace(/<[^>]*>/g, "").trim();
       if (!title || title.length < 10) continue;
 
-      // Extract description text after the bold title
+      const link = rawLink.startsWith("http") ? rawLink : `https://www.imo.org.tr${rawLink}`;
+      
+      // Skip nav/self links
+      if (link.includes("genel-merkez-guncel-haberler") || link.includes("ana-sayfa") || link.includes("iletisim")) continue;
+      if (seen.has(link)) continue;
+      seen.add(link);
+
+      // Extract snippet from text after bold
       const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
-      const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").trim().slice(0, 200);
+      const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").replace(/\s+/g, " ").trim().slice(0, 200);
 
       items.push({
         title,
