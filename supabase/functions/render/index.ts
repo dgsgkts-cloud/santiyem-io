@@ -57,9 +57,6 @@ Kullanıcı isteği: ${prompt}`
       });
     }
 
-    if (file_type === "dwg") {
-      userContent[0].text = `Bu bir DWG/DXF CAD projesidir. DWG içeriğini doğrudan okuyamadığın için yalnızca kullanıcının açıklamasına göre konsept üret. Geometri uydurma.\n\nKullanıcı isteği: ${prompt}`;
-    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
