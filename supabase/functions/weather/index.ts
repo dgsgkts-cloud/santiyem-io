@@ -30,7 +30,6 @@ function generateAlerts(days: ForecastDay[]): ConstructionAlert[] {
   const today = days[0];
   const tomorrow = days[1];
 
-  // Rain alerts for concrete
   if (today && today.rain_probability > 60) {
     alerts.push({
       type: "danger",
@@ -47,40 +46,37 @@ function generateAlerts(days: ForecastDay[]): ConstructionAlert[] {
     });
   }
 
-  // High temperature alerts
   for (const day of days.slice(0, 3)) {
     if (day.temp_max > 35) {
       alerts.push({
         type: "warning",
         icon: "🌡️",
         title: `Yüksek Sıcaklık: ${day.date}`,
-        description: `${Math.round(day.temp_max)}°C — kür sulamasına dikkat, beton çatlama riski. İşçi sağlığı önlemleri alın.`,
+        description: `${Math.round(day.temp_max)}°C — kür sulamasına dikkat, beton çatlama riski.`,
       });
-      break; // Only show once
+      break;
     }
   }
 
-  // Freezing alerts
   for (const day of days.slice(0, 3)) {
     if (day.temp_min < 5) {
       alerts.push({
         type: "danger",
         icon: "❄️",
         title: `Don Riski: ${day.date}`,
-        description: `${Math.round(day.temp_min)}°C — beton dökümü uygun değil, donma riski var. Antifrizi değerlendirin.`,
+        description: `${Math.round(day.temp_min)}°C — beton dökümü uygun değil, donma riski var.`,
       });
       break;
     }
   }
 
-  // Wind alerts
   for (const day of days.slice(0, 3)) {
     if (day.wind_speed > 50) {
       alerts.push({
         type: "danger",
         icon: "💨",
         title: `Şiddetli Rüzgar: ${day.date}`,
-        description: `${Math.round(day.wind_speed)} km/s — vinç operasyonlarını durdurun, iskele kontrolü yapın.`,
+        description: `${Math.round(day.wind_speed)} km/s — vinç operasyonlarını durdurun.`,
       });
       break;
     } else if (day.wind_speed > 30) {
@@ -94,7 +90,6 @@ function generateAlerts(days: ForecastDay[]): ConstructionAlert[] {
     }
   }
 
-  // Good conditions
   if (alerts.length === 0) {
     alerts.push({
       type: "info",
@@ -114,20 +109,20 @@ serve(async (req) => {
 
   try {
     const { lat, lon, city } = await req.json();
-    
-    const API_KEY = Deno.env.get("OPENWEATHERMAP_API_KEY");
+
+    const API_KEY = Deno.env.get("WEATHER_API_KEY");
     if (!API_KEY) {
       return new Response(
-        JSON.stringify({ error: "OPENWEATHERMAP_API_KEY yapılandırılmamış" }),
+        JSON.stringify({ error: "WEATHER_API_KEY yapılandırılmamış" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    let url: string;
+    let query: string;
     if (lat && lon) {
-      url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=tr`;
+      query = `${lat},${lon}`;
     } else if (city) {
-      url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)},TR&appid=${API_KEY}&units=metric&lang=tr`;
+      query = city;
     } else {
       return new Response(
         JSON.stringify({ error: "Konum bilgisi gerekli (lat/lon veya city)" }),
@@ -135,22 +130,18 @@ serve(async (req) => {
       );
     }
 
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(query)}&days=5&lang=tr&aqi=no`;
+    console.log("WeatherAPI request:", url.replace(API_KEY, "***"));
+
     const response = await fetch(url);
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenWeatherMap error:", response.status, errorText);
+      console.error("WeatherAPI error:", response.status, errorText);
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: "OpenWeatherMap API key geçersiz veya henüz aktif değil. Anahtarı kontrol edin ya da birkaç saat sonra tekrar deneyin." }),
+          JSON.stringify({ error: "WeatherAPI anahtarı geçersiz. Lütfen kontrol edin." }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Hava durumu servisi istek limiti aşıldı. Lütfen biraz sonra tekrar deneyin." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -161,48 +152,26 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log("WeatherAPI response city:", data.location?.name);
 
-    // Group by day and pick daily summary
-    const dailyMap = new Map<string, ForecastDay>();
-    
-    for (const item of data.list) {
-      const date = item.dt_txt.split(" ")[0];
-      const existing = dailyMap.get(date);
-      
-      if (!existing) {
-        dailyMap.set(date, {
-          date,
-          temp_min: item.main.temp_min,
-          temp_max: item.main.temp_max,
-          humidity: item.main.humidity,
-          wind_speed: item.wind.speed * 3.6, // m/s to km/h
-          description: item.weather[0].description,
-          icon: item.weather[0].icon,
-          rain_probability: (item.pop || 0) * 100,
-          rain_mm: item.rain?.["3h"] || 0,
-        });
-      } else {
-        existing.temp_min = Math.min(existing.temp_min, item.main.temp_min);
-        existing.temp_max = Math.max(existing.temp_max, item.main.temp_max);
-        existing.humidity = Math.max(existing.humidity, item.main.humidity);
-        existing.wind_speed = Math.max(existing.wind_speed, item.wind.speed * 3.6);
-        existing.rain_probability = Math.max(existing.rain_probability, (item.pop || 0) * 100);
-        existing.rain_mm += item.rain?.["3h"] || 0;
-        // Use midday forecast for description
-        if (item.dt_txt.includes("12:00")) {
-          existing.description = item.weather[0].description;
-          existing.icon = item.weather[0].icon;
-        }
-      }
-    }
+    const days: ForecastDay[] = data.forecast.forecastday.map((fd: any) => ({
+      date: fd.date,
+      temp_min: fd.day.mintemp_c,
+      temp_max: fd.day.maxtemp_c,
+      humidity: fd.day.avghumidity,
+      wind_speed: fd.day.maxwind_kph,
+      description: fd.day.condition.text,
+      icon: fd.day.condition.icon,
+      rain_probability: fd.day.daily_chance_of_rain,
+      rain_mm: fd.day.totalprecip_mm,
+    }));
 
-    const days = Array.from(dailyMap.values()).slice(0, 5);
     const alerts = generateAlerts(days);
 
     return new Response(
       JSON.stringify({
-        city: data.city.name,
-        country: data.city.country,
+        city: data.location.name,
+        country: data.location.country,
         forecast: days,
         alerts,
       }),
