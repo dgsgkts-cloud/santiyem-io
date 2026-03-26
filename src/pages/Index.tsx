@@ -82,33 +82,64 @@ const Index = () => {
             <p className="text-[11px] text-muted-foreground">İnşaat & Mühendislik Asistanı</p>
           </div>
         </div>
-        {messages.length > 0 && (
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Yeni Sohbet
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Tab buttons */}
+          <div className="flex rounded-lg border border-border overflow-hidden">
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "chat"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              Sohbet
+            </button>
+            <button
+              onClick={() => setActiveTab("weather")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "weather"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <CloudRain className="w-3.5 h-3.5" />
+              Hava Durumu
+            </button>
+          </div>
+          {activeTab === "chat" && messages.length > 0 && (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Yeni Sohbet
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* Chat area */}
+      {/* Content area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {messages.length === 0 ? (
-          <WelcomeScreen onSuggestionClick={handleSend} />
+        {activeTab === "chat" ? (
+          messages.length === 0 ? (
+            <WelcomeScreen onSuggestionClick={handleSend} />
+          ) : (
+            <div className="max-w-3xl mx-auto py-6 px-4 space-y-4">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))}
+              {isTyping && <TypingIndicator />}
+            </div>
+          )
         ) : (
-          <div className="max-w-3xl mx-auto py-6 px-4 space-y-4">
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
-            {isTyping && <TypingIndicator />}
-          </div>
+          <WeatherPanel />
         )}
       </div>
 
-      {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isTyping} />
+      {/* Input - only show in chat tab */}
+      {activeTab === "chat" && <ChatInput onSend={handleSend} disabled={isTyping} />}
     </div>
   );
 };
