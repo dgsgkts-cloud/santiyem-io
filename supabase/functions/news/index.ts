@@ -55,7 +55,10 @@ function extractItemsFromRss(xml: string, source: string, category: string): New
     const titleMatch = block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) ||
                        block.match(/<title>([\s\S]*?)<\/title>/);
     const title = titleMatch?.[1]?.trim() || "";
-    const link = block.match(/<link>(.*?)<\/link>/)?.[1]?.trim() || "";
+    const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/) || block.match(/<link[^>]*href="([^"]*)"/);
+    const link = linkMatch?.[1]?.trim() || "";
+    const guidMatch = block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/);
+    const finalLink = link || guidMatch?.[1]?.trim() || "";
     const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
     const descMatch = block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) ||
                       block.match(/<description>([\s\S]*?)<\/description>/);
@@ -64,7 +67,7 @@ function extractItemsFromRss(xml: string, source: string, category: string): New
     if (title) {
       items.push({
         title,
-        link,
+        link: finalLink,
         date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         source,
         category,
