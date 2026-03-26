@@ -120,6 +120,10 @@ serve(async (req) => {
       { url: "https://www.isguvenligi.net/feed/", source: "İSG Güvenliği", category: "duyuru" },
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
       { url: "https://www.enerjigunlugu.net/rss.xml", source: "Enerji Günlüğü", category: "sektör" },
+      { url: "https://www.tmmob.org.tr/rss/etkinlikler", source: "TMMOB Etkinlikler", category: "duyuru" },
+      { url: "https://www.tmmob.org.tr/rss/haberler", source: "TMMOB Haberler", category: "duyuru" },
+      { url: "https://www.imo.org.tr/TR/RSS/1/tum-haberler.rss", source: "İnşaat Müh. Odası", category: "duyuru" },
+      { url: "https://www.mmotmmob.org.tr/rss", source: "Makina Müh. Odası", category: "duyuru" },
     ];
 
     const results = await Promise.allSettled(
