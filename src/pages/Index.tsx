@@ -5,15 +5,16 @@ import ChatInput from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
 import WeatherPanel from "@/components/WeatherPanel";
 import NewsPanel from "@/components/NewsPanel";
+import EventsPanel from "@/components/EventsPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw, MessageSquare, CloudRain, Newspaper } from "lucide-react";
+import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -119,6 +120,17 @@ const Index = () => {
               <Newspaper className="w-3.5 h-3.5" />
               Haberler
             </button>
+            <button
+              onClick={() => setActiveTab("events")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "events"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              Etkinlikler
+            </button>
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
@@ -147,8 +159,10 @@ const Index = () => {
           )
         ) : activeTab === "weather" ? (
           <WeatherPanel />
-        ) : (
+        ) : activeTab === "news" ? (
           <NewsPanel />
+        ) : (
+          <EventsPanel />
         )}
       </div>
 
