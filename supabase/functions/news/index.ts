@@ -159,23 +159,19 @@ async function fetchFeed(url: string, source: string, category: string): Promise
 }
 
 const SECTOR_KEYWORDS = [
-  "inşaat", "beton", "çimento", "demir", "donatı", "kalıp", "iskele",
-  "yapı", "konut", "bina", "deprem", "yönetmelik", "imar", "ruhsat",
-  "mühendis", "mimar", "müteahhit", "şantiye", "temel", "kolon", "kiriş",
-  "perde", "döşeme", "çelik", "betonarme", "prefabrik", "güçlendirme",
-  "kentsel dönüşüm", "altyapı", "üstyapı", "kanal", "köprü", "tünel",
-  "baraj", "yol", "asfalt", "zemin", "sondaj", "kazık", "istinat",
-  "yalıtım", "izolasyon", "mantolama", "tesisat", "sıhhi", "mekanik",
-  "enerji kimlik", "ekb", "ts 500", "tbdy", "afad",
-  "tmmob", "imo", "yapı denetim", "fenni mesul", "proje müellif",
-  "metraj", "keşif", "hakediş", "ihale", "kamu", "toki",
-  "emlak", "gayrimenkul", "arsa", "parsel", "tapu", "kadastro",
-  "çatı", "cephe", "duvar", "tuğla", "agrega", "kum", "çakıl",
-  "vinç", "ekskavatör", "iş makinesi", "hafriyat",
+  "inşaat", "beton", "çimento", "donatı", "kalıp", "iskele",
+  "konut", "deprem", "imar", "ruhsat",
+  "müteahhit", "şantiye", "kolon", "kiriş",
+  "betonarme", "prefabrik", "güçlendirme",
+  "kentsel dönüşüm", "köprü", "tünel", "baraj",
+  "zemin etüd", "sondaj", "kazık", "istinat",
+  "yalıtım", "mantolama",
+  "yapı denetim", "fenni mesul",
+  "metraj", "hakediş", "toki",
+  "hafriyat", "temel atma", "kaba inşaat",
 ];
 
 function classifySectorRelevance(item: NewsItem): string {
-  // Already mevzuat or duyuru → keep as is
   if (item.category === "mevzuat" || item.category === "duyuru") return item.category;
 
   const text = `${item.title} ${item.snippet}`.toLocaleLowerCase("tr");
