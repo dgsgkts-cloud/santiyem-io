@@ -132,6 +132,48 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
   }
 }
 
+async function scrapeResmiGazete(): Promise<NewsItem[]> {
+  try {
+    const resp = await fetch("https://www.resmigazete.gov.tr/default.aspx", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; MuhendisAI/1.0)", Accept: "text/html" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const items: NewsItem[] = [];
+
+    // Extract date from page
+    const dateMatch = html.match(/(\d{1,2}\s+\w+\s+\d{4})\s+Tarihli/);
+    const dateStr = dateMatch ? dateMatch[1] : "";
+
+    // Find all links to resmigazete items (yönetmelik, tebliğ, karar etc.)
+    const linkRegex = /<a[^>]*href="(https?:\/\/www\.resmigazete\.gov\.tr\/eskiler\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m;
+    while ((m = linkRegex.exec(html)) !== null) {
+      const link = m[1];
+      let title = m[2].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+      // Remove leading dash
+      title = title.replace(/^––\s*/, "").replace(/^–\s*/, "").trim();
+      if (!title || title.length < 15) continue;
+
+      items.push({
+        title,
+        link,
+        date: new Date().toISOString(),
+        source: "Resmi Gazete",
+        category: "mevzuat",
+        snippet: dateStr ? `${dateStr} tarihli Resmi Gazete'de yayımlandı.` : "",
+      });
+    }
+
+    console.log(`Scraped ${items.length} Resmi Gazete items`);
+    return items.slice(0, 15); // Top 15
+  } catch (e) {
+    console.error("Resmi Gazete scrape error:", e);
+    return [];
+  }
+}
+
 async function fetchFeed(url: string, source: string, category: string): Promise<NewsItem[]> {
   try {
     const resp = await fetch(url, {
@@ -187,26 +229,19 @@ serve(async (req) => {
   try {
     const feeds = [
       { url: "https://www.csb.gov.tr/rss", source: "Çevre ve Şehircilik Bakanlığı", category: "mevzuat" },
-      { url: "https://www.afad.gov.tr/rss", source: "AFAD", category: "mevzuat" },
-      { url: "https://www.insaatnoktasi.com/rss", source: "İnşaat Noktası", category: "sektör" },
       { url: "https://www.yapi.com.tr/rss/haberler.xml", source: "Yapı Dergisi", category: "sektör" },
       { url: "https://www.emlakkulisi.com/rss", source: "Emlak Kulisi", category: "sektör" },
       { url: "https://www.ekonomist.com.tr/rss", source: "Ekonomist", category: "sektör" },
-      { url: "https://www.isguvenligi.net/feed/", source: "İSG Güvenliği", category: "duyuru" },
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
-      { url: "https://www.enerjigunlugu.net/rss.xml", source: "Enerji Günlüğü", category: "sektör" },
-      { url: "https://www.tmmob.org.tr/rss/etkinlikler", source: "TMMOB Etkinlikler", category: "duyuru" },
-      { url: "https://www.tmmob.org.tr/rss/haberler", source: "TMMOB Haberler", category: "duyuru" },
-      { url: "https://www.imo.org.tr/TR/RSS/1/tum-haberler.rss", source: "İnşaat Müh. Odası", category: "duyuru" },
-      { url: "https://www.mmotmmob.org.tr/rss", source: "Makina Müh. Odası", category: "duyuru" },
     ];
 
-    const [rssResults, imoNews] = await Promise.all([
+    const [rssResults, imoNews, rgNews] = await Promise.all([
       Promise.allSettled(feeds.map((f) => fetchFeed(f.url, f.source, f.category))),
       scrapeImoNews(),
+      scrapeResmiGazete(),
     ]);
 
-    const allItems: NewsItem[] = [...imoNews];
+    const allItems: NewsItem[] = [...imoNews, ...rgNews];
     for (const r of rssResults) {
       if (r.status === "fulfilled") allItems.push(...r.value);
     }
