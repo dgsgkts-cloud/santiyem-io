@@ -11,7 +11,7 @@ const TOOLS = [
   { id: "ekb", label: "EKB Hesabı", icon: <Zap className="w-4 h-4" />, desc: "Enerji kimlik belgesi ve TS 825 kontrolü" },
   { id: "structural", label: "Kolon/Kiriş/Döşeme", icon: <Columns3 className="w-4 h-4" />, desc: "TBDY 2018 ön boyutlandırma" },
   { id: "windsnow", label: "Rüzgar & Kar Yükü", icon: <Wind className="w-4 h-4" />, desc: "TS EN 1991 yük hesabı" },
-  { id: "taks", label: "TAKS/KAKS/h", icon: <Building2 className="w-4 h-4" />, desc: "İmar hesabı ve parsel analizi" },
+  { id: "taks", label: "TAKS/KAKS", icon: <Building2 className="w-4 h-4" />, desc: "İmar hesabı ve parsel analizi" },
   { id: "material", label: "Malzeme Tahmini", icon: <Package className="w-4 h-4" />, desc: "Beton, demir, kalıp miktarı" },
   { id: "thermal", label: "Isı Köprüsü", icon: <Thermometer className="w-4 h-4" />, desc: "Doğrusal ısı köprüsü analizi" },
 ] as const;
