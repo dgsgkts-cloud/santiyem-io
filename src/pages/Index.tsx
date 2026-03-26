@@ -6,8 +6,9 @@ import TypingIndicator from "@/components/TypingIndicator";
 import WeatherPanel from "@/components/WeatherPanel";
 import NewsPanel from "@/components/NewsPanel";
 import EventsPanel from "@/components/EventsPanel";
+import CalculatorsPanel from "@/components/CalculatorsPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar } from "lucide-react";
+import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
