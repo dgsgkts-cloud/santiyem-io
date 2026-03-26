@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
