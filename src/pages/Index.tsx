@@ -3,8 +3,9 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
+import WeatherPanel from "@/components/WeatherPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, MessageSquare, CloudRain } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
