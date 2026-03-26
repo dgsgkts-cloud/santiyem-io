@@ -22,16 +22,17 @@ Focus on: realistic lighting, materials, landscaping, sky, and atmosphere.`;
 
     const userContent: any[] = [{ type: "text", text: prompt }];
 
-    if (image_base64) {
-      const mimeMap: Record<string, string> = { pdf: "application/pdf", dwg: "application/octet-stream", image: "image/png" };
-      const mimeType = mimeMap[file_type] || "image/png";
+    if (image_base64 && file_type !== "dwg") {
+      const mimeType = file_type === "pdf" ? "application/pdf" : "image/png";
       userContent.push({
         type: "image_url",
         image_url: { url: `data:${mimeType};base64,${image_base64}` },
       });
-      if (file_type === "dwg") {
-        userContent[0].text = `${prompt}\n\n[Not: Bu bir DWG/DXF CAD dosyasıdır. Mimari plan ve vaziyet planı bilgilerini yorumlayarak render oluştur.]`;
-      }
+    }
+    
+    if (file_type === "dwg") {
+      // DWG is binary and can't be sent to AI directly — enhance prompt instead
+      userContent[0].text = `${prompt}\n\n[Bu bir DWG/DXF CAD projesidir. Dosya adından ve kullanıcının açıklamasından yola çıkarak mimari render oluştur. Vaziyet planı, kat planı veya cephe görseli olarak yorumla.]`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
