@@ -293,9 +293,9 @@ serve(async (req) => {
     }
 
     // If no RSS feeds returned data, provide curated fallback
-    if (allItems.length === 0) {
+    if (dedupedItems.length === 0) {
       const now = new Date().toISOString();
-      allItems.push(
+      dedupedItems.push(
         {
           title: "TBDY 2018 Deprem Yönetmeliği Güncellemeleri",
           link: "https://www.resmigazete.gov.tr",
@@ -323,8 +323,8 @@ serve(async (req) => {
       );
     }
 
-    allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const news = allItems.slice(0, 100);
+    dedupedItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const news = dedupedItems.slice(0, 100);
 
     return new Response(
       JSON.stringify({ news, total: news.length, fetched_at: new Date().toISOString() }),
