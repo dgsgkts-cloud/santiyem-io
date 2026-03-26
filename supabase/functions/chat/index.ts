@@ -219,6 +219,67 @@ Aşağıda TBDY 2018'in temel bölümleri ve kritik maddeleri özetlenmiştir. S
 - Zemin sınıfı belirleme: Vs30 ölçümü veya SPT-N bazlı sınıflandırma
 - Tasarım spektrumu oluşturma: SDS = Ss × Fs × 2/3, SD1 = S1 × F1 × 2/3
 
+## İMO TEKNİK BİLGİLER KÜTÜPHANESİ
+
+Aşağıda İMO'nun "Teknik Bilgiler" sayfasındaki referans belgeleri listelenmiştir. Bu konularda gelen sorularda ilgili belgeyi referans göster ve PDF linkini paylaş.
+Kaynak: https://www.imo.org.tr/TR,76621/teknik-bilgiler.html
+
+### ÖLÇÜ VE BİRİMLER
+- **Ölçüler** — Genel ölçü birimleri ve dönüşüm tabloları: https://www.imo.org.tr/resimler/dosya_ekler/e2e6adb2c5d6200_ek.pdf
+- **Mühendislikte Sık Kullanılan Metrik Birimler**: https://www.imo.org.tr/Eklenti/8050,a7dfc60f447df80ekpdf.pdf?0
+- **SI Sisteminde Temel Birimler**: https://www.imo.org.tr/resimler/dosya_ekler/428cdca555b6464_ek.pdf
+
+### GEOMETRİ VE ALAN HESABI
+- **Düzlemsel Geometrik Şekillerin Özellikleri** — Alan, çevre, ağırlık merkezi formülleri: https://www.imo.org.tr/resimler/dosya_ekler/95b851ae7c7af5a_ek.pdf
+- **Alan Hesabında Kros Metodu** — Arazi ölçümlerinde alan hesaplama: https://www.imo.org.tr/resimler/dosya_ekler/2777167ed0417a5_ek.pdf
+
+### MALZEME YOĞUNLUKLARI VE AĞIRLIKLARI
+- **Yapı Malzemelerinin Birim Hacim Ağırlıkları**: https://www.imo.org.tr/resimler/dosya_ekler/f7deb880ca6b4b7_ek.pdf
+- **Başlıca Malzeme Yoğunlukları**: https://www.imo.org.tr/resimler/dosya_ekler/27abe7a7df24f39_ek.pdf
+
+### BETON VE ÇİMENTO
+- **Çimento Çeşitleri** — CEM I-V sınıflandırması: https://www.imo.org.tr/resimler/dosya_ekler/cdposljsda297e7786e30_ek.pdf
+- **Beton** — Genel beton bilgisi: https://www.imo.org.tr/resimler/dosya_ekler/787a9fe2ee4fff1_ek.pdf
+- **Betonun Çevreye Etkileriyle İlgili Etki Sınıfları** — XC, XD, XS, XF, XA sınıfları: https://www.imo.org.tr/resimler/dosya_ekler/2a5ddbef906afed_ek.pdf
+- **Beton Sınıfları ve Dayanımları** — C20-C50 ve üzeri: https://www.imo.org.tr/resimler/dosya_ekler/e13632cdf2787a0_ek.pdf
+- **Beton ve Betonarme Yapıların Bozulması**: https://www.imo.org.tr/resimler/dosya_ekler/f2b0d179aed885f_ek.pdf
+- **Taze veya Sertleşmiş Betonda Çatlak Tipleri**: https://www.imo.org.tr/resimler/dosya_ekler/e2ea46dd3c9de08_ek.pdf
+- **Çatlakların Oluşum Yerleri**: https://www.imo.org.tr/resimler/dosya_ekler/bc5c9963dfe8345_ek.pdf
+
+### DONATI VE ÇELİK
+- **Donatı Çeliklerinin Mekanik Özellikleri** — B420C,	B500C tabloları: https://www.imo.org.tr/resimler/dosya_ekler/ab13409c7a3+"dcdb_ek.pdf
+- **Kirişlerin Bo Genişliği**: https://www.imo.org.tr/resimler/dosya_ekler/a32dbf843c1d859_ek.pdf
+- **Kayma Donatısı** — Etriye hesabı referansları: https://www.imo.org.tr/resimler/dosya_ekler/4272ef55e7e3ca5_ek.pdf
+- **Yuvarlak Betonarme Çelik**: https://www.imo.org.tr/resimler/dosya_ekler/2db3f0a3f9e70db_ek.pdf
+- **Standart Çelik Hasırları** — Q ve R tipi hasır tabloları: https://www.imo.org.tr/resimler/dosya_ekler/b1e02ebf696d341_ek.pdf
+- **Yapısal Çelik Kaliteleri** — S235, S275, S355: https://www.imo.org.tr/resimler/dosya_ekler/ceafa528942d470_ek.pdf
+
+### KAYNAK VE BİRLEŞİM
+- **Kaynak** — Kaynak türleri ve kuralları: https://www.imo.org.tr/resimler/dosya_ekler/ea333ac49320ca5_ek.pdf
+- **Kaynak Dikişleri İçin Emniyet Gerilmesi**: https://www.imo.org.tr/resimler/dosya_ekler/e11ca8c1d2b985e_ek.pdf
+- **Profiller** — Çelik profil tabloları (IPE, HEA, HEB, UNP vb.): https://www.imo.org.tr/resimler/dosya_ekler/ecbb7afee470389_ek.pdf
+- **Birleşim Elemanları İçin Emniyet Gerilmeleri**: https://www.imo.org.tr/resimler/dosya_ekler/23833d3d741ba69_ek.pdf
+
+### AHŞAP VE ÇATI
+- **Ahşap İçin Emniyet Gerilmeleri**: https://www.imo.org.tr/resimler/dosya_ekler/047e0f8f2d6d745_ek.pdf
+- **Çatı Örtüleri** — Çatı kaplama malzemeleri: https://www.imo.org.tr/resimler/dosya_ekler/21df17456adab5a_ek.pdf
+- **Metal Saçların Ağırlığı**: https://www.imo.org.tr/resimler/dosya_ekler/e42c012090a08a9_ek.pdf
+
+### YÜKLER VE ZEMİN
+- **İl ve İlçelere Göre Zati Kar Yükü**: https://www.imo.org.tr/resimler/dosya_ekler/5723f14de16b22f_ek.pdf
+- **Yığma Binalar İçin Depreme Dayanıklı Tasarım Kuralları**: https://www.imo.org.tr/resimler/dosya_ekler/630386f58a8a10f_ek.pdf
+- **Düşey Hareketli Yükler** — Kullanım yükü tabloları: https://www.imo.org.tr/resimler/dosya_ekler/94f39f6e4411799_ek.pdf
+- **Ön Tasarım İçin İzin Verilen Emniyetli Zemin Gerilmeleri**: https://www.imo.org.tr/Eklenti/463,on-tasarim-icin-izin-verilen-emniyetli-zemin-gerilmeleripdf.pdf?0
+
+### SU VE ALTYAPI
+- **Atıksu Arıtma Tesisi Projelendirme Debi Kriterleri**: https://www.imo.org.tr/resimler/dosya_ekler/0da578077653eaa_ek.pdf
+- **İçme Suyu Pis Su Akım Formülleri**: https://www.imo.org.tr/resimler/dosya_ekler/3179fe62016e4f8_ek.pdf
+
+### İŞ GÜCÜ VE METRAJ
+- **İnşaat İmalatlarında Adam/Saat Tabloları** — İş gücü planlaması için referans: https://www.imo.org.tr/resimler/dosya_ekler/84df8e36c312234_ek.pdf
+
+Bu konulardaki sorularda ilgili PDF belgesinin linkini paylaş ve kullanıcıyı detaylı bilgi için İMO Teknik Bilgiler sayfasına yönlendir.
+
 Bu bilgileri kullanıcı sorularında referans olarak kullan. Detaylı madde metinleri için kullanıcıyı Resmi Gazete veya İMO kaynağına yönlendir.`;
 
 serve(async (req) => {
