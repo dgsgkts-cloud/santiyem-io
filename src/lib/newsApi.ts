@@ -6,6 +6,7 @@ export interface NewsItem {
   date: string;
   source: string;
   category: string;
+  snippet: string;
 }
 
 export interface NewsData {
