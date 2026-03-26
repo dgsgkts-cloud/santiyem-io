@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
-import ChatInput from "@/components/ChatInput";
+import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
 import WeatherPanel from "@/components/WeatherPanel";
 import NewsPanel from "@/components/NewsPanel";
@@ -29,8 +29,8 @@ const Index = () => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
-  const handleSend = async (text: string) => {
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
+  const handleSend = async (text: string, attachments?: Attachment[]) => {
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
@@ -40,6 +40,7 @@ const Index = () => {
     const chatMessages = [...messages, userMsg].map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
+      attachments: m.attachments?.map((a) => ({ base64: a.base64, type: a.type })),
     }));
 
     try {
