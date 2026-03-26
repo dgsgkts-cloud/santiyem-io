@@ -13,79 +13,39 @@ interface EventItem {
   type: string;
 }
 
-function parseEvents(html: string): EventItem[] {
+function parseEventsFromHtml(html: string): EventItem[] {
   const events: EventItem[] = [];
 
-  // Match calendar cells with events: date links followed by event links
-  // Pattern: date anchor with title like "DD.MM.YYYY" followed by event link
-  const cellRegex = /href="[^"]*#(\d{4}-\d{2}-\d{2})"[^>]*title="[^"]*"[^>]*>[\s\S]*?<\/a>([\s\S]*?)(?=<\/td|<td)/g;
-  let cellMatch;
+  // Strategy: find date anchors like #2026-03-05 then find event links nearby
+  // The HTML has patterns like: <a href="...#2026-03-05" title="05.03.2026">5</a> followed by event <a> tags
+  
+  // Split by date anchors
+  const dateBlockRegex = /#(\d{4}-\d{2}-\d{2})[^>]*>[^<]*<\/a>([\s\S]*?)(?=#\d{4}-\d{2}-\d{2}|<\/table|$)/g;
+  let blockMatch;
 
-  while ((cellMatch = cellRegex.exec(html)) !== null) {
-    const date = cellMatch[1];
-    const cellContent = cellMatch[2];
+  while ((blockMatch = dateBlockRegex.exec(html)) !== null) {
+    const date = blockMatch[1];
+    const block = blockMatch[2];
 
-    // Find event links within the cell
-    const eventRegex = /<a[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,[^"]*)"[^>]*>([\s\S]*?)<\/a>/g;
-    let eventMatch;
-
-    while ((eventMatch = eventRegex.exec(cellContent)) !== null) {
-      const link = eventMatch[1];
-      let title = eventMatch[2].replace(/<[^>]*>/g, "").trim();
-
-      // Skip "delete" links
-      if (title.toLowerCase() === "delete" || !title) continue;
-
-      // Determine event type
-      let type = "etkinlik";
-      const titleLower = title.toLocaleLowerCase("tr");
-      if (titleLower.includes("seminer")) type = "seminer";
-      else if (titleLower.includes("kurs") || titleLower.includes("eğitim")) type = "eğitim";
-      else if (titleLower.includes("gezi")) type = "gezi";
-      else if (titleLower.includes("genel kurul") || titleLower.includes("seçim")) type = "toplantı";
-      else if (titleLower.includes("kongre") || titleLower.includes("konferans")) type = "kongre";
-
-      events.push({ title, date, link, type });
-    }
-  }
-
-  return events;
-}
-
-// Fallback: parse from markdown-like text
-function parseEventsFromText(text: string): EventItem[] {
-  const events: EventItem[] = [];
-  // Match patterns like: [EVENT TITLE](https://www.imo.org.tr/TR,XXXXX/...)
-  const regex = /\[([^\]]+)\]\((https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^)]+)\)/g;
-  let match;
-
-  // Track dates from date anchors
-  let currentDate = "";
-  const dateRegex = /#(\d{4}-\d{2}-\d{2})/g;
-
-  const lines = text.split("\n");
-  for (const line of lines) {
-    const dateMatch = line.match(/#(\d{4}-\d{2}-\d{2})/);
-    if (dateMatch) currentDate = dateMatch[1];
-
-    const linkMatches = [...line.matchAll(/\[([^\]]+)\]\((https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^)]+)\)/g)];
-    for (const lm of linkMatches) {
-      const title = lm[1].trim();
-      const link = lm[2];
-
-      if (title === "delete" || title.length < 5) continue;
-      // Skip navigation-like links
-      if (["etkinlik-takvimi", "ana-sayfa", "web-mail", "iletisim", "aydinlatma"].some(s => link.includes(s))) continue;
+    // Find event links (not delete, not calendar nav)
+    const linkRegex = /<a[^>]*href="(https?:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let lm;
+    while ((lm = linkRegex.exec(block)) !== null) {
+      const link = lm[1];
+      const title = lm[2].replace(/<[^>]*>/g, "").trim();
+      
+      if (!title || title.length < 5 || title.toLowerCase() === "delete") continue;
+      if (link.includes("etkinlik-takvimi")) continue;
 
       let type = "etkinlik";
       const tl = title.toLocaleLowerCase("tr");
-      if (tl.includes("seminer")) type = "seminer";
-      else if (tl.includes("kurs") || tl.includes("eğitim")) type = "eğitim";
+      if (tl.includes("seminer") || tl.includes("semineri")) type = "seminer";
+      else if (tl.includes("kurs") || tl.includes("eğitim") || tl.includes("kursu")) type = "eğitim";
       else if (tl.includes("gezi")) type = "gezi";
       else if (tl.includes("genel kurul") || tl.includes("seçim")) type = "toplantı";
       else if (tl.includes("kongre") || tl.includes("konferans")) type = "kongre";
 
-      events.push({ title, date: currentDate || new Date().toISOString().split("T")[0], link, type });
+      events.push({ title, date, link, type });
     }
   }
 
@@ -122,12 +82,10 @@ serve(async (req) => {
     }
 
     const html = await resp.text();
-
-    // Try HTML parsing first, fallback to text parsing
-    let events = parseEvents(html);
-    if (events.length === 0) {
-      events = parseEventsFromText(html);
-    }
+    console.log("Fetched IMO page, length:", html.length);
+    
+    const events = parseEventsFromHtml(html);
+    console.log("Parsed events:", events.length);
 
     // Sort by date
     events.sort((a, b) => a.date.localeCompare(b.date));
