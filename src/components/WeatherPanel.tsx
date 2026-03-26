@@ -24,8 +24,12 @@ function formatDate(dateStr: string): { day: string; date: string } {
 }
 
 function getWeatherIcon(icon: string) {
-  if (icon.includes("01") || icon.includes("02")) return <Sun className="w-8 h-8 text-accent" />;
-  if (icon.includes("09") || icon.includes("10")) return <CloudRain className="w-8 h-8 text-primary" />;
+  // WeatherAPI returns full URL like //cdn.weatherapi.com/...
+  if (icon && (icon.startsWith("http") || icon.startsWith("//"))) {
+    return <img src={icon.startsWith("//") ? `https:${icon}` : icon} alt="hava" className="w-10 h-10" />;
+  }
+  if (icon?.includes("sun") || icon?.includes("clear")) return <Sun className="w-8 h-8 text-accent" />;
+  if (icon?.includes("rain")) return <CloudRain className="w-8 h-8 text-primary" />;
   return <Cloud className="w-8 h-8 text-muted-foreground" />;
 }
 
