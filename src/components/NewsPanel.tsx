@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Newspaper, ExternalLink, Loader2, RefreshCw, Scale, Megaphone, Building2, Filter } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Newspaper, ExternalLink, Loader2, RefreshCw, Scale, Megaphone, Building2, Filter, Search } from "lucide-react";
 import { fetchNews, type NewsItem } from "@/lib/newsApi";
 import { toast } from "sonner";
 
@@ -58,6 +58,7 @@ const NewsPanel = () => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<string>("all");
   const [lastFetch, setLastFetch] = useState<string>("");
+  const [search, setSearch] = useState("");
 
   const loadNews = async () => {
     setLoading(true);
@@ -76,7 +77,19 @@ const NewsPanel = () => {
     loadNews();
   }, []);
 
-  const filtered = filter === "all" ? news : news.filter((n) => n.category === filter);
+  const filtered = useMemo(() => {
+    let result = filter === "all" ? news : news.filter((n) => n.category === filter);
+    if (search.trim()) {
+      const q = search.toLocaleLowerCase("tr");
+      result = result.filter(
+        (n) =>
+          n.title.toLocaleLowerCase("tr").includes(q) ||
+          n.source.toLocaleLowerCase("tr").includes(q) ||
+          (n.snippet && n.snippet.toLocaleLowerCase("tr").includes(q))
+      );
+    }
+    return result;
+  }, [news, filter, search]);
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
@@ -121,6 +134,18 @@ const NewsPanel = () => {
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Haberlerde ara... (ör. deprem, beton, imar)"
+          className="w-full rounded-lg border border-input bg-background pl-9 pr-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+        />
       </div>
 
       {/* Loading */}

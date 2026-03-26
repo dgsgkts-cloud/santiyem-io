@@ -115,6 +115,11 @@ serve(async (req) => {
       { url: "https://www.afad.gov.tr/rss", source: "AFAD", category: "mevzuat" },
       { url: "https://www.insaatnoktasi.com/rss", source: "İnşaat Noktası", category: "sektör" },
       { url: "https://www.yapi.com.tr/rss/haberler.xml", source: "Yapı Dergisi", category: "sektör" },
+      { url: "https://www.emlakkulisi.com/rss", source: "Emlak Kulisi", category: "sektör" },
+      { url: "https://www.ekonomist.com.tr/rss", source: "Ekonomist", category: "sektör" },
+      { url: "https://www.isguvenligi.net/feed/", source: "İSG Güvenliği", category: "duyuru" },
+      { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
+      { url: "https://www.enerjigunlugu.net/rss.xml", source: "Enerji Günlüğü", category: "sektör" },
     ];
 
     const results = await Promise.allSettled(
@@ -176,7 +181,7 @@ serve(async (req) => {
     }
 
     allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const news = allItems.slice(0, 30);
+    const news = allItems.slice(0, 50);
 
     return new Response(
       JSON.stringify({ news, total: news.length, fetched_at: new Date().toISOString() }),
