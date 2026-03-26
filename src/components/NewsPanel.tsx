@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Newspaper, ExternalLink, Loader2, RefreshCw, Scale, Megaphone, Building2, Filter, Search } from "lucide-react";
+import { Newspaper, ExternalLink, Loader2, RefreshCw, Scale, Megaphone, Building2, Globe, Filter, Search } from "lucide-react";
 import { fetchNews, type NewsItem } from "@/lib/newsApi";
 import { toast } from "sonner";
 
@@ -7,6 +7,7 @@ const CATEGORY_MAP: Record<string, { label: string; icon: React.ReactNode; color
   mevzuat: { label: "Mevzuat", icon: <Scale className="w-3.5 h-3.5" />, color: "bg-primary/10 text-primary border-primary/20" },
   duyuru: { label: "Duyuru", icon: <Megaphone className="w-3.5 h-3.5" />, color: "bg-accent/10 text-accent border-accent/20" },
   sektör: { label: "Sektör", icon: <Building2 className="w-3.5 h-3.5" />, color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  genel: { label: "Genel", icon: <Globe className="w-3.5 h-3.5" />, color: "bg-muted text-muted-foreground border-border" },
 };
 
 function timeAgo(dateStr: string): string {
@@ -109,9 +110,10 @@ const NewsPanel = () => {
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           {[
             { key: "all", label: "Tümü" },
+            { key: "sektör", label: "Sektör" },
             { key: "mevzuat", label: "Mevzuat" },
             { key: "duyuru", label: "Duyurular" },
-            { key: "sektör", label: "Sektör" },
+            { key: "genel", label: "Genel" },
           ].map((f) => (
             <button
               key={f.key}

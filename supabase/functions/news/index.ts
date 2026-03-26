@@ -158,6 +158,31 @@ async function fetchFeed(url: string, source: string, category: string): Promise
   }
 }
 
+const SECTOR_KEYWORDS = [
+  "inşaat", "beton", "çimento", "demir", "donatı", "kalıp", "iskele",
+  "yapı", "konut", "bina", "deprem", "yönetmelik", "imar", "ruhsat",
+  "mühendis", "mimar", "müteahhit", "şantiye", "temel", "kolon", "kiriş",
+  "perde", "döşeme", "çelik", "betonarme", "prefabrik", "güçlendirme",
+  "kentsel dönüşüm", "altyapı", "üstyapı", "kanal", "köprü", "tünel",
+  "baraj", "yol", "asfalt", "zemin", "sondaj", "kazık", "istinat",
+  "yalıtım", "izolasyon", "mantolama", "tesisat", "sıhhi", "mekanik",
+  "enerji kimlik", "ekb", "ts 500", "tbdy", "afad",
+  "tmmob", "imo", "yapı denetim", "fenni mesul", "proje müellif",
+  "metraj", "keşif", "hakediş", "ihale", "kamu", "toki",
+  "emlak", "gayrimenkul", "arsa", "parsel", "tapu", "kadastro",
+  "çatı", "cephe", "duvar", "tuğla", "agrega", "kum", "çakıl",
+  "vinç", "ekskavatör", "iş makinesi", "hafriyat",
+];
+
+function classifySectorRelevance(item: NewsItem): string {
+  // Already mevzuat or duyuru → keep as is
+  if (item.category === "mevzuat" || item.category === "duyuru") return item.category;
+
+  const text = `${item.title} ${item.snippet}`.toLocaleLowerCase("tr");
+  const isSector = SECTOR_KEYWORDS.some((kw) => text.includes(kw));
+  return isSector ? "sektör" : "genel";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -192,6 +217,11 @@ serve(async (req) => {
 
     console.log(`Fetched ${allItems.length} total items from feeds`);
 
+    // Classify sector relevance for "sektör" tagged items
+    for (const item of allItems) {
+      item.category = classifySectorRelevance(item);
+    }
+
     // If no RSS feeds returned data, provide curated fallback
     if (allItems.length === 0) {
       const now = new Date().toISOString();
@@ -219,28 +249,12 @@ serve(async (req) => {
           source: "İnşaat Noktası",
           category: "sektör",
           snippet: "İnşaat malzeme fiyatlarındaki son gelişmeler ve piyasa analizi.",
-        },
-        {
-          title: "Kentsel Dönüşüm Projelerinde Son Durum",
-          link: "https://www.csb.gov.tr",
-          date: now,
-          source: "Çevre ve Şehircilik Bakanlığı",
-          category: "mevzuat",
-          snippet: "Kentsel dönüşüm kapsamında devam eden projeler ve yeni düzenlemeler.",
-        },
-        {
-          title: "İş Güvenliği Yönetmeliğinde Yapılan Değişiklikler",
-          link: "https://www.resmigazete.gov.tr",
-          date: now,
-          source: "Resmi Gazete",
-          category: "mevzuat",
-          snippet: "Şantiye iş güvenliği ve işçi sağlığı konusundaki yönetmelik güncellemeleri.",
         }
       );
     }
 
     allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const news = allItems.slice(0, 50);
+    const news = allItems.slice(0, 60);
 
     return new Response(
       JSON.stringify({ news, total: news.length, fetched_at: new Date().toISOString() }),
