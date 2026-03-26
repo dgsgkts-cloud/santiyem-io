@@ -70,14 +70,18 @@ function EventCard({ event }: { event: EventItem }) {
 const EventsPanel = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadEvents = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchEvents();
       setEvents(data.events);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Etkinlikler alınamadı");
+      const msg = e instanceof Error ? e.message : "Etkinlikler alınamadı";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
