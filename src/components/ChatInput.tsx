@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 export interface Attachment {
   base64: string;
   name: string;
-  type: "image" | "pdf" | "dwg";
+  type: "image" | "pdf";
   preview?: string;
 }
 
@@ -41,13 +41,12 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     Array.from(files).forEach((file) => {
       if (file.size > 10 * 1024 * 1024) return;
       const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
-      const isDwg = file.name.toLowerCase().endsWith(".dwg") || file.name.toLowerCase().endsWith(".dxf");
-      if (!allowed.includes(file.type) && !isDwg) return;
+      if (!allowed.includes(file.type)) return;
 
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = (reader.result as string).split(",")[1];
-        const fileType = isDwg ? "dwg" : file.type.includes("pdf") ? "pdf" : "image";
+        const fileType = file.type.includes("pdf") ? "pdf" : "image";
         const preview = fileType === "image" ? (reader.result as string) : undefined;
         setAttachments((prev) => [...prev, { base64, name: file.name, type: fileType, preview }]);
       };
