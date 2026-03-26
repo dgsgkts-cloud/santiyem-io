@@ -23,9 +23,9 @@ function parseEventsFromHtml(html: string): EventItem[] {
   let currentDate = "";
   
   // Find all date headers and event links
-  // rsDateHeader: <a href="...#2026-03-15" title="..." class="rsDateHeader">
+  // rsDateHeader: <a href="#2026-03-01" title="..." class="rsDateHeader">
   // Event links: <a target="_blank" href="https://www.imo.org.tr/TR,XXXXX/...">TITLE</a>
-  const tokenRegex = /href="[^#]*#(\d{4}-\d{2}-\d{2})"[^>]*class="rsDateHeader"|<a[^>]*target="_blank"[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+  const tokenRegex = /href="#(\d{4}-\d{2}-\d{2})"[^>]*class="rsDateHeader"|<a[^>]*target="_blank"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
   let m;
   
   while ((m = tokenRegex.exec(html)) !== null) {
