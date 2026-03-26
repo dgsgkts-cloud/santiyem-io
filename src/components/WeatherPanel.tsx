@@ -24,8 +24,8 @@ function formatDate(dateStr: string): { day: string; date: string } {
 }
 
 function getWeatherIcon(icon: string) {
-  if (icon.includes("01") || icon.includes("02")) return <Sun className="w-8 h-8 text-amber-500" />;
-  if (icon.includes("09") || icon.includes("10")) return <CloudRain className="w-8 h-8 text-blue-500" />;
+  if (icon.includes("01") || icon.includes("02")) return <Sun className="w-8 h-8 text-accent" />;
+  if (icon.includes("09") || icon.includes("10")) return <CloudRain className="w-8 h-8 text-primary" />;
   return <Cloud className="w-8 h-8 text-muted-foreground" />;
 }
 
@@ -66,7 +66,7 @@ function ForecastCard({ day, isToday }: { day: ForecastDay; isToday: boolean }) 
           </span>
         </div>
         <div className="flex items-center justify-center gap-1">
-          <Droplets className="w-3 h-3 text-blue-400" />
+          <Droplets className="w-3 h-3 text-primary" />
           <span className="text-[10px] text-muted-foreground">%{Math.round(day.rain_probability)}</span>
           <Wind className="w-3 h-3 text-muted-foreground ml-1" />
           <span className="text-[10px] text-muted-foreground">{Math.round(day.wind_speed)}km/s</span>
