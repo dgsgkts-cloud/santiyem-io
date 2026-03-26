@@ -132,7 +132,48 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
   }
 }
 
-async function fetchFeed(url: string, source: string, category: string): Promise<NewsItem[]> {
+async function scrapeResmiGazete(): Promise<NewsItem[]> {
+  try {
+    const resp = await fetch("https://www.resmigazete.gov.tr/default.aspx", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; MuhendisAI/1.0)", Accept: "text/html" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const items: NewsItem[] = [];
+
+    // Extract date from page
+    const dateMatch = html.match(/(\d{1,2}\s+\w+\s+\d{4})\s+Tarihli/);
+    const dateStr = dateMatch ? dateMatch[1] : "";
+
+    // Find all links to resmigazete items (yönetmelik, tebliğ, karar etc.)
+    const linkRegex = /<a[^>]*href="(https?:\/\/www\.resmigazete\.gov\.tr\/eskiler\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m;
+    while ((m = linkRegex.exec(html)) !== null) {
+      const link = m[1];
+      let title = m[2].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+      // Remove leading dash
+      title = title.replace(/^––\s*/, "").replace(/^–\s*/, "").trim();
+      if (!title || title.length < 15) continue;
+
+      items.push({
+        title,
+        link,
+        date: new Date().toISOString(),
+        source: "Resmi Gazete",
+        category: "mevzuat",
+        snippet: dateStr ? `${dateStr} tarihli Resmi Gazete'de yayımlandı.` : "",
+      });
+    }
+
+    console.log(`Scraped ${items.length} Resmi Gazete items`);
+    return items.slice(0, 15); // Top 15
+  } catch (e) {
+    console.error("Resmi Gazete scrape error:", e);
+    return [];
+  }
+}
+
   try {
     const resp = await fetch(url, {
       headers: {
