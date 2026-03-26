@@ -228,26 +228,19 @@ serve(async (req) => {
   try {
     const feeds = [
       { url: "https://www.csb.gov.tr/rss", source: "Çevre ve Şehircilik Bakanlığı", category: "mevzuat" },
-      { url: "https://www.afad.gov.tr/rss", source: "AFAD", category: "mevzuat" },
-      { url: "https://www.insaatnoktasi.com/rss", source: "İnşaat Noktası", category: "sektör" },
       { url: "https://www.yapi.com.tr/rss/haberler.xml", source: "Yapı Dergisi", category: "sektör" },
       { url: "https://www.emlakkulisi.com/rss", source: "Emlak Kulisi", category: "sektör" },
       { url: "https://www.ekonomist.com.tr/rss", source: "Ekonomist", category: "sektör" },
-      { url: "https://www.isguvenligi.net/feed/", source: "İSG Güvenliği", category: "duyuru" },
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
-      { url: "https://www.enerjigunlugu.net/rss.xml", source: "Enerji Günlüğü", category: "sektör" },
-      { url: "https://www.tmmob.org.tr/rss/etkinlikler", source: "TMMOB Etkinlikler", category: "duyuru" },
-      { url: "https://www.tmmob.org.tr/rss/haberler", source: "TMMOB Haberler", category: "duyuru" },
-      { url: "https://www.imo.org.tr/TR/RSS/1/tum-haberler.rss", source: "İnşaat Müh. Odası", category: "duyuru" },
-      { url: "https://www.mmotmmob.org.tr/rss", source: "Makina Müh. Odası", category: "duyuru" },
     ];
 
-    const [rssResults, imoNews] = await Promise.all([
+    const [rssResults, imoNews, rgNews] = await Promise.all([
       Promise.allSettled(feeds.map((f) => fetchFeed(f.url, f.source, f.category))),
       scrapeImoNews(),
+      scrapeResmiGazete(),
     ]);
 
-    const allItems: NewsItem[] = [...imoNews];
+    const allItems: NewsItem[] = [...imoNews, ...rgNews];
     for (const r of rssResults) {
       if (r.status === "fulfilled") allItems.push(...r.value);
     }
