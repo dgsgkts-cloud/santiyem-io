@@ -149,7 +149,7 @@ const NewsPanel = () => {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Haberlerde ara... (ör. deprem, beton, imar)"
+          placeholder="Haberlerde ara..."
           className="w-full rounded-lg border border-input bg-background pl-9 pr-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </div>
