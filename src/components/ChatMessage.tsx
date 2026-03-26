@@ -1,14 +1,16 @@
-import { HardHat, User } from "lucide-react";
+import { HardHat, User, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import type { Attachment } from "./ChatInput";
 
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  attachments?: Attachment[];
 }
 
 const ChatMessage = ({ message }: { message: Message }) => {
@@ -32,6 +34,24 @@ const ChatMessage = ({ message }: { message: Message }) => {
           isUser ? "message-user" : "message-ai"
         }`}
       >
+        {/* Show attachments for user messages */}
+        {isUser && message.attachments && message.attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {message.attachments.map((att, idx) => (
+              <div key={idx}>
+                {att.preview ? (
+                  <img src={att.preview} alt={att.name} className="max-w-[200px] max-h-[150px] rounded-lg object-cover" />
+                ) : (
+                  <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    <span className="text-xs">{att.name}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {isUser ? (
           <span className="whitespace-pre-wrap">{message.content}</span>
         ) : (

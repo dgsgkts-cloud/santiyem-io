@@ -298,6 +298,22 @@ serve(async (req) => {
       );
     }
 
+    // Build messages with multimodal support
+    const formattedMessages = messages.map((m: { role: string; content: string; attachments?: { base64: string; type: string }[] }) => {
+      if (m.attachments && m.attachments.length > 0) {
+        const contentParts: any[] = [{ type: "text", text: m.content }];
+        for (const att of m.attachments) {
+          const mimeType = att.type === "pdf" ? "application/pdf" : "image/png";
+          contentParts.push({
+            type: "image_url",
+            image_url: { url: `data:${mimeType};base64,${att.base64}` },
+          });
+        }
+        return { role: m.role, content: contentParts };
+      }
+      return { role: m.role, content: m.content };
+    });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -308,10 +324,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...messages.map((m: { role: string; content: string }) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          ...formattedMessages,
         ],
         stream: true,
       }),
