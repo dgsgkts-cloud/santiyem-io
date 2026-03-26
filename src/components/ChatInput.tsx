@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 export interface Attachment {
   base64: string;
   name: string;
-  type: "image" | "pdf";
+  type: "image" | "pdf" | "dwg";
   preview?: string;
 }
 
