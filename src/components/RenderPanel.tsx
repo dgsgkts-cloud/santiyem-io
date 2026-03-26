@@ -109,7 +109,7 @@ const RenderPanel = () => {
       <div>
         <h2 className="text-lg font-bold text-foreground mb-1">🎨 AI Mimari Render</h2>
         <p className="text-sm text-muted-foreground">
-          Bina fotoğrafı veya proje dosyası yükleyin, prompt yazın — AI sizin için render oluştursun.
+          Referans fotoğrafı veya proje dosyası yüklerseniz sistem artık kat sayısı, balkon yerleri ve cephe oranlarını koruyup sadece render kalitesini iyileştirir.
         </p>
       </div>
 
