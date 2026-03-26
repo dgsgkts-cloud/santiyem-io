@@ -110,6 +110,10 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
       if (seen.has(link)) continue;
       seen.add(link);
 
+      // Extract snippet from text after bold
+      const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
+      const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").replace(/\s+/g, " ").trim().slice(0, 200);
+
       // Try to extract date from snippet text (e.g. "12.03.2026", "12 Mart 2026")
       const fullText = block.replace(/<[^>]*>/g, " ");
       const dateRegex = /(\d{1,2})[.\s]+((?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)|\d{1,2})[.\s]+(\d{4})/i;
