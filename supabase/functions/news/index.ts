@@ -78,6 +78,60 @@ function extractItemsFromRss(xml: string, source: string, category: string): New
   return items;
 }
 
+async function scrapeImoNews(): Promise<NewsItem[]> {
+  try {
+    const resp = await fetch("https://www.imo.org.tr/TR,75842/genel-merkez-guncel-haberler.html", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; MuhendisAI/1.0)", Accept: "text/html" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const items: NewsItem[] = [];
+
+    // Each news item is a table row linking to a detail page with bold title and optional description
+    const blockRegex = /href="(https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]+)"[^>]*>\s*\|[^|]*\|[^|]*\|\s*\*\*([^*]+)\*\*/g;
+    // Fallback: match <a> tags with bold titles in table cells
+    const linkRegex = /<a[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,(\d+)\/[^"]+)"[^>]*>[\s\S]*?<\/a>/g;
+    const titleRegex = /<b>([\s\S]*?)<\/b>|<strong>([\s\S]*?)<\/strong>/;
+
+    // Strategy: find table cells with images + bold text + links
+    const cellRegex = /<a[^>]*href="(https:\/\/www\.imo\.org\.tr\/TR,\d+\/[^"]*)"[^>]*>\s*<table[\s\S]*?<\/table>\s*<\/a>/gi;
+    let cm;
+    while ((cm = cellRegex.exec(html)) !== null) {
+      const link = cm[1];
+      const block = cm[0];
+
+      // Skip navigation links
+      if (link.includes("genel-merkez-guncel-haberler")) continue;
+
+      // Extract bold title
+      const boldMatch = block.match(/<b>([\s\S]*?)<\/b>/i) || block.match(/<strong>([\s\S]*?)<\/strong>/i);
+      if (!boldMatch) continue;
+      const title = boldMatch[1].replace(/<[^>]*>/g, "").trim();
+      if (!title || title.length < 10) continue;
+
+      // Extract description text after the bold title
+      const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
+      const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").trim().slice(0, 200);
+
+      items.push({
+        title,
+        link,
+        date: new Date().toISOString(),
+        source: "İMO Güncel",
+        category: "duyuru",
+        snippet,
+      });
+    }
+
+    console.log(`Scraped ${items.length} IMO news items`);
+    return items;
+  } catch (e) {
+    console.error("IMO scrape error:", e);
+    return [];
+  }
+}
+
 async function fetchFeed(url: string, source: string, category: string): Promise<NewsItem[]> {
   try {
     const resp = await fetch(url, {
