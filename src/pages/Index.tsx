@@ -6,15 +6,16 @@ import TypingIndicator from "@/components/TypingIndicator";
 import WeatherPanel from "@/components/WeatherPanel";
 import NewsPanel from "@/components/NewsPanel";
 import EventsPanel from "@/components/EventsPanel";
+import CalculatorsPanel from "@/components/CalculatorsPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar } from "lucide-react";
+import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -131,6 +132,17 @@ const Index = () => {
               <Calendar className="w-3.5 h-3.5" />
               Etkinlikler
             </button>
+            <button
+              onClick={() => setActiveTab("calc")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "calc"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <Calculator className="w-3.5 h-3.5" />
+              Hesap
+            </button>
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
@@ -161,8 +173,10 @@ const Index = () => {
           <WeatherPanel />
         ) : activeTab === "news" ? (
           <NewsPanel />
-        ) : (
+        ) : activeTab === "events" ? (
           <EventsPanel />
+        ) : (
+          <CalculatorsPanel />
         )}
       </div>
 
