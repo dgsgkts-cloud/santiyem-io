@@ -311,7 +311,7 @@ serve(async (req) => {
     }
 
     allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const news = allItems.slice(0, 60);
+    const news = allItems.slice(0, 100);
 
     return new Response(
       JSON.stringify({ news, total: news.length, fetched_at: new Date().toISOString() }),
