@@ -23,15 +23,20 @@ const RenderPanel = () => {
     }
 
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Desteklenen formatlar: PNG, JPG, WebP, PDF");
+    const isDwg = file.name.toLowerCase().endsWith(".dwg") || file.name.toLowerCase().endsWith(".dxf");
+    if (!allowedTypes.includes(file.type) && !isDwg) {
+      toast.error("Desteklenen formatlar: PNG, JPG, WebP, PDF, DWG, DXF");
       return;
+    }
+
+    if (isDwg) {
+      toast.info("DWG/DXF dosyası yüklendi. En iyi sonuç için CAD yazılımınızdan PDF veya görsel export almanız önerilir.", { duration: 5000 });
     }
 
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
-      const fileType = file.type.includes("pdf") ? "pdf" : "image";
+      const fileType = isDwg ? "dwg" : file.type.includes("pdf") ? "pdf" : "image";
       const preview = fileType === "image" ? (reader.result as string) : undefined;
       setUploadedFile({ base64, name: file.name, type: fileType, preview });
     };
@@ -124,7 +129,7 @@ const RenderPanel = () => {
               )}
               <div className="text-left">
                 <p className="text-sm font-medium text-foreground">{uploadedFile.name}</p>
-                <p className="text-xs text-muted-foreground">{uploadedFile.type === "pdf" ? "PDF Dosyası" : "Görsel"}</p>
+                <p className="text-xs text-muted-foreground">{uploadedFile.type === "pdf" ? "PDF Dosyası" : uploadedFile.type === "dwg" ? "DWG/DXF Dosyası" : "Görsel"}</p>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setUploadedFile(null); }}
@@ -136,15 +141,15 @@ const RenderPanel = () => {
           ) : (
             <div className="space-y-2">
               <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Fotoğraf, PDF veya proje dosyası yükleyin</p>
-              <p className="text-xs text-muted-foreground">PNG, JPG, WebP, PDF — Maks 10MB</p>
+              <p className="text-sm text-muted-foreground">Fotoğraf, PDF, DWG veya DXF dosyası yükleyin</p>
+              <p className="text-xs text-muted-foreground">PNG, JPG, WebP, PDF, DWG, DXF — Maks 10MB</p>
             </div>
           )}
         </div>
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,application/pdf"
+          accept="image/png,image/jpeg,image/webp,application/pdf,.dwg,.dxf"
           onChange={handleFileUpload}
           className="hidden"
         />
