@@ -174,6 +174,7 @@ async function scrapeResmiGazete(): Promise<NewsItem[]> {
   }
 }
 
+async function fetchFeed(url: string, source: string, category: string): Promise<NewsItem[]> {
   try {
     const resp = await fetch(url, {
       headers: {
