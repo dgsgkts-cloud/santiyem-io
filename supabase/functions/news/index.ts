@@ -114,10 +114,27 @@ async function scrapeImoNews(): Promise<NewsItem[]> {
       const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
       const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").replace(/\s+/g, " ").trim().slice(0, 200);
 
+      // Try to extract date from snippet text (e.g. "12.03.2026", "12 Mart 2026")
+      const fullText = block.replace(/<[^>]*>/g, " ");
+      const dateRegex = /(\d{1,2})[.\s]+((?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)|\d{1,2})[.\s]+(\d{4})/i;
+      const dateFound = fullText.match(dateRegex);
+      let itemDate: string;
+      if (dateFound) {
+        const months: Record<string, number> = { ocak: 0, şubat: 1, mart: 2, nisan: 3, mayıs: 4, haziran: 5, temmuz: 6, ağustos: 7, eylül: 8, ekim: 9, kasım: 10, aralık: 11 };
+        const day = parseInt(dateFound[1]);
+        const monthStr = dateFound[2].toLowerCase();
+        const month = months[monthStr] !== undefined ? months[monthStr] : parseInt(dateFound[2]) - 1;
+        const year = parseInt(dateFound[3]);
+        itemDate = new Date(year, month, day).toISOString();
+      } else {
+        // No date found — leave empty string so frontend shows nothing instead of "0 dk önce"
+        itemDate = "";
+      }
+
       items.push({
         title,
         link,
-        date: new Date().toISOString(),
+        date: itemDate,
         source: "İMO Güncel",
         category: "duyuru",
         snippet,

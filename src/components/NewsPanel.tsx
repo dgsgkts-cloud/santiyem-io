@@ -13,13 +13,17 @@ const CATEGORY_MAP: Record<string, { label: string; icon: React.ReactNode; color
 function timeAgo(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
+  if (diffMins < 2) return "Az önce";
   if (diffMins < 60) return `${diffMins} dk önce`;
   if (diffHours < 24) return `${diffHours} saat önce`;
+  if (diffDays < 1) return "Bugün";
+  if (diffDays === 1) return "Dün";
   if (diffDays < 7) return `${diffDays} gün önce`;
   return date.toLocaleDateString("tr-TR");
 }
