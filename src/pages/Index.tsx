@@ -5,118 +5,8 @@ import ChatInput from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
 import logo from "@/assets/muhendis-logo.png";
 import { RotateCcw } from "lucide-react";
-
-const SYSTEM_PROMPT = `Sen MühendisAI'sın — Türk mimar, mühendis ve müteahhitler için özelleştirilmiş bir yapay zeka asistanısın.
-
-Türkiye inşaat, mimarlık ve mühendislik sektörüne özel bilgi birikimine sahipsin. Türk yapı mevzuatını (TBDY 2018, Bina Yönetmeliği, İmar Kanunu, TS standartları) iyi biliyorsun. Cevaplarını her zaman Türkçe, sade ve teknik ama anlaşılır dilde veriyorsun.
-
-Kurallar:
-- Soruyu kısaca özetle, sonra detaylı cevapla
-- Mevzuat sorularında madde numarası ve yönetmelik adını belirt
-- Hesaplama sorularında adım adım göster
-- Madde madde listeler kullan
-- Her cevabın sonuna ekle: "⚠️ Not: Bu bilgi genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız."
-- Kesin yapısal hesap sonucu verme
-- Pratik ve özlü ol`;
-
-// Simulated AI response for demo
-const getSimulatedResponse = (userMessage: string): string => {
-  if (userMessage.toLowerCase().includes("tbdy") || userMessage.toLowerCase().includes("deprem")) {
-    return `**Deprem Yükü Hesabı — TBDY 2018 Genel Yaklaşım**
-
-TBDY 2018'e göre deprem etkisi altında bina tasarımı için temel adımlar:
-
-**1. Deprem Tehlikesinin Belirlenmesi**
-- AFAD Deprem Tehlike Haritaları İnteraktif Web Uygulaması üzerinden konum bazlı spektral ivme katsayıları (SS, S1) belirlenir.
-- Zemin sınıfına göre yerel zemin etki katsayıları (FS, F1) uygulanır.
-
-**2. Tasarım Spektrumunun Oluşturulması (Madde 2.3)**
-- SDS = SS × FS (kısa periyot tasarım spektral ivme katsayısı)
-- SD1 = S1 × F1 (1 sn periyot tasarım spektral ivme katsayısı)
-
-**3. Bina Önem Katsayısı (Madde 3.1, Tablo 3.1)**
-- I = 1.0 (konutlar), I = 1.2 (okullar, hastaneler), I = 1.5 (afet sonrası kullanım)
-
-**4. Taşıyıcı Sistem Davranış Katsayısı (R)**
-- Betonarme çerçeve: R = 8
-- Perdeli sistem: R = 6-7
-- Çelik çerçeve: R = 8
-
-**5. Eşdeğer Deprem Yükü Yöntemi (Madde 4.7)**
-- Vt = (SaR(T1) / R) × W × I
-- T1: Birinci doğal titreşim periyodu
-- W: Toplam ağırlık
-
-📌 Detaylı hesap için yapı modelleme programları (ETABS, SAP2000, ideCAD) kullanılması önerilir.
-
-⚠️ Not: Bu bilgi genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız.`;
-  }
-
-  if (userMessage.toLowerCase().includes("taks") || userMessage.toLowerCase().includes("kaks") || userMessage.toLowerCase().includes("imar")) {
-    return `**TAKS ve KAKS Hesaplama Rehberi**
-
-**TAKS (Taban Alanı Kat Sayısı)**
-- Tanım: Binanın taban alanının parsel alanına oranı
-- Formül: TAKS = Taban Alanı / Parsel Alanı
-- Örnek: 500 m² parsel, TAKS = 0.40 → Taban alanı max 200 m²
-
-**KAKS (Kat Alanı Kat Sayısı) / Emsal**
-- Tanım: Toplam inşaat alanının parsel alanına oranı
-- Formül: KAKS = Toplam İnşaat Alanı / Parsel Alanı
-- Örnek: 500 m² parsel, KAKS = 2.0 → Toplam max 1000 m²
-
-**Emsale Dahil Olmayan Alanlar (İmar Yönetmeliği Madde 5):**
-- Sığınak
-- Otopark (parsel ihtiyacı kadar)
-- Yangın merdiveni
-- Asansör boşluğu
-- Ortak alan kapıcı dairesi (max 75 m²)
-
-| Parametre | TAKS | KAKS |
-|-----------|------|------|
-| Ölçülen | Taban alanı | Tüm katlar toplamı |
-| Bölen | Parsel alanı | Parsel alanı |
-| Kontrol eder | Bahçe mesafeleri | Toplam yapılaşma |
-
-⚠️ Not: Bu bilgi genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız.`;
-  }
-
-  if (userMessage.toLowerCase().includes("ts 825") || userMessage.toLowerCase().includes("yalıtım")) {
-    return `**TS 825 Yalıtım Kalınlığı Belirleme**
-
-**1. Derece-Gün Bölgesi Belirleme**
-- Türkiye 4 iklim bölgesine ayrılır (güncel TS 825:2024)
-- Binanın bulunduğu ilin HDD (Heating Degree Day) değeri alınır
-
-**2. U Değeri Limitleri (TS 825 Tablo 1)**
-
-| Bileşen | 1. Bölge | 2. Bölge | 3. Bölge | 4. Bölge |
-|---------|----------|----------|----------|----------|
-| Dış Duvar | 0.66 | 0.57 | 0.48 | 0.40 |
-| Çatı | 0.43 | 0.38 | 0.28 | 0.22 |
-| Taban | 0.66 | 0.57 | 0.48 | 0.40 |
-
-**3. Kalınlık Hesabı**
-- d = λ × (1/Uistenen - Rdiğer)
-- λ: Yalıtım malzemesi iletkenlik katsayısı (W/mK)
-- XPS: λ ≈ 0.035, EPS: λ ≈ 0.040, Taş yünü: λ ≈ 0.040
-
-📌 BEP-TR hesap programı ile resmi hesaplama yapılması zorunludur.
-
-⚠️ Not: Bu bilgi genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız.`;
-  }
-
-  return `Sorunuz alındı. Size bu konuda yardımcı olmaya çalışayım.
-
-Bu konu hakkında daha detaylı bilgi verebilmem için lütfen şunları belirtin:
-- **Proje türü:** Konut, ticari, endüstriyel?
-- **Konum:** Hangi il/ilçe?
-- **Detay:** Hangi spesifik konuda yardım istiyorsunuz?
-
-Böylece size daha doğru ve mevzuata uygun bilgi sunabilirim.
-
-⚠️ Not: Bu bilgi genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız.`;
-};
+import { streamChat } from "@/lib/streamChat";
+import { toast } from "sonner";
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -138,16 +28,40 @@ const Index = () => {
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
-    // Simulate AI delay
-    await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
+    let assistantContent = "";
+    const assistantId = (Date.now() + 1).toString();
 
-    const aiMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: getSimulatedResponse(text),
-    };
-    setIsTyping(false);
-    setMessages((prev) => [...prev, aiMsg]);
+    const chatMessages = [...messages, userMsg].map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+    try {
+      await streamChat({
+        messages: chatMessages,
+        onDelta: (chunk) => {
+          assistantContent += chunk;
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant" && last.id === assistantId) {
+              return prev.map((m, i) =>
+                i === prev.length - 1 ? { ...m, content: assistantContent } : m
+              );
+            }
+            return [...prev, { id: assistantId, role: "assistant", content: assistantContent }];
+          });
+        },
+        onDone: () => setIsTyping(false),
+        onError: (error) => {
+          setIsTyping(false);
+          toast.error(error);
+        },
+      });
+    } catch (e) {
+      setIsTyping(false);
+      toast.error("Bağlantı hatası oluştu.");
+      console.error(e);
+    }
   };
 
   const handleReset = () => {
