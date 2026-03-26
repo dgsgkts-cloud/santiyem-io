@@ -132,6 +132,17 @@ const Index = () => {
               <Calendar className="w-3.5 h-3.5" />
               Etkinlikler
             </button>
+            <button
+              onClick={() => setActiveTab("calc")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === "calc"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <Calculator className="w-3.5 h-3.5" />
+              Hesap
+            </button>
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
