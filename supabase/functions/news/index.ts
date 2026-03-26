@@ -274,15 +274,28 @@ serve(async (req) => {
 
     console.log(`Fetched ${allItems.length} total items from feeds`);
 
-    // Classify sector relevance for "sektör" tagged items
-    for (const item of allItems) {
+    // Deduplicate by title similarity
+    const seen = new Set<string>();
+    const dedupedItems = allItems.filter((item) => {
+      const key = item.title.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
+      if (seen.has(key)) return false;
+      // Also check shortened key (first 60 chars) to catch near-duplicates
+      const shortKey = key.slice(0, 60);
+      if (seen.has(shortKey)) return false;
+      seen.add(key);
+      seen.add(shortKey);
+      return true;
+    });
+
+    // Classify sector relevance
+    for (const item of dedupedItems) {
       item.category = classifySectorRelevance(item);
     }
 
     // If no RSS feeds returned data, provide curated fallback
-    if (allItems.length === 0) {
+    if (dedupedItems.length === 0) {
       const now = new Date().toISOString();
-      allItems.push(
+      dedupedItems.push(
         {
           title: "TBDY 2018 Deprem Yönetmeliği Güncellemeleri",
           link: "https://www.resmigazete.gov.tr",
@@ -310,8 +323,8 @@ serve(async (req) => {
       );
     }
 
-    allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const news = allItems.slice(0, 100);
+    dedupedItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const news = dedupedItems.slice(0, 100);
 
     return new Response(
       JSON.stringify({ news, total: news.length, fetched_at: new Date().toISOString() }),
