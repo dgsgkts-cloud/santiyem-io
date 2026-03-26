@@ -245,11 +245,20 @@ serve(async (req) => {
 
   try {
     const feeds = [
+      // Mevzuat
       { url: "https://www.csb.gov.tr/rss", source: "Çevre ve Şehircilik Bakanlığı", category: "mevzuat" },
+      // Sektör - Mühendislik & İnşaat
       { url: "https://www.yapi.com.tr/rss/haberler.xml", source: "Yapı Dergisi", category: "sektör" },
       { url: "https://www.emlakkulisi.com/rss", source: "Emlak Kulisi", category: "sektör" },
-      { url: "https://www.ekonomist.com.tr/rss", source: "Ekonomist", category: "sektör" },
       { url: "https://www.arkitera.com/feed/", source: "Arkitera", category: "sektör" },
+      // Teknoloji & Mühendislik
+      { url: "https://www.donanimhaber.com/rss/tum/", source: "DonanımHaber", category: "genel" },
+      // Ana akım haber ajansları - Genel haberler
+      { url: "https://www.hurriyet.com.tr/rss/gundem", source: "Hürriyet", category: "genel" },
+      { url: "https://www.hurriyet.com.tr/rss/ekonomi", source: "Hürriyet Ekonomi", category: "genel" },
+      { url: "https://www.milliyet.com.tr/rss/rssNew/gundemRss.xml", source: "Milliyet", category: "genel" },
+      { url: "https://www.milliyet.com.tr/rss/rssNew/ekonomiRss.xml", source: "Milliyet Ekonomi", category: "genel" },
+      { url: "https://www.dha.com.tr/rss/", source: "DHA", category: "genel" },
     ];
 
     const [rssResults, imoNews, rgNews] = await Promise.all([
