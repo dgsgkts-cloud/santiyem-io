@@ -78,6 +78,60 @@ function extractItemsFromRss(xml: string, source: string, category: string): New
   return items;
 }
 
+async function scrapeImoNews(): Promise<NewsItem[]> {
+  try {
+    const resp = await fetch("https://www.imo.org.tr/TR,75842/genel-merkez-guncel-haberler.html", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; MuhendisAI/1.0)", Accept: "text/html" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const items: NewsItem[] = [];
+    const seen = new Set<string>();
+
+    // Find all <a> blocks that link to IMO article pages and contain <b> or <strong>
+    const aRegex = /<a[^>]*href="((?:https?:\/\/www\.imo\.org\.tr)?\/TR,(\d+)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let cm;
+    while ((cm = aRegex.exec(html)) !== null) {
+      const rawLink = cm[1];
+      const block = cm[3];
+
+      // Must contain bold text (the title)
+      const boldMatch = block.match(/<b>([\s\S]*?)<\/b>/i) || block.match(/<strong>([\s\S]*?)<\/strong>/i);
+      if (!boldMatch) continue;
+
+      const title = boldMatch[1].replace(/<[^>]*>/g, "").trim();
+      if (!title || title.length < 10) continue;
+
+      const link = rawLink.startsWith("http") ? rawLink : `https://www.imo.org.tr${rawLink}`;
+      
+      // Skip nav/self links
+      if (link.includes("genel-merkez-guncel-haberler") || link.includes("ana-sayfa") || link.includes("iletisim")) continue;
+      if (seen.has(link)) continue;
+      seen.add(link);
+
+      // Extract snippet from text after bold
+      const afterBold = block.substring(block.indexOf(boldMatch[0]) + boldMatch[0].length);
+      const snippet = afterBold.replace(/<[^>]*>/g, "").replace(/Detaylar İçin Tıklayınız\s*»?/gi, "").replace(/\s+/g, " ").trim().slice(0, 200);
+
+      items.push({
+        title,
+        link,
+        date: new Date().toISOString(),
+        source: "İMO Güncel",
+        category: "duyuru",
+        snippet,
+      });
+    }
+
+    console.log(`Scraped ${items.length} IMO news items`);
+    return items;
+  } catch (e) {
+    console.error("IMO scrape error:", e);
+    return [];
+  }
+}
+
 async function fetchFeed(url: string, source: string, category: string): Promise<NewsItem[]> {
   try {
     const resp = await fetch(url, {
@@ -126,12 +180,13 @@ serve(async (req) => {
       { url: "https://www.mmotmmob.org.tr/rss", source: "Makina Müh. Odası", category: "duyuru" },
     ];
 
-    const results = await Promise.allSettled(
-      feeds.map((f) => fetchFeed(f.url, f.source, f.category))
-    );
+    const [rssResults, imoNews] = await Promise.all([
+      Promise.allSettled(feeds.map((f) => fetchFeed(f.url, f.source, f.category))),
+      scrapeImoNews(),
+    ]);
 
-    const allItems: NewsItem[] = [];
-    for (const r of results) {
+    const allItems: NewsItem[] = [...imoNews];
+    for (const r of rssResults) {
       if (r.status === "fulfilled") allItems.push(...r.value);
     }
 
