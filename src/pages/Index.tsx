@@ -91,7 +91,7 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
+      {/* Header — logo row */}
       <header className="border-b border-border bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <img src={logo} alt="MühendisAI" className="w-8 h-8 sm:w-9 sm:h-9" />
@@ -100,54 +100,46 @@ const Index = () => {
             <p className="text-[10px] sm:text-[11px] text-muted-foreground hidden sm:block">İnşaat & Mühendislik Asistanı</p>
           </div>
         </div>
-
-        {/* Desktop tab bar */}
-        <div className="hidden md:flex items-center gap-2">
-          <div className="flex rounded-lg border border-border overflow-hidden">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex items-center gap-2">
           {activeTab === "chat" && messages.length > 0 && (
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 sm:px-3 py-1.5 rounded-lg hover:bg-secondary"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Yeni Sohbet
-            </button>
-          )}
-        </div>
-
-        {/* Mobile reset button */}
-        <div className="flex md:hidden items-center gap-2">
-          {activeTab === "chat" && messages.length > 0 && (
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Yeni Sohbet</span>
             </button>
           )}
         </div>
       </header>
 
-      {/* Content area — add bottom padding on mobile for tab bar */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16 md:pb-0">
+      {/* Tab bar — fixed below header, both mobile & desktop */}
+      <div className="border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
+        <div className="flex items-center px-2 sm:px-4 py-1 gap-0.5 sm:gap-1 min-w-max sm:min-w-0 sm:justify-center">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline sm:inline">{tab.shortLabel}</span>
+                <span className="hidden sm:inline xs:hidden">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {activeTab === "chat" ? (
           messages.length === 0 ? (
             <WelcomeScreen onSuggestionClick={handleSend} />
@@ -174,38 +166,10 @@ const Index = () => {
         )}
       </div>
 
-      {/* Chat input - only show in chat tab, with bottom margin on mobile */}
+      {/* Chat input - only show in chat tab */}
       {activeTab === "chat" && (
-        <div className="mb-14 md:mb-0">
-          <ChatInput onSend={handleSend} disabled={isTyping} />
-        </div>
+        <ChatInput onSend={handleSend} disabled={isTyping} />
       )}
-
-      {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50 safe-area-bottom">
-        <div className="flex items-center justify-around px-1 py-1">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg min-w-0 flex-1 transition-colors ${
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
-                <span className={`text-[9px] leading-tight truncate ${isActive ? "font-semibold" : "font-normal"}`}>
-                  {tab.shortLabel}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 };
