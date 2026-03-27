@@ -33,10 +33,10 @@ const PricingPanel = () => {
     {
       id: "pro",
       name: "Profesyonel",
-      price: yearly ? "399₺" : "499₺",
+      price: yearly ? "239₺" : "299₺",
       period: "/ay",
       subtitle: "Serbest mimar, mühendis ve müteahhitler için",
-      yearlyNote: yearly ? "Yıllık 4.788₺ (1.200₺ tasarruf)" : null,
+      yearlyNote: yearly ? "Yıllık 2.868₺ (720₺ tasarruf)" : null,
       badge: "EN POPÜLER",
       featured: true,
       button: { text: "14 Gün Ücretsiz Dene", style: "primary" as const },
@@ -61,16 +61,16 @@ const PricingPanel = () => {
     {
       id: "office",
       name: "Ofis",
-      price: yearly ? "799₺" : "999₺",
+      price: yearly ? "639₺" : "799₺",
       period: "/ay",
       subtitle: "Mühendislik ve mimarlık ofisleri için",
-      yearlyNote: yearly ? "Yıllık 9.588₺ (2.400₺ tasarruf)" : null,
+      yearlyNote: yearly ? "Yıllık 7.668₺ (1.920₺ tasarruf)" : null,
       badge: null,
       featured: false,
       button: { text: "Hemen Başla", style: "outline" as const },
       features: [
         { text: "Pro'daki tüm özellikler", included: true },
-        { text: "5 kullanıcı hesabı", included: true },
+        { text: "3 kullanıcı hesabı", included: true },
         { text: "Ekip proje paylaşımı", included: true },
         { text: "Kullanıcı yetki yönetimi", included: true },
         { text: "Aylık kullanım raporu", included: true },
@@ -85,7 +85,7 @@ const PricingPanel = () => {
     { q: "14 günlük deneme bittikten sonra ne olur?", a: "Otomatik ücretlendirme yapılmaz. İstediğiniz planı seçebilir veya ücretsiz plana geçebilirsiniz." },
     { q: "İstediğim zaman iptal edebilir miyim?", a: "Evet, istediğiniz zaman kolayca iptal edebilirsiniz. İptal sonrası dönem sonuna kadar erişiminiz devam eder." },
     { q: "Fatura kesiliyor mu?", a: "Evet, her ödeme için e-fatura otomatik olarak gönderilir." },
-    { q: "Ofis planında 5'ten fazla kullanıcı ekleyebilir miyim?", a: "5'ten fazla kullanıcı için bizimle iletişime geçin, özel fiyat sunabiliriz." },
+    { q: "Ofis planında 3'ten fazla kullanıcı ekleyebilir miyim?", a: "3'ten fazla kullanıcı için bizimle iletişime geçin, özel fiyat sunabiliriz." },
   ];
 
   return (

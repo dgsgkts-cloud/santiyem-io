@@ -33,7 +33,7 @@ const UpgradeModal = ({ open, onClose, feature }: UpgradeModalProps) => {
             ))}
           </div>
           <Button className="w-full h-11 font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
-            Pro'ya Geç — 499₺/ay
+            Pro'ya Geç — 299₺/ay
           </Button>
           <p className="text-center text-xs text-white/40 mt-2">14 gün ücretsiz deneme</p>
         </div>
