@@ -806,14 +806,14 @@ const ConstructionCostCalculator = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => downloadPDF(result, form)} className="text-xs bg-accent text-accent-foreground hover:bg-accent/90">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Button onClick={() => downloadPDF(result, form)} className="text-xs w-full bg-accent text-accent-foreground hover:bg-accent/90">
               📄 PDF İndir
             </Button>
-            <Button onClick={() => downloadExcel(result, form)} variant="outline" className="text-xs">
+            <Button onClick={() => downloadExcel(result, form)} variant="outline" className="text-xs w-full">
               📊 Excel İndir
             </Button>
-            <Button onClick={() => { setStep(1); setForm({ ...defaultForm }); }} variant="outline" className="text-xs">
+            <Button onClick={() => { setStep(1); setForm({ ...defaultForm }); }} variant="outline" className="text-xs w-full">
               🔄 Yeni Hesaplama
             </Button>
           </div>
