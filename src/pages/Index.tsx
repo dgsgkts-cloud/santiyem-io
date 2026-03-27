@@ -14,10 +14,22 @@ import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator, P
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders";
+
+const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+  { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
+  { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
+  { id: "news", label: "Haberler", shortLabel: "Haber", icon: Newspaper },
+  { id: "events", label: "Etkinlikler", shortLabel: "Etkinlik", icon: Calendar },
+  { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
+  { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
+  { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
+];
+
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders">("chat");
+  const [activeTab, setActiveTab] = useState<Tab>("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -80,94 +92,35 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/60 backdrop-blur-sm px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="MühendisAI" width={36} height={36} />
+      <header className="border-b border-border bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <img src={logo} alt="MühendisAI" className="w-8 h-8 sm:w-9 sm:h-9" />
           <div>
-            <h1 className="text-base font-bold text-foreground leading-tight">MühendisAI</h1>
-            <p className="text-[11px] text-muted-foreground">İnşaat & Mühendislik Asistanı</p>
+            <h1 className="text-sm sm:text-base font-bold text-foreground leading-tight">MühendisAI</h1>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground hidden sm:block">İnşaat & Mühendislik Asistanı</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Tab buttons */}
+
+        {/* Desktop tab bar */}
+        <div className="hidden md:flex items-center gap-2">
           <div className="flex rounded-lg border border-border overflow-hidden">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "chat"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Sohbet
-            </button>
-            <button
-              onClick={() => setActiveTab("weather")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "weather"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <CloudRain className="w-3.5 h-3.5" />
-              Hava Durumu
-            </button>
-            <button
-              onClick={() => setActiveTab("news")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "news"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Newspaper className="w-3.5 h-3.5" />
-              Haberler
-            </button>
-            <button
-              onClick={() => setActiveTab("events")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "events"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              Etkinlikler
-            </button>
-            <button
-              onClick={() => setActiveTab("calc")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "calc"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              Hesap
-            </button>
-            <button
-              onClick={() => setActiveTab("render")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "render"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <Paintbrush className="w-3.5 h-3.5" />
-              Render
-            </button>
-            <button
-              onClick={() => setActiveTab("reminders")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "reminders"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <CalendarClock className="w-3.5 h-3.5" />
-              Hatırlatıcı
-            </button>
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
@@ -179,15 +132,27 @@ const Index = () => {
             </button>
           )}
         </div>
+
+        {/* Mobile reset button */}
+        <div className="flex md:hidden items-center gap-2">
+          {activeTab === "chat" && messages.length > 0 && (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* Content area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      {/* Content area — add bottom padding on mobile for tab bar */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16 md:pb-0">
         {activeTab === "chat" ? (
           messages.length === 0 ? (
             <WelcomeScreen onSuggestionClick={handleSend} />
           ) : (
-            <div className="max-w-3xl mx-auto py-6 px-4 space-y-4">
+            <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
               {messages.map((msg) => (
                 <ChatMessage key={msg.id} message={msg} />
               ))}
@@ -209,8 +174,38 @@ const Index = () => {
         )}
       </div>
 
-      {/* Input - only show in chat tab */}
-      {activeTab === "chat" && <ChatInput onSend={handleSend} disabled={isTyping} />}
+      {/* Chat input - only show in chat tab, with bottom margin on mobile */}
+      {activeTab === "chat" && (
+        <div className="mb-14 md:mb-0">
+          <ChatInput onSend={handleSend} disabled={isTyping} />
+        </div>
+      )}
+
+      {/* Mobile bottom tab bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50 safe-area-bottom">
+        <div className="flex items-center justify-around px-1 py-1">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg min-w-0 flex-1 transition-colors ${
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
+                <span className={`text-[9px] leading-tight truncate ${isActive ? "font-semibold" : "font-normal"}`}>
+                  {tab.shortLabel}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
