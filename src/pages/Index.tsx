@@ -50,6 +50,8 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
 ];
 
 const Index = () => {
+  const { user, plan, signOut } = useUser();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
@@ -233,9 +235,13 @@ const Index = () => {
               <User className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Kullanıcı</p>
-              <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FF6B2B]/20 text-[#FF6B2B]">
-                Pro Plan
+              <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
+              <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                plan === "pro" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
+                plan === "office" ? "bg-blue-500/20 text-blue-400" :
+                "bg-white/10 text-white/50"
+              }`}>
+                {plan === "pro" ? "Pro Plan" : plan === "office" ? "Ofis Plan" : "Ücretsiz"}
               </span>
             </div>
           </div>
@@ -301,6 +307,8 @@ const Index = () => {
           <CalculatorsPanel />
         ) : activeTab === "render" ? (
           <RenderPanel />
+        ) : activeTab === "pricing" ? (
+          <PricingPanel />
         ) : (
           <RemindersPanel />
         )}
