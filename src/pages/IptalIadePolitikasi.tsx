@@ -31,7 +31,7 @@ const sections = [
   },
   {
     title: "Ücretsiz Deneme",
-    content: <p>30 günlük ücretsiz deneme süresi kapsamında herhangi bir ücret alınmaz. Deneme süresi sonunda otomatik ücretlendirme yapılmaz; kullanıcı bilinçli olarak plan seçmelidir.</p>,
+    content: <p>14 günlük ücretsiz deneme süresi kapsamında herhangi bir ücret alınmaz. Deneme süresi sonunda otomatik ücretlendirme yapılmaz; kullanıcı bilinçli olarak plan seçmelidir.</p>,
   },
   {
     title: "Plan Değişikliği",
