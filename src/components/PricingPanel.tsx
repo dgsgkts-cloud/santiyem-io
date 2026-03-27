@@ -28,7 +28,7 @@ const PricingPanel = () => {
         { text: "Piyasa Fiyatları — sınırsız", included: true },
         { text: "Belge Arşivi PDF indirme", included: false },
         { text: "Maliyet Hesaplama PDF/Excel", included: false },
-        { text: "Fiyat uyarısı kurma", included: false },
+        
       ],
     },
     {
@@ -55,7 +55,7 @@ const PricingPanel = () => {
         { text: "Mevzuat Arama — sınırsız", included: true },
         { text: "Günlük Bilgi — sınırsız", included: true },
         { text: "Piyasa Fiyatları — sınırsız", included: true },
-        { text: "Fiyat uyarısı kurma", included: true },
+        
         { text: "1 kullanıcı", included: true },
       ],
     },
