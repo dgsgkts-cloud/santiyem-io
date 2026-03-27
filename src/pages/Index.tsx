@@ -10,6 +10,7 @@ import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
 import PricingPanel from "@/components/PricingPanel";
+import DailyKnowledgePanel from "@/components/DailyKnowledgePanel";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +24,7 @@ import {
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily";
 
 // Desktop tab bar items
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -34,6 +35,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
+  { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
 ];
 
@@ -46,6 +48,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
+  { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
 ];
 
@@ -324,6 +327,8 @@ const Index = () => {
           <RenderPanel />
         ) : activeTab === "pricing" ? (
           <PricingPanel />
+        ) : activeTab === "daily" ? (
+          <DailyKnowledgePanel />
         ) : (
           <RemindersPanel />
         )}
