@@ -272,7 +272,8 @@ function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form:
   // Embed Roboto font for Turkish character support
   doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
   doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "bold");
+  doc.setFont("Roboto", "normal");
 
   doc.setFontSize(16);
   doc.text("İnşaat Maliyet Raporu", 14, 20);
@@ -283,18 +284,25 @@ function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form:
   doc.text(`Toplam Tahmini Maliyet: ${fmt(result.genelToplam)} ₺ (KDV hariç)`, 14, 42);
   doc.text(`m² Birim Maliyet: ${fmt(Math.round(result.genelToplam / (form.toplamAlan || 1)))} ₺/m²`, 14, 49);
 
+  const tableDefaults = {
+    styles: { fontSize: 7, cellPadding: 1.5, font: "Roboto" },
+    headStyles: { fillColor: [232, 89, 12] as [number, number, number], fontSize: 8, font: "Roboto", fontStyle: "bold" as const },
+    didParseCell: (data: any) => {
+      data.cell.styles.font = "Roboto";
+    },
+  };
+
   let y = 58;
   result.groups.forEach(group => {
     if (y > 260) { doc.addPage(); y = 20; }
     autoTable(doc, {
+      ...tableDefaults,
       startY: y,
       head: [[group.baslik, "Miktar", "Birim", "B.Fiyat", "Toplam"]],
       body: [
         ...group.items.map(i => [i.kalem, fmt(i.miktar), i.birim, fmt(i.birimFiyat), fmt(i.toplam) + " ₺"]),
         [{ content: "Grup Toplamı", colSpan: 4, styles: { fontStyle: "bold" } }, { content: fmt(group.toplam) + " ₺", styles: { fontStyle: "bold" } }],
       ],
-      styles: { fontSize: 7, cellPadding: 1.5, font: "Roboto" },
-      headStyles: { fillColor: [232, 89, 12], fontSize: 8, font: "Roboto" },
       theme: "grid",
     });
     y = (doc as any).lastAutoTable.finalY + 6;
@@ -302,18 +310,19 @@ function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form:
 
   if (y > 240) { doc.addPage(); y = 20; }
   autoTable(doc, {
+    ...tableDefaults,
     startY: y,
+    headStyles: { ...tableDefaults.headStyles, fillColor: [37, 99, 235] as [number, number, number] },
     head: [["Grup", "Tutar", "Pay %"]],
     body: [
       ...result.groups.map(g => [g.baslik, fmt(g.toplam) + " ₺", "%" + (g.toplam / result.genelToplam * 100).toFixed(1)]),
       [{ content: "GENEL TOPLAM", styles: { fontStyle: "bold" } }, { content: fmt(result.genelToplam) + " ₺", styles: { fontStyle: "bold" } }, "%100"],
     ],
-    styles: { fontSize: 8, font: "Roboto" },
-    headStyles: { fillColor: [37, 99, 235], font: "Roboto" },
     theme: "grid",
   });
 
   doc.setFontSize(7);
+  doc.setFont("Roboto", "normal");
   doc.text("Çevre ve Şehircilik Bakanlığı 2025 yılı yapı yaklaşık birim maliyetleri esas alınmıştır.", 14, (doc as any).lastAutoTable.finalY + 8);
 
   doc.save(`insaat-maliyet-${Date.now()}.pdf`);
