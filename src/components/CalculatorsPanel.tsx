@@ -6,6 +6,7 @@ import WindSnowCalculator from "./calculators/WindSnowCalculator";
 import TAKSKAKSCalculator from "./calculators/TAKSKAKSCalculator";
 import MaterialEstimator from "./calculators/MaterialEstimator";
 import ThermalBridgeCalculator from "./calculators/ThermalBridgeCalculator";
+import ConstructionCostCalculator from "./calculators/ConstructionCostCalculator";
 
 const TOOLS = [
   { id: "ekb", label: "EKB Hesabı", icon: <Zap className="w-4 h-4" />, desc: "Enerji kimlik belgesi ve TS 825 kontrolü" },
@@ -14,6 +15,7 @@ const TOOLS = [
   { id: "taks", label: "TAKS/KAKS", icon: <Building2 className="w-4 h-4" />, desc: "İmar hesabı ve parsel analizi" },
   { id: "material", label: "Malzeme Tahmini", icon: <Package className="w-4 h-4" />, desc: "Beton, demir, kalıp miktarı" },
   { id: "thermal", label: "Isı Köprüsü", icon: <Thermometer className="w-4 h-4" />, desc: "Doğrusal ısı köprüsü analizi" },
+  { id: "cost", label: "İnşaat Maliyet Hesaplama", icon: <span className="text-base">🏗️</span>, desc: "Bina tipine, kat sayısına ve özelliklerine göre kalem kalem maliyet hesabı" },
 ] as const;
 
 type ToolId = typeof TOOLS[number]["id"];
