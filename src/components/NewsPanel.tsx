@@ -97,9 +97,9 @@ const NewsPanel = () => {
   }, [news, filter, search]);
 
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
-      <div className="mb-6">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+    <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 animate-fade-in overflow-x-hidden">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
           <Newspaper className="w-5 h-5 text-primary" />
           Sektör Haberleri & Mevzuat
         </h2>
@@ -109,9 +109,9 @@ const NewsPanel = () => {
       </div>
 
       {/* Filters & Refresh */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           {[
             { key: "all", label: "Tümü" },
             { key: "sektör", label: "Sektör" },
@@ -122,7 +122,7 @@ const NewsPanel = () => {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium transition-all ${
                 filter === f.key
                   ? "bg-primary text-primary-foreground"
                   : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
@@ -135,7 +135,7 @@ const NewsPanel = () => {
         <button
           onClick={loadNews}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-secondary disabled:opacity-40"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-secondary disabled:opacity-40 self-end sm:self-auto shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Yenile
