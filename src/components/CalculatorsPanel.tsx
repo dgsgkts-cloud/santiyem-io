@@ -24,7 +24,7 @@ const CalculatorsPanel = () => {
   const [activeTool, setActiveTool] = useState<ToolId | null>(null);
 
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
+    <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 animate-fade-in">
       <div className="mb-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <Calculator className="w-5 h-5 text-primary" />
