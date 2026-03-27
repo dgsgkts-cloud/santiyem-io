@@ -11,6 +11,7 @@ import { Check } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { robotoBase64 } from "@/lib/robotoFont";
 
 // ── Constants ──────────────────────────────────────────
 
