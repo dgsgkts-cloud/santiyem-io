@@ -11,6 +11,7 @@ import { Check } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { robotoBase64 } from "@/lib/robotoFont";
 
 // ── Constants ──────────────────────────────────────────
 
@@ -267,14 +268,20 @@ const COLORS = ["#E8590C","#2563EB","#16A34A","#9333EA","#DC2626","#0891B2","#CA
 
 function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form: FormData) {
   const doc = new jsPDF();
+  
+  // Embed Roboto font for Turkish character support
+  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+  doc.setFont("Roboto");
+
   doc.setFontSize(16);
-  doc.text("Insaat Maliyet Raporu", 14, 20);
+  doc.text("İnşaat Maliyet Raporu", 14, 20);
   doc.setFontSize(9);
-  doc.text(`Bina: ${form.binaAmaci} | Il: ${form.il} | Alan: ${fmt(form.toplamAlan)} m2 | Kat: ${form.katSayisi}`, 14, 28);
-  doc.text(`Yapi Sinifi: ${form.yapiSinifi}. Sinif | Tarih: ${new Date().toLocaleDateString("tr-TR")}`, 14, 33);
+  doc.text(`Bina: ${form.binaAmaci} | İl: ${form.il} | Alan: ${fmt(form.toplamAlan)} m² | Kat: ${form.katSayisi}`, 14, 28);
+  doc.text(`Yapı Sınıfı: ${form.yapiSinifi}. Sınıf | Tarih: ${new Date().toLocaleDateString("tr-TR")}`, 14, 33);
   doc.setFontSize(12);
-  doc.text(`Toplam Tahmini Maliyet: ${fmt(result.genelToplam)} TL (KDV haric)`, 14, 42);
-  doc.text(`m2 Birim Maliyet: ${fmt(Math.round(result.genelToplam / (form.toplamAlan || 1)))} TL/m2`, 14, 49);
+  doc.text(`Toplam Tahmini Maliyet: ${fmt(result.genelToplam)} ₺ (KDV hariç)`, 14, 42);
+  doc.text(`m² Birim Maliyet: ${fmt(Math.round(result.genelToplam / (form.toplamAlan || 1)))} ₺/m²`, 14, 49);
 
   let y = 58;
   result.groups.forEach(group => {
@@ -283,11 +290,11 @@ function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form:
       startY: y,
       head: [[group.baslik, "Miktar", "Birim", "B.Fiyat", "Toplam"]],
       body: [
-        ...group.items.map(i => [i.kalem, fmt(i.miktar), i.birim, fmt(i.birimFiyat), fmt(i.toplam) + " TL"]),
-        [{ content: "Grup Toplami", colSpan: 4, styles: { fontStyle: "bold" } }, { content: fmt(group.toplam) + " TL", styles: { fontStyle: "bold" } }],
+        ...group.items.map(i => [i.kalem, fmt(i.miktar), i.birim, fmt(i.birimFiyat), fmt(i.toplam) + " ₺"]),
+        [{ content: "Grup Toplamı", colSpan: 4, styles: { fontStyle: "bold" } }, { content: fmt(group.toplam) + " ₺", styles: { fontStyle: "bold" } }],
       ],
-      styles: { fontSize: 7, cellPadding: 1.5 },
-      headStyles: { fillColor: [232, 89, 12], fontSize: 8 },
+      styles: { fontSize: 7, cellPadding: 1.5, font: "Roboto" },
+      headStyles: { fillColor: [232, 89, 12], fontSize: 8, font: "Roboto" },
       theme: "grid",
     });
     y = (doc as any).lastAutoTable.finalY + 6;
@@ -298,16 +305,16 @@ function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form:
     startY: y,
     head: [["Grup", "Tutar", "Pay %"]],
     body: [
-      ...result.groups.map(g => [g.baslik, fmt(g.toplam) + " TL", "%" + (g.toplam / result.genelToplam * 100).toFixed(1)]),
-      [{ content: "GENEL TOPLAM", styles: { fontStyle: "bold" } }, { content: fmt(result.genelToplam) + " TL", styles: { fontStyle: "bold" } }, "%100"],
+      ...result.groups.map(g => [g.baslik, fmt(g.toplam) + " ₺", "%" + (g.toplam / result.genelToplam * 100).toFixed(1)]),
+      [{ content: "GENEL TOPLAM", styles: { fontStyle: "bold" } }, { content: fmt(result.genelToplam) + " ₺", styles: { fontStyle: "bold" } }, "%100"],
     ],
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [37, 99, 235] },
+    styles: { fontSize: 8, font: "Roboto" },
+    headStyles: { fillColor: [37, 99, 235], font: "Roboto" },
     theme: "grid",
   });
 
   doc.setFontSize(7);
-  doc.text("Cevre ve Sehircilik Bakanligi 2025 yili yapi yaklasik birim maliyetleri esas alinmistir.", 14, (doc as any).lastAutoTable.finalY + 8);
+  doc.text("Çevre ve Şehircilik Bakanlığı 2025 yılı yapı yaklaşık birim maliyetleri esas alınmıştır.", 14, (doc as any).lastAutoTable.finalY + 8);
 
   doc.save(`insaat-maliyet-${Date.now()}.pdf`);
 }
