@@ -130,4 +130,17 @@
   .message-user {
     @apply chat-gradient text-primary-foreground;
   }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-table-scroll {
+    @apply overflow-x-auto -mx-3 px-3;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-table-scroll table {
+    min-width: 500px;
+  }
 }
