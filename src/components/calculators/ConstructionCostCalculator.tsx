@@ -709,32 +709,34 @@ const ConstructionCostCalculator = () => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-0 pb-0">
-                  <table className="w-full text-[11px]">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="text-left px-3 py-1 font-medium">İş Kalemi</th>
-                        <th className="text-right px-2 py-1 font-medium">Miktar</th>
-                        <th className="text-right px-2 py-1 font-medium">Birim</th>
-                        <th className="text-right px-2 py-1 font-medium">B.Fiyat</th>
-                        <th className="text-right px-3 py-1 font-medium">Toplam</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.items.map((item, ii) => (
-                        <tr key={ii} className="border-t border-border/50">
-                          <td className="px-3 py-1">{item.kalem}</td>
-                          <td className="text-right px-2 py-1">{fmt(item.miktar)}</td>
-                          <td className="text-right px-2 py-1">{item.birim}</td>
-                          <td className="text-right px-2 py-1">{fmt(item.birimFiyat)}</td>
-                          <td className="text-right px-3 py-1 font-medium">{fmt(item.toplam)}</td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[11px] min-w-[480px]">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="text-left px-3 py-1 font-medium">İş Kalemi</th>
+                          <th className="text-right px-2 py-1 font-medium">Miktar</th>
+                          <th className="text-right px-2 py-1 font-medium">Birim</th>
+                          <th className="text-right px-2 py-1 font-medium">B.Fiyat</th>
+                          <th className="text-right px-3 py-1 font-medium">Toplam</th>
                         </tr>
-                      ))}
-                      <tr className="bg-accent/10 font-bold border-t">
-                        <td colSpan={4} className="px-3 py-1 text-accent">Grup Toplamı</td>
-                        <td className="text-right px-3 py-1 text-accent">{fmt(group.toplam)} ₺</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {group.items.map((item, ii) => (
+                          <tr key={ii} className="border-t border-border/50">
+                            <td className="px-3 py-1">{item.kalem}</td>
+                            <td className="text-right px-2 py-1">{fmt(item.miktar)}</td>
+                            <td className="text-right px-2 py-1">{item.birim}</td>
+                            <td className="text-right px-2 py-1">{fmt(item.birimFiyat)}</td>
+                            <td className="text-right px-3 py-1 font-medium">{fmt(item.toplam)}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-accent/10 font-bold border-t">
+                          <td colSpan={4} className="px-3 py-1 text-accent">Grup Toplamı</td>
+                          <td className="text-right px-3 py-1 text-accent">{fmt(group.toplam)} ₺</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             ))}
