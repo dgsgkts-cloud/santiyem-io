@@ -275,12 +275,27 @@ const Index = () => {
         {/* Divider */}
         <div className="mx-5 h-px bg-white/10" />
 
-        {/* Logout */}
+        {/* Login/Logout */}
         <div className="px-3 py-4">
-          <button className="w-full flex items-center gap-3 px-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: "48px" }}>
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Çıkış Yap</span>
-          </button>
+          {user ? (
+            <button
+              onClick={() => { signOut(); setDrawerOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+              style={{ minHeight: "48px" }}
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium">Çıkış Yap</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => { navigate("/login"); setDrawerOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 rounded-xl text-[#FF6B2B] hover:bg-[#FF6B2B]/10 transition-colors"
+              style={{ minHeight: "48px" }}
+            >
+              <User className="w-5 h-5" />
+              <span className="text-sm font-medium">Giriş Yap</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -316,7 +331,10 @@ const Index = () => {
 
       {/* Chat input */}
       {activeTab === "chat" && (
-        <ChatInput onSend={handleSend} disabled={isTyping} />
+        <>
+          <UsageLimitBanner type="aiQuestions" />
+          <ChatInput onSend={handleSend} disabled={isTyping} />
+        </>
       )}
     </div>
   );
