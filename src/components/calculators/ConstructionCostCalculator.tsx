@@ -263,6 +263,93 @@ const fmt = (n: number) => n.toLocaleString("tr-TR");
 
 const COLORS = ["#E8590C","#2563EB","#16A34A","#9333EA","#DC2626","#0891B2","#CA8A04","#6366F1"];
 
+// ── Download helpers ─────────────────────────────────────
+
+function downloadPDF(result: { groups: CostGroup[]; genelToplam: number }, form: FormData) {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Insaat Maliyet Raporu", 14, 20);
+  doc.setFontSize(9);
+  doc.text(`Bina: ${form.binaAmaci} | Il: ${form.il} | Alan: ${fmt(form.toplamAlan)} m2 | Kat: ${form.katSayisi}`, 14, 28);
+  doc.text(`Yapi Sinifi: ${form.yapiSinifi}. Sinif | Tarih: ${new Date().toLocaleDateString("tr-TR")}`, 14, 33);
+  doc.setFontSize(12);
+  doc.text(`Toplam Tahmini Maliyet: ${fmt(result.genelToplam)} TL (KDV haric)`, 14, 42);
+  doc.text(`m2 Birim Maliyet: ${fmt(Math.round(result.genelToplam / (form.toplamAlan || 1)))} TL/m2`, 14, 49);
+
+  let y = 58;
+  result.groups.forEach(group => {
+    if (y > 260) { doc.addPage(); y = 20; }
+    autoTable(doc, {
+      startY: y,
+      head: [[group.baslik, "Miktar", "Birim", "B.Fiyat", "Toplam"]],
+      body: [
+        ...group.items.map(i => [i.kalem, fmt(i.miktar), i.birim, fmt(i.birimFiyat), fmt(i.toplam) + " TL"]),
+        [{ content: "Grup Toplami", colSpan: 4, styles: { fontStyle: "bold" } }, { content: fmt(group.toplam) + " TL", styles: { fontStyle: "bold" } }],
+      ],
+      styles: { fontSize: 7, cellPadding: 1.5 },
+      headStyles: { fillColor: [232, 89, 12], fontSize: 8 },
+      theme: "grid",
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  });
+
+  if (y > 240) { doc.addPage(); y = 20; }
+  autoTable(doc, {
+    startY: y,
+    head: [["Grup", "Tutar", "Pay %"]],
+    body: [
+      ...result.groups.map(g => [g.baslik, fmt(g.toplam) + " TL", "%" + (g.toplam / result.genelToplam * 100).toFixed(1)]),
+      [{ content: "GENEL TOPLAM", styles: { fontStyle: "bold" } }, { content: fmt(result.genelToplam) + " TL", styles: { fontStyle: "bold" } }, "%100"],
+    ],
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [37, 99, 235] },
+    theme: "grid",
+  });
+
+  doc.setFontSize(7);
+  doc.text("Cevre ve Sehircilik Bakanligi 2025 yili yapi yaklasik birim maliyetleri esas alinmistir.", 14, (doc as any).lastAutoTable.finalY + 8);
+
+  doc.save(`insaat-maliyet-${Date.now()}.pdf`);
+}
+
+function downloadExcel(result: { groups: CostGroup[]; genelToplam: number }, form: FormData) {
+  const wb = XLSX.utils.book_new();
+
+  // Summary sheet
+  const summaryData = [
+    ["INSAAT MALIYET RAPORU"],
+    [],
+    ["Bina Amaci", form.binaAmaci],
+    ["Il", form.il],
+    ["Toplam Alan (m2)", form.toplamAlan],
+    ["Kat Sayisi", form.katSayisi],
+    ["Yapi Sinifi", `${form.yapiSinifi}. Sinif`],
+    [],
+    ["TOPLAM TAHMINI MALIYET (KDV Haric)", result.genelToplam],
+    ["m2 Birim Maliyet", Math.round(result.genelToplam / (form.toplamAlan || 1))],
+    [],
+    ["Grup", "Tutar (TL)", "Pay %"],
+    ...result.groups.map(g => [g.baslik, g.toplam, +(g.toplam / result.genelToplam * 100).toFixed(1)]),
+    ["GENEL TOPLAM", result.genelToplam, 100],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws1["!cols"] = [{ wch: 40 }, { wch: 20 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws1, "Ozet");
+
+  // Detail sheet
+  const detailRows: any[][] = [["Is Kalemi", "Miktar", "Birim", "Birim Fiyat", "Toplam (TL)", "Grup"]];
+  result.groups.forEach(g => {
+    g.items.forEach(i => detailRows.push([i.kalem, i.miktar, i.birim, i.birimFiyat, i.toplam, g.baslik]));
+    detailRows.push(["GRUP TOPLAMI: " + g.baslik, "", "", "", g.toplam, ""]);
+  });
+  detailRows.push(["GENEL TOPLAM", "", "", "", result.genelToplam, ""]);
+  const ws2 = XLSX.utils.aoa_to_sheet(detailRows);
+  ws2["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 8 }, { wch: 14 }, { wch: 18 }, { wch: 30 }];
+  XLSX.utils.book_append_sheet(wb, ws2, "Detay");
+
+  XLSX.writeFile(wb, `insaat-maliyet-${Date.now()}.xlsx`);
+}
+
 // ── Component ───────────────────────────────────────────
 
 const ConstructionCostCalculator = () => {
