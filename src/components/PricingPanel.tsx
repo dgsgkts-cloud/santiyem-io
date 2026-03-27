@@ -85,7 +85,7 @@ const PricingPanel = () => {
     { q: "14 günlük deneme bittikten sonra ne olur?", a: "Otomatik ücretlendirme yapılmaz. İstediğiniz planı seçebilir veya ücretsiz plana geçebilirsiniz." },
     { q: "İstediğim zaman iptal edebilir miyim?", a: "Evet, istediğiniz zaman kolayca iptal edebilirsiniz. İptal sonrası dönem sonuna kadar erişiminiz devam eder." },
     { q: "Fatura kesiliyor mu?", a: "Evet, her ödeme için e-fatura otomatik olarak gönderilir." },
-    { q: "Ofis planında 5'ten fazla kullanıcı ekleyebilir miyim?", a: "5'ten fazla kullanıcı için bizimle iletişime geçin, özel fiyat sunabiliriz." },
+    { q: "Ofis planında 3'ten fazla kullanıcı ekleyebilir miyim?", a: "3'ten fazla kullanıcı için bizimle iletişime geçin, özel fiyat sunabiliriz." },
   ];
 
   return (
