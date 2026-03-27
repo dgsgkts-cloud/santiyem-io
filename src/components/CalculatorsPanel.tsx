@@ -76,6 +76,7 @@ const CalculatorsPanel = () => {
             {activeTool === "taks" && <TAKSKAKSCalculator />}
             {activeTool === "material" && <MaterialEstimator />}
             {activeTool === "thermal" && <ThermalBridgeCalculator />}
+            {activeTool === "cost" && <ConstructionCostCalculator />}
           </div>
         </div>
       )}
