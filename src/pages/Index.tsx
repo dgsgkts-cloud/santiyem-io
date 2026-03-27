@@ -9,6 +9,10 @@ import EventsPanel from "@/components/EventsPanel";
 import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
+import PricingPanel from "@/components/PricingPanel";
+import UsageLimitBanner from "@/components/UsageLimitBanner";
+import { useUser } from "@/contexts/UserContext";
+import { useNavigate } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
   RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
@@ -19,7 +23,7 @@ import {
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing";
 
 // Desktop tab bar items
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -30,6 +34,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
+  { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
 ];
 
 // Mobile drawer menu items
@@ -41,9 +46,12 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
+  { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
 ];
 
 const Index = () => {
+  const { user, plan, signOut } = useUser();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
@@ -227,9 +235,13 @@ const Index = () => {
               <User className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Kullanıcı</p>
-              <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FF6B2B]/20 text-[#FF6B2B]">
-                Pro Plan
+              <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
+              <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                plan === "pro" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
+                plan === "office" ? "bg-blue-500/20 text-blue-400" :
+                "bg-white/10 text-white/50"
+              }`}>
+                {plan === "pro" ? "Pro Plan" : plan === "office" ? "Ofis Plan" : "Ücretsiz"}
               </span>
             </div>
           </div>
@@ -263,12 +275,27 @@ const Index = () => {
         {/* Divider */}
         <div className="mx-5 h-px bg-white/10" />
 
-        {/* Logout */}
+        {/* Login/Logout */}
         <div className="px-3 py-4">
-          <button className="w-full flex items-center gap-3 px-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: "48px" }}>
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Çıkış Yap</span>
-          </button>
+          {user ? (
+            <button
+              onClick={() => { signOut(); setDrawerOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
+              style={{ minHeight: "48px" }}
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium">Çıkış Yap</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => { navigate("/login"); setDrawerOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 rounded-xl text-[#FF6B2B] hover:bg-[#FF6B2B]/10 transition-colors"
+              style={{ minHeight: "48px" }}
+            >
+              <User className="w-5 h-5" />
+              <span className="text-sm font-medium">Giriş Yap</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -295,6 +322,8 @@ const Index = () => {
           <CalculatorsPanel />
         ) : activeTab === "render" ? (
           <RenderPanel />
+        ) : activeTab === "pricing" ? (
+          <PricingPanel />
         ) : (
           <RemindersPanel />
         )}
@@ -302,7 +331,10 @@ const Index = () => {
 
       {/* Chat input */}
       {activeTab === "chat" && (
-        <ChatInput onSend={handleSend} disabled={isTyping} />
+        <>
+          <UsageLimitBanner type="aiQuestions" />
+          <ChatInput onSend={handleSend} disabled={isTyping} />
+        </>
       )}
     </div>
   );
