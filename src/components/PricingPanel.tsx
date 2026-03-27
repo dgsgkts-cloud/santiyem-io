@@ -25,7 +25,6 @@ const PricingPanel = () => {
         { text: "Hesap Araçları — sınırsız", included: true },
         { text: "Mevzuat Arama — sınırsız", included: true },
         { text: "Günlük Bilgi — sınırsız", included: true },
-        { text: "Piyasa Fiyatları — sınırsız", included: true },
         { text: "Belge Arşivi PDF indirme", included: false },
         { text: "Maliyet Hesaplama PDF/Excel", included: false },
         
@@ -54,7 +53,7 @@ const PricingPanel = () => {
         { text: "Belge PDF ve Word indirme", included: true },
         { text: "Mevzuat Arama — sınırsız", included: true },
         { text: "Günlük Bilgi — sınırsız", included: true },
-        { text: "Piyasa Fiyatları — sınırsız", included: true },
+        
         
         { text: "1 kullanıcı", included: true },
       ],
