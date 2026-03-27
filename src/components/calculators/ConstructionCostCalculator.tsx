@@ -702,6 +702,12 @@ const ConstructionCostCalculator = () => {
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2">
+            <Button onClick={() => downloadPDF(result, form)} className="text-xs bg-accent text-accent-foreground hover:bg-accent/90">
+              📄 PDF İndir
+            </Button>
+            <Button onClick={() => downloadExcel(result, form)} variant="outline" className="text-xs">
+              📊 Excel İndir
+            </Button>
             <Button onClick={() => { setStep(1); setForm({ ...defaultForm }); }} variant="outline" className="text-xs">
               🔄 Yeni Hesaplama
             </Button>
