@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
+import Footer from "@/components/Footer";
 
 type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily";
 
@@ -341,6 +342,8 @@ const Index = () => {
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
       )}
+
+      <Footer />
     </div>
   );
 };

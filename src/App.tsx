@@ -10,6 +10,9 @@ import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import KullanimSartlari from "./pages/KullanimSartlari.tsx";
+import GizlilikPolitikasi from "./pages/GizlilikPolitikasi.tsx";
+import IptalIadePolitikasi from "./pages/IptalIadePolitikasi.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
+            <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
+            <Route path="/iptal-iade-politikasi" element={<IptalIadePolitikasi />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
