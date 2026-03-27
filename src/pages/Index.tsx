@@ -10,12 +10,18 @@ import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
 import logo from "@/assets/muhendis-logo.png";
-import { RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar, Calculator, Paintbrush, CalendarClock } from "lucide-react";
+import {
+  RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
+  Calculator, Paintbrush, CalendarClock, Menu, X,
+  Home, FolderOpen, Camera, Zap, FileText, BookOpen,
+  Lightbulb, BarChart3, Settings, LogOut, User
+} from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
 type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders";
 
+// Desktop tab bar items
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
   { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
@@ -26,10 +32,22 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
 ];
 
+// Mobile drawer menu items
+const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
+  { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
+  { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
+  { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
+  { id: "weather", label: "Hava Durumu", emoji: "🌤️", icon: CloudRain },
+  { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
+  { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
+  { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
+];
+
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -41,6 +59,16 @@ const Index = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
 
   const handleSend = async (text: string, attachments?: Attachment[]) => {
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
@@ -89,33 +117,65 @@ const Index = () => {
     setIsTyping(false);
   };
 
+  const handleDrawerNav = (id: string) => {
+    if (TABS.some(t => t.id === id)) {
+      setActiveTab(id as Tab);
+    }
+    setDrawerOpen(false);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header — logo row */}
-      <header className="border-b border-border bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <img src={logo} alt="MühendisAI" className="w-8 h-8 sm:w-9 sm:h-9" />
+      {/* ── MOBILE HEADER ── */}
+      <header className="md:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+          style={{ backgroundColor: "hsl(var(--accent))", color: "white" }}
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="MühendisAI" className="w-7 h-7" />
+          <h1 className="text-sm font-bold text-foreground">MühendisAI</h1>
+        </div>
+        <div className="w-10">
+          {activeTab === "chat" && messages.length > 0 && (
+            <button
+              onClick={handleReset}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* ── DESKTOP HEADER ── */}
+      <header className="hidden md:flex border-b border-border bg-card/60 backdrop-blur-sm px-4 py-3 items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="MühendisAI" className="w-9 h-9" />
           <div>
-            <h1 className="text-sm sm:text-base font-bold text-foreground leading-tight">MühendisAI</h1>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground hidden sm:block">İnşaat & Mühendislik Asistanı</p>
+            <h1 className="text-base font-bold text-foreground leading-tight">MühendisAI</h1>
+            <p className="text-[11px] text-muted-foreground">İnşaat & Mühendislik Asistanı</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {activeTab === "chat" && messages.length > 0 && (
             <button
               onClick={handleReset}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 sm:px-3 py-1.5 rounded-lg hover:bg-secondary"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Yeni Sohbet</span>
+              Yeni Sohbet
             </button>
           )}
         </div>
       </header>
 
-      {/* Tab bar — fixed below header, both mobile & desktop */}
-      <div className="border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
-        <div className="flex items-center px-2 sm:px-4 py-1 gap-0.5 sm:gap-1 min-w-max sm:min-w-0 sm:justify-center">
+      {/* ── DESKTOP TAB BAR ── */}
+      <div className="hidden md:block border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
+        <div className="flex items-center px-4 py-1 gap-1 justify-center">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -123,21 +183,96 @@ const Index = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                {tab.shortLabel}
+                <Icon className="w-4 h-4" />
+                {tab.label}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Content area */}
+      {/* ── MOBILE DRAWER OVERLAY ── */}
+      {drawerOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      {/* ── MOBILE DRAWER PANEL ── */}
+      <div
+        className={`md:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
+          drawerOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ backgroundColor: "#0F1419" }}
+      >
+        {/* Close button */}
+        <button
+          onClick={() => setDrawerOpen(false)}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* User section */}
+        <div className="px-5 pt-6 pb-4">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E] flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Kullanıcı</p>
+              <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FF6B2B]/20 text-[#FF6B2B]">
+                Pro Plan
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="mx-5 h-px bg-white/10" />
+
+        {/* Menu items */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3">
+          {DRAWER_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleDrawerNav(item.id)}
+                className={`w-full flex items-center gap-3 px-3 rounded-xl transition-colors ${
+                  isActive
+                    ? "bg-[#FF6B2B]/15 text-[#FF6B2B]"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
+                }`}
+                style={{ minHeight: "48px" }}
+              >
+                <span className="text-lg w-6 text-center">{item.emoji}</span>
+                <span className={`text-sm ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Divider */}
+        <div className="mx-5 h-px bg-white/10" />
+
+        {/* Logout */}
+        <div className="px-3 py-4">
+          <button className="w-full flex items-center gap-3 px-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors" style={{ minHeight: "48px" }}>
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Çıkış Yap</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── CONTENT AREA ── */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {activeTab === "chat" ? (
           messages.length === 0 ? (
@@ -165,7 +300,7 @@ const Index = () => {
         )}
       </div>
 
-      {/* Chat input - only show in chat tab */}
+      {/* Chat input */}
       {activeTab === "chat" && (
         <ChatInput onSend={handleSend} disabled={isTyping} />
       )}
