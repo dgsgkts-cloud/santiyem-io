@@ -10,6 +10,7 @@ import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
 import PricingPanel from "@/components/PricingPanel";
+import DailyKnowledgePanel from "@/components/DailyKnowledgePanel";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
