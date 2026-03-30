@@ -43,7 +43,8 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
 
   const handleGenerate = async () => {
     setGenerating(true);
-    setGenerationStep("Senaryo ve sahneler oluşturuluyor...");
+    setWarning(null);
+    setGenerationStep("Parselin gerçek konumundan uydu görüntüleri hazırlanıyor...");
     try {
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-listing-video`,
@@ -58,16 +59,16 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
         }
       );
 
+      const data = await resp.json().catch(() => ({}));
       if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || "Video oluşturma hatası");
+        throw new Error(data.error || "Video oluşturma hatası");
       }
 
-      const data = await resp.json();
       if (data.script) {
         setScript(data.script);
-        setGenerationStep("");
       }
+      setWarning(data.warning || null);
+      setGenerationStep("");
     } catch (e: any) {
       console.error("Video generation error:", e);
       setGenerationStep(`Hata: ${e.message || "Bilinmeyen hata"}`);
