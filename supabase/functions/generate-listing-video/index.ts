@@ -108,25 +108,29 @@ serve(async (req) => {
                 content: `Generate a photorealistic cinematic image: ${imgPrompt}. Style: drone aerial photography, golden hour lighting, professional real estate promotional material, ultra high quality, 16:9 aspect ratio.`
               },
             ],
-            modalities: ["text", "image"],
+            modalities: ["image", "text"],
           }),
         });
 
         if (imgResponse.ok) {
           const imgData = await imgResponse.json();
-          const parts = imgData.choices?.[0]?.message?.content;
-          if (Array.isArray(parts)) {
-            for (const part of parts) {
-              if (part.type === "image_url" && part.image_url?.url) {
-                sceneImages.push(part.image_url.url);
-                break;
-              }
+          // Images are in message.images array, not message.content
+          const images = imgData.choices?.[0]?.message?.images;
+          if (Array.isArray(images) && images.length > 0) {
+            const imgUrl = images[0]?.image_url?.url;
+            if (imgUrl) {
+              sceneImages.push(imgUrl);
+              console.log("Image generated for scene:", scene.title);
+            } else {
+              sceneImages.push("");
             }
           } else {
+            console.log("No images in response for scene:", scene.title, JSON.stringify(imgData.choices?.[0]?.message).slice(0, 200));
             sceneImages.push("");
           }
         } else {
-          console.error("Image generation failed for scene:", scene.title, imgResponse.status);
+          const errText = await imgResponse.text();
+          console.error("Image generation failed for scene:", scene.title, imgResponse.status, errText);
           sceneImages.push("");
         }
       } catch (imgErr) {
