@@ -15,10 +15,10 @@ const DesktopSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
-      <div className="grid grid-cols-[240px_1fr] gap-5">
-        {/* Left tabs */}
-        <div className="space-y-1">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
+      <div className="flex flex-col lg:grid lg:grid-cols-[240px_1fr] gap-4 lg:gap-5">
+        {/* Tabs - horizontal scroll on mobile, vertical on desktop */}
+        <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -26,32 +26,31 @@ const DesktopSettingsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="w-full flex items-center gap-2.5 px-3 rounded-lg transition-all duration-150 relative"
+                className="flex items-center gap-2 px-3 rounded-lg transition-all duration-150 relative whitespace-nowrap shrink-0"
                 style={{
                   height: 40,
                   backgroundColor: isActive ? "#161C23" : "transparent",
                   color: isActive ? "#F1F5F9" : "#64748B",
                 }}
-                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#161C23"; }}
-                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = isActive ? "#161C23" : "transparent"; }}
               >
-                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
+                {isActive && <div className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
+                {isActive && <div className="lg:hidden absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-t" style={{ backgroundColor: "#FF6B2B" }} />}
                 <Icon className="w-4 h-4" />
-                <span className="text-[13px] font-medium">{tab.label}</span>
+                <span className="text-[12px] lg:text-[13px] font-medium">{tab.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Right content */}
-        <div className="rounded-xl p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        {/* Content */}
+        <div className="rounded-xl p-4 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
           {activeTab === "profile" && (
-            <div className="space-y-6">
+            <div className="space-y-5 lg:space-y-6">
               <div>
-                <h3 className="text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Profil Bilgileri</h3>
-                <p className="text-[12px]" style={{ color: "#64748B" }}>Kişisel bilgilerinizi güncelleyin</p>
+                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Profil Bilgileri</h3>
+                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Kişisel bilgilerinizi güncelleyin</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                 <FormField label="Ad Soyad" value={profile?.full_name || ""} />
                 <FormField label="Unvan" value={profile?.title || ""} />
                 <FormField label="İl" value={profile?.city || ""} />
@@ -65,12 +64,12 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "notifications" && (
-            <div className="space-y-6">
+            <div className="space-y-5 lg:space-y-6">
               <div>
-                <h3 className="text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
-                <p className="text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
+                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
+                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3 lg:space-y-4">
                 <ToggleRow label="E-posta Bildirimleri" desc="Günlük özet ve önemli güncellemeler" defaultOn />
                 <ToggleRow label="Proje Güncellemeleri" desc="Proje durumu değişikliklerinde bildir" defaultOn />
                 <ToggleRow label="Hakediş Bildirimleri" desc="Hakediş onay ve ödeme bildirimleri" defaultOn />
@@ -79,22 +78,22 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "subscription" && (
-            <div className="space-y-6">
+            <div className="space-y-5 lg:space-y-6">
               <div>
-                <h3 className="text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Abonelik Yönetimi</h3>
-                <p className="text-[12px]" style={{ color: "#64748B" }}>Mevcut planınız ve faturalama bilgileri</p>
+                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Abonelik Yönetimi</h3>
+                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Mevcut planınız ve faturalama bilgileri</p>
               </div>
               <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <span className="text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
+                    <span className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
                       {plan === "pro" ? "Profesyonel Plan" : plan === "office" ? "Ofis Planı" : "Ücretsiz Plan"}
                     </span>
-                    <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>
+                    <p className="text-[11px] lg:text-[12px] mt-0.5" style={{ color: "#64748B" }}>
                       {plan === "free" ? "Temel özellikler" : "Tüm özellikler aktif"}
                     </p>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md" style={{
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md self-start" style={{
                     backgroundColor: plan === "pro" ? "rgba(255,107,43,0.15)" : plan === "office" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
                     color: plan === "pro" ? "#FF6B2B" : plan === "office" ? "#60A5FA" : "#64748B",
                   }}>
@@ -105,8 +104,8 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {(activeTab === "team" || activeTab === "security") && (
-            <div className="text-center py-12">
-              <p className="text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
+            <div className="text-center py-8 lg:py-12">
+              <p className="text-[13px] lg:text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
             </div>
           )}
         </div>
@@ -117,7 +116,7 @@ const DesktopSettingsPage = () => {
 
 const FormField = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: "#94A3B8" }}>{label}</label>
+    <label className="text-[11px] lg:text-[12px] font-semibold mb-1.5 block" style={{ color: "#94A3B8" }}>{label}</label>
     <input
       defaultValue={value}
       className="w-full rounded-lg px-3 text-[13px] outline-none transition-colors duration-150"
@@ -131,14 +130,14 @@ const FormField = ({ label, value }: { label: string; value: string }) => (
 const ToggleRow = ({ label, desc, defaultOn }: { label: string; desc: string; defaultOn?: boolean }) => {
   const [on, setOn] = useState(!!defaultOn);
   return (
-    <div className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
-      <div>
-        <p className="text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{label}</p>
-        <p className="text-[11px]" style={{ color: "#64748B" }}>{desc}</p>
+    <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732" }}>
+      <div className="min-w-0">
+        <p className="text-[12px] lg:text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{label}</p>
+        <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{desc}</p>
       </div>
       <button
         onClick={() => setOn(!on)}
-        className="relative w-10 h-5 rounded-full transition-colors duration-150"
+        className="relative w-10 h-5 rounded-full transition-colors duration-150 shrink-0"
         style={{ backgroundColor: on ? "#FF6B2B" : "#1E2732" }}
       >
         <div
