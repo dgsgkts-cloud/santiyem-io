@@ -34,17 +34,17 @@ const NAV_SECTIONS = [
   {
     label: "ARAÇLAR",
     items: [
-      { id: "render" as Tab, label: "Proje Analizi", icon: FileSearch },
-      { id: "weather" as Tab, label: "Fotoğraf Analizi", icon: Camera },
-      { id: "calc" as Tab, label: "EKB Hesaplama", icon: Zap },
-      { id: "events" as Tab, label: "Hesap Araçları", icon: Calculator },
+      { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
+      { id: "weather" as Tab, label: "Hava Durumu", icon: Camera },
+      { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
+      { id: "events" as Tab, label: "Etkinlik Takvimi", icon: Calculator },
     ],
   },
   {
     label: "İÇERİK",
     items: [
-      { id: "news" as Tab, label: "Belge Arşivi", icon: FileText },
-      { id: "reminders" as Tab, label: "Mevzuat Arama", icon: BookOpen },
+      { id: "news" as Tab, label: "Haberler ve Mevzuat", icon: FileText },
+      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
       { id: "daily" as Tab, label: "Günlük Bilgi", icon: Lightbulb },
     ],
   },
