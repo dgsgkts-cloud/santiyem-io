@@ -412,6 +412,7 @@ const Index = () => {
         ) : (
           <RemindersPanel />
         )}
+        {activeTab !== "chat" && <Footer />}
       </div>
 
       {activeTab === "chat" && (
@@ -420,8 +421,6 @@ const Index = () => {
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
       )}
-
-      <Footer />
     </div>
   );
 };
