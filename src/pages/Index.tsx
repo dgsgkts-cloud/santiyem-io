@@ -87,7 +87,7 @@ const TAB_TITLES: Record<string, string> = {
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
   settings: "Ayarlar",
-  realestate: "Gayrimenkul360",
+  
   hakkimizda: "Hakkımızda",
 };
 
