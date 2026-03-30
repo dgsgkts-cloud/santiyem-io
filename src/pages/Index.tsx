@@ -26,8 +26,9 @@ import {
   RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, BarChart3, Settings, LogOut, User, Plus
+  Lightbulb, BarChart3, Settings, LogOut, User, Plus, Bell
 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
