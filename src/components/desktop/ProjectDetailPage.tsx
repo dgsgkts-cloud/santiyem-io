@@ -383,7 +383,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {/* Mobile cards */}
             <div className="lg:hidden space-y-2">
               {hakedisler.map((h, i) => (
-                <div key={h.id} className="p-3 rounded-lg" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div key={h.id} className="p-3 rounded-lg relative" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[12px] font-semibold" style={textStyle}>#{i + 1} — {h.period}</span>
                     <button
