@@ -273,8 +273,8 @@ const Index = () => {
       </header>
 
       {/* ── TABLET TAB BAR ── */}
-      <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
-        <div className="flex items-center px-4 py-1 gap-1 justify-center">
+      <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
+        <div className="flex items-center px-4 py-1 gap-1" style={{ minWidth: "max-content" }}>
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
