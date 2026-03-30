@@ -503,7 +503,63 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         )}
       </div>
 
-      {/* Projeyi Sil */}
+      {/* Notlar / Yorumlar */}
+      <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>Notlar & Yorumlar</h3>
+          </div>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
+            {notes.length} not
+          </span>
+        </div>
+
+        {user && (
+          <div className="flex gap-2 mb-4">
+            <input
+              value={newNoteContent}
+              onChange={e => setNewNoteContent(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNote(newNoteContent); setNewNoteContent(""); } }}
+              placeholder="Not veya yorum ekleyin..."
+              className="flex-1 px-3 py-2.5 rounded-lg text-[13px] outline-none"
+              style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+            />
+            <button
+              onClick={() => { addNote(newNoteContent); setNewNoteContent(""); }}
+              disabled={!newNoteContent.trim()}
+              className="px-3 py-2.5 rounded-lg transition-colors disabled:opacity-40"
+              style={{ backgroundColor: "#FF6B2B" }}
+            >
+              <Send className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        )}
+
+        {nLoading ? (
+          <p className="text-[12px]" style={labelStyle}>Yükleniyor...</p>
+        ) : notes.length === 0 ? (
+          <p className="text-[12px] text-center py-6" style={labelStyle}>Henüz not eklenmemiş.</p>
+        ) : (
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            {notes.map(note => (
+              <div key={note.id} className="p-3 rounded-lg group" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[12px] lg:text-[13px] whitespace-pre-wrap flex-1" style={textStyle}>{note.content}</p>
+                  {user && (
+                    <button onClick={() => deleteNote(note.id)} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" style={{ color: "#EF4444" }}>
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] mt-1.5" style={labelStyle}>{new Date(note.created_at).toLocaleString("tr-TR")}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
       {isDeletable && onDelete && user && (
         <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderColor: "rgba(239,68,68,0.3)" }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
