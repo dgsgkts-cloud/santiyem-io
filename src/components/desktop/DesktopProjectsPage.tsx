@@ -35,7 +35,7 @@ const dbToProject = (p: UserProject): Project => ({
 
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
-  const { projects: dbProjects, loading, addProject, deleteProject } = useProjects();
+  const { projects: dbProjects, loading, addProject, deleteProject, updateProjectStatus } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
