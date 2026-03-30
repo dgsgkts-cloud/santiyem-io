@@ -35,7 +35,7 @@ const NAV_SECTIONS = [
     label: "ARAÇLAR",
     items: [
       { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
-      { id: "realestate" as Tab, label: "Gayrimenkul360", icon: Camera },
+      { id: "realestate" as Tab, label: "Gayrimenkul360", icon: Building2 },
       { id: "weather" as Tab, label: "Hava Durumu", icon: Camera },
       { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
       { id: "events" as Tab, label: "Etkinlik Takvimi", icon: Calculator },
