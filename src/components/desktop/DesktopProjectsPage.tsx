@@ -65,7 +65,6 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
       />
     );
   }
-  }
 
   const stats = [
     { label: "Toplam Proje", value: String(allProjects.length), emoji: "📋" },
