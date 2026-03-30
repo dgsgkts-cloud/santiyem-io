@@ -32,6 +32,7 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
   const [generating, setGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState("");
   const [script, setScript] = useState<VideoScript | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [activeScene, setActiveScene] = useState(0);
   const [progress, setProgress] = useState(0);
