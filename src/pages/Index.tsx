@@ -194,11 +194,7 @@ const Index = () => {
             <DesktopTopBar
               title={TAB_TITLES[activeTab] || "Dashboard"}
               actions={
-                activeTab === "projects" ? (
-                  <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
-                    <Plus className="w-3.5 h-3.5" /> Yeni Proje
-                  </button>
-                ) : activeTab === "hakedis" ? (
+                activeTab === "hakedis" ? (
                   <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
                     <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
                   </button>
