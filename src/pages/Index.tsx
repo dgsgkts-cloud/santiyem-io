@@ -209,7 +209,7 @@ const Index = () => {
               {activeTab === "dashboard" ? (
                 <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
               ) : activeTab === "chat" ? (
-                <DesktopChatLayout messages={messages} isTyping={isTyping} onSend={handleSend} onReset={handleReset} scrollRef={scrollRef} />
+                <DesktopChatLayout scrollRef={scrollRef} />
               ) : activeTab === "projects" ? (
                 <DesktopProjectsPage />
               ) : activeTab === "hakedis" ? (
