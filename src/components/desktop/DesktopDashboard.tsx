@@ -1,9 +1,10 @@
 import { useUser } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
-  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown
+  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock
 } from "lucide-react";
 import { PROJECTS as SHARED_PROJECTS } from "@/lib/projectsData";
+import { useReminders } from "@/hooks/useReminders";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
