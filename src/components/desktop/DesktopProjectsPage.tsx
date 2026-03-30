@@ -26,6 +26,11 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     setSelectedProjectId(null);
     onProjectIdClear?.();
   };
+
+  const selectedProject = selectedProjectId ? PROJECTS.find(p => p.id === selectedProjectId) : null;
+
+  if (selectedProject) {
+    return <ProjectDetailPage project={selectedProject} onBack={handleBack} />;
   }
 
   return (
