@@ -4,7 +4,7 @@ import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
   FileText, BookOpen, Lightbulb, BarChart3,
-  Settings, LogOut, Gem, User, ChevronRight
+  Settings, LogOut, Gem, User, ChevronRight, Building2
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Progress } from "@/components/ui/progress";
