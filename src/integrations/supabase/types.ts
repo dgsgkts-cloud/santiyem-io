@@ -214,6 +214,60 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          budget: string
+          client: string
+          created_at: string
+          description: string
+          end_date: string
+          id: string
+          location: string
+          manager: string
+          name: string
+          progress: number
+          site_responsible: string
+          start_date: string
+          status: string
+          status_color: string
+          user_id: string
+        }
+        Insert: {
+          budget?: string
+          client?: string
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          location?: string
+          manager?: string
+          name: string
+          progress?: number
+          site_responsible?: string
+          start_date?: string
+          status?: string
+          status_color?: string
+          user_id: string
+        }
+        Update: {
+          budget?: string
+          client?: string
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          location?: string
+          manager?: string
+          name?: string
+          progress?: number
+          site_responsible?: string
+          start_date?: string
+          status?: string
+          status_color?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reminders: {
         Row: {
           created_at: string

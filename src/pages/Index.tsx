@@ -39,6 +39,8 @@ type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminde
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
+  { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
   { id: "news", label: "Haberler", shortLabel: "Haber", icon: Newspaper },
@@ -47,12 +49,15 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
+  { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
 ];
 
 // Mobile drawer menu items
 const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", emoji: "🏠", icon: Home },
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
+  { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
@@ -61,6 +66,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
+  { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
 ];
 
 const TAB_TITLES: Record<string, string> = {
@@ -191,11 +197,7 @@ const Index = () => {
             <DesktopTopBar
               title={TAB_TITLES[activeTab] || "Dashboard"}
               actions={
-                activeTab === "projects" ? (
-                  <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
-                    <Plus className="w-3.5 h-3.5" /> Yeni Proje
-                  </button>
-                ) : activeTab === "hakedis" ? (
+                activeTab === "hakedis" ? (
                   <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
                     <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
                   </button>
@@ -271,8 +273,8 @@ const Index = () => {
       </header>
 
       {/* ── TABLET TAB BAR ── */}
-      <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
-        <div className="flex items-center px-4 py-1 gap-1 justify-center">
+      <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
+        <div className="flex items-center px-4 py-1 gap-1" style={{ minWidth: "max-content" }}>
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -398,6 +400,12 @@ const Index = () => {
                 {isTyping && <TypingIndicator />}
               </div>
             )
+          ) : activeTab === "projects" ? (
+            <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
+          ) : activeTab === "hakedis" ? (
+            <DesktopHakedisPage />
+          ) : activeTab === "settings" ? (
+            <DesktopSettingsPage />
           ) : activeTab === "weather" ? (
             <WeatherPanel />
           ) : activeTab === "news" ? (
