@@ -172,7 +172,8 @@ const Register = () => {
             <Checkbox id="terms" checked={form.terms} onCheckedChange={c => update("terms", !!c)}
               className="mt-0.5 border-white/20 data-[state=checked]:bg-[#FF6B2B] data-[state=checked]:border-[#FF6B2B]" />
             <label htmlFor="terms" className="text-[11px] leading-relaxed" style={{ color: "#64748B" }}>
-              Kullanım şartlarını ve gizlilik politikasını kabul ediyorum
+              <a href="/kullanim-sartlari" target="_blank" className="underline" style={{ color: "#FF6B2B" }}>Kullanım Şartları</a>'nı ve{" "}
+              <a href="/gizlilik-politikasi" target="_blank" className="underline" style={{ color: "#FF6B2B" }}>Gizlilik Sözleşmesi</a>'ni okudum, kabul ediyorum.
             </label>
           </div>
 

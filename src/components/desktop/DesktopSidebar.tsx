@@ -48,6 +48,12 @@ const NAV_SECTIONS = [
       { id: "daily" as Tab, label: "Günlük Bilgi", icon: Lightbulb },
     ],
   },
+  {
+    label: "DİĞER",
+    items: [
+      { id: "hakkimizda" as Tab, label: "Hakkımızda", icon: ChevronRight },
+    ],
+  },
 ];
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
