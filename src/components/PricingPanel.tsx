@@ -160,14 +160,17 @@ const PricingPanel = () => {
 
             <div className="space-y-2">
               <Button
-                className={`w-full h-11 font-semibold ${
+                className={`w-full font-semibold ${
                   plan.button.style === "primary"
-                    ? "text-white"
-                    : "bg-transparent border border-border text-foreground hover:bg-secondary"
+                    ? "text-white h-14 flex-col gap-0"
+                    : "bg-transparent border border-border text-foreground hover:bg-secondary h-11"
                 }`}
                 style={plan.button.style === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
               >
-                {plan.button.text}
+                <span>{plan.button.text}</span>
+                {plan.buttonNote && (
+                  <span className="text-[10px] font-normal opacity-80">({plan.buttonNote})</span>
+                )}
               </Button>
               {plan.id === "pro" && (
                 <Button
@@ -175,9 +178,6 @@ const PricingPanel = () => {
                 >
                   Hemen Başla
                 </Button>
-              )}
-              {plan.buttonNote && (
-                <p className="text-center text-xs text-muted-foreground mt-1">{plan.buttonNote}</p>
               )}
             </div>
           </div>
