@@ -98,7 +98,8 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
-
+  const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
     const handler = () => setIsLg(mql.matches);
