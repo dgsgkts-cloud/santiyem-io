@@ -232,10 +232,6 @@ const Index = () => {
               <CalculatorsPanel />
             ) : activeTab === "render" ? (
               <RenderPanel />
-            ) : activeTab === "hakkimizda" ? (
-              <div className="max-w-3xl mx-auto px-4 py-8">
-                <p className="text-xs text-muted-foreground mb-8">Hakkımızda sayfasına yönlendiriliyorsunuz...</p>
-              </div>
             ) : (
               <RemindersPanel />
             )}
