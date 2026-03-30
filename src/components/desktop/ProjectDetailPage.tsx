@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
+import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 
 interface ProjectDetailPageProps {
@@ -18,7 +19,7 @@ const formatBytes = (bytes: number) => {
 
 const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
   const { user } = useUser();
-  const completedMilestones = p.milestones.filter(m => m.completed).length;
+  const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
   const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +27,21 @@ const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
   const [showAddHakedis, setShowAddHakedis] = useState(false);
   const [newPeriod, setNewPeriod] = useState("");
   const [newAmount, setNewAmount] = useState("");
+  const [showAddMilestone, setShowAddMilestone] = useState(false);
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
+  const [newMilestoneDate, setNewMilestoneDate] = useState("");
+
+  const handleAddMilestone = () => {
+    if (!newMilestoneTitle) return;
+    addMilestone(newMilestoneTitle, newMilestoneDate);
+    setNewMilestoneTitle("");
+    setNewMilestoneDate("");
+    setShowAddMilestone(false);
+  };
+
+  const displayProgress = user && !mLoading ? milestoneProgress : p.progress;
+  const completedMilestones = user && !mLoading ? milestones.filter(m => m.completed).length : p.milestones.filter(m => m.completed).length;
+  const totalMilestones = user && !mLoading ? milestones.length : p.milestones.length;
 
   const handleAddHakedis = () => {
     if (!newPeriod || !newAmount) return;
