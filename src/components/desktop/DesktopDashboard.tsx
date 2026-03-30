@@ -3,10 +3,12 @@ import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
   MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown
 } from "lucide-react";
+import { PROJECTS as SHARED_PROJECTS } from "@/lib/projectsData";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
   onSend?: (text: string) => void;
+  onProjectSelect?: (projectId: string) => void;
 }
 
 const formatDate = (d: Date) =>
@@ -19,12 +21,15 @@ const STAT_CARDS = [
   { label: "Geciken", value: "3", icon: AlertTriangle, change: "+1", up: false, desc: "Dikkat!", isAlert: true },
 ];
 
-const PROJECTS = [
-  { name: "Villa - Çeşme", client: "Mehmet Bey", progress: 75, delayed: 0, status: "Devam", statusColor: "#22C55E" },
-  { name: "AVM - Ankara", client: "Yıldız İnşaat", progress: 42, delayed: 2, status: "Gecikmiş", statusColor: "#EF4444" },
-  { name: "Konut - İstanbul", client: "Atlas Yapı", progress: 91, delayed: 0, status: "Bitmek üzere", statusColor: "#F59E0B" },
-  { name: "Fabrika - Kocaeli", client: "Endüstri A.Ş.", progress: 28, delayed: 1, status: "Devam", statusColor: "#22C55E" },
-];
+const PROJECTS = SHARED_PROJECTS.map(p => ({
+  id: p.id,
+  name: p.name.replace("Villa Projesi - ", "Villa - ").replace("AVM İnşaatı - ", "AVM - ").replace("Konut Projesi - ", "Konut - "),
+  client: p.client,
+  progress: p.progress,
+  delayed: p.delayed,
+  status: p.status === "Tamamlanıyor" ? "Bitmek üzere" : p.status === "Devam Ediyor" ? "Devam" : p.status,
+  statusColor: p.statusColor,
+}));
 
 const ACTIVITIES = [
   { text: "Villa hakediş onaylandı", time: "2sa", color: "#22C55E" },
@@ -39,7 +44,7 @@ const UPCOMING = [
   { task: "Hakediş sunumu", project: "AVM", days: 5, urgent: false },
 ];
 
-const DesktopDashboard = ({ onTabChange, onSend }: DesktopDashboardProps) => {
+const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
   const { profile } = useUser();
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
@@ -115,7 +120,7 @@ const DesktopDashboard = ({ onTabChange, onSend }: DesktopDashboardProps) => {
                 </thead>
                 <tbody>
                   {PROJECTS.map((p, i) => (
-                    <tr key={i} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
+                    <tr key={i} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
                       <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
                       <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
                       <td className="px-5 py-3">
@@ -139,7 +144,7 @@ const DesktopDashboard = ({ onTabChange, onSend }: DesktopDashboardProps) => {
             {/* Mobile/Tablet card list */}
             <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
               {PROJECTS.map((p, i) => (
-                <div key={i} className="px-4 py-3 space-y-2" style={{ borderColor: "#1E2732" }}>
+                <div key={i} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>

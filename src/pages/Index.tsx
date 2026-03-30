@@ -86,6 +86,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
@@ -207,11 +208,11 @@ const Index = () => {
           <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
             <div className="flex-1 pb-12">
               {activeTab === "dashboard" ? (
-                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
+                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
               ) : activeTab === "chat" ? (
                 <DesktopChatLayout scrollRef={scrollRef} />
               ) : activeTab === "projects" ? (
-                <DesktopProjectsPage />
+                <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
               ) : activeTab === "hakedis" ? (
                 <DesktopHakedisPage />
               ) : activeTab === "settings" ? (
@@ -385,7 +386,7 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
         <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
-            <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} />
+            <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
           ) : activeTab === "chat" ? (
             messages.length === 0 ? (
               <WelcomeScreen onSuggestionClick={handleSend} />
