@@ -1,10 +1,14 @@
 import { useState, useRef } from "react";
-import { Upload, Image, Wand2, Download, X, FileText } from "lucide-react";
+import { Upload, Image, Wand2, Download, X, FileText, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useUserRenders } from "@/hooks/useUserRenders";
+import { useUser } from "@/contexts/UserContext";
 
 const RENDER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/render`;
 
 const RenderPanel = () => {
+  const { user } = useUser();
+  const { renders, saveRender } = useUserRenders();
   const [prompt, setPrompt] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ base64: string; name: string; type: string; preview?: string } | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
@@ -15,19 +19,10 @@ const RenderPanel = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error("Dosya boyutu 10MB'dan küçük olmalıdır.");
-      return;
-    }
-
+    if (file.size > maxSize) { toast.error("Dosya boyutu 10MB'dan küçük olmalıdır."); return; }
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Desteklenen formatlar: PNG, JPG, WebP, PDF");
-      return;
-    }
-
+    if (!allowedTypes.includes(file.type)) { toast.error("Desteklenen formatlar: PNG, JPG, WebP, PDF"); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
@@ -39,15 +34,10 @@ const RenderPanel = () => {
   };
 
   const handleRender = async () => {
-    if (!prompt.trim()) {
-      toast.error("Lütfen bir render açıklaması girin.");
-      return;
-    }
-
+    if (!prompt.trim()) { toast.error("Lütfen bir render açıklaması girin."); return; }
     setLoading(true);
     setResultImage(null);
     setResultText("");
-
     try {
       const resp = await fetch(RENDER_URL, {
         method: "POST",
@@ -61,22 +51,15 @@ const RenderPanel = () => {
           file_type: uploadedFile?.type || null,
         }),
       });
-
       const data = await resp.json();
-      if (!resp.ok) {
-        toast.error(data.error || "Render oluşturulamadı");
-        return;
-      }
-
+      if (!resp.ok) { toast.error(data.error || "Render oluşturulamadı"); return; }
       if (data.image) {
         setResultImage(data.image);
+        // Save to DB
+        if (user) saveRender(prompt.trim(), data.image, data.text || null);
       }
-      if (data.text) {
-        setResultText(data.text);
-      }
-      if (!data.image) {
-        toast.error("Render görseli oluşturulamadı, lütfen farklı bir prompt deneyin.");
-      }
+      if (data.text) setResultText(data.text);
+      if (!data.image) toast.error("Render görseli oluşturulamadı, lütfen farklı bir prompt deneyin.");
     } catch {
       toast.error("Bağlantı hatası oluştu.");
     } finally {
@@ -141,13 +124,7 @@ const RenderPanel = () => {
             </div>
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,application/pdf"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
+        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={handleFileUpload} className="hidden" />
       </div>
 
       {/* Prompt */}
@@ -162,11 +139,7 @@ const RenderPanel = () => {
         />
         <div className="flex flex-wrap gap-2">
           {suggestions.map((s) => (
-            <button
-              key={s}
-              onClick={() => setPrompt(s)}
-              className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-            >
+            <button key={s} onClick={() => setPrompt(s)} className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
               {s.length > 40 ? s.slice(0, 40) + "…" : s}
             </button>
           ))}
@@ -192,28 +165,43 @@ const RenderPanel = () => {
         )}
       </button>
 
-      {/* Result */}
+      {/* Current Result */}
       {resultImage && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               <Image className="w-4 h-4" /> Render Sonucu
             </h3>
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-            >
+            <button onClick={handleDownload} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
               <Download className="w-3.5 h-3.5" /> İndir
             </button>
           </div>
-          <img
-            src={resultImage}
-            alt="AI Render"
-            className="w-full rounded-xl border border-border shadow-sm"
-          />
-          {resultText && (
-            <p className="text-sm text-muted-foreground">{resultText}</p>
-          )}
+          <img src={resultImage} alt="AI Render" className="w-full rounded-xl border border-border shadow-sm" />
+          {resultText && <p className="text-sm text-muted-foreground">{resultText}</p>}
+        </div>
+      )}
+
+      {/* Previous Renders */}
+      {user && renders.length > 0 && (
+        <div className="space-y-3 pt-4 border-t border-border">
+          <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground" /> Son Renderlar
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {renders.map((r) => (
+              <div key={r.id} className="glass-card rounded-lg overflow-hidden">
+                {r.result_image_url && (
+                  <img src={r.result_image_url} alt={r.prompt} className="w-full h-32 object-cover" />
+                )}
+                <div className="p-3">
+                  <p className="text-xs text-foreground truncate">{r.prompt}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {new Date(r.created_at).toLocaleDateString("tr-TR")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

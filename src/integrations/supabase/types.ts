@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -43,6 +105,93 @@ export type Database = {
           plan?: string
           title?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          note: string | null
+          reminder_date: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          note?: string | null
+          reminder_date: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          note?: string | null
+          reminder_date?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_calculations: {
+        Row: {
+          calc_title: string
+          calc_type: string
+          created_at: string
+          id: string
+          input_data: Json
+          result_data: Json
+          user_id: string
+        }
+        Insert: {
+          calc_title: string
+          calc_type: string
+          created_at?: string
+          id?: string
+          input_data?: Json
+          result_data?: Json
+          user_id: string
+        }
+        Update: {
+          calc_title?: string
+          calc_type?: string
+          created_at?: string
+          id?: string
+          input_data?: Json
+          result_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_renders: {
+        Row: {
+          created_at: string
+          id: string
+          prompt: string
+          result_image_url: string | null
+          result_text: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt: string
+          result_image_url?: string | null
+          result_text?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt?: string
+          result_image_url?: string | null
+          result_text?: string | null
           user_id?: string
         }
         Relationships: []

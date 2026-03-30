@@ -1,29 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-
-interface Reminder {
-  id: string;
-  title: string;
-  date: string; // ISO date string
-  note: string;
-  done: boolean;
-}
-
-const STORAGE_KEY = "muhendisai_reminders";
-
-function loadReminders(): Reminder[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveReminders(items: Reminder[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+import { useReminders } from "@/hooks/useReminders";
+import { useUser } from "@/contexts/UserContext";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("tr-TR", {
@@ -52,44 +30,23 @@ function getStatusInfo(dateStr: string, done: boolean) {
 }
 
 const RemindersPanel = () => {
-  const [reminders, setReminders] = useState<Reminder[]>(loadReminders);
+  const { user } = useUser();
+  const { reminders, loading, addReminder, toggleDone, deleteReminder } = useReminders();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
   const [filter, setFilter] = useState<"all" | "upcoming" | "done" | "overdue">("all");
 
-  useEffect(() => {
-    saveReminders(reminders);
-  }, [reminders]);
-
-  const handleAdd = () => {
-    if (!title.trim() || !date) {
-      toast.error("Başlık ve tarih zorunludur.");
-      return;
+  const handleAdd = async () => {
+    if (!title.trim() || !date) return;
+    const ok = await addReminder(title.trim(), date, note.trim());
+    if (ok) {
+      setTitle("");
+      setDate("");
+      setNote("");
+      setShowForm(false);
     }
-    const newReminder: Reminder = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      date,
-      note: note.trim(),
-      done: false,
-    };
-    setReminders((prev) => [...prev, newReminder].sort((a, b) => a.date.localeCompare(b.date)));
-    setTitle("");
-    setDate("");
-    setNote("");
-    setShowForm(false);
-    toast.success("Hatırlatıcı eklendi");
-  };
-
-  const toggleDone = (id: string) => {
-    setReminders((prev) => prev.map((r) => (r.id === id ? { ...r, done: !r.done } : r)));
-  };
-
-  const handleDelete = (id: string) => {
-    setReminders((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Hatırlatıcı silindi");
   };
 
   const filtered = useMemo(() => {
@@ -97,20 +54,19 @@ const RemindersPanel = () => {
     now.setHours(0, 0, 0, 0);
     switch (filter) {
       case "upcoming":
-        return reminders.filter((r) => !r.done && new Date(r.date) >= now);
+        return reminders.filter((r) => !r.done && new Date(r.reminder_date) >= now);
       case "done":
         return reminders.filter((r) => r.done);
       case "overdue":
-        return reminders.filter((r) => !r.done && new Date(r.date) < now);
+        return reminders.filter((r) => !r.done && new Date(r.reminder_date) < now);
       default:
         return reminders;
     }
   }, [reminders, filter]);
 
-  // Summary counts
-  const overdue = reminders.filter((r) => !r.done && getDaysDiff(r.date) < 0).length;
-  const today = reminders.filter((r) => !r.done && getDaysDiff(r.date) === 0).length;
-  const upcoming = reminders.filter((r) => !r.done && getDaysDiff(r.date) > 0).length;
+  const overdue = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) < 0).length;
+  const today = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) === 0).length;
+  const upcoming = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) > 0).length;
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
@@ -121,7 +77,7 @@ const RemindersPanel = () => {
             Hatırlatıcılar
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Önemli tarihleri ve görevlerinizi takip edin
+            {user ? "Hatırlatıcılarınız hesabınıza kaydedilir (maks 20)" : "Giriş yaparak hatırlatıcılarınızı kaydedin"}
           </p>
         </div>
         <button
@@ -200,8 +156,17 @@ const RemindersPanel = () => {
         })}
       </div>
 
-      {/* Reminders table */}
-      {filtered.length === 0 ? (
+      {/* Reminders list */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="glass-card rounded-lg p-4 animate-pulse">
+              <div className="h-4 bg-muted rounded w-2/3 mb-2" />
+              <div className="h-3 bg-muted rounded w-1/3" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <CalendarClock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
@@ -211,7 +176,7 @@ const RemindersPanel = () => {
       ) : (
         <div className="space-y-2">
           {filtered.map((r) => {
-            const status = getStatusInfo(r.date, r.done);
+            const status = getStatusInfo(r.reminder_date, r.done);
             const StatusIcon = status.icon;
             return (
               <div
@@ -238,11 +203,11 @@ const RemindersPanel = () => {
                       {status.label}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{formatDate(r.date)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(r.reminder_date)}</p>
                   {r.note && <p className="text-xs text-muted-foreground mt-1">{r.note}</p>}
                 </div>
                 <button
-                  onClick={() => handleDelete(r.id)}
+                  onClick={() => deleteReminder(r.id)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
