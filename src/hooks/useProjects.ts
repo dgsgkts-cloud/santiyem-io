@@ -65,5 +65,12 @@ export function useProjects() {
     toast.success("Proje silindi");
   };
 
-  return { projects, loading, addProject, deleteProject, refetch: fetchProjects };
+  const updateProjectStatus = async (id: string, status: string, statusColor: string) => {
+    const { error } = await supabase.from("projects").update({ status, status_color: statusColor }).eq("id", id);
+    if (error) { toast.error("Durum güncellenemedi"); return; }
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, status, status_color: statusColor } : p));
+    toast.success("Proje durumu güncellendi");
+  };
+
+  return { projects, loading, addProject, deleteProject, updateProjectStatus, refetch: fetchProjects };
 }
