@@ -165,6 +165,12 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
           )}
         </div>
       ) : (
+        {warning && (
+          <div className="rounded-lg px-3 py-2 text-xs" style={{ backgroundColor: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.35)", color: "#F59E0B" }}>
+            {warning}
+          </div>
+        )}
+
         <div className="space-y-4">
           {/* Cinematic Video Player */}
           <div className="rounded-xl overflow-hidden max-w-sm mx-auto sm:max-w-none" style={{ border: "1px solid #1E2732" }}>
