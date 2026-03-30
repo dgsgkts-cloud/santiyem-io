@@ -55,7 +55,16 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
 
   if (selectedProject) {
-    return <ProjectDetailPage project={selectedProject} onBack={handleBack} />;
+    const dbProject = isDbProject(selectedProject.id);
+    return (
+      <ProjectDetailPage
+        project={selectedProject}
+        onBack={handleBack}
+        isDeletable={dbProject}
+        onDelete={(id) => { deleteProject(id); handleBack(); }}
+      />
+    );
+  }
   }
 
   const stats = [
