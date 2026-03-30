@@ -196,6 +196,8 @@ const Index = () => {
           {activeTab !== "chat" && (
             <DesktopTopBar
               title={TAB_TITLES[activeTab] || "Dashboard"}
+              onTabChange={(t) => handleDesktopTabChange(t as Tab)}
+              onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }}
             />
           )}
 
