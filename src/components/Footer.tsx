@@ -1,23 +1,9 @@
 import { Link } from "react-router-dom";
-
-const VisaLogo = () => (
-  <svg viewBox="0 0 48 16" height="16">
-    <text x="0" y="14" fontFamily="Arial" fontSize="14" fontWeight="bold" fill="#1A1F71">VISA</text>
-  </svg>
-);
-
-const MasterCardLogo = () => (
-  <svg viewBox="0 0 40 24" height="18">
-    <circle cx="14" cy="12" r="10" fill="#EB001B" />
-    <circle cx="26" cy="12" r="10" fill="#F79E1B" />
-    <path d="M20 4.6a10 10 0 000 14.8 10 10 0 000-14.8z" fill="#FF5F00" />
-  </svg>
-);
+import iyzicoFooterBand from "@/assets/iyzico-footer-band.png";
 
 const Footer = () => (
   <footer className="border-t border-border bg-card/60 backdrop-blur-sm px-4 py-5 shrink-0">
     <div className="max-w-5xl mx-auto">
-      {/* 3-column layout */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-4">
         {/* Left - Brand */}
         <div className="flex flex-col gap-1.5">
@@ -41,14 +27,10 @@ const Footer = () => (
           <Link to="/iptal-iade-politikasi" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">İptal & İade Politikası</Link>
         </div>
 
-        {/* Right - Trust badges */}
+        {/* Right - Trust badges + iyzico */}
         <div className="flex flex-col gap-2 items-start sm:items-end">
           <span className="text-[11px] font-semibold text-foreground mb-0.5">Güvenli Ödeme</span>
-          <div className="flex items-center gap-3">
-            <VisaLogo />
-            <MasterCardLogo />
-            <span className="font-bold text-[11px] px-1.5 py-0.5 rounded" style={{ color: "#1A1F71", backgroundColor: "#f0f0f0" }}>iyzico</span>
-          </div>
+          <img src={iyzicoFooterBand} alt="iyzico ile güvenli ödeme" className="h-6 object-contain" />
           <span className="flex items-center gap-1 text-[11px]" style={{ color: "#22C55E" }}>
             🔒 256-bit SSL ile korumalı
           </span>
