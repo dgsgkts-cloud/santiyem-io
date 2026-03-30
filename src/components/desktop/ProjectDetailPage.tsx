@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X, ChevronDown } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -31,7 +31,8 @@ const formatBytes = (bytes: number) => {
 const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDeletable }: ProjectDetailPageProps) => {
   const { user } = useUser();
   const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
-  const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
+  const { hakedisler, loading: hLoading, addHakedis, deleteHakedis, updateHakedisStatus } = useProjectHakedis(p.id);
+  const [hakedisStatusMenuId, setHakedisStatusMenuId] = useState<string | null>(null);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
