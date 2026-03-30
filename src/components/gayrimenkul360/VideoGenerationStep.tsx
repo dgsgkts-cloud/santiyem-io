@@ -339,7 +339,7 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
               ))}
             </div>
           </div>
-        </div>
+        </>
       )}
 
       <div className="flex gap-2 mt-4">
