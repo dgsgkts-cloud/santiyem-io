@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X, ChevronDown } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -277,17 +277,37 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
 
       {/* Hakediş Özeti */}
       <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>Hakediş Özeti</h3>
-          {user && (
-            <button
-              onClick={() => setShowAddHakedis(!showAddHakedis)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-colors"
-              style={{ backgroundColor: "#FF6B2B" }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Yeni Hakediş
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {hakedisler.length > 0 && (
+              <>
+                <button
+                  onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name)); }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
+                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                >
+                  <FileDown className="w-3 h-3" /> PDF
+                </button>
+                <button
+                  onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name)); }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
+                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                >
+                  <FileSpreadsheet className="w-3 h-3" /> Excel
+                </button>
+              </>
+            )}
+            {user && (
+              <button
+                onClick={() => setShowAddHakedis(!showAddHakedis)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-colors"
+                style={{ backgroundColor: "#FF6B2B" }}
+              >
+                <Plus className="w-3.5 h-3.5" /> Yeni Hakediş
+              </button>
+            )}
+          </div>
         </div>
 
         {showAddHakedis && (
