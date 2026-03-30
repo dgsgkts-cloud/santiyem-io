@@ -207,34 +207,36 @@ const Index = () => {
           )}
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#0F1419" }}>
-            {activeTab === "dashboard" ? (
-              <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
-            ) : activeTab === "chat" ? (
-              <DesktopChatLayout messages={messages} isTyping={isTyping} onSend={handleSend} onReset={handleReset} scrollRef={scrollRef} />
-            ) : activeTab === "projects" ? (
-              <DesktopProjectsPage />
-            ) : activeTab === "hakedis" ? (
-              <DesktopHakedisPage />
-            ) : activeTab === "settings" ? (
-              <DesktopSettingsPage />
-            ) : activeTab === "pricing" ? (
-              <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
-            ) : activeTab === "daily" ? (
-              <DailyKnowledgePanel />
-            ) : activeTab === "weather" ? (
-              <WeatherPanel />
-            ) : activeTab === "news" ? (
-              <NewsPanel />
-            ) : activeTab === "events" ? (
-              <EventsPanel />
-            ) : activeTab === "calc" ? (
-              <CalculatorsPanel />
-            ) : activeTab === "render" ? (
-              <RenderPanel />
-            ) : (
-              <RemindersPanel />
-            )}
+          <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
+            <div className="flex-1 pb-12">
+              {activeTab === "dashboard" ? (
+                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
+              ) : activeTab === "chat" ? (
+                <DesktopChatLayout messages={messages} isTyping={isTyping} onSend={handleSend} onReset={handleReset} scrollRef={scrollRef} />
+              ) : activeTab === "projects" ? (
+                <DesktopProjectsPage />
+              ) : activeTab === "hakedis" ? (
+                <DesktopHakedisPage />
+              ) : activeTab === "settings" ? (
+                <DesktopSettingsPage />
+              ) : activeTab === "pricing" ? (
+                <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
+              ) : activeTab === "daily" ? (
+                <DailyKnowledgePanel />
+              ) : activeTab === "weather" ? (
+                <WeatherPanel />
+              ) : activeTab === "news" ? (
+                <NewsPanel />
+              ) : activeTab === "events" ? (
+                <EventsPanel />
+              ) : activeTab === "calc" ? (
+                <CalculatorsPanel />
+              ) : activeTab === "render" ? (
+                <RenderPanel />
+              ) : (
+                <RemindersPanel />
+              )}
+            </div>
             {activeTab !== "chat" && <Footer />}
           </div>
         </div>
@@ -383,35 +385,37 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {activeTab === "chat" ? (
-          messages.length === 0 ? (
-            <WelcomeScreen onSuggestionClick={handleSend} />
+      <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 pb-8 md:pb-10">
+          {activeTab === "chat" ? (
+            messages.length === 0 ? (
+              <WelcomeScreen onSuggestionClick={handleSend} />
+            ) : (
+              <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
+                {messages.map((msg) => (
+                  <ChatMessage key={msg.id} message={msg} />
+                ))}
+                {isTyping && <TypingIndicator />}
+              </div>
+            )
+          ) : activeTab === "weather" ? (
+            <WeatherPanel />
+          ) : activeTab === "news" ? (
+            <NewsPanel />
+          ) : activeTab === "events" ? (
+            <EventsPanel />
+          ) : activeTab === "calc" ? (
+            <CalculatorsPanel />
+          ) : activeTab === "render" ? (
+            <RenderPanel />
+          ) : activeTab === "pricing" ? (
+            <PricingPanel />
+          ) : activeTab === "daily" ? (
+            <DailyKnowledgePanel />
           ) : (
-            <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))}
-              {isTyping && <TypingIndicator />}
-            </div>
-          )
-        ) : activeTab === "weather" ? (
-          <WeatherPanel />
-        ) : activeTab === "news" ? (
-          <NewsPanel />
-        ) : activeTab === "events" ? (
-          <EventsPanel />
-        ) : activeTab === "calc" ? (
-          <CalculatorsPanel />
-        ) : activeTab === "render" ? (
-          <RenderPanel />
-        ) : activeTab === "pricing" ? (
-          <PricingPanel />
-        ) : activeTab === "daily" ? (
-          <DailyKnowledgePanel />
-        ) : (
-          <RemindersPanel />
-        )}
+            <RemindersPanel />
+          )}
+        </div>
         {activeTab !== "chat" && <Footer />}
       </div>
 

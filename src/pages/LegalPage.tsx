@@ -26,7 +26,7 @@ const LegalPage = ({ title, sections }: LegalPageProps) => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto pb-8 md:pb-10 lg:pb-12">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <p className="text-xs text-muted-foreground mb-8">Son güncelleme: 01 Ocak 2025</p>
           <div className="space-y-8">
