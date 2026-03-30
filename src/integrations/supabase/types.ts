@@ -76,6 +76,90 @@ export type Database = {
         }
         Relationships: []
       }
+      listings: {
+        Row: {
+          contact: string
+          created_at: string
+          description: string
+          floor_info: string | null
+          id: string
+          listing_type: string
+          media_urls: Json | null
+          parcel_ada: string | null
+          parcel_area_sqm: number | null
+          parcel_center_lat: number | null
+          parcel_center_lng: number | null
+          parcel_coords: Json | null
+          parcel_il: string | null
+          parcel_ilce: string | null
+          parcel_parsel: string | null
+          price: number
+          property_type: string | null
+          rooms: string | null
+          sqm: number | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          video_status: string | null
+          video_url: string | null
+        }
+        Insert: {
+          contact?: string
+          created_at?: string
+          description?: string
+          floor_info?: string | null
+          id?: string
+          listing_type?: string
+          media_urls?: Json | null
+          parcel_ada?: string | null
+          parcel_area_sqm?: number | null
+          parcel_center_lat?: number | null
+          parcel_center_lng?: number | null
+          parcel_coords?: Json | null
+          parcel_il?: string | null
+          parcel_ilce?: string | null
+          parcel_parsel?: string | null
+          price?: number
+          property_type?: string | null
+          rooms?: string | null
+          sqm?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+          video_status?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          contact?: string
+          created_at?: string
+          description?: string
+          floor_info?: string | null
+          id?: string
+          listing_type?: string
+          media_urls?: Json | null
+          parcel_ada?: string | null
+          parcel_area_sqm?: number | null
+          parcel_center_lat?: number | null
+          parcel_center_lng?: number | null
+          parcel_coords?: Json | null
+          parcel_il?: string | null
+          parcel_ilce?: string | null
+          parcel_parsel?: string | null
+          price?: number
+          property_type?: string | null
+          rooms?: string | null
+          sqm?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_status?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
