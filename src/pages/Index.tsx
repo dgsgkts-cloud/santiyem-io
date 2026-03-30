@@ -49,7 +49,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "events", label: "Etkinlikler", shortLabel: "Etkinlik", icon: Calendar },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
-  { id: "realestate", label: "Gayrimenkul360", shortLabel: "G.Menkul", icon: Building2 },
+  
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
   { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
