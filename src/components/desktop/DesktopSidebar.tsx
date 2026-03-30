@@ -9,7 +9,7 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Progress } from "@/components/ui/progress";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "realestate";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
