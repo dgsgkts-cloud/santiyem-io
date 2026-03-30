@@ -33,6 +33,7 @@ import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Gayrimenkul360Panel from "@/components/gayrimenkul360/Gayrimenkul360Panel";
 
 type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "realestate";
 
