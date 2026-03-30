@@ -47,7 +47,13 @@ const UPCOMING = [
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
   const { profile } = useUser();
+  const { reminders } = useReminders();
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
+
+  // Son 5 hatırlatıcı (tarihe göre en yeniler)
+  const recentReminders = [...reminders]
+    .sort((a, b) => new Date(b.reminder_date).getTime() - new Date(a.reminder_date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
