@@ -26,15 +26,16 @@ import {
   RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, BarChart3, Settings, LogOut, User, Plus, Bell
+  Lightbulb, BarChart3, Settings, LogOut, User, Plus, Bell, Building2
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Gayrimenkul360Panel from "@/components/gayrimenkul360/Gayrimenkul360Panel";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "realestate";
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -48,6 +49,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "events", label: "Etkinlikler", shortLabel: "Etkinlik", icon: Calendar },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
+  { id: "realestate", label: "Gayrimenkul360", shortLabel: "G.Menkul", icon: Building2 },
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
   { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
@@ -62,6 +64,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
+  { id: "realestate", label: "Gayrimenkul360", emoji: "🏢", icon: Building2 },
   { id: "weather", label: "Hava Durumu", emoji: "🌤️", icon: CloudRain },
   { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
@@ -84,6 +87,7 @@ const TAB_TITLES: Record<string, string> = {
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
   settings: "Ayarlar",
+  realestate: "Gayrimenkul360",
   hakkimizda: "Hakkımızda",
 };
 
@@ -230,6 +234,8 @@ const Index = () => {
                 <CalculatorsPanel />
               ) : activeTab === "render" ? (
                 <RenderPanel />
+              ) : activeTab === "realestate" ? (
+                <Gayrimenkul360Panel />
               ) : (
                 <RemindersPanel />
               )}
@@ -472,6 +478,8 @@ const Index = () => {
             <CalculatorsPanel />
           ) : activeTab === "render" ? (
             <RenderPanel />
+          ) : activeTab === "realestate" ? (
+            <Gayrimenkul360Panel />
           ) : activeTab === "pricing" ? (
             <PricingPanel />
           ) : activeTab === "daily" ? (
