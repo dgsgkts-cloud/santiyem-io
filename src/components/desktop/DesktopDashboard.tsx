@@ -1,9 +1,10 @@
 import { useUser } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
-  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown
+  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock
 } from "lucide-react";
 import { PROJECTS as SHARED_PROJECTS } from "@/lib/projectsData";
+import { useReminders } from "@/hooks/useReminders";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -46,7 +47,13 @@ const UPCOMING = [
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
   const { profile } = useUser();
+  const { reminders } = useReminders();
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
+
+  // Son 5 hatırlatıcı (tarihe göre en yeniler)
+  const recentReminders = [...reminders]
+    .sort((a, b) => new Date(b.reminder_date).getTime() - new Date(a.reminder_date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
@@ -248,6 +255,54 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Hatırlatıcılar */}
+          <div
+            className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30"
+            style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+            onClick={() => onTabChange("reminders")}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Hatırlatıcılar</h3>
+              </div>
+              <button className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+                Tümü <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            {recentReminders.length === 0 ? (
+              <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz hatırlatıcı yok</p>
+            ) : (
+              <div className="space-y-2.5">
+                {recentReminders.map((r) => {
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  const rDate = new Date(r.reminder_date); rDate.setHours(0,0,0,0);
+                  const diff = Math.round((rDate.getTime() - today.getTime()) / (1000*60*60*24));
+                  const isOverdue = !r.done && diff < 0;
+                  const isToday = diff === 0;
+                  return (
+                    <div key={r.id} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: r.done ? "#22C55E" : isOverdue ? "#EF4444" : isToday ? "#F59E0B" : "#3B82F6" }} />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[12px] lg:text-[13px] font-medium truncate ${r.done ? "line-through" : ""}`} style={{ color: r.done ? "#64748B" : "#F1F5F9" }}>{r.title}</p>
+                        {r.note && <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{r.note}</p>}
+                      </div>
+                      <span
+                        className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
+                        style={{
+                          backgroundColor: r.done ? "rgba(34,197,94,0.1)" : isOverdue ? "rgba(239,68,68,0.1)" : isToday ? "rgba(245,158,11,0.1)" : "rgba(59,130,246,0.1)",
+                          color: r.done ? "#22C55E" : isOverdue ? "#EF4444" : isToday ? "#F59E0B" : "#3B82F6"
+                        }}
+                      >
+                        {r.done ? "✓" : isOverdue ? `${Math.abs(diff)}g gecikmiş` : isToday ? "Bugün" : `${diff}g`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
