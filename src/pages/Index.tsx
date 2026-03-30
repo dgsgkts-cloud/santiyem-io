@@ -257,7 +257,66 @@ const Index = () => {
           <img src={logo} alt="MühendisAI" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">MühendisAI</h1>
         </div>
-        <div className="w-10">
+        <div className="flex items-center gap-1">
+          {/* Mobile notification bell */}
+          <div className="relative">
+            <button
+              onClick={() => setMobileNotifOpen(!mobileNotifOpen)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors relative"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <div className="absolute top-1 right-1 min-w-[16px] h-[16px] rounded-full flex items-center justify-center text-[9px] font-bold text-white px-0.5" style={{ backgroundColor: "#EF4444" }}>
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </div>
+              )}
+            </button>
+            {mobileNotifOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMobileNotifOpen(false)} />
+                <div className="absolute right-0 top-11 z-50 w-[280px] rounded-xl shadow-2xl max-h-[350px] flex flex-col" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+                  <div className="p-3 flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #1E2732" }}>
+                    <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Bildirimler</p>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllAsRead} className="text-[11px] font-medium" style={{ color: "#FF6B2B" }}>Tümünü Oku</button>
+                    )}
+                  </div>
+                  <div className="overflow-y-auto flex-1">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <p className="text-[12px]" style={{ color: "#64748B" }}>Bildirim yok</p>
+                      </div>
+                    ) : (
+                      notifications.map((n, i) => {
+                        const isRead = dismissedIds.includes(n.id);
+                        return (
+                          <button
+                            key={n.id}
+                            onClick={() => {
+                              markAsRead([n.id]);
+                              if (n.targetTab === "projects" && n.targetProjectId) {
+                                setSelectedProjectId(n.targetProjectId);
+                              }
+                              setActiveTab(n.targetTab as Tab);
+                              setMobileNotifOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-3 transition-colors"
+                            style={{
+                              borderBottom: i < notifications.length - 1 ? "1px solid #1E2732" : undefined,
+                              backgroundColor: isRead ? "transparent" : "rgba(255,107,43,0.04)",
+                            }}
+                          >
+                            <p className="text-[12px] font-medium truncate" style={{ color: isRead ? "#94A3B8" : "#F1F5F9" }}>{n.title}</p>
+                            <p className="text-[11px] mt-0.5" style={{ color: isRead ? "#475569" : "#94A3B8" }}>{n.message}</p>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button
               onClick={handleReset}
