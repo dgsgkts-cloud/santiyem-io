@@ -5,39 +5,136 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+type ListingInput = {
+  listing_type?: string;
+  property_type?: string | null;
+  title?: string;
+  description?: string;
+  price?: number;
+  contact?: string;
+  rooms?: string | null;
+  sqm?: number | null;
+  floor_info?: string | null;
+  parcel_il?: string | null;
+  parcel_ilce?: string | null;
+  parcel_area_sqm?: number | null;
+  parcel_center_lat?: number | null;
+  parcel_center_lng?: number | null;
+};
 
-  try {
-    const { listing } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+type Scene = {
+  title: string;
+  description: string;
+  duration: number;
+  image_prompt?: string;
+};
 
-    const isLand = listing.listing_type === "arsa";
-    const locationText = [listing.parcel_il, listing.parcel_ilce].filter(Boolean).join(", ") || "Türkiye";
+type VideoScript = {
+  narration: string;
+  scenes: Scene[];
+};
 
-    // Step 1: Generate script with scenes
-    const systemPrompt = `Sen bir gayrimenkul pazarlama uzmanısın. ${isLand ? "Arsa" : "Gayrimenkul"} ilanları için profesyonel, sinematik bir video senaryosu oluşturuyorsun. Her sahne için drone/sinematik kamera açısından detaylı görsel açıklama yaz. Türkçe yaz. JSON formatında yanıt ver.`;
+const CAMERA_PRESETS = [
+  { zoom: 13.8, bearing: 0, pitch: 0 },
+  { zoom: 14.8, bearing: 25, pitch: 35 },
+  { zoom: 15.8, bearing: 65, pitch: 45 },
+  { zoom: 16.4, bearing: 100, pitch: 55 },
+  { zoom: 15.2, bearing: 145, pitch: 40 },
+  { zoom: 14.2, bearing: 180, pitch: 20 },
+] as const;
 
-    const userPrompt = isLand
-      ? `Arsa İlanı: Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Alan: ${listing.parcel_area_sqm || "Belirtilmemiş"} m², Konum: ${locationText}, İletişim: ${listing.contact}`
-      : `Gayrimenkul İlanı: Tür: ${listing.property_type}, Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Oda: ${listing.rooms}, Metrekare: ${listing.sqm} m², Kat: ${listing.floor_info}, Konum: ${locationText}, İletişim: ${listing.contact}`;
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
 
-    const scriptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
+const buildFallbackScript = (listing: ListingInput, isLand: boolean, locationText: string): VideoScript => {
+  const title = listing.title || (isLand ? "Özel Arsa" : "Özel Gayrimenkul");
+  const desc = listing.description || "Detaylar için bizimle iletişime geçin.";
+  const priceText = listing.price ? `${listing.price.toLocaleString("tr-TR")} TL` : "Fiyat bilgisi için arayın";
+  const areaText = listing.parcel_area_sqm
+    ? `${listing.parcel_area_sqm} m²`
+    : listing.sqm
+      ? `${listing.sqm} m²`
+      : "geniş kullanım alanı";
+
+  return {
+    narration: `${locationText} bölgesinde yer alan ${title} için hazırlanan bu tanıtımda, konumu ve yatırım potansiyelini görebilirsiniz. ${desc} Fiyat: ${priceText}. Daha fazla bilgi için hemen iletişime geçin.`,
+    scenes: [
+      { title: "Konum", description: `${locationText} genel görünümü`, duration: 4 },
+      { title: "Parsel Görünümü", description: "İşaretlenen alanın yakından görünümü", duration: 5 },
+      { title: "Çevre ve Erişim", description: "Yollar ve çevre yerleşimlere yakınlık", duration: 4 },
+      { title: "Yatırım Potansiyeli", description: `${areaText} ve yüksek değer potansiyeli`, duration: 4 },
+      { title: "Kapanış", description: `Fiyat: ${priceText} • İletişim: ${listing.contact || "İletişime geçin"}`, duration: 5 },
+    ],
+  };
+};
+
+const buildMapboxStaticUrl = (
+  token: string,
+  lat: number,
+  lng: number,
+  zoom: number,
+  bearing: number,
+  pitch: number,
+): string => {
+  const safeLat = lat.toFixed(6);
+  const safeLng = lng.toFixed(6);
+  const marker = `pin-s+10B981(${safeLng},${safeLat})`;
+
+  return `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${marker}/${safeLng},${safeLat},${zoom},${bearing},${pitch}/1280x720?logo=false&attribution=false&access_token=${encodeURIComponent(token)}`;
+};
+
+const buildMapboxSceneImages = (
+  sceneCount: number,
+  lat: number,
+  lng: number,
+  mapboxToken: string,
+): string[] => {
+  if (sceneCount <= 0) return [];
+
+  return Array.from({ length: sceneCount }, (_, index) => {
+    const preset = CAMERA_PRESETS[index % CAMERA_PRESETS.length];
+    const offsetRadius = index % 2 === 0 ? 0 : 0.0015;
+    const angle = (preset.bearing * Math.PI) / 180;
+    const offsetLat = lat + Math.sin(angle) * offsetRadius;
+    const offsetLng = lng + Math.cos(angle) * offsetRadius;
+
+    return buildMapboxStaticUrl(
+      mapboxToken,
+      offsetLat,
+      offsetLng,
+      preset.zoom,
+      preset.bearing,
+      preset.pitch,
+    );
+  });
+};
+
+const tryGenerateAiScript = async (
+  lovableApiKey: string,
+  listing: ListingInput,
+  isLand: boolean,
+  locationText: string,
+): Promise<{ script: VideoScript | null; status: number | null; errorText?: string }> => {
+  const systemPrompt = `Sen bir gayrimenkul pazarlama uzmanısın. ${isLand ? "Arsa" : "Gayrimenkul"} ilanları için profesyonel, sinematik video senaryosu oluşturuyorsun. Türkçe yaz. JSON formatında yanıt ver.`;
+
+  const userPrompt = isLand
+    ? `Arsa İlanı: Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Alan: ${listing.parcel_area_sqm || "Belirtilmemiş"} m², Konum: ${locationText}, İletişim: ${listing.contact}`
+    : `Gayrimenkul İlanı: Tür: ${listing.property_type}, Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Oda: ${listing.rooms}, Metrekare: ${listing.sqm} m², Kat: ${listing.floor_info}, Konum: ${locationText}, İletişim: ${listing.contact}`;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      tools: [
+        {
           type: "function",
           function: {
             name: "generate_video_script",
@@ -45,7 +142,7 @@ serve(async (req) => {
             parameters: {
               type: "object",
               properties: {
-                narration: { type: "string", description: "Full narration text in Turkish" },
+                narration: { type: "string" },
                 scenes: {
                   type: "array",
                   items: {
@@ -53,106 +150,118 @@ serve(async (req) => {
                     properties: {
                       title: { type: "string" },
                       description: { type: "string" },
-                      image_prompt: { type: "string", description: "Detailed English prompt for AI image generation of this scene - describe drone/cinematic camera angle, landscape, architecture, lighting" },
                       duration: { type: "number" },
+                      image_prompt: { type: "string" },
                     },
-                    required: ["title", "description", "image_prompt", "duration"],
+                    required: ["title", "description", "duration"],
                   },
                 },
               },
               required: ["narration", "scenes"],
             },
           },
-        }],
-        tool_choice: { type: "function", function: { name: "generate_video_script" } },
-      }),
-    });
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "generate_video_script" } },
+    }),
+  });
 
-    if (!scriptResponse.ok) {
-      if (scriptResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit aşıldı, lütfen bekleyin." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await scriptResponse.text();
-      console.error("AI gateway error:", scriptResponse.status, t);
-      throw new Error("AI gateway error");
+  if (!response.ok) {
+    const errorText = await response.text();
+    return { script: null, status: response.status, errorText };
+  }
+
+  const data = await response.json();
+  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall?.function?.arguments) {
+    return { script: null, status: null, errorText: "Invalid tool response" };
+  }
+
+  const script = JSON.parse(toolCall.function.arguments) as VideoScript;
+  return { script, status: 200 };
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { listing } = (await req.json()) as { listing: ListingInput };
+    const MAPBOX_TOKEN = Deno.env.get("MAPBOX_TOKEN");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+    if (!listing) {
+      return new Response(JSON.stringify({ error: "listing payload required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const scriptData = await scriptResponse.json();
-    const toolCall = scriptData.choices?.[0]?.message?.tool_calls?.[0];
-    let script = { narration: "", scenes: [] as any[] };
+    const hasCoords = isFiniteNumber(listing.parcel_center_lat) && isFiniteNumber(listing.parcel_center_lng);
+    const isLand = listing.listing_type === "arsa";
+    const locationText = [listing.parcel_il, listing.parcel_ilce].filter(Boolean).join(", ") || "Türkiye";
 
-    if (toolCall?.function?.arguments) {
-      script = JSON.parse(toolCall.function.arguments);
-    }
+    let warning: string | null = null;
+    let script = buildFallbackScript(listing, isLand, locationText);
 
-    // Step 2: Generate images for each scene
-    const sceneImages: string[] = [];
-    for (const scene of script.scenes) {
+    // AI script is optional now; real map imagery continues even when credits are exhausted.
+    if (LOVABLE_API_KEY) {
       try {
-        const imgPrompt = scene.image_prompt || 
-          `Cinematic drone aerial photography of ${locationText} Turkey, ${scene.description}, golden hour, professional real estate photography, 4K quality`;
-        
-        const imgResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3.1-flash-image-preview",
-            messages: [
-              { 
-                role: "user", 
-                content: `Generate a photorealistic cinematic image: ${imgPrompt}. Style: drone aerial photography, golden hour lighting, professional real estate promotional material, ultra high quality, 16:9 aspect ratio.`
-              },
-            ],
-            modalities: ["image", "text"],
-          }),
-        });
-
-        if (imgResponse.ok) {
-          const imgData = await imgResponse.json();
-          // Images are in message.images array, not message.content
-          const images = imgData.choices?.[0]?.message?.images;
-          if (Array.isArray(images) && images.length > 0) {
-            const imgUrl = images[0]?.image_url?.url;
-            if (imgUrl) {
-              sceneImages.push(imgUrl);
-              console.log("Image generated for scene:", scene.title);
-            } else {
-              sceneImages.push("");
-            }
-          } else {
-            console.log("No images in response for scene:", scene.title, JSON.stringify(imgData.choices?.[0]?.message).slice(0, 200));
-            sceneImages.push("");
-          }
-        } else {
-          const errText = await imgResponse.text();
-          console.error("Image generation failed for scene:", scene.title, imgResponse.status, errText);
-          sceneImages.push("");
+        const aiResult = await tryGenerateAiScript(LOVABLE_API_KEY, listing, isLand, locationText);
+        if (aiResult.script && Array.isArray(aiResult.script.scenes) && aiResult.script.scenes.length > 0) {
+          script = aiResult.script;
+        } else if (aiResult.status === 402) {
+          warning = "AI kredisi yetersiz; gerçek konum görüntüleri ile devam edildi.";
+        } else if (aiResult.status === 429) {
+          warning = "AI hız limiti aşıldı; gerçek konum görüntüleri ile devam edildi.";
+        } else if (aiResult.errorText) {
+          console.error("AI script fallback reason:", aiResult.status, aiResult.errorText);
         }
-      } catch (imgErr) {
-        console.error("Image generation error:", imgErr);
-        sceneImages.push("");
+      } catch (error) {
+        console.error("AI script generation failed, using fallback:", error);
       }
     }
 
-    // Attach images to scenes
-    const scenesWithImages = script.scenes.map((scene: any, i: number) => ({
+    if (!MAPBOX_TOKEN) {
+      return new Response(JSON.stringify({ error: "MAPBOX_TOKEN not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!hasCoords) {
+      warning = warning || "Parsel koordinatı bulunamadı. Lütfen haritada parsel işaretleyin.";
+    }
+
+    const images = hasCoords
+      ? buildMapboxSceneImages(
+          script.scenes.length,
+          listing.parcel_center_lat as number,
+          listing.parcel_center_lng as number,
+          MAPBOX_TOKEN,
+        )
+      : Array.from({ length: script.scenes.length }, () => null);
+
+    const scenesWithImages = script.scenes.map((scene, index) => ({
       ...scene,
-      image_url: sceneImages[i] || null,
+      duration: isFiniteNumber(scene.duration) && scene.duration > 0 ? scene.duration : 4,
+      image_url: images[index] || null,
+      image_source: images[index] ? "mapbox_satellite" : null,
     }));
 
-    return new Response(JSON.stringify({ 
-      script: { 
-        narration: script.narration, 
-        scenes: scenesWithImages 
-      } 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        script: {
+          narration: script.narration,
+          scenes: scenesWithImages,
+        },
+        warning,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (e) {
     console.error("generate-listing-video error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
