@@ -39,6 +39,8 @@ type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminde
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
+  { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
   { id: "news", label: "Haberler", shortLabel: "Haber", icon: Newspaper },
@@ -47,6 +49,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
+  { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
 ];
 
 // Mobile drawer menu items
