@@ -13,14 +13,19 @@ const STATS = [
   { label: "Geciken", value: "1", emoji: "⏰", alert: true },
 ];
 
-const DesktopProjectsPage = () => {
+interface DesktopProjectsPageProps {
+  initialProjectId?: string | null;
+  onProjectIdClear?: () => void;
+}
+
+const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
 
-  const selectedProject = selectedProjectId ? PROJECTS.find(p => p.id === selectedProjectId) : null;
-
-  if (selectedProject) {
-    return <ProjectDetailPage project={selectedProject} onBack={() => setSelectedProjectId(null)} />;
+  const handleBack = () => {
+    setSelectedProjectId(null);
+    onProjectIdClear?.();
+  };
   }
 
   return (
