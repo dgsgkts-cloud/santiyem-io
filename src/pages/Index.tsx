@@ -64,6 +64,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
+  { id: "realestate", label: "Gayrimenkul360", emoji: "🏢", icon: Building2 },
   { id: "weather", label: "Hava Durumu", emoji: "🌤️", icon: CloudRain },
   { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
