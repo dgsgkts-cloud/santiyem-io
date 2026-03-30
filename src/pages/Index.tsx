@@ -235,9 +235,8 @@ const Index = () => {
             ) : (
               <RemindersPanel />
             )}
+            {activeTab !== "chat" && <Footer />}
           </div>
-
-          {activeTab !== "chat" && <Footer />}
         </div>
       </div>
     );
