@@ -212,7 +212,7 @@ const Index = () => {
               ) : activeTab === "chat" ? (
                 <DesktopChatLayout scrollRef={scrollRef} />
               ) : activeTab === "projects" ? (
-                <DesktopProjectsPage />
+                <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
               ) : activeTab === "hakedis" ? (
                 <DesktopHakedisPage />
               ) : activeTab === "settings" ? (
