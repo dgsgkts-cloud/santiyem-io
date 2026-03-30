@@ -385,35 +385,37 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {activeTab === "chat" ? (
-          messages.length === 0 ? (
-            <WelcomeScreen onSuggestionClick={handleSend} />
+      <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 pb-8 md:pb-10">
+          {activeTab === "chat" ? (
+            messages.length === 0 ? (
+              <WelcomeScreen onSuggestionClick={handleSend} />
+            ) : (
+              <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
+                {messages.map((msg) => (
+                  <ChatMessage key={msg.id} message={msg} />
+                ))}
+                {isTyping && <TypingIndicator />}
+              </div>
+            )
+          ) : activeTab === "weather" ? (
+            <WeatherPanel />
+          ) : activeTab === "news" ? (
+            <NewsPanel />
+          ) : activeTab === "events" ? (
+            <EventsPanel />
+          ) : activeTab === "calc" ? (
+            <CalculatorsPanel />
+          ) : activeTab === "render" ? (
+            <RenderPanel />
+          ) : activeTab === "pricing" ? (
+            <PricingPanel />
+          ) : activeTab === "daily" ? (
+            <DailyKnowledgePanel />
           ) : (
-            <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))}
-              {isTyping && <TypingIndicator />}
-            </div>
-          )
-        ) : activeTab === "weather" ? (
-          <WeatherPanel />
-        ) : activeTab === "news" ? (
-          <NewsPanel />
-        ) : activeTab === "events" ? (
-          <EventsPanel />
-        ) : activeTab === "calc" ? (
-          <CalculatorsPanel />
-        ) : activeTab === "render" ? (
-          <RenderPanel />
-        ) : activeTab === "pricing" ? (
-          <PricingPanel />
-        ) : activeTab === "daily" ? (
-          <DailyKnowledgePanel />
-        ) : (
-          <RemindersPanel />
-        )}
+            <RemindersPanel />
+          )}
+        </div>
         {activeTab !== "chat" && <Footer />}
       </div>
 
