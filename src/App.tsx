@@ -13,6 +13,9 @@ import NotFound from "./pages/NotFound.tsx";
 import KullanimSartlari from "./pages/KullanimSartlari.tsx";
 import GizlilikPolitikasi from "./pages/GizlilikPolitikasi.tsx";
 import IptalIadePolitikasi from "./pages/IptalIadePolitikasi.tsx";
+import Hakkimizda from "./pages/Hakkimizda.tsx";
+import TeslimatIade from "./pages/TeslimatIade.tsx";
+import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,9 @@ const App = () => (
             <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
             <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
             <Route path="/iptal-iade-politikasi" element={<IptalIadePolitikasi />} />
+            <Route path="/hakkimizda" element={<Hakkimizda />} />
+            <Route path="/teslimat-iade" element={<TeslimatIade />} />
+            <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

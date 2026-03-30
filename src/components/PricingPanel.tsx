@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, X, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PaymentLogoBand, TrustBadges } from "@/components/PaymentLogos";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const PricingPanel = () => {
@@ -176,10 +177,14 @@ const PricingPanel = () => {
         ))}
       </div>
 
-      {/* Security note */}
-      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-12">
-        <Shield className="w-4 h-4" />
-        Tüm planlarda 256-bit SSL şifreleme ve veri güvenliği sağlanmaktadır.
+      {/* Trust badges */}
+      <div className="mb-6">
+        <TrustBadges />
+      </div>
+
+      {/* Payment logos */}
+      <div className="mb-12">
+        <PaymentLogoBand />
       </div>
 
       {/* FAQ */}
