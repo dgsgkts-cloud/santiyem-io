@@ -12,6 +12,13 @@ import RemindersPanel from "@/components/RemindersPanel";
 import PricingPanel from "@/components/PricingPanel";
 import DailyKnowledgePanel from "@/components/DailyKnowledgePanel";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
+import DesktopSidebar from "@/components/desktop/DesktopSidebar";
+import DesktopTopBar from "@/components/desktop/DesktopTopBar";
+import DesktopDashboard from "@/components/desktop/DesktopDashboard";
+import DesktopChatLayout from "@/components/desktop/DesktopChatLayout";
+import DesktopProjectsPage from "@/components/desktop/DesktopProjectsPage";
+import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
+import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
@@ -19,15 +26,16 @@ import {
   RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, BarChart3, Settings, LogOut, User
+  Lightbulb, BarChart3, Settings, LogOut, User, Plus
 } from "lucide-react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
-// Desktop tab bar items
+// Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
@@ -53,6 +61,22 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
 ];
 
+const TAB_TITLES: Record<string, string> = {
+  dashboard: "Dashboard",
+  chat: "AI Asistan",
+  daily: "Günlük Bilgi",
+  weather: "Fotoğraf Analizi",
+  news: "Belge Arşivi",
+  events: "Hesap Araçları",
+  calc: "EKB Hesaplama",
+  render: "Proje Analizi",
+  reminders: "Mevzuat Arama",
+  pricing: "Planlar",
+  projects: "Proje Yönetimi",
+  hakedis: "Hakediş Yönetimi",
+  settings: "Ayarlar",
+};
+
 const Index = () => {
   const { user, plan, signOut } = useUser();
   const navigate = useNavigate();
@@ -61,6 +85,23 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>("chat");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+  const [isLg, setIsLg] = useState(isDesktop);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const handler = () => setIsLg(mql.matches);
+    mql.addEventListener("change", handler);
+    setIsLg(mql.matches);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Default to dashboard on desktop
+  useEffect(() => {
+    if (isLg && activeTab === "chat" && messages.length === 0) {
+      setActiveTab("dashboard");
+    }
+  }, [isLg]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -72,7 +113,6 @@ const Index = () => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
-  // Lock body scroll when drawer is open
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
@@ -136,10 +176,77 @@ const Index = () => {
     setDrawerOpen(false);
   };
 
+  const handleDesktopTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+  };
+
+  // Desktop layout
+  if (isLg) {
+    return (
+      <div className="flex h-screen" style={{ backgroundColor: "#0A0E13" }}>
+        <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
+
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar - not for chat (it has its own header) */}
+          {activeTab !== "chat" && (
+            <DesktopTopBar
+              title={TAB_TITLES[activeTab] || "Dashboard"}
+              actions={
+                activeTab === "projects" ? (
+                  <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
+                    <Plus className="w-3.5 h-3.5" /> Yeni Proje
+                  </button>
+                ) : activeTab === "hakedis" ? (
+                  <button className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors" style={{ height: 32, backgroundColor: "#FF6B2B" }}>
+                    <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
+                  </button>
+                ) : undefined
+              }
+            />
+          )}
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#0F1419" }}>
+            {activeTab === "dashboard" ? (
+              <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
+            ) : activeTab === "chat" ? (
+              <DesktopChatLayout messages={messages} isTyping={isTyping} onSend={handleSend} onReset={handleReset} scrollRef={scrollRef} />
+            ) : activeTab === "projects" ? (
+              <DesktopProjectsPage />
+            ) : activeTab === "hakedis" ? (
+              <DesktopHakedisPage />
+            ) : activeTab === "settings" ? (
+              <DesktopSettingsPage />
+            ) : activeTab === "pricing" ? (
+              <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
+            ) : activeTab === "daily" ? (
+              <DailyKnowledgePanel />
+            ) : activeTab === "weather" ? (
+              <WeatherPanel />
+            ) : activeTab === "news" ? (
+              <NewsPanel />
+            ) : activeTab === "events" ? (
+              <EventsPanel />
+            ) : activeTab === "calc" ? (
+              <CalculatorsPanel />
+            ) : activeTab === "render" ? (
+              <RenderPanel />
+            ) : (
+              <RemindersPanel />
+            )}
+          </div>
+
+          {activeTab !== "chat" && <Footer />}
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile/Tablet layout (unchanged)
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* ── MOBILE HEADER ── */}
-      <header className="md:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0">
+      <header className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0">
         <button
           onClick={() => setDrawerOpen(true)}
           className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
@@ -163,30 +270,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* ── DESKTOP HEADER ── */}
-      <header className="hidden md:flex border-b border-border bg-card/60 backdrop-blur-sm px-4 py-3 items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="MühendisAI" className="w-9 h-9" />
-          <div>
-            <h1 className="text-base font-bold text-foreground leading-tight">MühendisAI</h1>
-            <p className="text-[11px] text-muted-foreground">İnşaat & Mühendislik Asistanı</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {activeTab === "chat" && messages.length > 0 && (
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Yeni Sohbet
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* ── DESKTOP TAB BAR ── */}
-      <div className="hidden md:block border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
+      {/* ── TABLET TAB BAR ── */}
+      <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0">
         <div className="flex items-center px-4 py-1 gap-1 justify-center">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -212,19 +297,18 @@ const Index = () => {
       {/* ── MOBILE DRAWER OVERLAY ── */}
       {drawerOpen && (
         <div
-          className="md:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity"
+          className="lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
       {/* ── MOBILE DRAWER PANEL ── */}
       <div
-        className={`md:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
+        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ backgroundColor: "#0F1419" }}
       >
-        {/* Close button */}
         <button
           onClick={() => setDrawerOpen(false)}
           className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
@@ -232,7 +316,6 @@ const Index = () => {
           <X className="w-5 h-5" />
         </button>
 
-        {/* User section */}
         <div className="px-5 pt-6 pb-4">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E] flex items-center justify-center">
@@ -251,10 +334,8 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="mx-5 h-px bg-white/10" />
 
-        {/* Menu items */}
         <nav className="flex-1 overflow-y-auto px-3 py-3">
           {DRAWER_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
@@ -276,10 +357,8 @@ const Index = () => {
           })}
         </nav>
 
-        {/* Divider */}
         <div className="mx-5 h-px bg-white/10" />
 
-        {/* Login/Logout */}
         <div className="px-3 py-4">
           {user ? (
             <button
@@ -335,7 +414,6 @@ const Index = () => {
         )}
       </div>
 
-      {/* Chat input */}
       {activeTab === "chat" && (
         <>
           <UsageLimitBanner type="aiQuestions" />
