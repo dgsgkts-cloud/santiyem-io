@@ -476,8 +476,6 @@ const Index = () => {
             <CalculatorsPanel />
           ) : activeTab === "render" ? (
             <RenderPanel />
-          ) : activeTab === "realestate" ? (
-            <Gayrimenkul360Panel />
           ) : activeTab === "pricing" ? (
             <PricingPanel />
           ) : activeTab === "daily" ? (
