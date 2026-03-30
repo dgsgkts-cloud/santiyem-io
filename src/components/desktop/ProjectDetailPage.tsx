@@ -19,7 +19,7 @@ const formatBytes = (bytes: number) => {
   return (bytes / 1048576).toFixed(1) + " MB";
 };
 
-const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
+const ProjectDetailPage = ({ project: p, onBack, onDelete, isDeletable }: ProjectDetailPageProps) => {
   const { user } = useUser();
   const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
   const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
