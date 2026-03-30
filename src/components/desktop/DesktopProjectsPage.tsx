@@ -1,43 +1,75 @@
 import { useState } from "react";
 import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
-  LayoutGrid, List, MoreHorizontal, ChevronRight
+  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
 } from "lucide-react";
-import { PROJECTS } from "@/lib/projectsData";
+import { PROJECTS, Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
-
-const STATS = [
-  { label: "Toplam Proje", value: "12", emoji: "📋" },
-  { label: "Devam Eden", value: "8", emoji: "🔄" },
-  { label: "Tamamlanan", value: "3", emoji: "✅" },
-  { label: "Geciken", value: "1", emoji: "⏰", alert: true },
-];
+import AddProjectModal from "./AddProjectModal";
+import { useProjects, UserProject } from "@/hooks/useProjects";
+import { useUser } from "@/contexts/UserContext";
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
   onProjectIdClear?: () => void;
 }
 
+// Convert DB project to Project interface for detail page
+const dbToProject = (p: UserProject): Project => ({
+  id: p.id,
+  name: p.name,
+  client: p.client,
+  start: p.start_date,
+  end: p.end_date,
+  progress: p.progress,
+  status: p.status,
+  statusColor: p.status_color,
+  done: 0, ongoing: 0, failed: 0, delayed: 0,
+  budget: p.budget,
+  location: p.location,
+  manager: p.manager,
+  description: p.description,
+  milestones: [],
+  recentActivity: [],
+});
+
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
+  const { user } = useUser();
+  const { projects: dbProjects, loading, addProject, deleteProject } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const handleBack = () => {
     setSelectedProjectId(null);
     onProjectIdClear?.();
   };
 
-  const selectedProject = selectedProjectId ? PROJECTS.find(p => p.id === selectedProjectId) : null;
+  // Merge static + DB projects
+  const allProjects: Project[] = [
+    ...PROJECTS,
+    ...dbProjects.map(dbToProject),
+  ];
+
+  const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
+  const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
 
   if (selectedProject) {
     return <ProjectDetailPage project={selectedProject} onBack={handleBack} />;
   }
 
+  const stats = [
+    { label: "Toplam Proje", value: String(allProjects.length), emoji: "📋" },
+    { label: "Devam Eden", value: String(allProjects.filter(p => p.status === "Devam Ediyor").length), emoji: "🔄" },
+    { label: "Tamamlanan", value: String(allProjects.filter(p => p.status === "Tamamlanıyor" || p.progress >= 100).length), emoji: "✅" },
+    { label: "Geciken", value: String(allProjects.filter(p => p.status === "Gecikmiş").length), emoji: "⏰", alert: true },
+  ];
+
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <div key={s.label} className="rounded-xl p-3 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base lg:text-lg">{s.emoji}</span>
@@ -50,18 +82,29 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         ))}
       </div>
 
-      {/* View toggle */}
+      {/* View toggle + Add button */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Projeler</h3>
-        <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #1E2732" }}>
-          <button onClick={() => setViewMode("list")} className="w-8 h-8 flex items-center justify-center transition-colors"
-            style={{ backgroundColor: viewMode === "list" ? "#FF6B2B" : "transparent", color: viewMode === "list" ? "white" : "#64748B" }}>
-            <List className="w-4 h-4" />
-          </button>
-          <button onClick={() => setViewMode("grid")} className="w-8 h-8 flex items-center justify-center transition-colors"
-            style={{ backgroundColor: viewMode === "grid" ? "#FF6B2B" : "transparent", color: viewMode === "grid" ? "white" : "#64748B" }}>
-            <LayoutGrid className="w-4 h-4" />
-          </button>
+        <div className="flex items-center gap-3">
+          {user && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors"
+              style={{ height: 32, backgroundColor: "#FF6B2B" }}
+            >
+              <Plus className="w-3.5 h-3.5" /> Proje Ekle
+            </button>
+          )}
+          <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #1E2732" }}>
+            <button onClick={() => setViewMode("list")} className="w-8 h-8 flex items-center justify-center transition-colors"
+              style={{ backgroundColor: viewMode === "list" ? "#FF6B2B" : "transparent", color: viewMode === "list" ? "white" : "#64748B" }}>
+              <List className="w-4 h-4" />
+            </button>
+            <button onClick={() => setViewMode("grid")} className="w-8 h-8 flex items-center justify-center transition-colors"
+              style={{ backgroundColor: viewMode === "grid" ? "#FF6B2B" : "transparent", color: viewMode === "grid" ? "white" : "#64748B" }}>
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -71,13 +114,13 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
           <table className="w-full text-[13px] hidden lg:table">
             <thead>
               <tr style={{ backgroundColor: "#0F1419" }}>
-                {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum"].map((h) => (
+                {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum", ""].map((h) => (
                   <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {PROJECTS.map((p) => (
+              {allProjects.map((p) => (
                 <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1C242D"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}>
@@ -96,6 +139,13 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   <td className="px-5 py-3">
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                   </td>
+                  <td className="px-5 py-3">
+                    {isDbProject(p.id) && (
+                      <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -103,14 +153,21 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
           {/* Mobile/Tablet list */}
           <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
-            {PROJECTS.map((p) => (
+            {allProjects.map((p) => (
               <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
                     <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
                   </div>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                    {isDbProject(p.id) && (
+                      <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} style={{ color: "#64748B" }}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
@@ -124,12 +181,17 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-          {PROJECTS.map((p) => (
+          {allProjects.map((p) => (
             <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
               className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer"
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                {isDbProject(p.id) && (
+                  <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} style={{ color: "#64748B" }}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
               <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate" style={{ color: "#F1F5F9" }}>{p.name}</h4>
               <p className="text-[11px] lg:text-[12px] mb-3" style={{ color: "#64748B" }}>{p.client}</p>
@@ -151,6 +213,12 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
           ))}
         </div>
       )}
+
+      <AddProjectModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={(data) => addProject(data)}
+      />
     </div>
   );
 };
