@@ -103,23 +103,35 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
             <div className="relative aspect-video flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F1419 0%, #1a2332 100%)" }}>
               {previewPlaying ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                  {script.scenes.map((scene, i) => (
+                  {activeSceneIndex !== null && activeSceneIndex < script.scenes.length && (
                     <div
-                      key={i}
+                      key={`scene-${activeSceneIndex}-${previewKey}`}
                       className="absolute inset-0 flex flex-col items-center justify-center p-8"
-                      style={{
-                        animation: `fadeInOut ${scene.duration}s ease-in-out ${script.scenes.slice(0, i).reduce((s, sc) => s + sc.duration, 0)}s both`,
-                        opacity: 0,
-                      }}
+                      style={{ animation: `fadeInOut ${script.scenes[activeSceneIndex].duration}s ease-in-out forwards` }}
                     >
-                      <p className="text-lg font-bold text-white mb-2">{scene.title}</p>
-                      <p className="text-sm text-white/70">{scene.description}</p>
+                      <div className="absolute top-4 left-4 px-2 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: "rgba(16,185,129,0.2)", color: "#10B981" }}>
+                        Sahne {activeSceneIndex + 1}/{script.scenes.length}
+                      </div>
+                      <p className="text-lg font-bold text-white mb-2">{script.scenes[activeSceneIndex].title}</p>
+                      <p className="text-sm text-white/70 max-w-md">{script.scenes[activeSceneIndex].description}</p>
                     </div>
-                  ))}
+                  )}
+                  {activeSceneIndex !== null && activeSceneIndex >= script.scenes.length && (
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white/70 mb-3">Önizleme tamamlandı</p>
+                      <button
+                        onClick={() => { setPreviewPlaying(false); setActiveSceneIndex(null); setPreviewKey(k => k + 1); }}
+                        className="px-4 py-1.5 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#10B981" }}
+                      >
+                        <Play className="w-3.5 h-3.5 inline mr-1" /> Tekrar İzle
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button
-                  onClick={() => setPreviewPlaying(true)}
+                  onClick={startPreview}
                   className="w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                   style={{ backgroundColor: "rgba(16,185,129,0.9)" }}
                 >
@@ -148,7 +160,14 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
             <p className="text-xs font-semibold mb-3" style={{ color: "#F1F5F9" }}>Sahneler ({script.scenes.length})</p>
             <div className="space-y-2">
               {script.scenes.map((scene, i) => (
-                <div key={i} className="flex items-start gap-3 p-2 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                <div
+                  key={i}
+                  className="flex items-start gap-3 p-2 rounded-lg transition-all"
+                  style={{
+                    backgroundColor: activeSceneIndex === i ? "rgba(16,185,129,0.1)" : "#0F1419",
+                    border: activeSceneIndex === i ? "1px solid rgba(16,185,129,0.3)" : "1px solid transparent",
+                  }}
+                >
                   <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ backgroundColor: "rgba(16,185,129,0.15)", color: "#10B981" }}>
                     {i + 1}
                   </div>
