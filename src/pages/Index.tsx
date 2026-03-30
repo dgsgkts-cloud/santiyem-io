@@ -208,7 +208,7 @@ const Index = () => {
           <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
             <div className="flex-1 pb-12">
               {activeTab === "dashboard" ? (
-                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} />
+                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
               ) : activeTab === "chat" ? (
                 <DesktopChatLayout scrollRef={scrollRef} />
               ) : activeTab === "projects" ? (
@@ -386,7 +386,7 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
         <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
-            <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} />
+            <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
           ) : activeTab === "chat" ? (
             messages.length === 0 ? (
               <WelcomeScreen onSuggestionClick={handleSend} />
