@@ -14,6 +14,14 @@ const STATUS_OPTIONS = [
   { label: "Durduruldu", color: "#64748B" },
 ];
 
+const HAKEDIS_STATUS_OPTIONS = [
+  { label: "Bekliyor", color: "#F59E0B" },
+  { label: "Onaylandı", color: "#22C55E" },
+  { label: "Reddedildi", color: "#EF4444" },
+  { label: "Hazırlanıyor", color: "#3B82F6" },
+  { label: "Ödendi", color: "#10B981" },
+];
+
 interface ProjectDetailPageProps {
   project: Project;
   onBack: () => void;
