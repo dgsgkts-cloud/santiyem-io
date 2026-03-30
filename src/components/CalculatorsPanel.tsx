@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer } from "lucide-react";
+import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer, Clock } from "lucide-react";
 import EKBCalculator from "./calculators/EKBCalculator";
 import StructuralSizingCalculator from "./calculators/StructuralSizingCalculator";
 import WindSnowCalculator from "./calculators/WindSnowCalculator";
@@ -7,6 +7,8 @@ import TAKSKAKSCalculator from "./calculators/TAKSKAKSCalculator";
 import MaterialEstimator from "./calculators/MaterialEstimator";
 import ThermalBridgeCalculator from "./calculators/ThermalBridgeCalculator";
 import ConstructionCostCalculator from "./calculators/ConstructionCostCalculator";
+import { useUserCalculations } from "@/hooks/useUserCalculations";
+import { useUser } from "@/contexts/UserContext";
 
 const TOOLS = [
   { id: "ekb", label: "EKB Hesabı", icon: <Zap className="w-4 h-4" />, desc: "Enerji kimlik belgesi ve TS 825 kontrolü" },
@@ -20,7 +22,11 @@ const TOOLS = [
 
 type ToolId = typeof TOOLS[number]["id"];
 
+const TOOL_LABELS: Record<string, string> = Object.fromEntries(TOOLS.map(t => [t.id, t.label]));
+
 const CalculatorsPanel = () => {
+  const { user } = useUser();
+  const { calculations } = useUserCalculations();
   const [activeTool, setActiveTool] = useState<ToolId | null>(null);
 
   return (
@@ -36,27 +42,56 @@ const CalculatorsPanel = () => {
       </div>
 
       {!activeTool ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TOOLS.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              className="glass-card rounded-lg p-4 text-left hover:ring-2 hover:ring-primary/20 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  {tool.icon}
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {TOOLS.map((tool) => (
+              <button
+                key={tool.id}
+                onClick={() => setActiveTool(tool.id)}
+                className="glass-card rounded-lg p-4 text-left hover:ring-2 hover:ring-primary/20 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    {tool.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                      {tool.label}
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground">{tool.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                    {tool.label}
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground">{tool.desc}</p>
-                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Recent calculations */}
+          {user && calculations.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-border">
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4 text-muted-foreground" /> Son Hesaplamalar
+              </h3>
+              <div className="space-y-2">
+                {calculations.map((c) => (
+                  <div key={c.id} className="glass-card rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-foreground">{c.calc_title}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {TOOL_LABELS[c.calc_type] || c.calc_type} · {new Date(c.created_at).toLocaleDateString("tr-TR")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTool(c.calc_type as ToolId)}
+                      className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      Aç
+                    </button>
+                  </div>
+                ))}
               </div>
-            </button>
-          ))}
-        </div>
+            </div>
+          )}
+        </>
       ) : (
         <div>
           <button
