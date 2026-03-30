@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Video, Play, ArrowLeft, ArrowRight, Loader2, Film, Mic, Music } from "lucide-react";
 import { Listing } from "@/hooks/useListings";
 
@@ -23,6 +23,25 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
   const [generating, setGenerating] = useState(false);
   const [script, setScript] = useState<VideoScript | null>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [activeSceneIndex, setActiveSceneIndex] = useState<number | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  const startPreview = useCallback(() => {
+    setPreviewPlaying(true);
+    setActiveSceneIndex(0);
+    setPreviewKey(k => k + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!previewPlaying || activeSceneIndex === null || !script) return;
+    if (activeSceneIndex >= script.scenes.length) return;
+
+    const timer = setTimeout(() => {
+      setActiveSceneIndex(i => (i !== null ? i + 1 : null));
+    }, script.scenes[activeSceneIndex].duration * 1000);
+
+    return () => clearTimeout(timer);
+  }, [previewPlaying, activeSceneIndex, script, previewKey]);
 
   const handleGenerate = async () => {
     setGenerating(true);
