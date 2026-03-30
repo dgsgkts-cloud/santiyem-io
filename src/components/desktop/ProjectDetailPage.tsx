@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
+import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 
 interface ProjectDetailPageProps {
@@ -18,7 +19,7 @@ const formatBytes = (bytes: number) => {
 
 const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
   const { user } = useUser();
-  const completedMilestones = p.milestones.filter(m => m.completed).length;
+  const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
   const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +27,21 @@ const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
   const [showAddHakedis, setShowAddHakedis] = useState(false);
   const [newPeriod, setNewPeriod] = useState("");
   const [newAmount, setNewAmount] = useState("");
+  const [showAddMilestone, setShowAddMilestone] = useState(false);
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
+  const [newMilestoneDate, setNewMilestoneDate] = useState("");
+
+  const handleAddMilestone = () => {
+    if (!newMilestoneTitle) return;
+    addMilestone(newMilestoneTitle, newMilestoneDate);
+    setNewMilestoneTitle("");
+    setNewMilestoneDate("");
+    setShowAddMilestone(false);
+  };
+
+  const displayProgress = user && !mLoading ? milestoneProgress : p.progress;
+  const completedMilestones = user && !mLoading ? milestones.filter(m => m.completed).length : p.milestones.filter(m => m.completed).length;
+  const totalMilestones = user && !mLoading ? milestones.length : p.milestones.length;
 
   const handleAddHakedis = () => {
     if (!newPeriod || !newAmount) return;
@@ -65,9 +81,9 @@ const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
               <div className="relative w-14 h-14 lg:w-16 lg:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                   <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${p.progress}, 100`} />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${displayProgress}, 100`} />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold font-mono" style={textStyle}>{p.progress}%</span>
+                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold font-mono" style={textStyle}>{displayProgress}%</span>
               </div>
             </div>
           </div>
@@ -119,31 +135,63 @@ const ProjectDetailPage = ({ project: p, onBack }: ProjectDetailPageProps) => {
         <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>Kilometre Taşları</h3>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
-              {completedMilestones}/{p.milestones.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
+                {completedMilestones}/{totalMilestones}
+              </span>
+              {user && (
+                <button onClick={() => setShowAddMilestone(!showAddMilestone)} className="w-6 h-6 rounded-md flex items-center justify-center transition-colors" style={{ backgroundColor: showAddMilestone ? "#EF4444" : "#FF6B2B" }}>
+                  {showAddMilestone ? <X className="w-3 h-3 text-white" /> : <Plus className="w-3 h-3 text-white" />}
+                </button>
+              )}
+            </div>
           </div>
-          <div className="space-y-3">
-            {p.milestones.map((m, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: m.completed ? "#22C55E" : "#1E2732", border: m.completed ? "none" : "2px solid #334155" }}>
-                  {m.completed && <CheckCircle2 className="w-3 h-3 text-white" />}
+
+          {showAddMilestone && (
+            <div className="flex flex-col sm:flex-row gap-2 mb-4 p-3 rounded-lg" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <input value={newMilestoneTitle} onChange={e => setNewMilestoneTitle(e.target.value)} placeholder="Görev adı"
+                className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              <input value={newMilestoneDate} onChange={e => setNewMilestoneDate(e.target.value)} placeholder="Tarih (ör: 01.05.2026)"
+                className="w-full sm:w-36 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              <button onClick={handleAddMilestone} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>Ekle</button>
+            </div>
+          )}
+
+          {mLoading ? (
+            <p className="text-[12px]" style={labelStyle}>Yükleniyor...</p>
+          ) : (
+            <div className="space-y-2">
+              {(user ? milestones : p.milestones.map((m, i) => ({ id: String(i), title: m.title, milestone_date: m.date, completed: m.completed, project_id: p.id, sort_order: i }))).map((m) => (
+                <div key={m.id} className="flex items-center gap-3 group">
+                  <button
+                    onClick={() => user && toggleCompleted(m.id)}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${user ? "cursor-pointer hover:opacity-80" : ""}`}
+                    style={{ backgroundColor: m.completed ? "#22C55E" : "#1E2732", border: m.completed ? "none" : "2px solid #334155" }}
+                    disabled={!user}
+                  >
+                    {m.completed && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through" : ""}`} style={{ color: m.completed ? "#64748B" : "#F1F5F9" }}>{m.title}</p>
+                  </div>
+                  <span className="text-[10px] lg:text-[11px] font-mono shrink-0" style={labelStyle}>{m.milestone_date}</span>
+                  {user && (
+                    <button onClick={() => deleteMilestone(m.id)} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#EF4444" }}>
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through" : ""}`} style={{ color: m.completed ? "#64748B" : "#F1F5F9" }}>{m.title}</p>
-                </div>
-                <span className="text-[10px] lg:text-[11px] font-mono shrink-0" style={labelStyle}>{m.date}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
           <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px]" style={labelStyle}>İlerleme</span>
-              <span className="text-[11px] font-mono font-medium" style={{ color: "#FF6B2B" }}>{p.progress}%</span>
+              <span className="text-[11px] font-mono font-medium" style={{ color: "#FF6B2B" }}>{displayProgress}%</span>
             </div>
             <div className="h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-              <div className="h-full rounded-full transition-all" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+              <div className="h-full rounded-full transition-all" style={{ backgroundColor: "#FF6B2B", width: `${displayProgress}%` }} />
             </div>
           </div>
         </div>

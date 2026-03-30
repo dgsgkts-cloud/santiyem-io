@@ -181,6 +181,39 @@ export type Database = {
         }
         Relationships: []
       }
+      project_milestones: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          milestone_date: string
+          project_id: string
+          sort_order: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          milestone_date?: string
+          project_id: string
+          sort_order?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          milestone_date?: string
+          project_id?: string
+          sort_order?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reminders: {
         Row: {
           created_at: string
