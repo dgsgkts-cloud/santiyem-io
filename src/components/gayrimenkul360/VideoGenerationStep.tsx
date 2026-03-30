@@ -165,8 +165,8 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
       ) : (
         <div className="space-y-4">
           {/* Cinematic Video Player */}
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1E2732" }}>
-            <div className="relative aspect-video overflow-hidden" style={{ backgroundColor: "#000" }}>
+          <div className="rounded-xl overflow-hidden max-w-sm mx-auto sm:max-w-none" style={{ border: "1px solid #1E2732" }}>
+            <div className="relative overflow-hidden aspect-[9/16] sm:aspect-video" style={{ backgroundColor: "#000" }}>
               {/* Scene image with Ken Burns effect */}
               {hasImages && currentScene?.image_url && playing ? (
                 <img
