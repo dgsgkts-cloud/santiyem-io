@@ -2,77 +2,72 @@ import LegalPage from "./LegalPage";
 
 const sections = [
   {
-    title: "Toplanan Veriler",
+    title: "Veri Sorumlusu",
+    content: <p>GÖKTAŞ GLOBAL MÜHENDİSLİK İNŞAAT İÇ VE DIŞ TİC. LİM. ŞİRKETİ, 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında veri sorumlusu sıfatıyla hareket etmektedir.</p>,
+  },
+  {
+    title: "İşlenen Kişisel Veriler",
     content: (
-      <>
-        <p>MühendisAI aşağıdaki kişisel verileri toplar:</p>
-        <ul className="list-disc list-inside space-y-1 ml-2">
-          <li><strong>Kayıt sırasında:</strong> Ad soyad, e-posta adresi, unvan, il bilgisi</li>
-          <li><strong>Kullanım sırasında:</strong> Platform üzerinde gerçekleştirilen işlemler, yüklenen dosyalar, sohbet geçmişi</li>
-          <li><strong>Ödeme sırasında:</strong> Ödeme işlemleri iyzico altyapısı üzerinden gerçekleştirilir. Kart bilgileri platformumuzda saklanmaz.</li>
-        </ul>
-      </>
+      <ul className="list-disc list-inside space-y-1 ml-2">
+        <li><strong>Kimlik verileri:</strong> Ad, soyad, unvan</li>
+        <li><strong>İletişim verileri:</strong> E-posta adresi, telefon numarası</li>
+        <li><strong>Konum verileri:</strong> İl bilgisi</li>
+        <li><strong>İşlem güvenliği verileri:</strong> Şifre (şifrelenmiş), giriş logları</li>
+        <li><strong>Finansal veriler:</strong> Ödeme işlemleri iyzico altyapısı üzerinden gerçekleştirilir; kart bilgileri platformumuzda saklanmaz</li>
+        <li><strong>Kullanım verileri:</strong> Platform üzerinde gerçekleştirilen işlemler, yüklenen dosyalar</li>
+      </ul>
     ),
   },
   {
-    title: "Verilerin Kullanım Amacı",
+    title: "Kişisel Verilerin İşlenme Amacı",
     content: (
-      <>
-        <p>Toplanan veriler şu amaçlarla kullanılır:</p>
-        <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>Hizmetin sunulması ve kişiselleştirilmesi</li>
-          <li>Hesap yönetimi ve güvenliği</li>
-          <li>Faturalama ve ödeme işlemleri</li>
-          <li>Platform iyileştirmeleri</li>
-          <li>Yasal yükümlülüklerin yerine getirilmesi</li>
-        </ul>
-      </>
+      <ul className="list-disc list-inside space-y-1 ml-2">
+        <li>Hizmetin sunulması ve kişiselleştirilmesi</li>
+        <li>Üyelik ve hesap yönetimi</li>
+        <li>Ödeme ve faturalama işlemleri</li>
+        <li>Yasal yükümlülüklerin yerine getirilmesi</li>
+        <li>Platform güvenliği ve dolandırıcılık önleme</li>
+      </ul>
     ),
   },
   {
-    title: "Verilerin Saklanması",
-    content: <p>Kişisel veriler, hizmetin sunulması için gerekli olduğu süre boyunca saklanır. Hesap silme talebinde veriler yasal saklama süresi sonunda silinir.</p>,
-  },
-  {
-    title: "Verilerin Paylaşımı",
+    title: "Verilerin Aktarıldığı Taraflar",
     content: (
-      <>
-        <p>Kişisel verileriniz üçüncü taraflarla şu durumlar dışında paylaşılmaz:</p>
-        <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>Ödeme altyapısı sağlayıcısı (iyzico) — sadece ödeme işlemleri için</li>
-          <li>Yapay zeka hizmet sağlayıcısı (Anthropic) — sadece içerik üretimi için, kişisel veri aktarımı yapılmaz</li>
-          <li>Yasal zorunluluk halleri</li>
-        </ul>
-      </>
+      <ul className="list-disc list-inside space-y-1 ml-2">
+        <li><strong>iyzico Ödeme Hizmetleri A.Ş.</strong> — ödeme işlemleri için</li>
+        <li><strong>Anthropic PBC</strong> — yapay zeka hizmeti için (kişisel veri aktarımı yapılmaz, yalnızca içerik işlenir)</li>
+        <li>Yasal yükümlülük halleri (mahkeme, savcılık vb.)</li>
+      </ul>
     ),
   },
   {
-    title: "Çerezler",
-    content: <p>Platform oturum yönetimi ve kullanıcı deneyimini iyileştirmek amacıyla çerez kullanır. Tarayıcı ayarlarından çerezleri devre dışı bırakabilirsiniz.</p>,
-  },
-  {
-    title: "KVKK Kapsamındaki Haklarınız",
+    title: "Haklarınız (KVKK Madde 11)",
     content: (
       <>
-        <p>6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında şu haklara sahipsiniz:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
           <li>İşlenmişse bilgi talep etme</li>
-          <li>İşlenme amacını öğrenme</li>
+          <li>İşlenme amacını öğrenme ve amaca uygun kullanılıp kullanılmadığını öğrenme</li>
           <li>Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme</li>
           <li>Eksik veya yanlış işlenmişse düzeltilmesini isteme</li>
           <li>Silinmesini veya yok edilmesini isteme</li>
           <li>Otomatik sistemler aracılığıyla aleyhinize bir sonucun ortaya çıkmasına itiraz etme</li>
+          <li>Zarara uğramanız halinde zararın giderilmesini talep etme</li>
         </ul>
-        <p>Talepler için: info@goktasglobal.com</p>
+        <p className="mt-2">Talepler için: INFO@GOKTASGLOBAL.COM</p>
       </>
     ),
   },
   {
-    title: "Veri Güvenliği",
-    content: <p>Platform, kişisel verilerin güvenliği için SSL şifreleme ve güvenli sunucu altyapısı kullanır. İletişim: info@goktasglobal.com</p>,
+    title: "Çerezler (Cookie)",
+    content: (
+      <>
+        <p>Platform oturum yönetimi ve kullanıcı deneyimi için zorunlu çerezler kullanır.</p>
+        <p>Analitik çerezler kullanılmaz. Üçüncü taraf reklam çerezleri kullanılmaz.</p>
+      </>
+    ),
   },
 ];
 
-const GizlilikPolitikasi = () => <LegalPage title="Gizlilik Politikası" sections={sections} />;
+const GizlilikPolitikasi = () => <LegalPage title="Gizlilik Sözleşmesi (KVKK Aydınlatma Metni)" sections={sections} />;
 export default GizlilikPolitikasi;
