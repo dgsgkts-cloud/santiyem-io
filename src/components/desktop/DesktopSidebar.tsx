@@ -9,7 +9,7 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Progress } from "@/components/ui/progress";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "hakkimizda";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -46,12 +46,6 @@ const NAV_SECTIONS = [
       { id: "news" as Tab, label: "Haberler ve Mevzuat", icon: FileText },
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
       { id: "daily" as Tab, label: "Günlük Bilgi", icon: Lightbulb },
-    ],
-  },
-  {
-    label: "DİĞER",
-    items: [
-      { id: "hakkimizda" as Tab, label: "Hakkımızda", icon: ChevronRight },
     ],
   },
 ];
