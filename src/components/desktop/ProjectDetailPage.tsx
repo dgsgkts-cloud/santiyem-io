@@ -82,12 +82,41 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] mb-3 transition-colors" style={labelStyle}>
           <ArrowLeft className="w-3.5 h-3.5" /> Projelere Dön
         </button>
-        <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderLeft: "3px solid " + p.statusColor }}>
+        <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderLeft: "3px solid " + currentStatusColor }}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-base lg:text-xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", ...textStyle }}>{p.name}</h2>
-                <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                <div className="relative">
+                  <button
+                    onClick={() => onStatusChange && setShowStatusMenu(!showStatusMenu)}
+                    className={`text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors ${onStatusChange ? "cursor-pointer hover:opacity-80" : ""}`}
+                    style={{ backgroundColor: `${currentStatusColor}15`, color: currentStatusColor }}
+                  >
+                    {currentStatus} {onStatusChange && "▾"}
+                  </button>
+                  {showStatusMenu && (
+                    <div className="absolute top-full left-0 mt-1 z-50 rounded-lg py-1 min-w-[160px] shadow-xl" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+                      {STATUS_OPTIONS.map(opt => (
+                        <button
+                          key={opt.label}
+                          onClick={() => {
+                            setCurrentStatus(opt.label);
+                            setCurrentStatusColor(opt.color);
+                            onStatusChange?.(p.id, opt.label, opt.color);
+                            setShowStatusMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[12px] flex items-center gap-2 transition-colors hover:bg-white/5"
+                          style={{ color: "#F1F5F9" }}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
+                          {opt.label}
+                          {currentStatus === opt.label && <span className="ml-auto text-[10px]" style={{ color: opt.color }}>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
