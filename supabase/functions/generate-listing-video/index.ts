@@ -25,21 +25,48 @@ type ListingInput = {
 type Scene = {
   title: string;
   description: string;
-  image_prompt?: string;
   duration: number;
+  image_prompt?: string;
 };
 
-const SCENE_CAMERA_PRESETS = [
+type VideoScript = {
+  narration: string;
+  scenes: Scene[];
+};
+
+const CAMERA_PRESETS = [
   { zoom: 13.8, bearing: 0, pitch: 0 },
   { zoom: 14.8, bearing: 25, pitch: 35 },
-  { zoom: 15.8, bearing: 60, pitch: 45 },
-  { zoom: 16.4, bearing: 95, pitch: 55 },
-  { zoom: 15.2, bearing: 140, pitch: 40 },
+  { zoom: 15.8, bearing: 65, pitch: 45 },
+  { zoom: 16.4, bearing: 100, pitch: 55 },
+  { zoom: 15.2, bearing: 145, pitch: 40 },
   { zoom: 14.2, bearing: 180, pitch: 20 },
 ] as const;
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
+
+const buildFallbackScript = (listing: ListingInput, isLand: boolean, locationText: string): VideoScript => {
+  const title = listing.title || (isLand ? "Özel Arsa" : "Özel Gayrimenkul");
+  const desc = listing.description || "Detaylar için bizimle iletişime geçin.";
+  const priceText = listing.price ? `${listing.price.toLocaleString("tr-TR")} TL` : "Fiyat bilgisi için arayın";
+  const areaText = listing.parcel_area_sqm
+    ? `${listing.parcel_area_sqm} m²`
+    : listing.sqm
+      ? `${listing.sqm} m²`
+      : "geniş kullanım alanı";
+
+  return {
+    narration: `${locationText} bölgesinde yer alan ${title} için hazırlanan bu tanıtımda, konumu ve yatırım potansiyelini görebilirsiniz. ${desc} Fiyat: ${priceText}. Daha fazla bilgi için hemen iletişime geçin.`,
+    scenes: [
+      { title: "Konum", description: `${locationText} genel görünümü`, duration: 4 },
+      { title: "Parsel Görünümü", description: "İşaretlenen alanın yakından görünümü", duration: 5 },
+      { title: "Çevre ve Erişim", description: "Yollar ve çevre yerleşimlere yakınlık", duration: 4 },
+      { title: "Yatırım Potansiyeli", description: `${areaText} ve yüksek değer potansiyeli`, duration: 4 },
+      { title: "Kapanış", description: `Fiyat: ${priceText} • İletişim: ${listing.contact || "İletişime geçin"}`, duration: 5 },
+    ],
+  };
+};
 
 const buildMapboxStaticUrl = (
   token: string,
@@ -48,11 +75,12 @@ const buildMapboxStaticUrl = (
   zoom: number,
   bearing: number,
   pitch: number,
-) => {
+): string => {
   const safeLat = lat.toFixed(6);
   const safeLng = lng.toFixed(6);
-  const markerOverlay = `pin-s+10B981(${safeLng},${safeLat})`;
-  return `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${markerOverlay}/${safeLng},${safeLat},${zoom},${bearing},${pitch}/1280x720?logo=false&attribution=false&access_token=${encodeURIComponent(token)}`;
+  const marker = `pin-s+10B981(${safeLng},${safeLat})`;
+
+  return `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${marker}/${safeLng},${safeLat},${zoom},${bearing},${pitch}/1280x720?logo=false&attribution=false&access_token=${encodeURIComponent(token)}`;
 };
 
 const buildMapboxSceneImages = (
@@ -64,11 +92,11 @@ const buildMapboxSceneImages = (
   if (sceneCount <= 0) return [];
 
   return Array.from({ length: sceneCount }, (_, index) => {
-    const preset = SCENE_CAMERA_PRESETS[index % SCENE_CAMERA_PRESETS.length];
+    const preset = CAMERA_PRESETS[index % CAMERA_PRESETS.length];
     const offsetRadius = index % 2 === 0 ? 0 : 0.0015;
-    const rad = (preset.bearing * Math.PI) / 180;
-    const offsetLat = lat + Math.sin(rad) * offsetRadius;
-    const offsetLng = lng + Math.cos(rad) * offsetRadius;
+    const angle = (preset.bearing * Math.PI) / 180;
+    const offsetLat = lat + Math.sin(angle) * offsetRadius;
+    const offsetLng = lng + Math.cos(angle) * offsetRadius;
 
     return buildMapboxStaticUrl(
       mapboxToken,
@@ -81,41 +109,76 @@ const buildMapboxSceneImages = (
   });
 };
 
-const fetchAiSceneImage = async (
+const tryGenerateAiScript = async (
   lovableApiKey: string,
+  listing: ListingInput,
+  isLand: boolean,
   locationText: string,
-  scene: Scene,
-): Promise<string | null> => {
-  const imgPrompt =
-    scene.image_prompt ||
-    `Cinematic drone aerial photography of ${locationText}, ${scene.description}, golden hour, professional real estate photography, 4K quality`;
+): Promise<{ script: VideoScript | null; status: number | null; errorText?: string }> => {
+  const systemPrompt = `Sen bir gayrimenkul pazarlama uzmanısın. ${isLand ? "Arsa" : "Gayrimenkul"} ilanları için profesyonel, sinematik video senaryosu oluşturuyorsun. Türkçe yaz. JSON formatında yanıt ver.`;
 
-  const imgResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const userPrompt = isLand
+    ? `Arsa İlanı: Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Alan: ${listing.parcel_area_sqm || "Belirtilmemiş"} m², Konum: ${locationText}, İletişim: ${listing.contact}`
+    : `Gayrimenkul İlanı: Tür: ${listing.property_type}, Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Oda: ${listing.rooms}, Metrekare: ${listing.sqm} m², Kat: ${listing.floor_info}, Konum: ${locationText}, İletişim: ${listing.contact}`;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${lovableApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-3.1-flash-image-preview",
+      model: "google/gemini-2.5-flash",
       messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      tools: [
         {
-          role: "user",
-          content: `Generate a photorealistic cinematic image: ${imgPrompt}. Style: drone aerial photography, ultra high quality, 16:9 aspect ratio.`,
+          type: "function",
+          function: {
+            name: "generate_video_script",
+            description: "Generate video script with narration and scenes",
+            parameters: {
+              type: "object",
+              properties: {
+                narration: { type: "string" },
+                scenes: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      duration: { type: "number" },
+                      image_prompt: { type: "string" },
+                    },
+                    required: ["title", "description", "duration"],
+                  },
+                },
+              },
+              required: ["narration", "scenes"],
+            },
+          },
         },
       ],
-      modalities: ["image", "text"],
+      tool_choice: { type: "function", function: { name: "generate_video_script" } },
     }),
   });
 
-  if (!imgResponse.ok) {
-    const errText = await imgResponse.text();
-    console.error("Image generation failed:", imgResponse.status, errText);
-    return null;
+  if (!response.ok) {
+    const errorText = await response.text();
+    return { script: null, status: response.status, errorText };
   }
 
-  const imgData = await imgResponse.json();
-  return imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url ?? null;
+  const data = await response.json();
+  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall?.function?.arguments) {
+    return { script: null, status: null, errorText: "Invalid tool response" };
+  }
+
+  const script = JSON.parse(toolCall.function.arguments) as VideoScript;
+  return { script, status: 200 };
 };
 
 serve(async (req) => {
@@ -125,137 +188,67 @@ serve(async (req) => {
 
   try {
     const { listing } = (await req.json()) as { listing: ListingInput };
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const MAPBOX_TOKEN = Deno.env.get("MAPBOX_TOKEN");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    if (!listing) {
+      return new Response(JSON.stringify({ error: "listing payload required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    const hasCoords = isFiniteNumber(listing.parcel_center_lat) && isFiniteNumber(listing.parcel_center_lng);
     const isLand = listing.listing_type === "arsa";
     const locationText = [listing.parcel_il, listing.parcel_ilce].filter(Boolean).join(", ") || "Türkiye";
 
-    const hasParcelCenter =
-      isFiniteNumber(listing.parcel_center_lat) &&
-      isFiniteNumber(listing.parcel_center_lng);
+    let warning: string | null = null;
+    let script = buildFallbackScript(listing, isLand, locationText);
 
-    const systemPrompt = `Sen bir gayrimenkul pazarlama uzmanısın. ${isLand ? "Arsa" : "Gayrimenkul"} ilanları için profesyonel, sinematik video senaryosu oluşturuyorsun. Türkçe yaz. JSON formatında yanıt ver.`;
-
-    const userPrompt = isLand
-      ? `Arsa İlanı: Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Alan: ${listing.parcel_area_sqm || "Belirtilmemiş"} m², Konum: ${locationText}, İletişim: ${listing.contact}`
-      : `Gayrimenkul İlanı: Tür: ${listing.property_type}, Başlık: ${listing.title}, Açıklama: ${listing.description}, Fiyat: ${listing.price} TL, Oda: ${listing.rooms}, Metrekare: ${listing.sqm} m², Kat: ${listing.floor_info}, Konum: ${locationText}, İletişim: ${listing.contact}`;
-
-    const scriptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_video_script",
-              description: "Generate video script with narration and scenes",
-              parameters: {
-                type: "object",
-                properties: {
-                  narration: { type: "string", description: "Full narration text in Turkish" },
-                  scenes: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        description: { type: "string" },
-                        image_prompt: {
-                          type: "string",
-                          description: "Detailed English prompt for fallback AI image generation",
-                        },
-                        duration: { type: "number" },
-                      },
-                      required: ["title", "description", "duration"],
-                    },
-                  },
-                },
-                required: ["narration", "scenes"],
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_video_script" } },
-      }),
-    });
-
-    if (!scriptResponse.ok) {
-      if (scriptResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit aşıldı, lütfen bekleyin." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (scriptResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredi yetersiz." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const errorText = await scriptResponse.text();
-      console.error("AI gateway error:", scriptResponse.status, errorText);
-      throw new Error("AI gateway error");
-    }
-
-    const scriptData = await scriptResponse.json();
-    const toolCall = scriptData.choices?.[0]?.message?.tool_calls?.[0];
-
-    let script: { narration: string; scenes: Scene[] } = { narration: "", scenes: [] };
-    if (toolCall?.function?.arguments) {
-      script = JSON.parse(toolCall.function.arguments);
-    }
-
-    const scenes = Array.isArray(script.scenes) ? script.scenes : [];
-
-    // 1) Use real satellite images from marked parcel when coordinates are available
-    const mapboxImages =
-      MAPBOX_TOKEN && hasParcelCenter
-        ? buildMapboxSceneImages(
-            scenes.length,
-            listing.parcel_center_lat as number,
-            listing.parcel_center_lng as number,
-            MAPBOX_TOKEN,
-          )
-        : [];
-
-    // 2) Fallback to AI-generated images only if real coordinate imagery is unavailable
-    const aiImages: (string | null)[] = [];
-    for (let i = 0; i < scenes.length; i++) {
-      if (mapboxImages[i]) {
-        aiImages.push(null);
-        continue;
-      }
+    // AI script is optional now; real map imagery continues even when credits are exhausted.
+    if (LOVABLE_API_KEY) {
       try {
-        const aiImage = await fetchAiSceneImage(LOVABLE_API_KEY, locationText, scenes[i]);
-        aiImages.push(aiImage);
+        const aiResult = await tryGenerateAiScript(LOVABLE_API_KEY, listing, isLand, locationText);
+        if (aiResult.script && Array.isArray(aiResult.script.scenes) && aiResult.script.scenes.length > 0) {
+          script = aiResult.script;
+        } else if (aiResult.status === 402) {
+          warning = "AI kredisi yetersiz; gerçek konum görüntüleri ile devam edildi.";
+        } else if (aiResult.status === 429) {
+          warning = "AI hız limiti aşıldı; gerçek konum görüntüleri ile devam edildi.";
+        } else if (aiResult.errorText) {
+          console.error("AI script fallback reason:", aiResult.status, aiResult.errorText);
+        }
       } catch (error) {
-        console.error("Fallback image generation error:", error);
-        aiImages.push(null);
+        console.error("AI script generation failed, using fallback:", error);
       }
     }
 
-    const scenesWithImages = scenes.map((scene, index) => {
-      const realImage = mapboxImages[index] ?? null;
-      const fallbackImage = aiImages[index] ?? null;
-      return {
-        ...scene,
-        image_url: realImage || fallbackImage,
-        image_source: realImage ? "mapbox_satellite" : fallbackImage ? "ai_fallback" : null,
-      };
-    });
+    if (!MAPBOX_TOKEN) {
+      return new Response(JSON.stringify({ error: "MAPBOX_TOKEN not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!hasCoords) {
+      warning = warning || "Parsel koordinatı bulunamadı. Lütfen haritada parsel işaretleyin.";
+    }
+
+    const images = hasCoords
+      ? buildMapboxSceneImages(
+          script.scenes.length,
+          listing.parcel_center_lat as number,
+          listing.parcel_center_lng as number,
+          MAPBOX_TOKEN,
+        )
+      : Array.from({ length: script.scenes.length }, () => null);
+
+    const scenesWithImages = script.scenes.map((scene, index) => ({
+      ...scene,
+      duration: isFiniteNumber(scene.duration) && scene.duration > 0 ? scene.duration : 4,
+      image_url: images[index] || null,
+      image_source: images[index] ? "mapbox_satellite" : null,
+    }));
 
     return new Response(
       JSON.stringify({
@@ -263,6 +256,7 @@ serve(async (req) => {
           narration: script.narration,
           scenes: scenesWithImages,
         },
+        warning,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
