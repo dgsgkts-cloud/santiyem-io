@@ -37,6 +37,7 @@ type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminde
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+  { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
@@ -50,6 +51,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
 
 // Mobile drawer menu items
 const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
+  { id: "dashboard", label: "Dashboard", emoji: "🏠", icon: Home },
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
@@ -83,7 +85,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("chat");
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
@@ -97,12 +99,7 @@ const Index = () => {
     return () => mql.removeEventListener("change", handler);
   }, []);
 
-  // Default to dashboard on desktop
-  useEffect(() => {
-    if (isLg && activeTab === "chat" && messages.length === 0) {
-      setActiveTab("dashboard");
-    }
-  }, [isLg]);
+  // Default tab is already dashboard
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -256,7 +253,7 @@ const Index = () => {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("chat")}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
           <img src={logo} alt="MühendisAI" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">MühendisAI</h1>
         </div>
@@ -387,7 +384,9 @@ const Index = () => {
       {/* ── CONTENT AREA ── */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
         <div className="flex-1 pb-8 md:pb-10">
-          {activeTab === "chat" ? (
+          {activeTab === "dashboard" ? (
+            <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} />
+          ) : activeTab === "chat" ? (
             messages.length === 0 ? (
               <WelcomeScreen onSuggestionClick={handleSend} />
             ) : (
