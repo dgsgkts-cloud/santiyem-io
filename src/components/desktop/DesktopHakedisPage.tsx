@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileDown, Plus, Trash2, ChevronDown, X } from "lucide-react";
+import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, X } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
+import { exportHakedisPDF, exportHakedisExcel } from "@/lib/hakedisExport";
 
 const STATUS_OPTIONS = [
   { label: "Bekliyor", color: "#F59E0B" },
@@ -52,15 +53,35 @@ const DesktopHakedisPage = () => {
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
       {/* Top bar with add button */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-base md:text-lg font-bold" style={{ color: "#F1F5F9" }}>Hakediş Yönetimi</h2>
-        <button
-          onClick={() => { if (projects.length === 0) return; setShowAddForm(true); }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white transition-colors"
-          style={{ backgroundColor: projects.length > 0 ? "#FF6B2B" : "#64748B" }}
-        >
-          <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
-        </button>
+        <div className="flex items-center gap-2">
+          {hakedisler.length > 0 && (
+            <>
+              <button
+                onClick={() => exportHakedisPDF(hakedisler, selectedProject?.name || "Proje")}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors"
+                style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+              >
+                <FileDown className="w-3.5 h-3.5" /> PDF
+              </button>
+              <button
+                onClick={() => exportHakedisExcel(hakedisler, selectedProject?.name || "Proje")}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors"
+                style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => { if (projects.length === 0) return; setShowAddForm(true); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white transition-colors"
+            style={{ backgroundColor: projects.length > 0 ? "#FF6B2B" : "#64748B" }}
+          >
+            <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
