@@ -41,6 +41,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
   const [newMilestoneDate, setNewMilestoneDate] = useState("");
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(p.status);
+  const [currentStatusColor, setCurrentStatusColor] = useState(p.statusColor);
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle) return;
