@@ -6,10 +6,19 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 
+const STATUS_OPTIONS = [
+  { label: "Devam Ediyor", color: "#22C55E" },
+  { label: "Gecikmiş", color: "#EF4444" },
+  { label: "Tamamlanıyor", color: "#F59E0B" },
+  { label: "Tamamlandı", color: "#3B82F6" },
+  { label: "Durduruldu", color: "#64748B" },
+];
+
 interface ProjectDetailPageProps {
   project: Project;
   onBack: () => void;
   onDelete?: (id: string) => void;
+  onStatusChange?: (id: string, status: string, color: string) => void;
   isDeletable?: boolean;
 }
 
@@ -19,7 +28,7 @@ const formatBytes = (bytes: number) => {
   return (bytes / 1048576).toFixed(1) + " MB";
 };
 
-const ProjectDetailPage = ({ project: p, onBack, onDelete, isDeletable }: ProjectDetailPageProps) => {
+const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDeletable }: ProjectDetailPageProps) => {
   const { user } = useUser();
   const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
   const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
