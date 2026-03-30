@@ -4,12 +4,12 @@ import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
   FileText, BookOpen, Lightbulb, BarChart3,
-  Settings, LogOut, Gem, User, ChevronRight, Building2
+  Settings, LogOut, Gem, User, ChevronRight
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Progress } from "@/components/ui/progress";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "realestate";
+type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -35,7 +35,7 @@ const NAV_SECTIONS = [
     label: "ARAÇLAR",
     items: [
       { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
-      { id: "realestate" as Tab, label: "Gayrimenkul360", icon: Building2 },
+      
       { id: "weather" as Tab, label: "Hava Durumu", icon: Camera },
       { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
       { id: "events" as Tab, label: "Etkinlik Takvimi", icon: Calculator },
