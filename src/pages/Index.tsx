@@ -53,6 +53,8 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
 const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", emoji: "🏠", icon: Home },
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
+  { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
@@ -61,6 +63,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
+  { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
 ];
 
 const TAB_TITLES: Record<string, string> = {
