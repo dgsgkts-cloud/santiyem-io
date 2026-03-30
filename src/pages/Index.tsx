@@ -254,7 +254,7 @@ const Index = () => {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("chat")}>
           <img src={logo} alt="MühendisAI" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">MühendisAI</h1>
         </div>

@@ -60,7 +60,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   return (
     <aside className="hidden lg:flex flex-col w-[240px] h-screen sticky top-0 shrink-0" style={{ backgroundColor: "#0F1419", borderRight: "1px solid #1E2732" }}>
       {/* Logo */}
-      <div className="px-4 py-5 flex items-center gap-2" style={{ borderBottom: "1px solid #1E2732" }}>
+      <div className="px-4 py-5 cursor-pointer flex items-center gap-2" style={{ borderBottom: "1px solid #1E2732" }} onClick={() => onTabChange("dashboard")}>
         <img src={logo} alt="MühendisAI" className="w-8 h-8" />
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#F1F5F9", fontSize: 16 }}>
           MühendisAI
