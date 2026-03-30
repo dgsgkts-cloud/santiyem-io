@@ -397,6 +397,12 @@ const Index = () => {
                 {isTyping && <TypingIndicator />}
               </div>
             )
+          ) : activeTab === "projects" ? (
+            <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
+          ) : activeTab === "hakedis" ? (
+            <DesktopHakedisPage />
+          ) : activeTab === "settings" ? (
+            <DesktopSettingsPage />
           ) : activeTab === "weather" ? (
             <WeatherPanel />
           ) : activeTab === "news" ? (
