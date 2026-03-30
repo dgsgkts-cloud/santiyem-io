@@ -139,10 +139,10 @@ const VideoGenerationStep = ({ listing, onContinue, onBack }: VideoGenerationSte
           </p>
           <p className="text-xs mb-6 max-w-sm mx-auto" style={{ color: "#64748B" }}>
             {generating
-              ? "AI, ilanınız için drone görüntülü sinematik sahneler ve görseller üretiyor. Bu işlem 30-60 saniye sürebilir..."
+              ? "Parselin gerçek konumundan uydu görüntüleri hazırlanıyor. Bu işlem 30-60 saniye sürebilir..."
               : listing.listing_type === "arsa"
-                ? "AI, arsanız için drone tarzı sinematik görseller ve seslendirme metni oluşturacak"
-                : "AI, gayrimenkulünüz için sinematik görseller ve seslendirme metni oluşturacak"}
+                ? "Öncelik: işaretlenen arsanın gerçek uydu görüntüleri (Mapbox). Gerekirse AI yedek görseller kullanılır."
+                : "Öncelik: konuma dayalı gerçek uydu görüntüleri (Mapbox). Gerekirse AI yedek görseller kullanılır."}
           </p>
 
           {generating && (
