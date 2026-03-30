@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, Upload, Trash2, FileText, Plus, X, ChevronDown } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -12,6 +12,14 @@ const STATUS_OPTIONS = [
   { label: "Tamamlanıyor", color: "#F59E0B" },
   { label: "Tamamlandı", color: "#3B82F6" },
   { label: "Durduruldu", color: "#64748B" },
+];
+
+const HAKEDIS_STATUS_OPTIONS = [
+  { label: "Bekliyor", color: "#F59E0B" },
+  { label: "Onaylandı", color: "#22C55E" },
+  { label: "Reddedildi", color: "#EF4444" },
+  { label: "Hazırlanıyor", color: "#3B82F6" },
+  { label: "Ödendi", color: "#10B981" },
 ];
 
 interface ProjectDetailPageProps {
@@ -31,7 +39,8 @@ const formatBytes = (bytes: number) => {
 const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDeletable }: ProjectDetailPageProps) => {
   const { user } = useUser();
   const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
-  const { hakedisler, loading: hLoading, addHakedis, deleteHakedis } = useProjectHakedis(p.id);
+  const { hakedisler, loading: hLoading, addHakedis, deleteHakedis, updateHakedisStatus } = useProjectHakedis(p.id);
+  const [hakedisStatusMenuId, setHakedisStatusMenuId] = useState<string | null>(null);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -336,10 +345,30 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                       <td className="px-4 py-3 font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 font-mono" style={{ color: "#94A3B8" }}>₺{h.kdv.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}>
+                      <td className="px-4 py-3 relative">
+                        <button
+                          onClick={() => setHakedisStatusMenuId(hakedisStatusMenuId === h.id ? null : h.id)}
+                          className="text-[11px] font-medium px-2 py-0.5 rounded-md cursor-pointer flex items-center gap-1"
+                          style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}
+                        >
                           {h.status}
-                        </span>
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                        {hakedisStatusMenuId === h.id && (
+                          <div className="absolute z-50 top-full left-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px]" style={{ backgroundColor: "#1C242D", border: "1px solid #2D3748" }}>
+                            {HAKEDIS_STATUS_OPTIONS.map(opt => (
+                              <button
+                                key={opt.label}
+                                onClick={() => { updateHakedisStatus(h.id, opt.label, opt.color); setHakedisStatusMenuId(null); }}
+                                className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/5 flex items-center gap-2"
+                                style={{ color: opt.color }}
+                              >
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <button onClick={() => deleteHakedis(h.id)} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
@@ -354,10 +383,31 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {/* Mobile cards */}
             <div className="lg:hidden space-y-2">
               {hakedisler.map((h, i) => (
-                <div key={h.id} className="p-3 rounded-lg" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div key={h.id} className="p-3 rounded-lg relative" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[12px] font-semibold" style={textStyle}>#{i + 1} — {h.period}</span>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}>{h.status}</span>
+                    <button
+                      onClick={() => setHakedisStatusMenuId(hakedisStatusMenuId === h.id ? null : h.id)}
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1"
+                      style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}
+                    >
+                      {h.status} <ChevronDown className="w-2.5 h-2.5" />
+                    </button>
+                    {hakedisStatusMenuId === h.id && (
+                      <div className="absolute right-3 top-2 z-50 rounded-lg py-1 shadow-xl min-w-[130px]" style={{ backgroundColor: "#1C242D", border: "1px solid #2D3748" }}>
+                        {HAKEDIS_STATUS_OPTIONS.map(opt => (
+                          <button
+                            key={opt.label}
+                            onClick={() => { updateHakedisStatus(h.id, opt.label, opt.color); setHakedisStatusMenuId(null); }}
+                            className="w-full text-left px-3 py-1.5 text-[10px] hover:bg-white/5 flex items-center gap-2"
+                            style={{ color: opt.color }}
+                          >
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
                     <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</span></span>
