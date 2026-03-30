@@ -44,7 +44,7 @@ export function useConversations() {
         id: m.id,
         role: m.role as "user" | "assistant",
         content: m.content,
-        attachments: m.attachments as Message["attachments"],
+        attachments: m.attachments as unknown as Message["attachments"],
       })));
     }
     setActiveConversationId(conversationId);
