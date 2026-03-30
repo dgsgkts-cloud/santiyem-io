@@ -1,10 +1,12 @@
+import { useMemo, useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
   MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock
 } from "lucide-react";
-import { PROJECTS as SHARED_PROJECTS } from "@/lib/projectsData";
+import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -15,42 +17,74 @@ interface DesktopDashboardProps {
 const formatDate = (d: Date) =>
   `${d.getDate()} ${["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][d.getMonth()]} ${d.getFullYear()}`;
 
-const STAT_CARDS = [
-  { label: "Toplam Proje", value: "12", icon: FolderOpen, change: "+2", up: true, desc: "Bu ay" },
-  { label: "Devam Eden", value: "8", icon: Clock, change: "+1", up: true, desc: "Aktif" },
-  { label: "Hakediş", value: "₺485K", icon: TrendingUp, change: "+15%", up: true, desc: "Bu ay" },
-  { label: "Geciken", value: "3", icon: AlertTriangle, change: "+1", up: false, desc: "Dikkat!", isAlert: true },
-];
+const formatCurrency = (n: number) => {
+  if (n >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `₺${Math.round(n / 1_000)}K`;
+  return `₺${Math.round(n)}`;
+};
 
-const PROJECTS = SHARED_PROJECTS.map(p => ({
-  id: p.id,
-  name: p.name.replace("Villa Projesi - ", "Villa - ").replace("AVM İnşaatı - ", "AVM - ").replace("Konut Projesi - ", "Konut - "),
-  client: p.client,
-  progress: p.progress,
-  delayed: p.delayed,
-  status: p.status === "Tamamlanıyor" ? "Bitmek üzere" : p.status === "Devam Ediyor" ? "Devam" : p.status,
-  statusColor: p.statusColor,
-}));
-
-const ACTIVITIES = [
-  { text: "Villa hakediş onaylandı", time: "2sa", color: "#22C55E" },
-  { text: "AVM gecikme raporu eklendi", time: "4sa", color: "#EF4444" },
-  { text: "Mevzuat güncellemesi", time: "6sa", color: "#818CF8" },
-  { text: "Konut projesi %90'ı aştı", time: "1g", color: "#F59E0B" },
-];
-
-const UPCOMING = [
+const UPCOMING_STATIC = [
   { task: "Temel betonu dökümü", project: "Fabrika", days: 2, urgent: true },
   { task: "Yapı denetim kontrolü", project: "Villa", days: 4, urgent: false },
   { task: "Hakediş sunumu", project: "AVM", days: 5, urgent: false },
 ];
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile } = useUser();
+  const { profile, user } = useUser();
+  const { projects } = useProjects();
   const { reminders } = useReminders();
+  const [totalHakedis, setTotalHakedis] = useState(0);
+  const [pendingHakedis, setPendingHakedis] = useState(0);
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
-  // Son 5 hatırlatıcı (tarihe göre en yeniler)
+  // Fetch hakedis totals
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("project_hakedis")
+      .select("net,status")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (!data) return;
+        setTotalHakedis(data.reduce((s, h) => s + Number(h.net), 0));
+        setPendingHakedis(data.filter(h => h.status === "Bekliyor").reduce((s, h) => s + Number(h.net), 0));
+      });
+  }, [user]);
+
+  // Computed stats
+  const totalProjects = projects.length;
+  const activeProjects = projects.filter(p => p.status === "Devam Ediyor").length;
+  const delayedReminders = reminders.filter(r => {
+    if (r.done) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const rd = new Date(r.reminder_date); rd.setHours(0,0,0,0);
+    return rd < today;
+  }).length;
+
+  const upcomingThisWeek = reminders.filter(r => {
+    if (r.done) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const rd = new Date(r.reminder_date); rd.setHours(0,0,0,0);
+    const diff = (rd.getTime() - today.getTime()) / (1000*60*60*24);
+    return diff >= 0 && diff <= 7;
+  }).length;
+
+  const statCards = [
+    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı" },
+    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif" },
+    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam" },
+    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0 },
+  ];
+
+  const displayProjects = projects.slice(0, 5).map(p => ({
+    id: p.id,
+    name: p.name,
+    client: p.client,
+    progress: p.progress,
+    status: p.status,
+    statusColor: p.status_color,
+  }));
+
   const recentReminders = [...reminders]
     .sort((a, b) => new Date(b.reminder_date).getTime() - new Date(a.reminder_date).getTime())
     .slice(0, 5);
@@ -66,16 +100,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <span className="text-[11px] lg:text-[13px] hidden sm:block" style={{ color: "#64748B" }}>{formatDate(new Date())}</span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MiniStat emoji="📌" label="Aktif Projeler" value="8" />
-          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value="3" />
-          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value="₺125K" />
-          <MiniStat emoji="🌤️" label="Şantiye Havası" value="28°C" />
+          <MiniStat emoji="📌" label="Aktif Projeler" value={String(activeProjects)} />
+          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={String(upcomingThisWeek)} />
+          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={formatCurrency(pendingHakedis)} />
+          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={String(delayedReminders)} />
         </div>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {STAT_CARDS.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -93,20 +127,18 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 {stat.value}
               </p>
               <div className="flex items-center gap-1 mt-1">
-                {stat.up ? <ArrowUp className="w-3 h-3 shrink-0" style={{ color: stat.isAlert ? "#EF4444" : "#22C55E" }} /> : <ArrowDown className="w-3 h-3 shrink-0" style={{ color: "#EF4444" }} />}
-                <span className="text-[11px] lg:text-[12px]" style={{ color: stat.isAlert ? "#EF4444" : stat.up ? "#22C55E" : "#EF4444" }}>{stat.change}</span>
-                <span className="text-[11px] lg:text-[12px] ml-0.5 truncate" style={{ color: "#64748B" }}>{stat.desc}</span>
+                <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Main content - stacked on mobile, two columns on desktop */}
+      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4 lg:gap-5">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
-          {/* Projects - card list on mobile, table on desktop */}
+          {/* Projects */}
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
               <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
@@ -115,73 +147,88 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
 
-            {/* Desktop table */}
-            <div className="hidden lg:block">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr style={{ backgroundColor: "#0F1419" }}>
-                    {["Proje Adı", "Müşteri", "İlerleme", "Geciken", "Durum"].map((h) => (
-                      <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {PROJECTS.map((p, i) => (
-                    <tr key={i} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
-                      <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
-                      <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                            <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                          </div>
-                          <span className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{p.progress}%</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3"><span style={{ color: p.delayed > 0 ? "#EF4444" : "#22C55E" }}>{p.delayed}</span></td>
-                      <td className="px-5 py-3">
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile/Tablet card list */}
-            <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
-              {PROJECTS.map((p, i) => (
-                <div key={i} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
-                      <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
-                    </div>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                    </div>
-                    <span className="text-[11px] font-mono shrink-0" style={{ color: "#94A3B8" }}>{p.progress}%</span>
-                  </div>
+            {displayProjects.length === 0 ? (
+              <p className="text-[12px] text-center py-6" style={{ color: "#64748B" }}>Henüz proje eklenmemiş</p>
+            ) : (
+              <>
+                {/* Desktop table */}
+                <div className="hidden lg:block">
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr style={{ backgroundColor: "#0F1419" }}>
+                        {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
+                          <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayProjects.map((p) => (
+                        <tr key={p.id} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
+                          <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
+                          <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                                <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                              </div>
+                              <span className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
+
+                {/* Mobile/Tablet card list */}
+                <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
+                  {displayProjects.map((p) => (
+                    <div key={p.id} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
+                          <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
+                        </div>
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                          <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                        </div>
+                        <span className="text-[11px] font-mono shrink-0" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Activities */}
+          {/* Activities - still static for now, could be event-sourced later */}
           <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
             <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
-            <div className="space-y-2.5 lg:space-y-3">
-              {ACTIVITIES.map((a, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
-                  <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 truncate" style={{ color: "#94A3B8" }}>{a.text}</span>
-                  <span className="text-[11px] lg:text-[12px] shrink-0" style={{ color: "#64748B" }}>{a.time}</span>
-                </div>
-              ))}
-            </div>
+            {projects.length === 0 ? (
+              <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
+            ) : (
+              <div className="space-y-2.5 lg:space-y-3">
+                {projects.slice(0, 4).map((p, i) => {
+                  const colors = ["#22C55E", "#3B82F6", "#F59E0B", "#818CF8"];
+                  const ago = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / (1000*60*60*24)));
+                  return (
+                    <div key={p.id} className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                      <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 truncate" style={{ color: "#94A3B8" }}>
+                        {p.name} — {p.status}
+                      </span>
+                      <span className="text-[11px] lg:text-[12px] shrink-0" style={{ color: "#64748B" }}>{ago}g</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Hatırlatıcılar */}
@@ -287,7 +334,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
             <div className="space-y-2.5">
-              {UPCOMING.map((u, i) => (
+              {UPCOMING_STATIC.map((u, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: u.urgent ? "#EF4444" : "#F59E0B" }} />
                   <div className="flex-1 min-w-0">
@@ -304,7 +351,6 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               ))}
             </div>
           </div>
-
         </div>
       </div>
     </div>
