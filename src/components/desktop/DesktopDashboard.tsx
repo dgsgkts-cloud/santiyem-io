@@ -120,7 +120,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 </thead>
                 <tbody>
                   {PROJECTS.map((p, i) => (
-                    <tr key={i} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
+                    <tr key={i} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
                       <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
                       <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
                       <td className="px-5 py-3">
@@ -144,7 +144,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             {/* Mobile/Tablet card list */}
             <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
               {PROJECTS.map((p, i) => (
-                <div key={i} className="px-4 py-3 space-y-2" style={{ borderColor: "#1E2732" }}>
+                <div key={i} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
