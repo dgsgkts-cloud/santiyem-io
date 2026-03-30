@@ -1,0 +1,63 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
+
+export interface ProjectHakedis {
+  id: string;
+  project_id: string;
+  period: string;
+  amount: number;
+  kdv: number;
+  net: number;
+  status: string;
+  status_color: string;
+  created_at: string;
+}
+
+export function useProjectHakedis(projectId: string) {
+  const { user } = useUser();
+  const [hakedisler, setHakedisler] = useState<ProjectHakedis[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchHakedisler = async () => {
+    if (!user) { setLoading(false); return; }
+    const { data, error } = await supabase
+      .from("project_hakedis")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+    if (!error && data) setHakedisler(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchHakedisler(); }, [user, projectId]);
+
+  const addHakedis = async (period: string, amount: number, kdvRate = 0.18) => {
+    if (!user) return;
+    const kdv = Math.round(amount * kdvRate * 100) / 100;
+    const net = amount + kdv;
+    const { error } = await supabase.from("project_hakedis").insert({
+      user_id: user.id,
+      project_id: projectId,
+      period,
+      amount,
+      kdv,
+      net,
+      status: "Bekliyor",
+      status_color: "#F59E0B",
+    });
+    if (error) { toast.error("Hakediş eklenemedi"); return; }
+    toast.success("Hakediş eklendi");
+    fetchHakedisler();
+  };
+
+  const deleteHakedis = async (id: string) => {
+    const { error } = await supabase.from("project_hakedis").delete().eq("id", id);
+    if (error) { toast.error("Silinemedi"); return; }
+    setHakedisler(prev => prev.filter(h => h.id !== id));
+  };
+
+  return { hakedisler, loading, addHakedis, deleteHakedis, refetch: fetchHakedisler };
+}
