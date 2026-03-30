@@ -15,6 +15,8 @@ const Footer = () => (
         <Link to="/teslimat-iade" className="hover:text-[#94A3B8] transition-colors">İade</Link>
         <span>·</span>
         <Link to="/hakkimizda" className="hover:text-[#94A3B8] transition-colors">Hakkımızda</Link>
+        <span>·</span>
+        <Link to="/iletisim" className="hover:text-[#94A3B8] transition-colors">İletişim</Link>
       </div>
     </div>
 
@@ -30,6 +32,8 @@ const Footer = () => (
         <Link to="/teslimat-iade" className="hover:text-[#94A3B8] transition-colors">İade</Link>
         <span>·</span>
         <Link to="/hakkimizda" className="hover:text-[#94A3B8] transition-colors">Hakkımızda</Link>
+        <span>·</span>
+        <Link to="/iletisim" className="hover:text-[#94A3B8] transition-colors">İletişim</Link>
       </div>
       <span className="text-xs">© 2026 MühendisAI. Tüm hakları saklıdır.</span>
     </div>
@@ -47,8 +51,15 @@ const Footer = () => (
         <Link to="/teslimat-iade" className="hover:text-[#94A3B8] transition-colors">İade</Link>
         <span>·</span>
         <Link to="/hakkimizda" className="hover:text-[#94A3B8] transition-colors">Hakkımızda</Link>
+        <span>·</span>
+        <Link to="/iletisim" className="hover:text-[#94A3B8] transition-colors">İletişim</Link>
       </div>
       <span className="text-[11px]">© 2026 MühendisAI. Tüm hakları saklıdır.</span>
+    </div>
+
+    {/* Company info row — all breakpoints */}
+    <div className="text-center px-6 py-2" style={{ borderTop: "1px solid #1E2732", color: "#334155", fontSize: 10 }}>
+      Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001 | Uluçınar Mah. 12 Özgürkent Sk. No:4 Arsuz / Hatay | info@goktasglobal.com
     </div>
   </footer>
 );

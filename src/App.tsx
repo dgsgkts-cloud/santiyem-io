@@ -16,6 +16,8 @@ import IptalIadePolitikasi from "./pages/IptalIadePolitikasi.tsx";
 import Hakkimizda from "./pages/Hakkimizda.tsx";
 import TeslimatIade from "./pages/TeslimatIade.tsx";
 import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi.tsx";
+import Iletisim from "./pages/Iletisim.tsx";
+import CookieBanner from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -38,9 +40,11 @@ const App = () => (
             <Route path="/hakkimizda" element={<Hakkimizda />} />
             <Route path="/teslimat-iade" element={<TeslimatIade />} />
             <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+            <Route path="/iletisim" element={<Iletisim />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieBanner />
         </BrowserRouter>
       </UserProvider>
     </TooltipProvider>
