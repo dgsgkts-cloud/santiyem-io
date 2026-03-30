@@ -158,7 +158,7 @@ const PricingPanel = () => {
               ))}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Button
                 className={`w-full h-11 font-semibold ${
                   plan.button.style === "primary"
@@ -169,8 +169,15 @@ const PricingPanel = () => {
               >
                 {plan.button.text}
               </Button>
+              {plan.id === "pro" && (
+                <Button
+                  className="w-full h-11 font-semibold bg-transparent border border-[#FF6B2B] text-[#FF6B2B] hover:bg-[#FF6B2B]/10"
+                >
+                  Hemen Başla
+                </Button>
+              )}
               {plan.buttonNote && (
-                <p className="text-center text-xs text-muted-foreground mt-2">{plan.buttonNote}</p>
+                <p className="text-center text-xs text-muted-foreground mt-1">{plan.buttonNote}</p>
               )}
             </div>
           </div>
