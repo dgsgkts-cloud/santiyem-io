@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown } from "lucide-react";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
+import { useProjectNotes } from "@/hooks/useProjectNotes";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#22C55E" },
