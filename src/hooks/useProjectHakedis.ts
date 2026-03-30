@@ -34,7 +34,7 @@ export function useProjectHakedis(projectId: string) {
 
   useEffect(() => { fetchHakedisler(); }, [user, projectId]);
 
-  const addHakedis = async (period: string, amount: number, kdvRate = 0.18) => {
+  const addHakedis = async (period: string, amount: number, kdvRate = 0.20) => {
     if (!user) return;
     const kdv = Math.round(amount * kdvRate * 100) / 100;
     const net = amount + kdv;
@@ -59,5 +59,12 @@ export function useProjectHakedis(projectId: string) {
     setHakedisler(prev => prev.filter(h => h.id !== id));
   };
 
-  return { hakedisler, loading, addHakedis, deleteHakedis, refetch: fetchHakedisler };
+  const updateHakedisStatus = async (id: string, status: string, statusColor: string) => {
+    const { error } = await supabase.from("project_hakedis").update({ status, status_color: statusColor }).eq("id", id);
+    if (error) { toast.error("Durum güncellenemedi"); return; }
+    setHakedisler(prev => prev.map(h => h.id === id ? { ...h, status, status_color: statusColor } : h));
+    toast.success("Hakediş durumu güncellendi");
+  };
+
+  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, refetch: fetchHakedisler };
 }
