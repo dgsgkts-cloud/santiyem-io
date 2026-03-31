@@ -22,13 +22,14 @@ const sections = [
     title: "HİZMET BİLGİLERİ",
     content: (
       <>
-        <p><strong>Hizmet Adı:</strong> MühendisAI Dijital Abonelik (Profesyonel Plan veya Ofis Planı)</p>
+        <p><strong>Hizmet Adı:</strong> MühendisAI Dijital Abonelik</p>
         <p><strong>Hizmet Türü:</strong> Dijital hizmet — çevrimiçi yazılım aboneliği (SaaS)</p>
-        <p><strong>Abonelik Dönemi:</strong> Aylık veya yıllık (Alıcı tarafından seçilir)</p>
-        <p><strong>Hizmet Kapsamı:</strong> AI asistan, proje yönetimi, hakediş takibi, EKB hesaplama, belge yönetimi ve diğer platform özellikleri</p>
-        <p className="mt-2"><strong>Aylık Plan Ücreti (Profesyonel):</strong> 499 ₺ + KDV</p>
-        <p><strong>Yıllık Plan Ücreti (Profesyonel):</strong> 4.788 ₺ + KDV</p>
-        <p><strong>Ofis Plan Ücreti:</strong> 2.499 ₺/ay + KDV (5 kullanıcı)</p>
+        <p><strong>Abonelik Dönemi:</strong> Aylık (Alıcı tarafından seçilir)</p>
+        <p><strong>Hizmet Kapsamı:</strong> AI asistan, hesap araçları, fotoğraf analizi, AI mimari render, proje yönetimi, hakediş takibi ve diğer platform özellikleri</p>
+        <p className="mt-2"><strong>Bireysel Planlar:</strong></p>
+        <p>Başlangıç: Ücretsiz | Plus: 199 ₺/ay + KDV | Pro: 399 ₺/ay + KDV</p>
+        <p className="mt-1"><strong>Kurumsal Planlar:</strong></p>
+        <p>Ücretsiz: 0 ₺ | Kurumsal Pro: 2.499 ₺/ay + KDV (5 kullanıcı) | Özel Kurumsal: Talebe göre fiyatlandırma</p>
       </>
     ),
   },
