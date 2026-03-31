@@ -72,7 +72,7 @@ const RemindersPanel = () => {
   const today = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) === 0).length;
   const upcoming = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) > 0).length;
 
-  const showTeamFeatures = plan === "office" && members.length > 1;
+  const showTeamFeatures = (plan === "office_free" || plan === "office_pro" || plan === "office_custom") && members.length > 1;
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">

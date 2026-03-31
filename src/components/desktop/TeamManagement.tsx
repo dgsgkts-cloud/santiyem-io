@@ -20,7 +20,7 @@ const TeamManagement = () => {
 
   const cardStyle = { backgroundColor: "#0F1419", border: "1px solid #1E2732" };
 
-  if (plan !== "office") {
+  if (plan !== "office_free" && plan !== "office_pro" && plan !== "office_custom") {
     return (
       <div className="text-center py-12">
         <Users className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />

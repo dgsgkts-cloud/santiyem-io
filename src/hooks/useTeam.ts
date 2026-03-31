@@ -107,7 +107,7 @@ export function useTeam() {
   }, [user?.id, user?.email, fetchTeam]);
 
   const createTeam = useCallback(async (name: string) => {
-    if (!user || plan !== "office") {
+    if (!user || (plan !== "office_free" && plan !== "office_pro" && plan !== "office_custom")) {
       toast.error("Takım oluşturmak için Ofis planı gereklidir");
       return null;
     }

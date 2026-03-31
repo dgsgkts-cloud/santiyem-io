@@ -2,23 +2,39 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-export type PlanType = "free" | "pro" | "office";
+export type PlanType = "free" | "plus" | "pro" | "office_free" | "office_pro" | "office_custom";
 
 interface UsageLimits {
   aiQuestions: { used: number; max: number };
-  projectAnalysis: { used: number; max: number };
   photoAnalysis: { used: number; max: number };
-  ekbCalc: { used: number; max: number };
-  costCalc: { used: number; max: number };
+  render: { used: number; max: number };
+  reminders: { used: number; max: number }; // max active at once
 }
 
 const FREE_LIMITS: UsageLimits = {
-  aiQuestions: { used: 0, max: 3 },
-  projectAnalysis: { used: 0, max: 2 },
+  aiQuestions: { used: 0, max: 5 },
   photoAnalysis: { used: 0, max: 2 },
-  ekbCalc: { used: 0, max: 2 },
-  costCalc: { used: 0, max: 1 },
+  render: { used: 0, max: 0 },
+  reminders: { used: 0, max: 0 },
 };
+
+const PLUS_LIMITS: UsageLimits = {
+  aiQuestions: { used: 0, max: 999 },
+  photoAnalysis: { used: 0, max: 10 },
+  render: { used: 0, max: 2 },
+  reminders: { used: 0, max: 3 },
+};
+
+// Helper to check if a plan is an office plan
+export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan === "office_pro" || plan === "office_custom";
+export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === "plus" || plan === "pro";
+
+// Feature access helpers
+export const canAccessProjects = (plan: PlanType) => isOfficePlan(plan);
+export const canAccessHakedis = (plan: PlanType) => isOfficePlan(plan);
+export const canAccessRender = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
+export const canAccessReminders = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
+export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
 
 interface UserContextType {
   user: User | null;
@@ -27,7 +43,7 @@ interface UserContextType {
   plan: PlanType;
   usage: UsageLimits;
   setPlan: (plan: PlanType) => void;
-  incrementUsage: (key: keyof UsageLimits) => boolean; // returns false if limit reached
+  incrementUsage: (key: keyof UsageLimits) => boolean;
   canUse: (key: keyof UsageLimits) => boolean;
   signOut: () => Promise<void>;
 }
@@ -41,6 +57,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [plan, setPlanState] = useState<PlanType>("free");
   const [usage, setUsage] = useState<UsageLimits>({ ...FREE_LIMITS });
 
+  const getLimitsForPlan = (p: PlanType): UsageLimits => {
+    if (p === "free") return { ...FREE_LIMITS };
+    if (p === "plus") return { ...PLUS_LIMITS };
+    // pro, office plans = unlimited
+    return {
+      aiQuestions: { used: 0, max: 999 },
+      photoAnalysis: { used: 0, max: 999 },
+      render: { used: 0, max: 999 },
+      reminders: { used: 0, max: 999 },
+    };
+  };
+
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -48,8 +76,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .single();
     if (data) {
+      const p = (data.plan as PlanType) || "free";
       setProfile(data as UserContextType["profile"]);
-      setPlanState((data.plan as PlanType) || "free");
+      setPlanState(p);
+      setUsage(prev => {
+        const limits = getLimitsForPlan(p);
+        return {
+          aiQuestions: { used: prev.aiQuestions.used, max: limits.aiQuestions.max },
+          photoAnalysis: { used: prev.photoAnalysis.used, max: limits.photoAnalysis.max },
+          render: { used: prev.render.used, max: limits.render.max },
+          reminders: { used: prev.reminders.used, max: limits.reminders.max },
+        };
+      });
     }
   }, []);
 
@@ -79,48 +117,43 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Load usage from localStorage daily
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    const stored = localStorage.getItem("muhendisai_usage");
+    const stored = localStorage.getItem("muhendisai_usage_v2");
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === today) {
-        setUsage(parsed.usage);
+        setUsage(prev => ({
+          ...prev,
+          aiQuestions: { ...prev.aiQuestions, used: parsed.usage.aiQuestions?.used || 0 },
+          photoAnalysis: { ...prev.photoAnalysis, used: parsed.usage.photoAnalysis?.used || 0 },
+          render: { ...prev.render, used: parsed.usage.render?.used || 0 },
+        }));
         return;
       }
     }
-    // Reset daily for AI questions, keep monthly for others
-    const month = new Date().toISOString().slice(0, 7);
-    const storedMonthly = localStorage.getItem("muhendisai_usage_monthly");
-    if (storedMonthly) {
-      const parsed = JSON.parse(storedMonthly);
-      if (parsed.month === month) {
-        setUsage({
-          aiQuestions: { used: 0, max: 3 },
-          projectAnalysis: parsed.usage.projectAnalysis || FREE_LIMITS.projectAnalysis,
-          photoAnalysis: parsed.usage.photoAnalysis || FREE_LIMITS.photoAnalysis,
-          ekbCalc: parsed.usage.ekbCalc || FREE_LIMITS.ekbCalc,
-          costCalc: parsed.usage.costCalc || FREE_LIMITS.costCalc,
-        });
-        return;
-      }
-    }
-    setUsage({ ...FREE_LIMITS });
+    // Reset daily
+    setUsage(prev => ({
+      ...prev,
+      aiQuestions: { ...prev.aiQuestions, used: 0 },
+      photoAnalysis: { ...prev.photoAnalysis, used: 0 },
+      render: { ...prev.render, used: 0 },
+    }));
   }, []);
 
   // Save usage
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem("muhendisai_usage", JSON.stringify({ date: today, usage }));
-    const month = new Date().toISOString().slice(0, 7);
-    localStorage.setItem("muhendisai_usage_monthly", JSON.stringify({ month, usage }));
+    localStorage.setItem("muhendisai_usage_v2", JSON.stringify({ date: today, usage }));
   }, [usage]);
 
   const canUse = (key: keyof UsageLimits) => {
-    if (plan !== "free") return true;
+    if (plan === "pro" || isOfficePlan(plan)) return true;
+    if (plan === "plus" && key === "aiQuestions") return true;
     return usage[key].used < usage[key].max;
   };
 
   const incrementUsage = (key: keyof UsageLimits) => {
-    if (plan !== "free") return true;
+    if (plan === "pro" || isOfficePlan(plan)) return true;
+    if (plan === "plus" && key === "aiQuestions") return true;
     if (usage[key].used >= usage[key].max) return false;
     setUsage(prev => ({
       ...prev,

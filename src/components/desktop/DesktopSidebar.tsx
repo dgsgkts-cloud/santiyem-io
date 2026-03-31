@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessRender, canAccessReminders } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
   FileText, BookOpen, Lightbulb,
-  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight
+  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -132,25 +132,42 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
 
+                // Check if feature is locked
+                const isLocked =
+                  (item.id === "projects" && !canAccessProjects(plan)) ||
+                  (item.id === "hakedis" && !canAccessHakedis(plan)) ||
+                  (item.id === "render" && !canAccessRender(plan)) ||
+                  (item.id === "reminders" && !canAccessReminders(plan));
+
+                const handleClick = () => {
+                  if (isLocked) {
+                    onTabChange("pricing");
+                  } else {
+                    onTabChange(item.id);
+                  }
+                };
+
                 const btn = (
                   <button
                     key={item.id}
-                    onClick={() => onTabChange(item.id)}
+                    onClick={handleClick}
                     className="w-full flex items-center rounded-lg transition-all duration-150 relative"
                     style={{
                       height: 36,
                       backgroundColor: isActive ? "rgba(255,107,43,0.12)" : "transparent",
-                      color: isActive ? "#FF6B2B" : "#64748B",
+                      color: isLocked ? "#334155" : isActive ? "#FF6B2B" : "#64748B",
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? "0" : "0 10px",
                       gap: collapsed ? 0 : 10,
+                      opacity: isLocked ? 0.7 : 1,
                     }}
-                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "#161C23"; e.currentTarget.style.color = "#F1F5F9"; }}}
-                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = isActive ? "rgba(255,107,43,0.12)" : "transparent"; e.currentTarget.style.color = isActive ? "#FF6B2B" : "#64748B"; }}}
+                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "#161C23"; e.currentTarget.style.color = isLocked ? "#475569" : "#F1F5F9"; }}}
+                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "#334155" : "#64748B"; }}}
                   >
-                    {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
+                    {isActive && !isLocked && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
                     <Icon className="w-4 h-4 shrink-0" />
                     {!collapsed && <span className="text-[13px] font-medium whitespace-nowrap">{item.label}</span>}
+                    {!collapsed && isLocked && <Lock className="w-3 h-3 ml-auto shrink-0" style={{ color: "#475569" }} />}
                   </button>
                 );
 
@@ -180,11 +197,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  backgroundColor: plan === "pro" ? "rgba(255,107,43,0.15)" : plan === "office" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: plan === "pro" ? "#FF6B2B" : plan === "office" ? "#60A5FA" : "#64748B",
+                  backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                  color: plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {plan === "pro" ? "Pro ⭐" : plan === "office" ? "Ofis 🏢" : "Ücretsiz"}
+                {plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
               {plan === "free" && (
                 <button
