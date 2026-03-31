@@ -7,6 +7,7 @@ import {
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
 import { supabase } from "@/integrations/supabase/client";
+import UpgradeModal from "@/components/UpgradeModal";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
