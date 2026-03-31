@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
-import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, User } from "lucide-react";
 import { useReminders } from "@/hooks/useReminders";
 import { useUser } from "@/contexts/UserContext";
+import { useTeam } from "@/hooks/useTeam";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("tr-TR", {
@@ -30,21 +31,24 @@ function getStatusInfo(dateStr: string, done: boolean) {
 }
 
 const RemindersPanel = () => {
-  const { user } = useUser();
+  const { user, plan } = useUser();
   const { reminders, loading, addReminder, toggleDone, deleteReminder } = useReminders();
+  const { members } = useTeam();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
   const [filter, setFilter] = useState<"all" | "upcoming" | "done" | "overdue">("all");
 
   const handleAdd = async () => {
     if (!title.trim() || !date) return;
-    const ok = await addReminder(title.trim(), date, note.trim());
+    const ok = await addReminder(title.trim(), date, note.trim(), assignedTo || null);
     if (ok) {
       setTitle("");
       setDate("");
       setNote("");
+      setAssignedTo("");
       setShowForm(false);
     }
   };
@@ -67,6 +71,8 @@ const RemindersPanel = () => {
   const overdue = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) < 0).length;
   const today = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) === 0).length;
   const upcoming = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) > 0).length;
+
+  const showTeamFeatures = plan === "office" && members.length > 1;
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
@@ -112,13 +118,27 @@ const RemindersPanel = () => {
             placeholder="Hatırlatıcı başlığı"
             className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
           />
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="flex-1 min-w-[140px] rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
+            {showTeamFeatures && (
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="flex-1 min-w-[140px] rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              >
+                <option value="">Kişi ata (opsiyonel)</option>
+                {members.map(m => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.profile?.full_name || "Bilinmiyor"}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={handleAdd}
               className="px-4 py-2.5 rounded-lg chat-gradient text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -194,7 +214,7 @@ const RemindersPanel = () => {
                   {r.done && <CheckCircle2 className="w-3 h-3" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className={`text-sm font-medium ${r.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                       {r.title}
                     </h3>
@@ -202,6 +222,12 @@ const RemindersPanel = () => {
                       <StatusIcon className="w-3 h-3" />
                       {status.label}
                     </span>
+                    {r.assignee_name && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        <User className="w-3 h-3" />
+                        {r.assignee_name}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">{formatDate(r.reminder_date)}</p>
                   {r.note && <p className="text-xs text-muted-foreground mt-1">{r.note}</p>}
