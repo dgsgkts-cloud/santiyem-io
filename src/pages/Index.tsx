@@ -92,7 +92,7 @@ const TAB_TITLES: Record<string, string> = {
 };
 
 const Index = () => {
-  const { user, plan, signOut } = useUser();
+  const { user, plan, signOut, incrementUsage, canUse } = useUser();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
