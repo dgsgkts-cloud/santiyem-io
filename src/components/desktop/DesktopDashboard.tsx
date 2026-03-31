@@ -69,11 +69,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     return diff >= 0 && diff <= 7;
   }).length;
 
+  const projectsLocked = !canAccessProjects(plan);
+  const hakedisLocked = !canAccessHakedis(plan);
+  const remindersLocked = !canAccessReminders(plan);
+
   const statCards = [
-    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı" },
-    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif" },
-    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam" },
-    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0 },
+    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked },
+    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked },
+    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked },
+    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked },
   ];
 
   const displayProjects = projects.slice(0, 5).map(p => ({
