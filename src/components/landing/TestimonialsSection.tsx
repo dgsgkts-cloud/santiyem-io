@@ -2,8 +2,8 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Star } from "lucide-react";
 
 const TESTIMONIALS = [
-  { initials: "AK", color: "#FF6B2B", name: "Ahmet K.", title: "İnşaat Mühendisi, İskenderun", text: "Hakediş hazırlamak için harcadığım 4 saati artık 20 dakikada bitiriyorum. AI'ın poz numarası önerisi gerçekten işe yarıyor." },
-  { initials: "SY", color: "#3B82F6", name: "Selin Y.", title: "Mimar, Adana", text: "İmar yönetmeliği sorularına verdiği cevaplar şaşırtıcı derecede doğru. TAKS/KAKS hesabını artık hep buradan yapıyorum." },
+  { initials: "DG", color: "#FF6B2B", name: "Doğuş G.", title: "Yüksek İnşaat Mühendisi, İskenderun", text: "Hakediş hazırlamak için harcadığım 4 saati artık 20 dakikada bitiriyorum. AI'ın poz numarası önerisi gerçekten işe yarıyor. Kaba inşaat aşamasındaki bazı binaların renderlarını yapmak istediğimde de çok işe yarıyor." },
+  { initials: "SY", color: "#3B82F6", name: "Selin Y.", title: "Mimar, İstanbul", text: "İmar yönetmeliği sorularına verdiği cevaplar şaşırtıcı derecede doğru. TAKS/KAKS hesabını artık hep buradan yapıyorum." },
   { initials: "MB", color: "#10B981", name: "Murat B.", title: "Müteahhit, Hatay", text: "Şantiye fotoğrafı yükleyince segregasyon tespiti yapması beni şoke etti. Ekibim artık her gün kullanıyor." },
 ];
 
