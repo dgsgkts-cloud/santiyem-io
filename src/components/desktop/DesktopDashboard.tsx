@@ -104,10 +104,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <span className="text-[11px] lg:text-[13px] hidden sm:block" style={{ color: "#64748B" }}>{formatDate(new Date())}</span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MiniStat emoji="📌" label="Aktif Projeler" value={String(activeProjects)} />
-          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={String(upcomingThisWeek)} />
-          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={formatCurrency(pendingHakedis)} />
-          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={String(delayedReminders)} />
+          <MiniStat emoji="📌" label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={remindersLocked ? "🔒" : String(delayedReminders)} />
         </div>
       </div>
 
