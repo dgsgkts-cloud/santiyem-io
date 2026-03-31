@@ -124,7 +124,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             >
-              {stat.locked && <LockedOverlay label="Kurumsal Paket" />}
+              {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
                   <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
