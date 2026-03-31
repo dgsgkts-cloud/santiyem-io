@@ -45,7 +45,24 @@ const KURUMSAL_PLANS = [
 const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
   const [activeTab, setActiveTab] = useState<TabType>("bireysel");
+  const [yearly, setYearly] = useState(false);
   const plans = activeTab === "bireysel" ? BIREYSEL_PLANS : KURUMSAL_PLANS;
+
+  const applyYearly = (price: string) => {
+    if (!price || price === "0₺") return { display: price, period: yearly ? "/ yıl" : "/ ay" };
+    const num = parseInt(price.replace(/[^0-9]/g, ""));
+    if (isNaN(num)) return { display: price, period: yearly ? "/ yıl" : "/ ay" };
+    const monthlyDiscounted = Math.round(num * 0.8);
+    const yearlyTotal = monthlyDiscounted * 12;
+    if (yearly) {
+      return {
+        display: `${yearlyTotal.toLocaleString("tr-TR")}₺`,
+        period: "/ yıl",
+        originalMonthly: `${num.toLocaleString("tr-TR")}₺/ay yerine ${monthlyDiscounted.toLocaleString("tr-TR")}₺/ay`,
+      };
+    }
+    return { display: price, period: "/ ay" };
+  };
 
   return (
     <section id="pricing" className="py-24 px-6" style={{ background: "#0F1419" }}>
