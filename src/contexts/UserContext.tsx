@@ -14,15 +14,15 @@ interface UsageLimits {
 const FREE_LIMITS: UsageLimits = {
   aiQuestions: { used: 0, max: 5 },
   photoAnalysis: { used: 0, max: 2 },
-  render: { used: 0, max: 0 },
-  reminders: { used: 0, max: 0 },
+  render: { used: 0, max: 2 },
+  reminders: { used: 0, max: 3 },
 };
 
 const PLUS_LIMITS: UsageLimits = {
   aiQuestions: { used: 0, max: 999 },
   photoAnalysis: { used: 0, max: 10 },
-  render: { used: 0, max: 2 },
-  reminders: { used: 0, max: 3 },
+  render: { used: 0, max: 5 },
+  reminders: { used: 0, max: 10 },
 };
 
 // Helper to check if a plan is an office plan
