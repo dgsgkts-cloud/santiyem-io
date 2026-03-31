@@ -29,7 +29,7 @@ const TeamManagement = () => {
           Ekip yönetimi özelliği Ofis planında kullanılabilir.
         </p>
         <p className="text-[11px]" style={{ color: "#64748B" }}>
-          Ofis planına yükselttiğinizde 2 kişiyi daha ekibinize davet edebilirsiniz.
+          Ofis planına yükselttiğinizde 4 kişiyi daha ekibinize davet edebilirsiniz.
         </p>
       </div>
     );

@@ -14,7 +14,7 @@ const PLANS = [
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
-    name: "Ofis", price: "999₺", period: "/ ay", popular: false,
+    name: "Ofis", price: "2.499₺", period: "/ ay", popular: false,
     features: ["Profesyonel'deki her şey", "5 kullanıcı", "Ekip yönetimi", "API erişimi", "Özel destek hattı"],
     cta: "İletişime Geç", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
