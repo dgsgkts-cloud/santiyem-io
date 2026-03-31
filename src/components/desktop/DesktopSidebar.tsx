@@ -187,7 +187,13 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 {plan === "pro" ? "Pro ⭐" : plan === "office" ? "Ofis 🏢" : "Ücretsiz"}
               </span>
               {plan === "free" && (
-                <button onClick={() => onTabChange("pricing")} className="text-[11px] font-medium transition-colors" style={{ color: "#FF6B2B" }}>
+                <button
+                  onClick={() => onTabChange("pricing")}
+                  className="text-[11px] font-medium transition-all duration-150"
+                  style={{ color: "#FF6B2B" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8F5C"; e.currentTarget.style.transform = "translateX(2px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#FF6B2B"; e.currentTarget.style.transform = "translateX(0)"; }}
+                >
                   Yükselt →
                 </button>
               )}
