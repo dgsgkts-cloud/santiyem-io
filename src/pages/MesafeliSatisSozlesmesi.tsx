@@ -26,9 +26,9 @@ const sections = [
         <p><strong>Hizmet Türü:</strong> Dijital hizmet — çevrimiçi yazılım aboneliği (SaaS)</p>
         <p><strong>Abonelik Dönemi:</strong> Aylık veya yıllık (Alıcı tarafından seçilir)</p>
         <p><strong>Hizmet Kapsamı:</strong> AI asistan, proje yönetimi, hakediş takibi, EKB hesaplama, belge yönetimi ve diğer platform özellikleri</p>
-        <p className="mt-2"><strong>Aylık Plan Ücreti:</strong> 299 ₺ + KDV</p>
-        <p><strong>Yıllık Plan Ücreti:</strong> 2.868 ₺ + KDV</p>
-        <p><strong>Ofis Plan Ücreti:</strong> 799 ₺/ay + KDV</p>
+        <p className="mt-2"><strong>Aylık Plan Ücreti (Profesyonel):</strong> 499 ₺ + KDV</p>
+        <p><strong>Yıllık Plan Ücreti (Profesyonel):</strong> 4.788 ₺ + KDV</p>
+        <p><strong>Ofis Plan Ücreti:</strong> 2.499 ₺/ay + KDV (5 kullanıcı)</p>
       </>
     ),
   },

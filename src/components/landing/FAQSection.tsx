@@ -7,7 +7,7 @@ const FAQS = [
   { q: "Verilerim güvende mi?", a: "Tüm veriler 256-bit SSL şifreleme ile korunur. Verileriniz üçüncü taraflarla paylaşılmaz." },
   { q: "14 günlük deneme bittikten sonra ne olur?", a: "Otomatik ücretlendirme yapılmaz. Ücretsiz plana geçer veya istediğiniz planı seçersiniz." },
   { q: "Fatura alabilir miyim?", a: "Evet, her ödeme için otomatik e-fatura gönderilir." },
-  { q: "Ofis planında kaç kişi kullanabilir?", a: "Ofis planında 5 kullanıcıya kadar ekip kurabilirsiniz. Her üye ayrı hesapla giriş yapar." },
+  { q: "Ofis planında kaç kişi kullanabilir?", a: "Ofis planında 5 kullanıcıya kadar ekip kurabilirsiniz. Hesabı alan kişi dahil toplam 5 kişi ayrı hesapla giriş yapar." },
   { q: "İptal etmek zor mu?", a: "Hiç zor değil. Ayarlar sayfasından tek tıkla iptal edebilirsiniz." },
   { q: "Mobilde çalışıyor mu?", a: "Evet, tam mobil uyumlu. Telefon tarayıcısından kullanabilirsiniz." },
 ];

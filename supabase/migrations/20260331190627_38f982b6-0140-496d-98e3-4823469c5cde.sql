@@ -1,0 +1,1 @@
+ALTER TABLE public.office_teams ALTER COLUMN max_members SET DEFAULT 5;
