@@ -32,8 +32,8 @@ export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === 
 // Feature access helpers
 export const canAccessProjects = (plan: PlanType) => isOfficePlan(plan);
 export const canAccessHakedis = (plan: PlanType) => isOfficePlan(plan);
-export const canAccessRender = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
-export const canAccessReminders = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
+export const canAccessRender = (plan: PlanType) => true;
+export const canAccessReminders = (plan: PlanType) => true;
 export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
 
 interface UserContextType {
