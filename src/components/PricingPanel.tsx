@@ -58,7 +58,6 @@ const PricingPanel = () => {
       id: "pro", name: "Pro", price: "399₺", period: "/ay", subtitle: "Tam donanımlı profesyoneller için",
       badge: "EN POPÜLER", featured: true,
       button: { text: "14 Gün Ücretsiz Dene", style: "primary" as const },
-      buttonNote: "Kredi kartı gerekmez",
       features: [
         { text: "AI Asistan — sınırsız", included: true },
         { text: "Fotoğraf Analizi — sınırsız", included: true },
