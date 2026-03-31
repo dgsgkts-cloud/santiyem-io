@@ -208,38 +208,42 @@ const Index = () => {
           )}
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
-            <div className="flex-1 pb-12">
-              {activeTab === "dashboard" ? (
-                <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
-              ) : activeTab === "chat" ? (
-                <DesktopChatLayout scrollRef={scrollRef} />
-              ) : activeTab === "projects" ? (
-                <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
-              ) : activeTab === "hakedis" ? (
-                <DesktopHakedisPage />
-              ) : activeTab === "settings" ? (
-                <DesktopSettingsPage />
-              ) : activeTab === "pricing" ? (
-                <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
-              ) : activeTab === "daily" ? (
-                <DailyKnowledgePanel />
-              ) : activeTab === "weather" ? (
-                <WeatherPanel />
-              ) : activeTab === "news" ? (
-                <NewsPanel />
-              ) : activeTab === "events" ? (
-                <EventsPanel />
-              ) : activeTab === "calc" ? (
-                <CalculatorsPanel />
-              ) : activeTab === "render" ? (
-                <RenderPanel />
-              ) : (
-                <RemindersPanel />
-              )}
+          {activeTab === "chat" ? (
+            <div className="flex-1 min-h-0 overflow-hidden" style={{ backgroundColor: "#0F1419" }}>
+              <DesktopChatLayout scrollRef={scrollRef} />
             </div>
-            {activeTab !== "chat" && <Footer />}
-          </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
+              <div className="flex-1 pb-12">
+                {activeTab === "dashboard" ? (
+                  <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
+                ) : activeTab === "projects" ? (
+                  <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
+                ) : activeTab === "hakedis" ? (
+                  <DesktopHakedisPage />
+                ) : activeTab === "settings" ? (
+                  <DesktopSettingsPage />
+                ) : activeTab === "pricing" ? (
+                  <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
+                ) : activeTab === "daily" ? (
+                  <DailyKnowledgePanel />
+                ) : activeTab === "weather" ? (
+                  <WeatherPanel />
+                ) : activeTab === "news" ? (
+                  <NewsPanel />
+                ) : activeTab === "events" ? (
+                  <EventsPanel />
+                ) : activeTab === "calc" ? (
+                  <CalculatorsPanel />
+                ) : activeTab === "render" ? (
+                  <RenderPanel />
+                ) : (
+                  <RemindersPanel />
+                )}
+              </div>
+              <Footer />
+            </div>
+          )}
         </div>
       </div>
     );
