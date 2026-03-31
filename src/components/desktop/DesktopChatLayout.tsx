@@ -20,7 +20,7 @@ interface DesktopChatLayoutProps {
 }
 
 const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutProps) => {
-  const { user } = useUser();
+  const { user, incrementUsage, canUse } = useUser();
   const conv = useConversations();
   const [searchQuery, setSearchQuery] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
