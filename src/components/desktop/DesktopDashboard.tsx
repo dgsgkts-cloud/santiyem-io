@@ -365,6 +365,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
         </div>
       </div>
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal(prev => ({ ...prev, open: false }))}
+        feature={upgradeModal.feature}
+        requiresOffice={upgradeModal.requiresOffice}
+      />
     </div>
   );
 };
