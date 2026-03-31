@@ -118,9 +118,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           return (
             <div
               key={stat.label}
-              className="rounded-xl p-3 lg:p-5 transition-all duration-150"
+              className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             >
+              {stat.locked && <LockedOverlay label="Kurumsal Paket" />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
                   <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
@@ -128,7 +129,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate" style={{ color: "#64748B" }}>{stat.label}</span>
               </div>
               <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
-                {stat.value}
+                {stat.locked ? "—" : stat.value}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
