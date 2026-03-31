@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useUser, canAccessProjects, canAccessHakedis, canAccessReminders } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
