@@ -38,6 +38,15 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
       return;
     }
 
+    // Check photo analysis limit if attachments present
+    if (attachments && attachments.length > 0 && !canUse("photoAnalysis")) {
+      toast.error("Günlük fotoğraf analizi limitine ulaştınız. Planınızı yükseltin.");
+      return;
+    }
+    if (attachments && attachments.length > 0) {
+      incrementUsage("photoAnalysis");
+    }
+
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
     setMessages((prev: Message[]) => [...prev, userMsg]);
     setLocalTyping(true);
