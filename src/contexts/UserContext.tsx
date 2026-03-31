@@ -19,7 +19,7 @@ const FREE_LIMITS: UsageLimits = {
 };
 
 const PLUS_LIMITS: UsageLimits = {
-  aiQuestions: { used: 0, max: 999 },
+  aiQuestions: { used: 0, max: 20 },
   photoAnalysis: { used: 0, max: 10 },
   render: { used: 0, max: 5 },
   reminders: { used: 0, max: 10 },
