@@ -364,6 +364,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   );
 };
 
+const LockedOverlay = ({ label }: { label: string }) => (
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}>
+    <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
+    <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
+    <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
+  </div>
+);
+
 const MiniStat = ({ emoji, label, value }: { emoji: string; label: string; value: string }) => (
   <div className="flex items-center gap-2">
     <span className="text-base lg:text-lg">{emoji}</span>
