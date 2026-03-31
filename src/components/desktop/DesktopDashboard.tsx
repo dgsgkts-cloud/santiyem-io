@@ -239,9 +239,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           {/* Hatırlatıcılar */}
           <div
-            className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30"
+            className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30 relative overflow-hidden"
             style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
-            onClick={() => onTabChange("reminders")}
+            onClick={() => !remindersLocked && onTabChange("reminders")}
+          >
+            {remindersLocked && <LockedOverlay label="Plus Paket" />}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
