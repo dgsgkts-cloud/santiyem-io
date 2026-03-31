@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser, canAccessProjects, canAccessHakedis, canAccessReminders } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
-  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock
+  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
@@ -30,7 +30,7 @@ const UPCOMING_STATIC = [
 ];
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile, user } = useUser();
+  const { profile, user, plan } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
@@ -69,11 +69,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     return diff >= 0 && diff <= 7;
   }).length;
 
+  const projectsLocked = !canAccessProjects(plan);
+  const hakedisLocked = !canAccessHakedis(plan);
+  const remindersLocked = !canAccessReminders(plan);
+
   const statCards = [
-    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı" },
-    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif" },
-    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam" },
-    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0 },
+    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked },
+    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked },
+    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked },
+    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked },
   ];
 
   const displayProjects = projects.slice(0, 5).map(p => ({
@@ -100,10 +104,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <span className="text-[11px] lg:text-[13px] hidden sm:block" style={{ color: "#64748B" }}>{formatDate(new Date())}</span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MiniStat emoji="📌" label="Aktif Projeler" value={String(activeProjects)} />
-          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={String(upcomingThisWeek)} />
-          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={formatCurrency(pendingHakedis)} />
-          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={String(delayedReminders)} />
+          <MiniStat emoji="📌" label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={remindersLocked ? "🔒" : String(delayedReminders)} />
         </div>
       </div>
 
@@ -114,9 +118,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           return (
             <div
               key={stat.label}
-              className="rounded-xl p-3 lg:p-5 transition-all duration-150"
+              className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             >
+              {stat.locked && <LockedOverlay label="Kurumsal Paket" />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
                   <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
@@ -124,7 +129,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate" style={{ color: "#64748B" }}>{stat.label}</span>
               </div>
               <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
-                {stat.value}
+                {stat.locked ? "—" : stat.value}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
@@ -139,7 +144,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
           {/* Projects */}
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl overflow-hidden relative" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
               <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
               <button onClick={() => onTabChange("projects")} className="flex items-center gap-0.5 text-[12px] font-medium shrink-0" style={{ color: "#FF6B2B" }}>
@@ -208,7 +214,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
 
           {/* Activities - still static for now, could be event-sourced later */}
-          <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
             <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
             {projects.length === 0 ? (
               <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
@@ -233,10 +240,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           {/* Hatırlatıcılar */}
           <div
-            className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30"
+            className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30 relative overflow-hidden"
             style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
-            onClick={() => onTabChange("reminders")}
+            onClick={() => !remindersLocked && onTabChange("reminders")}
           >
+            {remindersLocked && <LockedOverlay label="Plus Paket" />}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
@@ -331,7 +339,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
 
           {/* Upcoming */}
-          <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
             <div className="space-y-2.5">
               {UPCOMING_STATIC.map((u, i) => (
@@ -356,6 +365,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     </div>
   );
 };
+
+const LockedOverlay = ({ label }: { label: string }) => (
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}>
+    <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
+    <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
+    <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
+  </div>
+);
 
 const MiniStat = ({ emoji, label, value }: { emoji: string; label: string; value: string }) => (
   <div className="flex items-center gap-2">
