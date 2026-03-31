@@ -9,12 +9,12 @@ type TabType = "bireysel" | "kurumsal";
 const BIREYSEL_PLANS = [
   {
     name: "Başlangıç", price: "0₺", period: "/ ay", popular: false,
-    features: ["AI Asistan — günde 5 soru", "Fotoğraf Analizi — günde 2", "Hesap Araçları — sınırsız", "Günlük Bilgi & Haberler", "Hava Durumu & Etkinlikler"],
+    features: ["AI Asistan — sınırlı kullanım", "Fotoğraf Analizi — günde 2", "AI Mimari Render — günde 2", "Hatırlatıcılar — aynı anda 3", "Hesap Araçları — sınırsız"],
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
     name: "Plus", price: "199₺", period: "/ ay", popular: false,
-    features: ["AI Asistan — sınırsız", "Fotoğraf Analizi — günde 10", "AI Mimari Render — günde 2", "Hatırlatıcılar — aynı anda 3", "İndirme (PDF/Excel)"],
+    features: ["AI Asistan — sınırsız", "Fotoğraf Analizi — günde 10", "AI Mimari Render — günde 5", "Hatırlatıcılar — aynı anda 10", "İndirme (PDF/Excel)"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {

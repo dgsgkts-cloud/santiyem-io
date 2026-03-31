@@ -14,15 +14,15 @@ interface UsageLimits {
 const FREE_LIMITS: UsageLimits = {
   aiQuestions: { used: 0, max: 5 },
   photoAnalysis: { used: 0, max: 2 },
-  render: { used: 0, max: 0 },
-  reminders: { used: 0, max: 0 },
+  render: { used: 0, max: 2 },
+  reminders: { used: 0, max: 3 },
 };
 
 const PLUS_LIMITS: UsageLimits = {
   aiQuestions: { used: 0, max: 999 },
   photoAnalysis: { used: 0, max: 10 },
-  render: { used: 0, max: 2 },
-  reminders: { used: 0, max: 3 },
+  render: { used: 0, max: 5 },
+  reminders: { used: 0, max: 10 },
 };
 
 // Helper to check if a plan is an office plan
@@ -32,8 +32,8 @@ export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === 
 // Feature access helpers
 export const canAccessProjects = (plan: PlanType) => isOfficePlan(plan);
 export const canAccessHakedis = (plan: PlanType) => isOfficePlan(plan);
-export const canAccessRender = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
-export const canAccessReminders = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
+export const canAccessRender = (plan: PlanType) => true;
+export const canAccessReminders = (plan: PlanType) => true;
 export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
 
 interface UserContextType {
