@@ -78,14 +78,13 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
 
   if (selectedProject) {
-    const dbProject = isDbProject(selectedProject.id);
     return (
       <ProjectDetailPage
         project={selectedProject}
         onBack={handleBack}
-        isDeletable={dbProject}
-        onDelete={(id) => { deleteProject(id); handleBack(); }}
-        onStatusChange={dbProject ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
+        isDeletable={true}
+        onDelete={(id) => { handleDeleteProject(id); handleBack(); }}
+        onStatusChange={isDbProject(selectedProject.id) ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
       />
     );
   }
