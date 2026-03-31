@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
   LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
@@ -33,21 +33,44 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
+const HIDDEN_PROJECTS_KEY = "muhendisai_hidden_projects";
+
+const getHiddenProjects = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(HIDDEN_PROJECTS_KEY) || "[]");
+  } catch { return []; }
+};
+
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
   const { projects: dbProjects, loading, addProject, deleteProject, updateProjectStatus } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<string[]>(getHiddenProjects);
 
   const handleBack = () => {
     setSelectedProjectId(null);
     onProjectIdClear?.();
   };
 
-  // Merge static + DB projects
+  const hideStaticProject = (id: string) => {
+    const updated = [...hiddenIds, id];
+    setHiddenIds(updated);
+    localStorage.setItem(HIDDEN_PROJECTS_KEY, JSON.stringify(updated));
+  };
+
+  const handleDeleteProject = (id: string) => {
+    if (dbProjects.some(p => p.id === id)) {
+      deleteProject(id);
+    } else {
+      hideStaticProject(id);
+    }
+  };
+
+  // Merge static + DB projects, filter hidden
   const allProjects: Project[] = [
-    ...PROJECTS,
+    ...PROJECTS.filter(p => !hiddenIds.includes(p.id)),
     ...dbProjects.map(dbToProject),
   ];
 
@@ -55,14 +78,13 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
 
   if (selectedProject) {
-    const dbProject = isDbProject(selectedProject.id);
     return (
       <ProjectDetailPage
         project={selectedProject}
         onBack={handleBack}
-        isDeletable={dbProject}
-        onDelete={(id) => { deleteProject(id); handleBack(); }}
-        onStatusChange={dbProject ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
+        isDeletable={true}
+        onDelete={(id) => { handleDeleteProject(id); handleBack(); }}
+        onStatusChange={isDbProject(selectedProject.id) ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
       />
     );
   }
@@ -149,11 +171,9 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                   </td>
                   <td className="px-5 py-3">
-                    {isDbProject(p.id) && (
-                      <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400" style={{ color: "#64748B" }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -171,11 +191,9 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                    {isDbProject(p.id) && (
-                      <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} style={{ color: "#64748B" }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -196,11 +214,9 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                {isDbProject(p.id) && (
-                  <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} style={{ color: "#64748B" }}>
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} style={{ color: "#64748B" }}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
               <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate" style={{ color: "#F1F5F9" }}>{p.name}</h4>
               <p className="text-[11px] lg:text-[12px] mb-3" style={{ color: "#64748B" }}>{p.client}</p>
