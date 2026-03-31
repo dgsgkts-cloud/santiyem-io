@@ -45,7 +45,24 @@ const KURUMSAL_PLANS = [
 const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
   const [activeTab, setActiveTab] = useState<TabType>("bireysel");
+  const [yearly, setYearly] = useState(false);
   const plans = activeTab === "bireysel" ? BIREYSEL_PLANS : KURUMSAL_PLANS;
+
+  const applyYearly = (price: string) => {
+    if (!price || price === "0₺") return { display: price, period: yearly ? "/ yıl" : "/ ay" };
+    const num = parseInt(price.replace(/[^0-9]/g, ""));
+    if (isNaN(num)) return { display: price, period: yearly ? "/ yıl" : "/ ay" };
+    const monthlyDiscounted = Math.round(num * 0.8);
+    const yearlyTotal = monthlyDiscounted * 12;
+    if (yearly) {
+      return {
+        display: `${yearlyTotal.toLocaleString("tr-TR")}₺`,
+        period: "/ yıl",
+        originalMonthly: `${num.toLocaleString("tr-TR")}₺/ay yerine ${monthlyDiscounted.toLocaleString("tr-TR")}₺/ay`,
+      };
+    }
+    return { display: price, period: "/ ay" };
+  };
 
   return (
     <section id="pricing" className="py-24 px-6" style={{ background: "#0F1419" }}>
@@ -57,7 +74,7 @@ const PricingSection = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center justify-center gap-2 mb-10">
+        <div className="flex items-center justify-center gap-2 mb-4">
           <button
             onClick={() => setActiveTab("bireysel")}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
@@ -82,6 +99,25 @@ const PricingSection = () => {
           </button>
         </div>
 
+        {/* Yearly/Monthly Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-10">
+          <span className={`text-sm font-medium ${!yearly ? "text-white" : "text-white/40"}`}>Aylık</span>
+          <button
+            onClick={() => setYearly(!yearly)}
+            className="relative w-12 h-6 rounded-full transition-colors duration-200"
+            style={{ backgroundColor: yearly ? "#FF6B2B" : "#1E2732" }}
+          >
+            <span
+              className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+              style={{ transform: yearly ? "translateX(24px)" : "translateX(0)" }}
+            />
+          </button>
+          <span className={`text-sm font-medium ${yearly ? "text-white" : "text-white/40"}`}>
+            Yıllık
+            <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(255,107,43,0.15)", color: "#FF6B2B" }}>%20 indirim</span>
+          </span>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6">
           {plans.map(p => {
             const isCustom = "isCustom" in p && p.isCustom;
@@ -94,10 +130,24 @@ const PricingSection = () => {
                   </span>
                 )}
                 <h3 className="text-lg font-semibold text-white mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{p.name}</h3>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-3xl font-bold text-white">{p.price}</span>
-                  {p.period && <span className="text-sm" style={{ color: "#64748B" }}>{p.period}</span>}
-                </div>
+                {(() => {
+                  if (isCustom) return <div className="mb-6" />;
+                  const y = applyYearly(p.price);
+                  return (
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-white">{y.display}</span>
+                        <span className="text-sm" style={{ color: "#64748B" }}>{y.period}</span>
+                      </div>
+                      {y.originalMonthly && (
+                        <p className="text-xs mt-1" style={{ color: "#FF6B2B" }}>{y.originalMonthly}</p>
+                      )}
+                      {yearly && p.price !== "0₺" && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Yıllık ödeme, peşin tahsil edilir</p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {isCustom ? (
                   <div className="mb-8">

@@ -138,6 +138,22 @@ const PricingPanel = () => {
     }
   };
 
+  const applyYearly = (price: string): { display: string; period: string; originalMonthly?: string } => {
+    if (!price || price === "0₺") return { display: price, period: yearly ? "/yıl" : "/ay" };
+    const num = parseInt(price.replace(/[^0-9]/g, ""));
+    if (isNaN(num)) return { display: price, period: yearly ? "/yıl" : "/ay" };
+    const monthlyDiscounted = Math.round(num * 0.8);
+    const yearlyTotal = monthlyDiscounted * 12;
+    if (yearly) {
+      return {
+        display: `${yearlyTotal.toLocaleString("tr-TR")}₺`,
+        period: "/yıl",
+        originalMonthly: `${num.toLocaleString("tr-TR")}₺/ay yerine ${monthlyDiscounted.toLocaleString("tr-TR")}₺/ay`,
+      };
+    }
+    return { display: price, period: "/ay" };
+  };
+
   const plans = activeTab === "bireysel" ? bireyselPlans : kurumsalPlans;
 
   const faqs = [
@@ -157,7 +173,7 @@ const PricingPanel = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-center gap-2 mb-8">
+      <div className="flex items-center justify-center gap-2 mb-4">
         <button
           onClick={() => setActiveTab("bireysel")}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
@@ -184,6 +200,25 @@ const PricingPanel = () => {
         </button>
       </div>
 
+      {/* Yearly/Monthly Toggle */}
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <span className={`text-sm font-medium ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>Aylık</span>
+        <button
+          onClick={() => setYearly(!yearly)}
+          className="relative w-12 h-6 rounded-full transition-colors duration-200"
+          style={{ backgroundColor: yearly ? "#FF6B2B" : "#1E2732" }}
+        >
+          <span
+            className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+            style={{ transform: yearly ? "translateX(24px)" : "translateX(0)" }}
+          />
+        </button>
+        <span className={`text-sm font-medium ${yearly ? "text-foreground" : "text-muted-foreground"}`}>
+          Yıllık
+          <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(255,107,43,0.15)", color: "#FF6B2B" }}>%20 indirim</span>
+        </span>
+      </div>
+
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {plans.map((plan) => {
@@ -205,10 +240,25 @@ const PricingPanel = () => {
               )}
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                  {plan.period && <span className="text-muted-foreground text-sm">{plan.period}</span>}
-                </div>
+                {(() => {
+                  const isCustom = "isCustom" in plan && plan.isCustom;
+                  if (isCustom) return null;
+                  const y = applyYearly(plan.price);
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-3xl font-bold text-foreground">{y.display}</span>
+                        <span className="text-muted-foreground text-sm">{y.period}</span>
+                      </div>
+                      {y.originalMonthly && (
+                        <p className="text-xs mt-1" style={{ color: "#FF6B2B" }}>{y.originalMonthly}</p>
+                      )}
+                      {yearly && plan.price !== "0₺" && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Yıllık ödeme, peşin tahsil edilir</p>
+                      )}
+                    </>
+                  );
+                })()}
                 <p className="text-xs text-muted-foreground mt-1">{plan.subtitle}</p>
               </div>
 
