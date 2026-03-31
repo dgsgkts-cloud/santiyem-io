@@ -560,6 +560,12 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         )}
       </div>
 
+      {/* Görevlendirme / Kanban */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <TaskBoard projectId={p.id} />
+        </div>
+      )}
 
       {isDeletable && onDelete && user && (
         <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderColor: "rgba(239,68,68,0.3)" }}>
