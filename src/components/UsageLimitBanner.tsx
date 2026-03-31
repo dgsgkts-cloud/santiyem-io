@@ -1,12 +1,13 @@
 import { Lock } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { useNavigate } from "react-router-dom";
 
 interface UsageLimitBannerProps {
   type: "aiQuestions" | "photoAnalysis" | "render" | "reminders";
 }
 
 const LABELS: Record<string, { title: string; resetText: string }> = {
-  aiQuestions: { title: "Bugünkü ücretsiz AI sorularınızı kullandınız.", resetText: "Kota yarın sıfırlanır" },
+  aiQuestions: { title: "Günlük AI soru limitine ulaşıldı.", resetText: "Kota yarın sıfırlanır" },
   photoAnalysis: { title: "Bugünkü ücretsiz fotoğraf analizlerinizi kullandınız.", resetText: "Kota yarın sıfırlanır" },
   render: { title: "Bugünkü AI render hakkınızı kullandınız.", resetText: "Kota yarın sıfırlanır" },
   reminders: { title: "Maksimum hatırlatıcı sayısına ulaştınız.", resetText: "Mevcut hatırlatıcıları tamamlayın" },
