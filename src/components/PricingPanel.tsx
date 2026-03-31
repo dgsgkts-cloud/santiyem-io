@@ -299,16 +299,18 @@ const PricingPanel = () => {
                   onClick={isCustom ? () => setShowEnterpriseForm(true) : undefined}
                   className={`w-full font-semibold ${
                     plan.button.style === "primary"
-                      ? "text-white h-14 flex-col gap-0"
+                      ? "text-white h-11"
                       : "bg-transparent border border-border text-foreground hover:bg-secondary h-11"
                   }`}
                   style={plan.button.style === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
                 >
-                  <span>{plan.button.text}</span>
-                  {"buttonNote" in plan && plan.buttonNote && (
-                    <span className="text-[10px] font-normal opacity-80">({plan.buttonNote})</span>
-                  )}
+                  {plan.button.text}
                 </Button>
+                {plan.button.text.includes("Ücretsiz Dene") && (
+                  <p className="text-center text-[10px] text-muted-foreground">
+                    Kredi kartı gereklidir · 14 gün içinde iptal ederseniz ücret alınmaz
+                  </p>
+                )}
               </div>
             </div>
           );
