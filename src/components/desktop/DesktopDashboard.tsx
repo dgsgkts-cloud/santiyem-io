@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useUser, canAccessProjects, canAccessHakedis, canAccessReminders } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle,
@@ -7,6 +7,7 @@ import {
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
 import { supabase } from "@/integrations/supabase/client";
+import UpgradeModal from "@/components/UpgradeModal";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -35,6 +36,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string; requiresOffice: boolean }>({ open: false, feature: "", requiresOffice: false });
+  const openUpgrade = useCallback((feature: string, requiresOffice: boolean) => setUpgradeModal({ open: true, feature, requiresOffice }), []);
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
   // Fetch hakedis totals
@@ -121,7 +124,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             >
-              {stat.locked && <LockedOverlay label="Kurumsal Paket" />}
+              {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
                   <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
@@ -145,7 +148,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="space-y-4 lg:space-y-5 min-w-0">
           {/* Projects */}
           <div className="rounded-xl overflow-hidden relative" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />}
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
               <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
               <button onClick={() => onTabChange("projects")} className="flex items-center gap-0.5 text-[12px] font-medium shrink-0" style={{ color: "#FF6B2B" }}>
@@ -215,7 +218,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           {/* Activities - still static for now, could be event-sourced later */}
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Son Aktiviteler", true)} />}
             <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
             {projects.length === 0 ? (
               <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
@@ -244,7 +247,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             onClick={() => !remindersLocked && onTabChange("reminders")}
           >
-            {remindersLocked && <LockedOverlay label="Plus Paket" />}
+            {remindersLocked && <LockedOverlay label="Plus Paket" onClick={() => openUpgrade("Hatırlatıcılar", false)} />}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
@@ -340,7 +343,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           {/* Upcoming */}
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            {projectsLocked && <LockedOverlay label="Kurumsal Paket" />}
+            {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
             <div className="space-y-2.5">
               {UPCOMING_STATIC.map((u, i) => (
@@ -362,12 +365,22 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
         </div>
       </div>
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal(prev => ({ ...prev, open: false }))}
+        feature={upgradeModal.feature}
+        requiresOffice={upgradeModal.requiresOffice}
+      />
     </div>
   );
 };
 
-const LockedOverlay = ({ label }: { label: string }) => (
-  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}>
+const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  <div
+    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl cursor-pointer"
+    style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}
+    onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+  >
     <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
     <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
     <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
