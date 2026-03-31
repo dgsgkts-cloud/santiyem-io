@@ -138,6 +138,22 @@ const PricingPanel = () => {
     }
   };
 
+  const applyYearly = (price: string): { display: string; period: string; originalMonthly?: string } => {
+    if (!price || price === "0₺") return { display: price, period: yearly ? "/yıl" : "/ay" };
+    const num = parseInt(price.replace(/[^0-9]/g, ""));
+    if (isNaN(num)) return { display: price, period: yearly ? "/yıl" : "/ay" };
+    const monthlyDiscounted = Math.round(num * 0.8);
+    const yearlyTotal = monthlyDiscounted * 12;
+    if (yearly) {
+      return {
+        display: `${yearlyTotal.toLocaleString("tr-TR")}₺`,
+        period: "/yıl",
+        originalMonthly: `${num.toLocaleString("tr-TR")}₺/ay yerine ${monthlyDiscounted.toLocaleString("tr-TR")}₺/ay`,
+      };
+    }
+    return { display: price, period: "/ay" };
+  };
+
   const plans = activeTab === "bireysel" ? bireyselPlans : kurumsalPlans;
 
   const faqs = [
