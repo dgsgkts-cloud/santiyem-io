@@ -18,6 +18,7 @@ import TeslimatIade from "./pages/TeslimatIade.tsx";
 import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi.tsx";
 import Iletisim from "./pages/Iletisim.tsx";
 import CookieBanner from "@/components/CookieBanner";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
