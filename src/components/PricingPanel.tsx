@@ -157,7 +157,7 @@ const PricingPanel = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-center gap-2 mb-8">
+      <div className="flex items-center justify-center gap-2 mb-4">
         <button
           onClick={() => setActiveTab("bireysel")}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
@@ -182,6 +182,25 @@ const PricingPanel = () => {
           <Building2 className="w-4 h-4" />
           Kurumsal
         </button>
+      </div>
+
+      {/* Yearly/Monthly Toggle */}
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <span className={`text-sm font-medium ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>Aylık</span>
+        <button
+          onClick={() => setYearly(!yearly)}
+          className="relative w-12 h-6 rounded-full transition-colors duration-200"
+          style={{ backgroundColor: yearly ? "#FF6B2B" : "#1E2732" }}
+        >
+          <span
+            className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+            style={{ transform: yearly ? "translateX(24px)" : "translateX(0)" }}
+          />
+        </button>
+        <span className={`text-sm font-medium ${yearly ? "text-foreground" : "text-muted-foreground"}`}>
+          Yıllık
+          <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(255,107,43,0.15)", color: "#FF6B2B" }}>%20 indirim</span>
+        </span>
       </div>
 
       {/* Cards */}
