@@ -6,6 +6,7 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 import { useProjectNotes } from "@/hooks/useProjectNotes";
+import TaskBoard from "./TaskBoard";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#22C55E" },
