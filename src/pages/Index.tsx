@@ -92,7 +92,7 @@ const TAB_TITLES: Record<string, string> = {
 };
 
 const Index = () => {
-  const { user, plan, signOut } = useUser();
+  const { user, plan, signOut, incrementUsage, canUse } = useUser();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -134,6 +134,14 @@ const Index = () => {
   }, [drawerOpen]);
 
   const handleSend = async (text: string, attachments?: Attachment[]) => {
+    // Check photo analysis limit if attachments present
+    if (attachments && attachments.length > 0 && !canUse("photoAnalysis")) {
+      toast.error("Günlük fotoğraf analizi limitine ulaştınız. Planınızı yükseltin.");
+      return;
+    }
+    if (attachments && attachments.length > 0) {
+      incrementUsage("photoAnalysis");
+    }
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);

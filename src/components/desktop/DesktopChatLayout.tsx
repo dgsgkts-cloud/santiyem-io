@@ -20,7 +20,7 @@ interface DesktopChatLayoutProps {
 }
 
 const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutProps) => {
-  const { user } = useUser();
+  const { user, incrementUsage, canUse } = useUser();
   const conv = useConversations();
   const [searchQuery, setSearchQuery] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
@@ -36,6 +36,15 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
     if (!user && fallbackProps.onSend) {
       fallbackProps.onSend(text, attachments);
       return;
+    }
+
+    // Check photo analysis limit if attachments present
+    if (attachments && attachments.length > 0 && !canUse("photoAnalysis")) {
+      toast.error("Günlük fotoğraf analizi limitine ulaştınız. Planınızı yükseltin.");
+      return;
+    }
+    if (attachments && attachments.length > 0) {
+      incrementUsage("photoAnalysis");
     }
 
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
