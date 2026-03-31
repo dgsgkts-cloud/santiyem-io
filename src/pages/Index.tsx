@@ -390,11 +390,11 @@ const Index = () => {
             <div>
               <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
               <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                plan === "pro" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
-                plan === "office" ? "bg-blue-500/20 text-blue-400" :
+                plan === "pro" || plan === "plus" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
+                plan === "office_free" || plan === "office_pro" || plan === "office_custom" ? "bg-blue-500/20 text-blue-400" :
                 "bg-white/10 text-white/50"
               }`}>
-                {plan === "pro" ? "Pro Plan" : plan === "office" ? "Ofis Plan" : "Ücretsiz"}
+                {plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
               </span>
             </div>
           </div>

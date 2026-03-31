@@ -88,17 +88,17 @@ const DesktopSettingsPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <span className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
-                      {plan === "pro" ? "Profesyonel Plan" : plan === "office" ? "Ofis Planı" : "Ücretsiz Plan"}
+                      {plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz Plan"}
                     </span>
                     <p className="text-[11px] lg:text-[12px] mt-0.5" style={{ color: "#64748B" }}>
                       {plan === "free" ? "Temel özellikler" : "Tüm özellikler aktif"}
                     </p>
                   </div>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md self-start" style={{
-                    backgroundColor: plan === "pro" ? "rgba(255,107,43,0.15)" : plan === "office" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                    color: plan === "pro" ? "#FF6B2B" : plan === "office" ? "#60A5FA" : "#64748B",
+                    backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                    color: plan === "pro" || plan === "plus" ? "#FF6B2B" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "#60A5FA" : "#64748B",
                   }}>
-                    {plan === "pro" ? "Pro" : plan === "office" ? "Ofis" : "Ücretsiz"}
+                    {plan === "pro" ? "Pro" : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal" : plan === "office_custom" ? "Özel" : "Ücretsiz"}
                   </span>
                 </div>
               </div>
