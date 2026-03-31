@@ -214,11 +214,9 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                {isDbProject(p.id) && (
-                  <button onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }} style={{ color: "#64748B" }}>
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} style={{ color: "#64748B" }}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
               <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate" style={{ color: "#F1F5F9" }}>{p.name}</h4>
               <p className="text-[11px] lg:text-[12px] mb-3" style={{ color: "#64748B" }}>{p.client}</p>
