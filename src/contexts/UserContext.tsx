@@ -147,7 +147,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const canUse = (key: keyof UsageLimits) => {
     if (plan === "pro" || isOfficePlan(plan)) return true;
-    if (plan === "plus" && key === "aiQuestions") return true;
+    return usage[key].used < usage[key].max;
     return usage[key].used < usage[key].max;
   };
 
