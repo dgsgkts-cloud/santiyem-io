@@ -34,10 +34,10 @@ const PricingPanel = () => {
     {
       id: "pro",
       name: "Profesyonel",
-      price: yearly ? "239₺" : "299₺",
+      price: yearly ? "399₺" : "499₺",
       period: "/ay",
       subtitle: "Serbest mimar, mühendis ve müteahhitler için",
-      yearlyNote: yearly ? "Yıllık 2.868₺ (720₺ tasarruf)" : null,
+      yearlyNote: yearly ? "Yıllık 4.788₺ (1.200₺ tasarruf)" : null,
       badge: "EN POPÜLER",
       featured: true,
       button: { text: "14 Gün Ücretsiz Dene", style: "primary" as const },
