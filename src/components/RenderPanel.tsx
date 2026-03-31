@@ -52,7 +52,7 @@ const RenderPanel = () => {
         }),
       });
       const data = await resp.json();
-      if (!resp.ok) { toast.error(data.error || "Render oluşturulamadı"); return; }
+      if (!resp.ok || data.error) { toast.error(data.error || "Render oluşturulamadı"); return; }
       if (data.image) {
         setResultImage(data.image);
         // Save to DB

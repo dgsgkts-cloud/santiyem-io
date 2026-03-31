@@ -81,8 +81,8 @@ Kullanıcı isteği: ${prompt}`
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredi yetersiz, lütfen bakiyenizi kontrol edin." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Kredi yetersiz, lütfen bakiyenizi kontrol edin.", code: "INSUFFICIENT_CREDIT" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
