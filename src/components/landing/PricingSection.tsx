@@ -36,7 +36,7 @@ const KURUMSAL_PLANS = [
     cta: "Hemen Başla", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
-    name: "Özel Kurumsal", price: "Özel", period: "", popular: false, isCustom: true,
+    name: "Özel Kurumsal", price: "", period: "", popular: false, isCustom: true,
     features: [],
     cta: "İletişime Geç", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
