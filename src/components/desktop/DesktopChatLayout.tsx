@@ -125,7 +125,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
   }, {} as Record<string, Conversation[]>);
 
   return (
-    <div className="flex flex-1 min-h-0">
+    <div className="flex h-full overflow-hidden">
       {/* Left - Chat history */}
       <div className="w-[240px] shrink-0 flex flex-col" style={{ backgroundColor: "#0F1419", borderRight: "1px solid #1E2732" }}>
         <div className="p-3">
