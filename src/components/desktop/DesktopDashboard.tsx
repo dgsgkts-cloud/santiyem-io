@@ -369,8 +369,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   );
 };
 
-const LockedOverlay = ({ label }: { label: string }) => (
-  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}>
+const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  <div
+    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl cursor-pointer"
+    style={{ backgroundColor: "rgba(15,20,25,0.85)", backdropFilter: "blur(4px)" }}
+    onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+  >
     <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
     <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
     <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
