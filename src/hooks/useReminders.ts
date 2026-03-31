@@ -9,6 +9,8 @@ export interface Reminder {
   reminder_date: string;
   note: string;
   done: boolean;
+  assigned_to?: string | null;
+  assignee_name?: string;
 }
 
 const STORAGE_KEY = "muhendisai_reminders";
@@ -18,16 +20,33 @@ export function useReminders() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Load from DB or localStorage
   const loadReminders = useCallback(async () => {
     if (user) {
       setLoading(true);
       const { data } = await supabase
         .from("reminders")
-        .select("id, title, reminder_date, note, done")
+        .select("id, title, reminder_date, note, done, assigned_to")
         .eq("user_id", user.id)
         .order("reminder_date", { ascending: true });
-      if (data) setReminders(data.map(r => ({ ...r, note: r.note || "" })));
+
+      if (data) {
+        // Get assignee names
+        const assigneeIds = [...new Set(data.filter(r => r.assigned_to).map(r => r.assigned_to!))];
+        let profileMap = new Map<string, string>();
+        if (assigneeIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", assigneeIds);
+          profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name || "Bilinmiyor"]) || []);
+        }
+
+        setReminders(data.map(r => ({
+          ...r,
+          note: r.note || "",
+          assignee_name: r.assigned_to ? profileMap.get(r.assigned_to) || undefined : undefined,
+        })));
+      }
       setLoading(false);
     } else {
       try {
@@ -48,9 +67,8 @@ export function useReminders() {
 
   useEffect(() => { loadReminders(); }, [loadReminders]);
 
-  const addReminder = useCallback(async (title: string, date: string, note: string) => {
+  const addReminder = useCallback(async (title: string, date: string, note: string, assignedTo?: string | null) => {
     if (user) {
-      // Check limit
       const { count } = await supabase
         .from("reminders")
         .select("id", { count: "exact", head: true })
@@ -64,6 +82,7 @@ export function useReminders() {
         title,
         reminder_date: date,
         note,
+        assigned_to: assignedTo || null,
       });
       if (error) { toast.error("Eklenemedi"); return false; }
       loadReminders();

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import TeamManagement from "./TeamManagement";
 import { User, Bell, CreditCard, Users, Shield } from "lucide-react";
 
 const TABS = [
@@ -103,7 +104,8 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
-          {(activeTab === "team" || activeTab === "security") && (
+          {activeTab === "team" && <TeamManagement />}
+          {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
               <p className="text-[13px] lg:text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
             </div>

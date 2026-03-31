@@ -6,6 +6,7 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 import { useProjectNotes } from "@/hooks/useProjectNotes";
+import TaskBoard from "./TaskBoard";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#22C55E" },
@@ -559,6 +560,12 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         )}
       </div>
 
+      {/* Görevlendirme / Kanban */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <TaskBoard projectId={p.id} />
+        </div>
+      )}
 
       {isDeletable && onDelete && user && (
         <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderColor: "rgba(239,68,68,0.3)" }}>
