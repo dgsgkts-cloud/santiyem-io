@@ -1,23 +1,21 @@
-import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
 interface UsageLimitBannerProps {
-  type: "aiQuestions" | "projectAnalysis" | "photoAnalysis" | "ekbCalc" | "costCalc";
+  type: "aiQuestions" | "photoAnalysis" | "render" | "reminders";
 }
 
 const LABELS: Record<string, { title: string; resetText: string }> = {
-  aiQuestions: { title: "Bugünkü 3 ücretsiz sorunuzu kullandınız.", resetText: "Kota yarın sıfırlanır" },
-  projectAnalysis: { title: "Bu ayki 2 ücretsiz analizinizi kullandınız.", resetText: "Kota ay başında sıfırlanır" },
-  photoAnalysis: { title: "Bu ayki 2 ücretsiz fotoğraf analizinizi kullandınız.", resetText: "Kota ay başında sıfırlanır" },
-  ekbCalc: { title: "Bu ayki 2 ücretsiz EKB hesaplamanızı kullandınız.", resetText: "Kota ay başında sıfırlanır" },
-  costCalc: { title: "Bu ayki 1 ücretsiz maliyet hesaplamanızı kullandınız.", resetText: "Kota ay başında sıfırlanır" },
+  aiQuestions: { title: "Bugünkü ücretsiz AI sorularınızı kullandınız.", resetText: "Kota yarın sıfırlanır" },
+  photoAnalysis: { title: "Bugünkü ücretsiz fotoğraf analizlerinizi kullandınız.", resetText: "Kota yarın sıfırlanır" },
+  render: { title: "Bugünkü AI render hakkınızı kullandınız.", resetText: "Kota yarın sıfırlanır" },
+  reminders: { title: "Maksimum hatırlatıcı sayısına ulaştınız.", resetText: "Mevcut hatırlatıcıları tamamlayın" },
 };
 
 const UsageLimitBanner = ({ type }: UsageLimitBannerProps) => {
   const { canUse, plan } = useUser();
 
-  if (plan !== "free" || canUse(type)) return null;
+  if (canUse(type)) return null;
 
   const label = LABELS[type];
 
@@ -29,7 +27,7 @@ const UsageLimitBanner = ({ type }: UsageLimitBannerProps) => {
       </div>
       <p className="text-sm">
         <span className="text-[#FF6B2B] hover:underline cursor-pointer">
-          Sınırsız kullanım için Pro plana geçin →
+          Sınırsız kullanım için planınızı yükseltin →
         </span>
       </p>
       <p className="text-xs text-muted-foreground mt-1">{label.resetText}</p>
