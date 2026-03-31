@@ -14,7 +14,7 @@ const BIREYSEL_PLANS = [
   },
   {
     name: "Plus", price: "199₺", period: "/ ay", popular: false,
-    features: ["AI Asistan — sınırsız", "Fotoğraf Analizi — günde 10", "AI Mimari Render — günde 5", "Hatırlatıcılar — aynı anda 10", "İndirme (PDF/Excel)"],
+    features: ["AI Asistan — daha fazla kullanım", "Fotoğraf Analizi — günde 10", "AI Mimari Render — günde 5", "Hatırlatıcılar — aynı anda 10", "İndirme (PDF/Excel)"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {

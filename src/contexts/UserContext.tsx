@@ -19,7 +19,7 @@ const FREE_LIMITS: UsageLimits = {
 };
 
 const PLUS_LIMITS: UsageLimits = {
-  aiQuestions: { used: 0, max: 999 },
+  aiQuestions: { used: 0, max: 20 },
   photoAnalysis: { used: 0, max: 10 },
   render: { used: 0, max: 5 },
   reminders: { used: 0, max: 10 },
@@ -147,13 +147,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const canUse = (key: keyof UsageLimits) => {
     if (plan === "pro" || isOfficePlan(plan)) return true;
-    if (plan === "plus" && key === "aiQuestions") return true;
+    return usage[key].used < usage[key].max;
     return usage[key].used < usage[key].max;
   };
 
   const incrementUsage = (key: keyof UsageLimits) => {
     if (plan === "pro" || isOfficePlan(plan)) return true;
-    if (plan === "plus" && key === "aiQuestions") return true;
+    if (usage[key].used >= usage[key].max) return false;
     if (usage[key].used >= usage[key].max) return false;
     setUsage(prev => ({
       ...prev,
