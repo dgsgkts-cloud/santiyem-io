@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import TeamManagement from "./TeamManagement";
 import { User, Bell, CreditCard, Users, Shield } from "lucide-react";
 
 const TABS = [
