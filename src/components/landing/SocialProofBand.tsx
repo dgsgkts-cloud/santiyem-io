@@ -1,7 +1,7 @@
 const ITEMS = [
-  "MSY Yapı", "BFTA Mimarlık", "500+ Mühendis", "50+ Mimar Ofisi",
-  "Hatay · İskenderun · Adana", "100+ Aktif Proje", "MSY Yapı", "BFTA Mimarlık",
-  "500+ Mühendis", "50+ Mimar Ofisi", "Hatay · İskenderun · Adana", "100+ Aktif Proje",
+  "MSY Yapı", "Murt İnşaat", "Göktaş Global Mühendislik", "500+ Mühendis", "50+ Mimar Ofisi",
+  "100+ Aktif Proje", "MSY Yapı", "Murt İnşaat", "Göktaş Global Mühendislik",
+  "500+ Mühendis", "50+ Mimar Ofisi", "100+ Aktif Proje",
 ];
 
 const SocialProofBand = () => (
