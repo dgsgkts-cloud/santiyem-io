@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
   LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
@@ -33,21 +33,44 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
+const HIDDEN_PROJECTS_KEY = "muhendisai_hidden_projects";
+
+const getHiddenProjects = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(HIDDEN_PROJECTS_KEY) || "[]");
+  } catch { return []; }
+};
+
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
   const { projects: dbProjects, loading, addProject, deleteProject, updateProjectStatus } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<string[]>(getHiddenProjects);
 
   const handleBack = () => {
     setSelectedProjectId(null);
     onProjectIdClear?.();
   };
 
-  // Merge static + DB projects
+  const hideStaticProject = (id: string) => {
+    const updated = [...hiddenIds, id];
+    setHiddenIds(updated);
+    localStorage.setItem(HIDDEN_PROJECTS_KEY, JSON.stringify(updated));
+  };
+
+  const handleDeleteProject = (id: string) => {
+    if (dbProjects.some(p => p.id === id)) {
+      deleteProject(id);
+    } else {
+      hideStaticProject(id);
+    }
+  };
+
+  // Merge static + DB projects, filter hidden
   const allProjects: Project[] = [
-    ...PROJECTS,
+    ...PROJECTS.filter(p => !hiddenIds.includes(p.id)),
     ...dbProjects.map(dbToProject),
   ];
 
