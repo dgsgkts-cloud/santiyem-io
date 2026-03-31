@@ -200,7 +200,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
       </div>
 
       {/* Middle - Chat area */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ backgroundColor: "#0F1419" }}>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ backgroundColor: "#0F1419" }}>
         <div className="flex items-center justify-between px-5 shrink-0" style={{ height: 48, borderBottom: "1px solid #1E2732" }}>
           <span className="text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
             {messages.length > 0 ? "Sohbet" : "Yeni Sohbet"}
@@ -220,9 +220,11 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
           {messages.length === 0 ? (
-            <WelcomeScreen onSuggestionClick={handleSend} />
+            <div className="flex min-h-full items-center justify-center">
+              <WelcomeScreen onSuggestionClick={handleSend} />
+            </div>
           ) : (
             <div className="max-w-3xl mx-auto py-6 px-6 space-y-4">
               {messages.map((msg) => (
@@ -234,7 +236,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         </div>
 
         <UsageLimitBanner type="aiQuestions" />
-        <div style={{ borderTop: "1px solid #1E2732", backgroundColor: "#161C23" }}>
+        <div className="shrink-0" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#161C23" }}>
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </div>
       </div>
