@@ -108,7 +108,7 @@ const PricingPanel = () => {
       ],
     },
     {
-      id: "office_custom", name: "Özel Kurumsal", price: "Özel", period: "", subtitle: "Büyük ekipler ve şirketler için",
+      id: "office_custom", name: "Özel Kurumsal", price: "", period: "", subtitle: "Büyük ekipler ve şirketler için",
       badge: null, featured: false,
       isCustom: true,
       button: { text: "İletişime Geç", style: "outline" as const },
