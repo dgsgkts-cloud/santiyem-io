@@ -40,7 +40,7 @@ const PricingPanel = () => {
       badge: null, featured: false,
       button: { text: "14 Gün Ücretsiz Dene", style: "primary" as const },
       features: [
-        { text: "AI Asistan — sınırsız", included: true },
+        { text: "AI Asistan — daha fazla kullanım", included: true },
         { text: "Fotoğraf Analizi — günde 10", included: true },
         { text: "Hesap Araçları — sınırsız", included: true },
         { text: "AI Mimari Render — günde 5", included: true },
