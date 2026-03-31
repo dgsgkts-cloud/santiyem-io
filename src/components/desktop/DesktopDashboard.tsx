@@ -247,7 +247,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
             onClick={() => !remindersLocked && onTabChange("reminders")}
           >
-            {remindersLocked && <LockedOverlay label="Plus Paket" />}
+            {remindersLocked && <LockedOverlay label="Plus Paket" onClick={() => openUpgrade("Hatırlatıcılar", false)} />}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
