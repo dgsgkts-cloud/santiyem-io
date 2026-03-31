@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessRender, canAccessReminders } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
   Home, MessageSquare, FolderOpen, Receipt,
