@@ -240,10 +240,25 @@ const PricingPanel = () => {
               )}
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                  {plan.period && <span className="text-muted-foreground text-sm">{plan.period}</span>}
-                </div>
+                {(() => {
+                  const isCustom = "isCustom" in plan && plan.isCustom;
+                  if (isCustom) return null;
+                  const y = applyYearly(plan.price);
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-3xl font-bold text-foreground">{y.display}</span>
+                        <span className="text-muted-foreground text-sm">{y.period}</span>
+                      </div>
+                      {y.originalMonthly && (
+                        <p className="text-xs mt-1" style={{ color: "#FF6B2B" }}>{y.originalMonthly}</p>
+                      )}
+                      {yearly && plan.price !== "0₺" && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Yıllık ödeme, peşin tahsil edilir</p>
+                      )}
+                    </>
+                  );
+                })()}
                 <p className="text-xs text-muted-foreground mt-1">{plan.subtitle}</p>
               </div>
 

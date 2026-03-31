@@ -130,10 +130,24 @@ const PricingSection = () => {
                   </span>
                 )}
                 <h3 className="text-lg font-semibold text-white mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{p.name}</h3>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-3xl font-bold text-white">{p.price}</span>
-                  {p.period && <span className="text-sm" style={{ color: "#64748B" }}>{p.period}</span>}
-                </div>
+                {(() => {
+                  if (isCustom) return <div className="mb-6" />;
+                  const y = applyYearly(p.price);
+                  return (
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-white">{y.display}</span>
+                        <span className="text-sm" style={{ color: "#64748B" }}>{y.period}</span>
+                      </div>
+                      {y.originalMonthly && (
+                        <p className="text-xs mt-1" style={{ color: "#FF6B2B" }}>{y.originalMonthly}</p>
+                      )}
+                      {yearly && p.price !== "0₺" && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Yıllık ödeme, peşin tahsil edilir</p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {isCustom ? (
                   <div className="mb-8">
