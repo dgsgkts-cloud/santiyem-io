@@ -36,6 +36,7 @@ const FEATURES = [
 ];
 
 const Register = () => {
+  useSEO({ title: "Ücretsiz Kayıt Ol | MühendisAI" });
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: "", email: "", password: "", passwordConfirm: "",
