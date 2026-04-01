@@ -9,7 +9,6 @@ const TABS = [
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "team", label: "Ekip", icon: Users },
-  { id: "knowledgebase", label: "Bilgi Bankası", icon: BookOpen },
   { id: "security", label: "Güvenlik", icon: Shield },
 ];
 
