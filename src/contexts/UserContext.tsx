@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export type PlanType = "free" | "plus" | "pro" | "office_free" | "office_pro" | "office_custom";
+export type UserRole = "free" | "pro" | "office" | "admin";
 
 interface UsageLimits {
   aiQuestions: { used: number; max: number };
