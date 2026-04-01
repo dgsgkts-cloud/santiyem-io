@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, MessageSquare } from "lucide-react";
+import { Plus, Search, Trash2, MessageSquare, BookOpen } from "lucide-react";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -7,6 +7,7 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
 import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
+import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
