@@ -106,6 +106,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setProfile(null);
         setPlanState("free");
+        setRole("free");
       }
       setLoading(false);
     });
