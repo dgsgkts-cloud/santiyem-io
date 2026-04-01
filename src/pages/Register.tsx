@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/muhendis-logo.png";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const TITLES = [
   "İnşaat Mühendisi", "Mimar", "Makine Mühendisi",
