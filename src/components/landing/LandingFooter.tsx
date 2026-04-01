@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const LandingFooter = () => (
   <footer style={{ background: "#0A0E13", borderTop: "1px solid #1E2732" }}>
