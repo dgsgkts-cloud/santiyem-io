@@ -39,14 +39,16 @@ export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro"
 
 interface UserContextType {
   user: User | null;
-  profile: { full_name: string; title: string; city: string; plan: PlanType } | null;
+  profile: { full_name: string; title: string; city: string; plan: PlanType; role: UserRole } | null;
   loading: boolean;
   plan: PlanType;
+  role: UserRole;
   usage: UsageLimits;
   setPlan: (plan: PlanType) => void;
   incrementUsage: (key: keyof UsageLimits) => boolean;
   canUse: (key: keyof UsageLimits) => boolean;
   signOut: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
