@@ -56,5 +56,5 @@ const sections = [
   },
 ];
 
-const Hakkimizda = () => <LegalPage title="Hakkımızda" sections={sections} />;
+const Hakkimizda = () => { useSEO({ title: "Hakkımızda | MühendisAI" }); return <LegalPage title="Hakkımızda" sections={sections} />; };
 export default Hakkimizda;

@@ -70,5 +70,5 @@ const sections = [
   },
 ];
 
-const GizlilikPolitikasi = () => <LegalPage title="Gizlilik Sözleşmesi (KVKK Aydınlatma Metni)" sections={sections} />;
+const GizlilikPolitikasi = () => { useSEO({ title: "Gizlilik Politikası | MühendisAI" }); return <LegalPage title="Gizlilik Sözleşmesi (KVKK Aydınlatma Metni)" sections={sections} />; };
 export default GizlilikPolitikasi;

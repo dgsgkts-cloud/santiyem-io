@@ -9,8 +9,32 @@ import { useSEO } from "@/hooks/useSEO";
 const SUBJECTS = ["Teknik Destek", "Abonelik ve Ödeme", "Öneri ve Görüş", "Diğer"];
 
 const Iletisim = () => {
+  useSEO({ title: "İletişim | MühendisAI" });
   const [form, setForm] = useState({ name: "", email: "", subject: SUBJECTS[0], message: "" });
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    // JSON-LD for LocalBusiness
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Göktaş Global Mühendislik",
+      "url": "https://muhendisai.com",
+      "email": "info@goktasglobal.com",
+      "telephone": "+905333771156",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Uluçınar Mah. 12 Özgürkent Sk. No:4",
+        "addressLocality": "Arsuz",
+        "addressRegion": "Hatay",
+        "addressCountry": "TR"
+      }
+    });
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

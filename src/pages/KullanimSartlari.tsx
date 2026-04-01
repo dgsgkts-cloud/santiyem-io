@@ -71,5 +71,5 @@ const sections = [
   },
 ];
 
-const KullanimSartlari = () => <LegalPage title="Kullanım Şartları" sections={sections} />;
+const KullanimSartlari = () => { useSEO({ title: "Kullanım Şartları | MühendisAI" }); return <LegalPage title="Kullanım Şartları" sections={sections} />; };
 export default KullanimSartlari;

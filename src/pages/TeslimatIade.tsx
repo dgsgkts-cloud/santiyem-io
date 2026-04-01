@@ -34,5 +34,5 @@ const sections = [
   },
 ];
 
-const TeslimatIade = () => <LegalPage title="Teslimat ve İade Şartları" sections={sections} />;
+const TeslimatIade = () => { useSEO({ title: "Teslimat ve İade Şartları | MühendisAI" }); return <LegalPage title="Teslimat ve İade Şartları" sections={sections} />; };
 export default TeslimatIade;

@@ -40,5 +40,5 @@ const sections = [
   },
 ];
 
-const IptalIadePolitikasi = () => <LegalPage title="İptal ve İade Politikası" sections={sections} />;
+const IptalIadePolitikasi = () => { useSEO({ title: "İptal ve İade Politikası | MühendisAI" }); return <LegalPage title="İptal ve İade Politikası" sections={sections} />; };
 export default IptalIadePolitikasi;
