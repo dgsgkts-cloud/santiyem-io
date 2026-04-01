@@ -22,15 +22,33 @@ export const useDocuments = () => {
   const fetchDocuments = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
+    // Fetch user's own docs + global docs
+    const { data: userDocs } = await supabase
       .from("documents")
       .select("id, name, file_size, page_count, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setDocuments(data);
-    }
+    const { data: globalDocs } = await supabase
+      .from("documents")
+      .select("id, name, file_size, page_count, status, created_at")
+      .eq("is_global", true)
+      .order("created_at", { ascending: false });
+
+    const allDocs = [
+      ...(userDocs || []),
+      ...(globalDocs || []).map(d => ({ ...d, is_global: true })),
+    ];
+    
+    // Deduplicate by id
+    const seen = new Set<string>();
+    const dedupedDocs = allDocs.filter(d => {
+      if (seen.has(d.id)) return false;
+      seen.add(d.id);
+      return true;
+    });
+
+    setDocuments(dedupedDocs);
     setLoading(false);
   }, [user]);
 
