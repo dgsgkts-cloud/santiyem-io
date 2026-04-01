@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer, Clock, Layers } from "lucide-react";
+import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer, Clock, Layers, Grip, Shield, ArrowUpDown } from "lucide-react";
 import EKBCalculator from "./calculators/EKBCalculator";
 import StructuralSizingCalculator from "./calculators/StructuralSizingCalculator";
 import WindSnowCalculator from "./calculators/WindSnowCalculator";
@@ -8,6 +8,10 @@ import MaterialEstimator from "./calculators/MaterialEstimator";
 import ThermalBridgeCalculator from "./calculators/ThermalBridgeCalculator";
 import ConstructionCostCalculator from "./calculators/ConstructionCostCalculator";
 import ZeminBasinciCalculator from "./calculators/ZeminBasinciCalculator";
+import AsikCalculator from "./calculators/AsikCalculator";
+import DY2019Calculator from "./calculators/DY2019Calculator";
+import EurocodeWindCalculator from "./calculators/EurocodeWindCalculator";
+import AxialForceCalculator from "./calculators/AxialForceCalculator";
 import { useUserCalculations } from "@/hooks/useUserCalculations";
 import { useUser } from "@/contexts/UserContext";
 
@@ -16,6 +20,10 @@ const TOOLS = [
   { id: "structural", label: "Kolon/Kiriş/Döşeme", icon: <Columns3 className="w-4 h-4" />, desc: "TBDY 2018 ön boyutlandırma" },
   { id: "windsnow", label: "Rüzgar & Kar Yükü", icon: <Wind className="w-4 h-4" />, desc: "TS EN 1991 yük hesabı" },
   { id: "zemin", label: "Zemin Basıncı", icon: <Layers className="w-4 h-4" />, desc: "Bodrum perdesi zemin ve depremli basınç hesabı (TBDY 2018)" },
+  { id: "asik", label: "Çatı Aşığı Kontrolü", icon: <Grip className="w-4 h-4" />, desc: "Çift eksenli eğilme altında çelik aşık profil kontrolü (TBDY 2018)" },
+  { id: "dy2019", label: "DY-2019 Profil Kontrolü", icon: <Shield className="w-4 h-4" />, desc: "Çelik profil süneklik sınıfı kontrolü (TBDY 2018 / DY-2019)" },
+  { id: "eurowind", label: "Eurocode Rüzgar Yükü", icon: <Wind className="w-4 h-4" />, desc: "TS EN 1991-1-4 rüzgar basıncı ve katsayı hesabı" },
+  { id: "axial", label: "Eksenel Basınç/Çekme", icon: <ArrowUpDown className="w-4 h-4" />, desc: "Çelik kesitlerde çekme ve basınç kapasitesi kontrolü (AISC)" },
   { id: "taks", label: "TAKS/KAKS", icon: <Building2 className="w-4 h-4" />, desc: "İmar hesabı ve parsel analizi" },
   { id: "material", label: "Malzeme Tahmini", icon: <Package className="w-4 h-4" />, desc: "Beton, demir, kalıp miktarı" },
   { id: "thermal", label: "Isı Köprüsü", icon: <Thermometer className="w-4 h-4" />, desc: "Doğrusal ısı köprüsü analizi" },
@@ -67,7 +75,6 @@ const CalculatorsPanel = () => {
             ))}
           </div>
 
-          {/* Recent calculations */}
           {user && calculations.length > 0 && (
             <div className="mt-6 pt-4 border-t border-border">
               <h3 className="text-sm font-medium text-foreground flex items-center gap-2 mb-3">
@@ -115,6 +122,10 @@ const CalculatorsPanel = () => {
             {activeTool === "thermal" && <ThermalBridgeCalculator />}
             {activeTool === "cost" && <ConstructionCostCalculator />}
             {activeTool === "zemin" && <ZeminBasinciCalculator />}
+            {activeTool === "asik" && <AsikCalculator />}
+            {activeTool === "dy2019" && <DY2019Calculator />}
+            {activeTool === "eurowind" && <EurocodeWindCalculator />}
+            {activeTool === "axial" && <AxialForceCalculator />}
           </div>
         </div>
       )}
