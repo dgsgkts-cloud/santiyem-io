@@ -34,8 +34,8 @@ export const SignupEmail = ({
       <Container style={container}>
         <Heading style={h1}>E-posta Doğrulama</Heading>
         <Text style={text}>
-          <strong>MühendisAI</strong>'a hoş geldiniz! Hesabınızı aktif hale getirmek için
-          e-posta adresinizi ({' '}
+          <strong>MühendisAI</strong> platformuna hoş geldiniz! Hesabınızı aktif hale getirmek için
+          e-posta adresinizi (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
