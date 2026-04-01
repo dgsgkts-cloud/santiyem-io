@@ -10,6 +10,7 @@ export interface Document {
   page_count: number;
   status: string;
   created_at: string;
+  is_global?: boolean;
 }
 
 export const useDocuments = () => {
