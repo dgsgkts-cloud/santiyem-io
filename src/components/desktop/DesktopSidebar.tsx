@@ -216,7 +216,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               )}
             </div>
 
-            {(plan === "free" || plan === "plus") && (
+            {!isAdmin && (plan === "free" || plan === "plus") && (
               <div className="mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px]" style={{ color: "#64748B" }}>AI Soruları</span>
