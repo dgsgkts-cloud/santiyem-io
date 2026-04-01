@@ -153,15 +153,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("muhendisai_usage_v2", JSON.stringify({ date: today, usage }));
   }, [usage]);
 
+  const isAdmin = role === "admin";
+
   const canUse = (key: keyof UsageLimits) => {
-    if (plan === "pro" || isOfficePlan(plan)) return true;
-    return usage[key].used < usage[key].max;
+    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
     return usage[key].used < usage[key].max;
   };
 
   const incrementUsage = (key: keyof UsageLimits) => {
-    if (plan === "pro" || isOfficePlan(plan)) return true;
-    if (usage[key].used >= usage[key].max) return false;
+    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
     if (usage[key].used >= usage[key].max) return false;
     setUsage(prev => ({
       ...prev,
