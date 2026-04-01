@@ -58,6 +58,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
   const [plan, setPlanState] = useState<PlanType>("free");
+  const [role, setRole] = useState<UserRole>("free");
   const [usage, setUsage] = useState<UsageLimits>({ ...FREE_LIMITS });
 
   const getLimitsForPlan = (p: PlanType): UsageLimits => {
