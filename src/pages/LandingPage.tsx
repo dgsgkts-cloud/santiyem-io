@@ -24,6 +24,7 @@ const LandingPage = () => (
     <FinalCTASection />
     <LandingFooter />
   </div>
-);
+  );
+};
 
 export default LandingPage;
