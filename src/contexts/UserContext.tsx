@@ -76,15 +76,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, title, city, plan")
+      .select("full_name, title, city, plan, role")
       .eq("user_id", userId)
       .single();
     if (data) {
       const p = (data.plan as PlanType) || "free";
-      setProfile(data as UserContextType["profile"]);
+      const r = ((data as any).role as UserRole) || "free";
+      setProfile({ ...data, role: r } as UserContextType["profile"]);
       setPlanState(p);
+      setRole(r);
       setUsage(prev => {
-        const limits = getLimitsForPlan(p);
+        const effectivePlan = r === "admin" ? "pro" : p;
+        const limits = getLimitsForPlan(effectivePlan);
         return {
           aiQuestions: { used: prev.aiQuestions.used, max: limits.aiQuestions.max },
           photoAnalysis: { used: prev.photoAnalysis.used, max: limits.photoAnalysis.max },
