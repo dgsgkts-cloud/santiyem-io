@@ -83,8 +83,9 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          is_global: boolean
           page_number: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           chunk_index?: number
@@ -92,8 +93,9 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          is_global?: boolean
           page_number?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           chunk_index?: number
@@ -101,8 +103,9 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          is_global?: boolean
           page_number?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -120,33 +123,36 @@ export type Database = {
           file_path: string | null
           file_size: number
           id: string
+          is_global: boolean
           name: string
           page_count: number
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           file_path?: string | null
           file_size?: number
           id?: string
+          is_global?: boolean
           name: string
           page_count?: number
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           file_path?: string | null
           file_size?: number
           id?: string
+          is_global?: boolean
           name?: string
           page_count?: number
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
