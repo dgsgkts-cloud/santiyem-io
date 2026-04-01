@@ -17,17 +17,17 @@ interface ReauthenticationEmailProps {
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>MühendisAI doğrulama kodunuz</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Heading style={h1}>Kimlik Doğrulama</Heading>
+        <Text style={text}>Kimliğinizi doğrulamak için aşağıdaki kodu kullanın:</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Bu kod kısa süre içinde geçerliliğini yitirecektir.
+          Bu talebi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.
         </Text>
       </Container>
     </Body>
@@ -36,12 +36,12 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Space Grotesk', Arial, sans-serif" }
 const container = { padding: '20px 25px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#0F1419',
   margin: '0 0 20px',
 }
 const text = {
@@ -51,10 +51,10 @@ const text = {
   margin: '0 0 25px',
 }
 const codeStyle = {
-  fontFamily: 'Courier, monospace',
+  fontFamily: "'JetBrains Mono', Courier, monospace",
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#FF6B2B',
   margin: '0 0 30px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }

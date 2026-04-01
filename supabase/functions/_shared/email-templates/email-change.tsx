@@ -27,32 +27,27 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>MühendisAI e-posta değişikliği onayı</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Heading style={h1}>E-posta Değişikliği Onayı</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${email}`} style={link}>
-            {email}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
+          MühendisAI hesabınızda e-posta adresinizi{' '}
+          <Link href={`mailto:${email}`} style={link}>{email}</Link>
+          {' '}adresinden{' '}
+          <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>
+          {' '}adresine değiştirmek istediniz.
         </Text>
         <Text style={text}>
-          Click the button below to confirm this change:
+          Bu değişikliği onaylamak için aşağıdaki butona tıklayın:
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
+          E-posta Değişikliğini Onayla
         </Button>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Bu değişikliği siz talep etmediyseniz hesabınızın güvenliğini kontrol edin.
         </Text>
       </Container>
     </Body>
@@ -61,12 +56,12 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Space Grotesk', Arial, sans-serif" }
 const container = { padding: '20px 25px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#0F1419',
   margin: '0 0 20px',
 }
 const text = {
@@ -75,12 +70,12 @@ const text = {
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#FF6B2B', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#FF6B2B',
   color: '#ffffff',
   fontSize: '14px',
-  borderRadius: '8px',
+  borderRadius: '12px',
   padding: '12px 20px',
   textDecoration: 'none',
 }
