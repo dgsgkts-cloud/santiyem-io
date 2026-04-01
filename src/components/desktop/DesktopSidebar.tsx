@@ -197,11 +197,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
+                  backgroundColor: isAdmin ? "rgba(139,92,246,0.2)" : plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                  color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
+                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
               {plan === "free" && (
                 <button
