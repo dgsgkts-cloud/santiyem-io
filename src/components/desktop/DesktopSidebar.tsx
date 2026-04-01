@@ -203,7 +203,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               >
                 {isAdmin ? "Admin 🔧" : plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
-              {plan === "free" && (
+              {!isAdmin && plan === "free" && (
                 <button
                   onClick={() => onTabChange("pricing")}
                   className="text-[11px] font-medium transition-all duration-150"
