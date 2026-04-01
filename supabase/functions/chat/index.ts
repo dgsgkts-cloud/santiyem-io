@@ -244,14 +244,14 @@ serve(async (req) => {
             const keywords = query.toLowerCase().split(/\s+/).filter((w: string) => w.length >= 3).slice(0, 8);
             
             if (keywords.length > 0) {
-              // Try full text search first
               let chunks: any[] = [];
               const tsQuery = keywords.join(" | ");
               
+              // Search both user's own docs AND global docs
               const { data: ftsChunks, error: ftsError } = await supabase
                 .from("document_chunks")
                 .select("content, page_number, document_id")
-                .eq("user_id", user.id)
+                .or(`user_id.eq.${user.id},is_global.eq.true`)
                 .textSearch("content", tsQuery, { config: "turkish" })
                 .limit(5);
               
@@ -262,7 +262,7 @@ serve(async (req) => {
                 const { data: likeChunks } = await supabase
                   .from("document_chunks")
                   .select("content, page_number, document_id")
-                  .eq("user_id", user.id)
+                  .or(`user_id.eq.${user.id},is_global.eq.true`)
                   .ilike("content", `%${keywords[0]}%`)
                   .limit(5);
                 chunks = likeChunks || [];
