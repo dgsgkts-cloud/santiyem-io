@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const STEPS = [
-  { num: "1", title: "Kayıt Ol", sub: "30 saniye", desc: "E-posta adresinizle ücretsiz hesap oluşturun. Kredi kartı gerekmez." },
+  { num: "1", title: "Kayıt Ol", sub: "30 saniye", desc: "E-posta adresinizle ücretsiz hesap oluşturun. 14 gün ücretsiz deneyin." },
   { num: "2", title: "Projenizi Ekleyin", sub: "", desc: "Şantiyenizi, müşterinizi ve iş kalemlerinizi sisteme girin. Varsayılan şablonlar hazır bekliyor." },
   { num: "3", title: "AI'yi Çalıştırın", sub: "", desc: "Soru sorun, dosya yükleyin, hakediş hazırlayın. AI her adımda yanınızda." },
 ];

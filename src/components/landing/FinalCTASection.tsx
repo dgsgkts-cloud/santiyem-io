@@ -24,7 +24,7 @@ const FinalCTASection = () => {
             Demo İzle
           </button>
         </div>
-        <p className="text-xs" style={{ color: "#64748B" }}>Kredi kartı gerekmez · Kurulum yok · 14 gün ücretsiz</p>
+        <p className="text-xs" style={{ color: "#64748B" }}>Kurulum yok · 14 gün ücretsiz · İstediğin zaman iptal et</p>
       </div>
     </section>
   );
