@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer, Clock } from "lucide-react";
+import { Calculator, Zap, Columns3, Wind, Building2, Package, Thermometer, Clock, Layers } from "lucide-react";
 import EKBCalculator from "./calculators/EKBCalculator";
 import StructuralSizingCalculator from "./calculators/StructuralSizingCalculator";
 import WindSnowCalculator from "./calculators/WindSnowCalculator";
@@ -7,6 +7,7 @@ import TAKSKAKSCalculator from "./calculators/TAKSKAKSCalculator";
 import MaterialEstimator from "./calculators/MaterialEstimator";
 import ThermalBridgeCalculator from "./calculators/ThermalBridgeCalculator";
 import ConstructionCostCalculator from "./calculators/ConstructionCostCalculator";
+import ZeminBasinciCalculator from "./calculators/ZeminBasinciCalculator";
 import { useUserCalculations } from "@/hooks/useUserCalculations";
 import { useUser } from "@/contexts/UserContext";
 
@@ -14,6 +15,7 @@ const TOOLS = [
   { id: "ekb", label: "EKB Hesabı", icon: <Zap className="w-4 h-4" />, desc: "Enerji kimlik belgesi ve TS 825 kontrolü" },
   { id: "structural", label: "Kolon/Kiriş/Döşeme", icon: <Columns3 className="w-4 h-4" />, desc: "TBDY 2018 ön boyutlandırma" },
   { id: "windsnow", label: "Rüzgar & Kar Yükü", icon: <Wind className="w-4 h-4" />, desc: "TS EN 1991 yük hesabı" },
+  { id: "zemin", label: "Zemin Basıncı", icon: <Layers className="w-4 h-4" />, desc: "Bodrum perdesi zemin ve depremli basınç hesabı (TBDY 2018)" },
   { id: "taks", label: "TAKS/KAKS", icon: <Building2 className="w-4 h-4" />, desc: "İmar hesabı ve parsel analizi" },
   { id: "material", label: "Malzeme Tahmini", icon: <Package className="w-4 h-4" />, desc: "Beton, demir, kalıp miktarı" },
   { id: "thermal", label: "Isı Köprüsü", icon: <Thermometer className="w-4 h-4" />, desc: "Doğrusal ısı köprüsü analizi" },
