@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, MessageSquare } from "lucide-react";
+import { Plus, Search, Trash2, MessageSquare, BookOpen } from "lucide-react";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -7,6 +7,7 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
 import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
+import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ interface DesktopChatLayoutProps {
 const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutProps) => {
   const { user, incrementUsage, canUse } = useUser();
   const conv = useConversations();
+  const { activeCount: docCount } = useDocuments();
   const [searchQuery, setSearchQuery] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);
@@ -229,6 +231,27 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           </div>
         </div>
 
+        {/* Document info banner */}
+        {user && docCount > 0 && (
+          <div className="px-5 py-2 flex items-center gap-2 shrink-0" style={{ backgroundColor: "rgba(59,130,246,0.08)", borderBottom: "1px solid rgba(59,130,246,0.15)" }}>
+            <BookOpen className="w-3.5 h-3.5" style={{ color: "#60A5FA" }} />
+            <span className="text-[12px]" style={{ color: "#93C5FD" }}>
+              📚 {docCount} belge aktif — AI bu belgelerden yararlanarak cevap veriyor
+            </span>
+            <button
+              className="ml-auto text-[11px] font-medium transition-colors"
+              style={{ color: "#60A5FA" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#93C5FD"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#60A5FA"; }}
+              onClick={() => {
+                // Navigate to settings knowledge base tab
+                window.dispatchEvent(new CustomEvent("navigate-settings", { detail: "knowledgebase" }));
+              }}
+            >
+              Belgeleri Yönet →
+            </button>
+          </div>
+        )}
         <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="flex min-h-full items-center justify-center">
