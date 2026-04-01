@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import TeamManagement from "./TeamManagement";
-import KnowledgeBaseTab from "./KnowledgeBaseTab";
-import { User, Bell, CreditCard, Users, Shield, BookOpen } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield } from "lucide-react";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
