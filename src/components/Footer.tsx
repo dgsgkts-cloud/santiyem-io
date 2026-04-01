@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const Footer = () => (
   <footer className="shrink-0 mt-auto" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#0A0E13" }}>
@@ -57,7 +58,13 @@ const Footer = () => (
       <span className="text-[11px]">© 2026 MühendisAI. Tüm hakları saklıdır.</span>
     </div>
 
-    {/* Company info row — all breakpoints */}
+    {/* Payment logos + Company info */}
+    <div className="flex flex-col items-center gap-2 px-6 py-3" style={{ borderTop: "1px solid #1E2732" }}>
+      <div className="flex items-center gap-2">
+        <PaymentLogos />
+      </div>
+      <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.</p>
+    </div>
     <div className="text-center px-6 py-2" style={{ borderTop: "1px solid #1E2732", color: "#334155", fontSize: 10 }}>
       Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001 | Uluçınar Mah. 12 Özgürkent Sk. No:4 Arsuz / Hatay | info@goktasglobal.com
     </div>

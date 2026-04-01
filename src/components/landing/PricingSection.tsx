@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Check, X, User, Building2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { PricingTrustBand } from "@/components/PaymentLogos";
 
 type TabType = "bireysel" | "kurumsal";
 
@@ -189,6 +190,11 @@ const PricingSection = () => {
             </p>
           </div>
         )}
+
+        {/* Payment trust band */}
+        <div className="mt-10">
+          <PricingTrustBand />
+        </div>
       </div>
     </section>
   );

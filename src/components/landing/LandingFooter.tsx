@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const LandingFooter = () => (
   <footer style={{ background: "#0A0E13", borderTop: "1px solid #1E2732" }}>
@@ -52,6 +53,12 @@ const LandingFooter = () => (
       </div>
     </div>
 
+    <div className="flex flex-col items-center gap-2 px-6 py-3 border-t" style={{ borderColor: "#1E2732" }}>
+      <div className="flex items-center gap-2">
+        <PaymentLogos />
+      </div>
+      <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.</p>
+    </div>
     <div className="text-center px-6 py-3 border-t" style={{ borderColor: "#1E2732", color: "#334155", fontSize: 10 }}>
       © 2025 Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001
     </div>

@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/muhendis-logo.png";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const TITLES = [
   "İnşaat Mühendisi", "Mimar", "Makine Mühendisi",
@@ -206,6 +207,11 @@ const Register = () => {
           Zaten hesabınız var mı?{" "}
           <Link to="/login" className="font-medium" style={{ color: "#FF6B2B" }}>Giriş yapın →</Link>
         </p>
+
+        <div className="flex flex-col items-center gap-1.5 mt-4 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
+          <PaymentLogos />
+          <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeniz iyzico altyapısıyla güvenle işlenmektedir.</p>
+        </div>
       </div>
     </div>
   );
