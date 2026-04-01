@@ -114,6 +114,7 @@ const CalculatorsPanel = () => {
             {activeTool === "material" && <MaterialEstimator />}
             {activeTool === "thermal" && <ThermalBridgeCalculator />}
             {activeTool === "cost" && <ConstructionCostCalculator />}
+            {activeTool === "zemin" && <ZeminBasinciCalculator />}
           </div>
         </div>
       )}
