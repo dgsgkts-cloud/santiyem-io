@@ -190,6 +190,11 @@ const PricingSection = () => {
             </p>
           </div>
         )}
+
+        {/* Payment trust band */}
+        <div className="mt-10">
+          <PricingTrustBand />
+        </div>
       </div>
     </section>
   );

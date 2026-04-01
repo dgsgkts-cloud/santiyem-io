@@ -330,9 +330,10 @@ const PricingPanel = () => {
         </div>
       )}
 
-      {/* Trust badges */}
-      <div className="mb-6"><TrustBadges /></div>
-      <div className="mb-12"><PaymentLogoBand /></div>
+      {/* Trust band */}
+      <div className="mb-12">
+        <PricingTrustBand />
+      </div>
 
       {/* FAQ */}
       <div className="max-w-2xl mx-auto">
