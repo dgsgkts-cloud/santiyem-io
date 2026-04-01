@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const Footer = () => (
   <footer className="shrink-0 mt-auto" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#0A0E13" }}>
