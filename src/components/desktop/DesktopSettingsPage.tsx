@@ -107,6 +107,7 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "team" && <TeamManagement />}
+          {activeTab === "knowledgebase" && <KnowledgeBaseTab />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
               <p className="text-[13px] lg:text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
