@@ -20,7 +20,7 @@ const TestimonialsSection = () => {
       <div ref={ref} className={`max-w-6xl mx-auto transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
         <div className="text-center mb-16">
           <span className="text-xs font-semibold uppercase tracking-widest mb-3 block" style={{ color: "#FF6B2B" }}>YORUMLAR</span>
-          <h2 className="text-3xl md:text-[40px] font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Meslektaşlarınız Ne Diyor?</h2>
+          <h2 className="text-3xl md:text-[40px] font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Türk Mühendislerin Tercihi</h2>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-16">

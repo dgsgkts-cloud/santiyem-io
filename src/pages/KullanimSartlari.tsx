@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import LegalPage from "./LegalPage";
 
 const sections = [
@@ -70,5 +71,5 @@ const sections = [
   },
 ];
 
-const KullanimSartlari = () => <LegalPage title="Kullanım Şartları" sections={sections} />;
+const KullanimSartlari = () => { useSEO({ title: "Kullanım Şartları | MühendisAI" }); return <LegalPage title="Kullanım Şartları" sections={sections} />; };
 export default KullanimSartlari;

@@ -29,11 +29,11 @@ const HeroSection = () => {
 
         {/* Title */}
         <h1 className="text-4xl md:text-5xl lg:text-[64px] font-bold text-white leading-[1.1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Mühendislik İşlerini{" "}
+          Mühendisliğin Zor İşlerini{" "}
           <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg, #FF6B2B, #FFB347)" }}>
-            Yapay Zeka
+            Yapay Zekaya
           </span>{" "}
-          ile Hızlandır
+          Bırak
         </h1>
 
         {/* Subtitle */}

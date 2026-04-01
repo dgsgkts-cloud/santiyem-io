@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -35,6 +36,7 @@ const FEATURES = [
 ];
 
 const Register = () => {
+  useSEO({ title: "Ücretsiz Kayıt Ol | MühendisAI" });
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: "", email: "", password: "", passwordConfirm: "",
