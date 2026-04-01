@@ -5,7 +5,7 @@ const FAQS = [
   { q: "ChatGPT'den farkı ne?", a: "ChatGPT genel bir asistan. MühendisAI ise TBDY 2018, İmar Kanunu, TS standartları gibi Türk mühendislik mevzuatına özel eğitilmiş ve hakediş, proje takibi, EKB hesaplama gibi sektöre özel araçlara sahip." },
   { q: "Teknik bilgi gerekiyor mu?", a: "Hayır. Kurulum yok, kod yok. E-posta ile kayıt olup 5 dakika içinde kullanmaya başlayabilirsiniz." },
   { q: "Verilerim güvende mi?", a: "Tüm veriler 256-bit SSL şifreleme ile korunur. Verileriniz üçüncü taraflarla paylaşılmaz." },
-  { q: "14 günlük deneme bittikten sonra ne olur?", a: "Otomatik ücretlendirme yapılmaz. Ücretsiz plana geçer veya istediğiniz planı seçersiniz." },
+  { q: "14 günlük deneme bittikten sonra ne olur?", a: "14 günlük deneme süreniz boyunca hiçbir ücret alınmaz. Deneme süresi sonunda üyeliğinizi iptal etmez veya ücretsiz plana geçmezseniz, seçtiğiniz planın ücreti kayıtlı kredi kartınızdan otomatik olarak tahsil edilir." },
   { q: "Fatura alabilir miyim?", a: "Evet, her ödeme için otomatik e-fatura gönderilir." },
   { q: "Ofis planında kaç kişi kullanabilir?", a: "Ofis planında 5 kullanıcıya kadar ekip kurabilirsiniz. Hesabı alan kişi dahil toplam 5 kişi ayrı hesapla giriş yapar." },
   { q: "İptal etmek zor mu?", a: "Hiç zor değil. Ayarlar sayfasından tek tıkla iptal edebilirsiniz." },
