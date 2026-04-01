@@ -1,0 +1,12 @@
+{
+  "name": "MühendisAI",
+  "short_name": "MühendisAI",
+  "description": "Türk mühendis, mimar ve müteahhitler için yapay zeka platformu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1419",
+  "theme_color": "#FF6B2B",
+  "icons": [
+    {"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}
+  ]
+}

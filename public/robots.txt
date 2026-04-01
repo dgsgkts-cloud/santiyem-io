@@ -1,14 +1,13 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Allow: /hakkimizda
+Allow: /iletisim
+Allow: /gizlilik-politikasi
+Allow: /kullanim-sartlari
+Disallow: /dashboard
+Disallow: /ai-asistan
+Disallow: /proje-yonetimi
+Disallow: /hakedis-yonetimi
+Disallow: /ayarlar
+
+Sitemap: https://muhendisai.com/sitemap.xml
