@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, X, Shield, Building2, User, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PaymentLogoBand, TrustBadges } from "@/components/PaymentLogos";
+import { PaymentLogoBand, TrustBadges, PricingTrustBand } from "@/components/PaymentLogos";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
