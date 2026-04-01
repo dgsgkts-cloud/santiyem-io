@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import HeroSection from "@/components/landing/HeroSection";
 import SocialProofBand from "@/components/landing/SocialProofBand";
@@ -10,20 +11,22 @@ import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
-const LandingPage = () => (
-  <div className="min-h-screen" style={{ background: "#0F1419" }}>
-    <LandingNavbar />
-    <HeroSection />
-    <SocialProofBand />
-    <FeaturesSection />
-    <HowItWorksSection />
-    <DemoSection />
-    <TestimonialsSection />
-    <PricingSection />
-    <FAQSection />
-    <FinalCTASection />
-    <LandingFooter />
-  </div>
+const LandingPage = () => {
+  useSEO({ title: "MühendisAI — Türk Mühendis, Mimar ve Müteahhitler için Yapay Zeka Platformu", description: "TBDY 2018, İmar Yönetmeliği, TS standartları sorularına anında cevap. Hakediş takibi, proje yönetimi, EKB hesaplama. 14 gün ücretsiz dene." });
+  return (
+    <div className="min-h-screen" style={{ background: "#0F1419" }}>
+      <LandingNavbar />
+      <HeroSection />
+      <SocialProofBand />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <DemoSection />
+      <TestimonialsSection />
+      <PricingSection />
+      <FAQSection />
+      <FinalCTASection />
+      <LandingFooter />
+    </div>
   );
 };
 
