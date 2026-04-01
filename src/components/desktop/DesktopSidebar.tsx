@@ -52,7 +52,7 @@ const NAV_SECTIONS = [
 ];
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
-  const { user, profile, plan, usage, signOut } = useUser();
+  const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebarCollapsed") === "true"; } catch { return false; }
