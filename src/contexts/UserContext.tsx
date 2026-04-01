@@ -182,10 +182,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setProfile(null);
     setPlanState("free");
+    setRole("free");
   };
 
   return (
-    <UserContext.Provider value={{ user, profile, loading, plan, usage, setPlan, incrementUsage, canUse, signOut }}>
+    <UserContext.Provider value={{ user, profile, loading, plan, role, usage, setPlan, incrementUsage, canUse, signOut, isAdmin }}>
       {children}
     </UserContext.Provider>
   );
