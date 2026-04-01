@@ -52,7 +52,7 @@ const NAV_SECTIONS = [
 ];
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
-  const { user, profile, plan, usage, signOut } = useUser();
+  const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebarCollapsed") === "true"; } catch { return false; }
@@ -197,13 +197,13 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
+                  backgroundColor: isAdmin ? "rgba(139,92,246,0.2)" : plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                  color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
+                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
-              {plan === "free" && (
+              {!isAdmin && plan === "free" && (
                 <button
                   onClick={() => onTabChange("pricing")}
                   className="text-[11px] font-medium transition-all duration-150"
@@ -216,7 +216,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               )}
             </div>
 
-            {(plan === "free" || plan === "plus") && (
+            {!isAdmin && (plan === "free" || plan === "plus") && (
               <div className="mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px]" style={{ color: "#64748B" }}>AI Soruları</span>

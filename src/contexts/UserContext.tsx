@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export type PlanType = "free" | "plus" | "pro" | "office_free" | "office_pro" | "office_custom";
+export type UserRole = "free" | "pro" | "office" | "admin";
 
 interface UsageLimits {
   aiQuestions: { used: number; max: number };
@@ -38,14 +39,16 @@ export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro"
 
 interface UserContextType {
   user: User | null;
-  profile: { full_name: string; title: string; city: string; plan: PlanType } | null;
+  profile: { full_name: string; title: string; city: string; plan: PlanType; role: UserRole } | null;
   loading: boolean;
   plan: PlanType;
+  role: UserRole;
   usage: UsageLimits;
   setPlan: (plan: PlanType) => void;
   incrementUsage: (key: keyof UsageLimits) => boolean;
   canUse: (key: keyof UsageLimits) => boolean;
   signOut: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,6 +58,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
   const [plan, setPlanState] = useState<PlanType>("free");
+  const [role, setRole] = useState<UserRole>("free");
   const [usage, setUsage] = useState<UsageLimits>({ ...FREE_LIMITS });
 
   const getLimitsForPlan = (p: PlanType): UsageLimits => {
@@ -72,15 +76,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, title, city, plan")
+      .select("full_name, title, city, plan, role")
       .eq("user_id", userId)
       .single();
     if (data) {
       const p = (data.plan as PlanType) || "free";
-      setProfile(data as UserContextType["profile"]);
+      const r = ((data as any).role as UserRole) || "free";
+      setProfile({ ...data, role: r } as UserContextType["profile"]);
       setPlanState(p);
+      setRole(r);
       setUsage(prev => {
-        const limits = getLimitsForPlan(p);
+        const effectivePlan = r === "admin" ? "pro" : p;
+        const limits = getLimitsForPlan(effectivePlan);
         return {
           aiQuestions: { used: prev.aiQuestions.used, max: limits.aiQuestions.max },
           photoAnalysis: { used: prev.photoAnalysis.used, max: limits.photoAnalysis.max },
@@ -99,6 +106,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setProfile(null);
         setPlanState("free");
+        setRole("free");
       }
       setLoading(false);
     });
@@ -145,15 +153,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("muhendisai_usage_v2", JSON.stringify({ date: today, usage }));
   }, [usage]);
 
+  const isAdmin = role === "admin";
+
   const canUse = (key: keyof UsageLimits) => {
-    if (plan === "pro" || isOfficePlan(plan)) return true;
-    return usage[key].used < usage[key].max;
+    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
     return usage[key].used < usage[key].max;
   };
 
   const incrementUsage = (key: keyof UsageLimits) => {
-    if (plan === "pro" || isOfficePlan(plan)) return true;
-    if (usage[key].used >= usage[key].max) return false;
+    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
     if (usage[key].used >= usage[key].max) return false;
     setUsage(prev => ({
       ...prev,
@@ -174,10 +182,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setProfile(null);
     setPlanState("free");
+    setRole("free");
   };
 
   return (
-    <UserContext.Provider value={{ user, profile, loading, plan, usage, setPlan, incrementUsage, canUse, signOut }}>
+    <UserContext.Provider value={{ user, profile, loading, plan, role, usage, setPlan, incrementUsage, canUse, signOut, isAdmin }}>
       {children}
     </UserContext.Provider>
   );
