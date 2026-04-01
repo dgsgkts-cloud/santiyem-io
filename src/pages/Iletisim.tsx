@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Clock, Building2, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
+import { useSEO } from "@/hooks/useSEO";
 
 const SUBJECTS = ["Teknik Destek", "Abonelik ve Ödeme", "Öneri ve Görüş", "Diğer"];
 
