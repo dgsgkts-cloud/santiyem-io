@@ -107,7 +107,12 @@ const KnowledgeBaseTab = () => {
                     <FileText className="w-5 h-5" style={{ color: "#FF6B2B" }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{doc.name}</p>
+                    <p className="text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>
+                      {doc.name}
+                      {(doc as any).is_global && (
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(59,130,246,0.1)", color: "#60A5FA" }}>Sistem</span>
+                      )}
+                    </p>
                     <div className="flex items-center gap-3 mt-0.5">
                       <span className="text-[11px]" style={{ color: "#64748B" }}>{formatFileSize(doc.file_size)}</span>
                       {doc.page_count > 0 && (
@@ -126,15 +131,17 @@ const KnowledgeBaseTab = () => {
                       <StatusIcon className={`w-3 h-3 ${doc.status === "processing" ? "animate-spin" : ""}`} />
                       {status.label}
                     </span>
-                    <button
-                      onClick={() => deleteDocument(doc.id)}
-                      className="p-1.5 rounded-lg transition-colors"
-                      style={{ color: "#64748B" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!(doc as any).is_global && (
+                      <button
+                        onClick={() => deleteDocument(doc.id)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: "#64748B" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
