@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import TeamManagement from "./TeamManagement";
-import KnowledgeBaseTab from "./KnowledgeBaseTab";
-import { User, Bell, CreditCard, Users, Shield, BookOpen } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield } from "lucide-react";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "team", label: "Ekip", icon: Users },
-  { id: "knowledgebase", label: "Bilgi Bankası", icon: BookOpen },
   { id: "security", label: "Güvenlik", icon: Shield },
 ];
 
@@ -107,7 +105,6 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "team" && <TeamManagement />}
-          {activeTab === "knowledgebase" && <KnowledgeBaseTab />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
               <p className="text-[13px] lg:text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
