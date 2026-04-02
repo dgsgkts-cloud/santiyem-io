@@ -8,12 +8,7 @@ const PaymentResult = () => {
   const message = params.get("message");
   const isSuccess = status === "success";
 
-  useEffect(() => {
-    if (isSuccess) {
-      // Reload user profile to reflect new plan
-      window.location.reload();
-    }
-  }, []);
+  // No auto-reload; user navigates back manually
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0F1419" }}>
