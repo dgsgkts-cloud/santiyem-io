@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
-const IYZICO_BASE_URL = 'https://api.iyzipay.com' // production
+const IYZICO_BASE_URL = 'https://sandbox-api.iyzipay.com' // sandbox mode
 
 const PLAN_PRICES: Record<string, { price: number; name: string; planCode: string }> = {
   pro: { price: 399, name: 'Profesyonel Plan', planCode: 'pro' },

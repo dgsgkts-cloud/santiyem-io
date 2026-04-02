@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
-const IYZICO_BASE_URL = 'https://api.iyzipay.com'
+const IYZICO_BASE_URL = 'https://sandbox-api.iyzipay.com' // sandbox mode
 
 const PLAN_MAP: Record<string, string> = {
   pro: 'pro',
