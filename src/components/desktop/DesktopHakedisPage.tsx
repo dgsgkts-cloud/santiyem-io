@@ -524,6 +524,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     )}
 
                     <HakedisItemsSection hakedisId={h.id} />
+
+                    <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
                       <button onClick={() => exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
