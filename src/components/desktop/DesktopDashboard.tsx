@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useUser, canAccessProjects, canAccessHakedis, canAccessReminders } from "@/contexts/UserContext";
+import { useUser, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders } from "@/contexts/UserContext";
 import {
-  FolderOpen, Clock, TrendingUp, AlertTriangle,
+  FolderOpen, Clock, TrendingUp, AlertTriangle, Wallet,
   MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
