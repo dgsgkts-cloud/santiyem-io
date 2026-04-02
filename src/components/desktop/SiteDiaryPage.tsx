@@ -274,6 +274,19 @@ const SiteDiaryPage = () => {
             <ChevronLeft className="w-4 h-4" /> Şantiye Günlüğü
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const projName = projects.find(pr => pr.id === selectedProjectId)?.name || "Proje";
+                import("@/lib/siteDiaryExport").then(m => {
+                  m.exportSingleDayPDF(selectedEntry, projName, ep, true);
+                  toast.success("PDF indirildi");
+                });
+              }}
+              className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5"
+              style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+            >
+              <FileDown className="w-3.5 h-3.5" /> PDF İndir
+            </button>
             <button onClick={() => {
               setEditingEntry(selectedEntry);
               setFormDate(selectedEntry.entry_date);
