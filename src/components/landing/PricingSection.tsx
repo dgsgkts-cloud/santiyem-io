@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { PaymentLogos } from "@/components/PaymentLogos";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
 
 const PLANS = [
   {
