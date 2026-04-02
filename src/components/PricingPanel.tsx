@@ -48,7 +48,7 @@ const PricingPanel = () => {
       badge: "EN POPÜLER",
       btnText: "14 Gün Ücretsiz Dene",
       btnStyle: "primary" as const,
-      btnSub: "Kredi kartı gerekmez",
+      
       color: "#FF6B2B",
       features: [
         "1 kullanıcı",
