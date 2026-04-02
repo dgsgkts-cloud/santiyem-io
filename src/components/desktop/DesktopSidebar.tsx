@@ -215,11 +215,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               )}
             </div>
 
-            {!isAdmin && (plan === "free" || plan === "plus") && (
+            {!isAdmin && plan === "free" && (
               <div className="mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px]" style={{ color: "#64748B" }}>AI Soruları</span>
-                  <span className="text-[11px] font-mono" style={{ color: "#64748B" }}>{plan === "free" ? "Sınırlı" : "Daha Fazla"}</span>
+                  <span className="text-[11px] font-mono" style={{ color: "#64748B" }}>{usage.aiQuestions.used}/3</span>
                 </div>
                 <div className="w-full h-1 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                   <div className="h-full rounded-full transition-all duration-600" style={{ backgroundColor: "#FF6B2B", width: `${(usage.aiQuestions.used / usage.aiQuestions.max) * 100}%` }} />
