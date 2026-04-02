@@ -46,7 +46,7 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
     onDragStart: () => onDragStart(index),
     onDragOver: (e: React.DragEvent) => onDragOver(e, index),
     onDrop: () => onDrop(index),
-    onDragEnd: (e: React.DragEvent) => { e.currentTarget.style.opacity = "1"; },
+    onDragEnd: (e: React.DragEvent<HTMLTableRowElement>) => { (e.currentTarget as HTMLElement).style.opacity = "1"; },
   };
 
   if (editing) {
