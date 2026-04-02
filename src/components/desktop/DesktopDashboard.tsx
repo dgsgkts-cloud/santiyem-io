@@ -173,6 +173,46 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         })}
       </div>
 
+      {/* Financial Summary Widget */}
+      <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Finansal Özet — Bu Ay</h3>
+          </div>
+          <button onClick={() => onTabChange("profitability")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+            Detay <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Ciro</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthRevenue)}</p>
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Gider</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthExpense)}</p>
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Net Kar</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: monthRevenue - monthExpense >= 0 ? "#22C55E" : "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {formatCurrency(monthRevenue - monthExpense)}
+            </p>
+          </div>
+        </div>
+        {cashWarning && (
+          <div
+            className="mt-3 rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:opacity-90"
+            style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+            onClick={() => onTabChange("profitability")}
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#EF4444" }} />
+            <span className="text-[11px] lg:text-[12px] font-medium" style={{ color: "#FCA5A5" }}>{cashWarning}</span>
+          </div>
+        )}
+      </div>
+
       {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4 lg:gap-5">
         {/* Left column */}
