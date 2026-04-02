@@ -95,6 +95,17 @@ const PricingSection = () => {
             );
           })}
         </div>
+
+        {/* Trust Band */}
+        <div className="flex flex-col items-center gap-3 mt-10 pt-8" style={{ borderTop: "1px solid #1E2732" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium" style={{ color: "#22C55E" }}>🔒 SSL Güvenli</span>
+            <PaymentLogos />
+          </div>
+          <p className="text-[11px] text-center" style={{ color: "#475569" }}>
+            Tüm ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.
+          </p>
+        </div>
       </div>
     </section>
   );
