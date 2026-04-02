@@ -134,6 +134,14 @@ function addCompanyHeader(doc: jsPDF, docType: string, projectName?: string): nu
   return y;
 }
 
+export interface HakedisWorkItem {
+  description: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
 export function exportHakedisPDF(
   hakedisler: ProjectHakedis[],
   projectName: string,
@@ -141,6 +149,7 @@ export function exportHakedisPDF(
   clientName?: string,
   contractNo?: string,
   contractDate?: string,
+  workItems?: HakedisWorkItem[],
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
