@@ -29,7 +29,7 @@ const SignatureUploadedEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>Mühendis<span style={{ color: BRAND_COLOR }}>AI</span></Text>
+          <Text style={logoText}>Şantiyem</Text>
         </Section>
 
         <Heading style={h1}>✅ İmzalı Sözleşme Yüklendi</Heading>
