@@ -52,6 +52,150 @@ export type Database = {
           },
         ]
       }
+      contract_activity_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_name: string | null
+          contract_id: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_name?: string | null
+          contract_id: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_name?: string | null
+          contract_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_activity_log_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_signature_requests: {
+        Row: {
+          cc_emails: string[] | null
+          contract_id: string
+          created_at: string
+          deadline: string | null
+          id: string
+          message: string
+          recipient_email: string
+          recipient_name: string
+          sent_at: string
+          signed_at: string | null
+          status: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cc_emails?: string[] | null
+          contract_id: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          message?: string
+          recipient_email: string
+          recipient_name: string
+          sent_at?: string
+          signed_at?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cc_emails?: string[] | null
+          contract_id?: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          message?: string
+          recipient_email?: string
+          recipient_name?: string
+          sent_at?: string
+          signed_at?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signature_requests_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_signed_uploads: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          ip_address: string | null
+          signature_request_id: string
+          signer_name: string
+          signer_title: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          ip_address?: string | null
+          signature_request_id: string
+          signer_name: string
+          signer_title?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          ip_address?: string | null
+          signature_request_id?: string
+          signer_name?: string
+          signer_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signed_uploads_signature_request_id_fkey"
+            columns: ["signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "contract_signature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           ai_analysis: Json | null
