@@ -5,7 +5,7 @@ import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
   FileText, BookOpen, Lightbulb, ClipboardList, BarChart3,
-  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock
+  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock, FileSignature
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
