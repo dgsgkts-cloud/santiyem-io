@@ -14,6 +14,8 @@ export interface ProjectHakedis {
   status_color: string;
   created_at: string;
   payment_date: string | null;
+  expected_payment_date: string | null;
+  reminder_days_before: number | null;
 }
 
 export function useProjectHakedis(projectId: string) {
