@@ -28,6 +28,7 @@ export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === 
 // Feature access helpers
 export const canAccessProjects = (plan: PlanType, role?: UserRole) => role === "admin" || isProOrAbove(plan) || isOfficePlan(plan);
 export const canAccessHakedis = (plan: PlanType, role?: UserRole) => role === "admin" || isProOrAbove(plan) || isOfficePlan(plan);
+export const canAccessProfitability = (plan: PlanType, role?: UserRole) => role === "admin" || isProOrAbove(plan) || isOfficePlan(plan);
 export const canAccessRender = (plan: PlanType) => true;
 export const canAccessReminders = (plan: PlanType) => true;
 export const canDownload = (plan: PlanType) => plan !== "free";

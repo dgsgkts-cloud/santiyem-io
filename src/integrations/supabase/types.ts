@@ -460,6 +460,57 @@ export type Database = {
         }
         Relationships: []
       }
+      project_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          has_invoice: boolean
+          id: string
+          invoice_no: string | null
+          invoice_url: string | null
+          note: string | null
+          project_id: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          has_invoice?: boolean
+          id?: string
+          invoice_no?: string | null
+          invoice_url?: string | null
+          note?: string | null
+          project_id: string
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          has_invoice?: boolean
+          id?: string
+          invoice_no?: string | null
+          invoice_url?: string | null
+          note?: string | null
+          project_id?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       project_files: {
         Row: {
           created_at: string
