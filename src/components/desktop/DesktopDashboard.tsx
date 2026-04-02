@@ -408,7 +408,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
 
           {/* Contract Warnings Widget */}
-          {(plan === "pro" || plan === "office" || role === "admin") && (
+          {(plan === "pro" || plan === "team" || plan === "enterprise" || role === "admin") && (
             <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
