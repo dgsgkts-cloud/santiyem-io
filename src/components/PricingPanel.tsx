@@ -72,13 +72,12 @@ const PricingPanel = () => {
       btnStyle: "outline" as const,
       color: null,
       features: [
-        "1 kullanıcı",
+        "1 kullanıcı hesabı",
         "1 aktif proje",
         "1 hakediş/ay",
         "Şantiye günlüğü — günde 1 kayıt",
-        "Hesap araçları — sınırsız",
         "AI Asistan — günde 3 soru",
-        "PDF çıktı — aylık 3 adet",
+        "Hesap araçları — sınırsız",
       ],
     },
     {
