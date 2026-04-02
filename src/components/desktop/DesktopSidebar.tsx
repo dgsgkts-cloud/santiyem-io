@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
-  FileText, BookOpen, Lightbulb,
+  FileText, BookOpen, Lightbulb, ClipboardList,
   Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
