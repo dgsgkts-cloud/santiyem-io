@@ -10,7 +10,7 @@ interface Props {
   onAdd: () => void;
 }
 
-export default function ContractList({ contracts, onSelect, onAdd }: Props) {
+export default function ContractList({ contracts, signatureMap = {}, onSelect, onAdd }: Props) {
   const now = new Date();
   const stats = {
     total: contracts.length,
