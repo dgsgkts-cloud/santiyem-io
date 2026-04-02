@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const PLANS = [
   {
     name: "Başlangıç", monthlyPrice: 0, yearlyPrice: 0, popular: false,
-    features: ["1 kullanıcı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "PDF çıktı — aylık 3"],
+    features: ["1 kullanıcı hesabı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "Şantiye günlüğü — günde 1 kayıt"],
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
