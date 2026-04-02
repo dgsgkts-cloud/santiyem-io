@@ -83,32 +83,7 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
-          {activeTab === "subscription" && (
-            <div className="space-y-5 lg:space-y-6">
-              <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Abonelik Yönetimi</h3>
-                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Mevcut planınız ve faturalama bilgileri</p>
-              </div>
-              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
-                      {plan === "pro" ? "Profesyonel Plan" : plan === "team" ? "Ekip Planı" : plan === "enterprise" ? "Kurumsal Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Başlangıç Planı"}
-                    </span>
-                    <p className="text-[11px] lg:text-[12px] mt-0.5" style={{ color: "#64748B" }}>
-                      {plan === "free" ? "Temel özellikler" : plan === "pro" ? "399₺/ay" : plan === "team" ? "1.499₺/ay · 5 kullanıcı" : plan === "enterprise" ? "4.999₺/ay · Sınırsız" : "Tüm özellikler aktif"}
-                    </p>
-                  </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md self-start" style={{
-                    backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                    color: plan === "pro" || plan === "plus" ? "#FF6B2B" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "#60A5FA" : "#64748B",
-                  }}>
-                    {plan === "pro" ? "Profesyonel" : plan === "team" ? "Ekip" : plan === "enterprise" ? "Kurumsal" : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal" : plan === "office_custom" ? "Özel" : "Başlangıç"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
