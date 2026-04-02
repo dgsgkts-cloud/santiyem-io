@@ -12,7 +12,7 @@ const PLANS = [
   },
   {
     name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: false,
-    features: ["1 kullanıcı · 1 proje", "Sınırsız hakediş + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
+    features: ["1 kullanıcı · 1 proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
     
   },

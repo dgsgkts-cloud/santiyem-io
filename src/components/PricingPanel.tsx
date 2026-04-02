@@ -53,7 +53,7 @@ const PricingPanel = () => {
       features: [
         "1 kullanıcı",
 "1 proje",
-        "Sınırsız hakediş",
+        "3 hakediş/ay",
         "Gecikmiş ödeme uyarısı + yasal faiz hesabı",
         "Şantiye günlüğü — sınırsız kayıt",
         "Fotoğraf raporlama — aylık PDF rapor",
