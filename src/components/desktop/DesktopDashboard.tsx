@@ -2,13 +2,14 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useUser, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle, Wallet,
-  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock, FileSignature
+  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock, FileSignature, BarChart3
 } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -44,6 +45,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const [prevMonthExpense, setPrevMonthExpense] = useState(0);
   const [cashWarning, setCashWarning] = useState("");
   const [allHakedisData, setAllHakedisData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<{ month: string; ciro: number; gider: number }[]>([]);
   const [overdueCount, setOverdueCount] = useState(0);
   const [overdueTotal, setOverdueTotal] = useState(0);
   const [overdueBannerDismissed, setOverdueBannerDismissed] = useState(() => {
@@ -57,6 +59,19 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const profitLocked = !canAccessProfitability(plan, role);
 
   // Fetch hakedis totals + this month revenue + overdue tracking
+  // Build 6 month keys helper
+  const monthKeys = useMemo(() => {
+    const keys: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return keys;
+  }, []);
+
+  const MONTH_LABELS = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -87,8 +102,31 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         });
         setOverdueCount(overdueItems.length);
         setOverdueTotal(overdueItems.reduce((s, h) => s + Number(h.net), 0));
+
+        // 6-month revenue map
+        const revenueByMonth: Record<string, number> = {};
+        monthKeys.forEach(k => { revenueByMonth[k] = 0; });
+        data.filter(h => h.status === "Ödendi" && h.payment_date).forEach(h => {
+          const key = (h.payment_date as string).slice(0, 7);
+          if (revenueByMonth[key] !== undefined) revenueByMonth[key] += Number(h.net);
+        });
+
+        // Fetch 6 months of expenses for chart
+        const sixMonthsAgo = `${monthKeys[0]}-01`;
+        supabase.from("project_expenses").select("amount,expense_date").gte("expense_date", sixMonthsAgo).then(({ data: expData }) => {
+          const expenseByMonth: Record<string, number> = {};
+          monthKeys.forEach(k => { expenseByMonth[k] = 0; });
+          (expData || []).forEach(e => {
+            const key = (e.expense_date as string).slice(0, 7);
+            if (expenseByMonth[key] !== undefined) expenseByMonth[key] += Number(e.amount);
+          });
+          setChartData(monthKeys.map(k => {
+            const monthIdx = parseInt(k.split("-")[1]) - 1;
+            return { month: MONTH_LABELS[monthIdx], ciro: revenueByMonth[k], gider: expenseByMonth[k] };
+          }));
+        });
       });
-  }, [user]);
+  }, [user, monthKeys]);
 
   // Fetch this month expenses
   useEffect(() => {
@@ -264,7 +302,37 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         )}
       </div>
 
-      {/* Main content */}
+      {/* 6-Month Revenue/Expense Chart */}
+      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Grafik", false)} />}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Son 6 Ay — Ciro & Gider</h3>
+          </div>
+        </div>
+        <div style={{ width: "100%", height: 220 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} barGap={4} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#1E2732" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "#F1F5F9", fontWeight: 600 }}
+                itemStyle={{ color: "#94A3B8" }}
+                formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                formatter={(value: string) => <span style={{ color: "#94A3B8" }}>{value === "ciro" ? "Ciro" : "Gider"}</span>}
+              />
+              <Bar dataKey="ciro" fill="#22C55E" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={32} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-4">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
