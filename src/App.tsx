@@ -44,6 +44,7 @@ const App = () => (
             <Route path="/teslimat-iade" element={<TeslimatIade />} />
             <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
             <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="/sozlesme-imza/:token" element={<ContractSignUpload />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
