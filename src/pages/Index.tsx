@@ -224,6 +224,8 @@ const Index = () => {
                   <DesktopHakedisPage />
                 ) : activeTab === "site-diary" ? (
                   <SiteDiaryPage />
+                ) : activeTab === "profitability" ? (
+                  <ProfitabilityCashFlowPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
