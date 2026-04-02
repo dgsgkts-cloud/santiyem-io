@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, PlanType } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
 import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
+import { supabase } from "@/integrations/supabase/client";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
