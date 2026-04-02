@@ -11,10 +11,10 @@ import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 
 const STATUS_OPTIONS = [
-  { label: "Devam Ediyor", color: "#22C55E" },
+  { label: "Devam Ediyor", color: "#3B82F6" },
   { label: "Gecikmiş", color: "#EF4444" },
   { label: "Tamamlanıyor", color: "#F59E0B" },
-  { label: "Tamamlandı", color: "#3B82F6" },
+  { label: "Tamamlandı", color: "#22C55E" },
   { label: "Durduruldu", color: "#64748B" },
 ];
 
