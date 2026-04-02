@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Trash2, Package, X, Pencil, Check } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Trash2, Package, X, Pencil, Check, GripVertical } from "lucide-react";
 import { useHakedisItems, type HakedisItem } from "@/hooks/useHakedisItems";
 
 const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "gün", "saat", "sefer"];
@@ -8,10 +8,14 @@ const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2,
 
 const inputStyle = { backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" };
 
-function EditableRow({ item, index, onSave, onDelete }: {
+function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, onDrop, isDragOver }: {
   item: HakedisItem; index: number;
   onSave: (id: string, updates: Partial<Pick<HakedisItem, "description" | "unit" | "quantity" | "unit_price">>) => void;
   onDelete: (id: string) => void;
+  onDragStart: (index: number) => void;
+  onDragOver: (e: React.DragEvent, index: number) => void;
+  onDrop: (index: number) => void;
+  isDragOver: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [desc, setDesc] = useState(item.description);
@@ -37,10 +41,21 @@ function EditableRow({ item, index, onSave, onDelete }: {
     setEditing(false);
   };
 
+  const dragProps = {
+    draggable: !editing,
+    onDragStart: () => onDragStart(index),
+    onDragOver: (e: React.DragEvent) => onDragOver(e, index),
+    onDrop: () => onDrop(index),
+    onDragEnd: (e: React.DragEvent<HTMLTableRowElement>) => { (e.currentTarget as HTMLElement).style.opacity = "1"; },
+  };
+
   if (editing) {
     const calcTotal = (parseFloat(qty) || 0) * (parseFloat(price) || 0);
     return (
       <tr style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
+        <td className="px-1 py-1" style={{ color: "#64748B" }}>
+          <GripVertical className="w-3 h-3 opacity-30" />
+        </td>
         <td className="px-2 py-1 font-mono" style={{ color: "#64748B" }}>{index + 1}</td>
         <td className="px-1 py-1">
           <input value={desc} onChange={e => setDesc(e.target.value)}
@@ -74,7 +89,18 @@ function EditableRow({ item, index, onSave, onDelete }: {
   }
 
   return (
-    <tr style={{ backgroundColor: index % 2 === 0 ? "transparent" : "rgba(15,20,25,0.5)" }}>
+    <tr
+      {...dragProps}
+      style={{
+        backgroundColor: isDragOver ? "rgba(255,107,43,0.12)" : index % 2 === 0 ? "transparent" : "rgba(15,20,25,0.5)",
+        borderTop: isDragOver ? "2px solid #FF6B2B" : "none",
+        cursor: "grab",
+        transition: "background-color 0.15s",
+      }}
+    >
+      <td className="px-1 py-1.5" style={{ color: "#64748B" }}>
+        <GripVertical className="w-3 h-3 opacity-50 hover:opacity-100" />
+      </td>
       <td className="px-2 py-1.5 font-mono" style={{ color: "#64748B" }}>{index + 1}</td>
       <td className="px-2 py-1.5" style={{ color: "#F1F5F9" }}>{item.description}</td>
       <td className="px-2 py-1.5" style={{ color: "#94A3B8" }}>{item.unit}</td>
@@ -96,12 +122,14 @@ function EditableRow({ item, index, onSave, onDelete }: {
 }
 
 export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }) {
-  const { items, loading, addItem, updateItem, deleteItem } = useHakedisItems(hakedisId);
+  const { items, loading, addItem, updateItem, deleteItem, reorderItems } = useHakedisItems(hakedisId);
   const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
   const [unit, setUnit] = useState("adet");
   const [qty, setQty] = useState("");
   const [price, setPrice] = useState("");
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const total = items.reduce((s, i) => s + i.total_price, 0);
 
@@ -109,6 +137,19 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
     if (!desc || !qty || !price) return;
     addItem({ description: desc, unit, quantity: parseFloat(qty), unit_price: parseFloat(price) });
     setDesc(""); setQty(""); setPrice(""); setShowForm(false);
+  };
+
+  const handleDragStart = (index: number) => setDragIndex(index);
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+  const handleDrop = (toIndex: number) => {
+    if (dragIndex !== null && dragIndex !== toIndex) {
+      reorderItems(dragIndex, toIndex);
+    }
+    setDragIndex(null);
+    setDragOverIndex(null);
   };
 
   return (
@@ -133,17 +174,24 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           <table className="w-full text-[11px]">
             <thead>
               <tr style={{ backgroundColor: "#0F1419" }}>
-                {["#", "İş Kalemi", "Birim", "Miktar", "Birim Fiyat", "Toplam", ""].map(h => (
-                  <th key={h} className="text-left px-2 py-1.5 font-semibold" style={{ color: "#64748B", fontSize: 10, borderBottom: "1px solid #1E2732" }}>{h}</th>
+                {["", "#", "İş Kalemi", "Birim", "Miktar", "Birim Fiyat", "Toplam", ""].map((h, i) => (
+                  <th key={`${h}-${i}`} className="text-left px-2 py-1.5 font-semibold" style={{ color: "#64748B", fontSize: 10, borderBottom: "1px solid #1E2732", width: i === 0 ? 24 : undefined }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody onDragLeave={() => setDragOverIndex(null)}>
               {items.map((item, i) => (
-                <EditableRow key={item.id} item={item} index={i} onSave={updateItem} onDelete={deleteItem} />
+                <EditableRow
+                  key={item.id} item={item} index={i}
+                  onSave={updateItem} onDelete={deleteItem}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  isDragOver={dragOverIndex === i && dragIndex !== i}
+                />
               ))}
               <tr style={{ backgroundColor: "#0F1419", borderTop: "1px solid #1E2732" }}>
-                <td colSpan={5} className="px-2 py-1.5 text-right font-semibold" style={{ color: "#94A3B8" }}>TOPLAM</td>
+                <td colSpan={6} className="px-2 py-1.5 text-right font-semibold" style={{ color: "#94A3B8" }}>TOPLAM</td>
                 <td className="px-2 py-1.5 font-mono text-right font-bold" style={{ color: "#FF6B2B" }}>₺{fmt(total)}</td>
                 <td />
               </tr>

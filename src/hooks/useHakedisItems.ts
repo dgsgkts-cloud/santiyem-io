@@ -69,5 +69,17 @@ export function useHakedisItems(hakedisId: string | null) {
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
-  return { items, loading, addItem, updateItem, deleteItem, refetch: fetchItems };
+  const reorderItems = async (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const reordered = [...items];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    setItems(reordered);
+    const updates = reordered.map((item, i) =>
+      supabase.from("hakedis_items").update({ sort_order: i }).eq("id", item.id)
+    );
+    await Promise.all(updates);
+  };
+
+  return { items, loading, addItem, updateItem, deleteItem, reorderItems, refetch: fetchItems };
 }
