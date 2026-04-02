@@ -95,13 +95,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     if (!user) return;
     const now = new Date();
     const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfPrevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}-01`;
     supabase
       .from("project_expenses")
-      .select("amount")
-      .gte("expense_date", startOfMonth)
+      .select("amount,expense_date")
+      .gte("expense_date", startOfPrevMonth)
       .then(({ data }) => {
         if (!data) return;
-        setMonthExpense(data.reduce((s, e) => s + Number(e.amount), 0));
+        setMonthExpense(data.filter(e => e.expense_date >= startOfMonth).reduce((s, e) => s + Number(e.amount), 0));
+        setPrevMonthExpense(data.filter(e => e.expense_date >= startOfPrevMonth && e.expense_date < startOfMonth).reduce((s, e) => s + Number(e.amount), 0));
       });
   }, [user]);
 
