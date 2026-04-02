@@ -301,9 +301,6 @@ const PricingPanel = () => {
                 >
                   {plan.btnText}
                 </Button>
-                {"btnSub" in plan && plan.btnSub && (
-                  <p className="text-center text-[10px] text-muted-foreground">{plan.btnSub}</p>
-                )}
               </div>
             </div>
           );

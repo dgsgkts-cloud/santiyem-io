@@ -88,9 +88,6 @@ const PricingSection = () => {
                 <Link to="/register" className="block text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90" style={p.ctaStyle}>
                   {p.cta}
                 </Link>
-                {"ctaSub" in p && p.ctaSub && (
-                  <p className="text-center text-[10px] mt-2" style={{ color: "#64748B" }}>{p.ctaSub}</p>
-                )}
               </div>
             );
           })}
