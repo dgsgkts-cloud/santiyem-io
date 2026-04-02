@@ -13,6 +13,7 @@ export interface ProjectHakedis {
   status: string;
   status_color: string;
   created_at: string;
+  payment_date: string | null;
 }
 
 export function useProjectHakedis(projectId: string) {
@@ -26,9 +27,8 @@ export function useProjectHakedis(projectId: string) {
       .from("project_hakedis")
       .select("*")
       .eq("project_id", projectId)
-      .eq("user_id", user.id)
       .order("created_at", { ascending: true });
-    if (!error && data) setHakedisler(data);
+    if (!error && data) setHakedisler(data as ProjectHakedis[]);
     setLoading(false);
   };
 
@@ -59,12 +59,36 @@ export function useProjectHakedis(projectId: string) {
     setHakedisler(prev => prev.filter(h => h.id !== id));
   };
 
-  const updateHakedisStatus = async (id: string, status: string, statusColor: string) => {
-    const { error } = await supabase.from("project_hakedis").update({ status, status_color: statusColor }).eq("id", id);
+  const updateHakedisStatus = async (id: string, status: string, statusColor: string, paymentDate?: string) => {
+    const update: Record<string, unknown> = { status, status_color: statusColor };
+    if (paymentDate) update.payment_date = paymentDate;
+    if (status === "Ödendi" && !paymentDate) update.payment_date = new Date().toISOString().split("T")[0];
+    const { error } = await supabase.from("project_hakedis").update(update).eq("id", id);
     if (error) { toast.error("Durum güncellenemedi"); return; }
-    setHakedisler(prev => prev.map(h => h.id === id ? { ...h, status, status_color: statusColor } : h));
+    setHakedisler(prev => prev.map(h => h.id === id ? { ...h, status, status_color: statusColor, payment_date: (update.payment_date as string) || h.payment_date } : h));
     toast.success("Hakediş durumu güncellendi");
   };
 
   return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, refetch: fetchHakedisler };
+}
+
+// Hook to fetch all hakedis across all projects
+export function useAllHakedis() {
+  const { user } = useUser();
+  const [allHakedisler, setAllHakedisler] = useState<ProjectHakedis[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    supabase
+      .from("project_hakedis")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data) setAllHakedisler(data as ProjectHakedis[]);
+        setLoading(false);
+      });
+  }, [user]);
+
+  return { allHakedisler, loading };
 }

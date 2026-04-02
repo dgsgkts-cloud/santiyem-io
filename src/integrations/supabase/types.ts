@@ -500,6 +500,7 @@ export type Database = {
           id: string
           kdv: number
           net: number
+          payment_date: string | null
           period: string
           project_id: string
           status: string
@@ -512,6 +513,7 @@ export type Database = {
           id?: string
           kdv?: number
           net?: number
+          payment_date?: string | null
           period: string
           project_id: string
           status?: string
@@ -524,6 +526,7 @@ export type Database = {
           id?: string
           kdv?: number
           net?: number
+          payment_date?: string | null
           period?: string
           project_id?: string
           status?: string
@@ -593,6 +596,7 @@ export type Database = {
         Row: {
           budget: string
           client: string
+          contract_amount: number | null
           created_at: string
           description: string
           end_date: string
@@ -610,6 +614,7 @@ export type Database = {
         Insert: {
           budget?: string
           client?: string
+          contract_amount?: number | null
           created_at?: string
           description?: string
           end_date?: string
@@ -627,6 +632,7 @@ export type Database = {
         Update: {
           budget?: string
           client?: string
+          contract_amount?: number | null
           created_at?: string
           description?: string
           end_date?: string
