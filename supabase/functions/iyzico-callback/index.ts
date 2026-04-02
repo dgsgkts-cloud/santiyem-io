@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import { encodeBase64 } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
@@ -7,18 +6,23 @@ const IYZICO_BASE_URL = 'https://api.iyzipay.com'
 
 const PLAN_MAP: Record<string, string> = { pro: 'pro', team: 'team', enterprise: 'enterprise' }
 
-async function generateAuthV2(uri: string, bodyJson: string): Promise<string> {
+function toHex(buffer: ArrayBuffer): string {
+  return [...new Uint8Array(buffer)].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function generateAuthV2(uri: string, bodyJson: string): Promise<{ authorization: string; randomKey: string }> {
   const encoder = new TextEncoder()
-  const randomKey = crypto.randomUUID().replace(/-/g, '').substring(0, 8)
+  const randomKey = Date.now().toString() + '123456789'
   const payload = randomKey + uri + bodyJson
   const cryptoKey = await crypto.subtle.importKey(
     'raw', encoder.encode(IYZICO_SECRET_KEY),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
   )
   const sig = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(payload))
-  const signature = encodeBase64(new Uint8Array(sig))
+  const signature = toHex(sig)
   const authStr = `apiKey:${IYZICO_API_KEY}&randomKey:${randomKey}&signature:${signature}`
-  return `IYZWSv2 ${encodeBase64(encoder.encode(authStr))}`
+  const authorization = `IYZWSv2 ${btoa(authStr)}`
+  return { authorization, randomKey }
 }
 
 Deno.serve(async (req) => {
@@ -39,11 +43,11 @@ Deno.serve(async (req) => {
     const requestBody = { locale: 'tr', conversationId: txnId.substring(0, 20), token }
     const uri = '/payment/iyzipos/checkoutform/auth/ecom/detail'
     const bodyJson = JSON.stringify(requestBody)
-    const authorization = await generateAuthV2(uri, bodyJson)
+    const { authorization, randomKey } = await generateAuthV2(uri, bodyJson)
 
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}${uri}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': authorization },
+      headers: { 'Content-Type': 'application/json', 'Authorization': authorization, 'x-iyzi-rnd': randomKey },
       body: bodyJson,
     })
     const iyzicoData = await iyzicoResponse.json()
