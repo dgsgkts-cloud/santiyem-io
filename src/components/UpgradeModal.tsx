@@ -38,7 +38,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
           </div>
           <div className="space-y-2">
             <Button className="w-full h-11 font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
-              Profesyonel'e Geç — 399₺/ay
+              Profesyonel'e Geç — 499₺/ay
             </Button>
             {requiresOffice && (
               <Button className="w-full h-11 font-semibold bg-transparent border border-[#FF6B2B] text-[#FF6B2B] hover:bg-[#FF6B2B]/10">

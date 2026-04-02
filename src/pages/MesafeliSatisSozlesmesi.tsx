@@ -29,7 +29,7 @@ const sections = [
         <p><strong>Hizmet Kapsamı:</strong> AI asistan, hesap araçları, fotoğraf analizi, hakediş yönetimi, proje yönetimi, şantiye günlüğü ve diğer platform özellikleri</p>
         <p className="mt-2"><strong>Planlar:</strong></p>
         <p>Başlangıç: Ücretsiz</p>
-        <p>Profesyonel: 399 ₺/ay + KDV (yıllık: 3.828 ₺ + KDV)</p>
+        <p>Profesyonel: 499 ₺/ay + KDV (yıllık: 4.788 ₺ + KDV)</p>
         <p>Ekip: 1.499 ₺/ay + KDV (yıllık: 14.388 ₺ + KDV)</p>
         <p>Kurumsal: 4.999 ₺/ay + KDV (yıllık: 47.988 ₺ + KDV)</p>
       </>

@@ -220,7 +220,7 @@ const PricingPanel = () => {
     {
       title: "RAPORLAMA",
       rows: [
-        { label: "PDF Çıktı", values: ["3/ay", "Sınırsız", "Sınırsız", "Sınırsız"] },
+        { label: "PDF Çıktı", values: ["—", "Sınırsız", "Sınırsız", "Sınırsız"] },
         { label: "Firma Logosu + Kaşe", values: [false, true, true, true] },
         { label: "Fotoğraf Raporu", values: [false, true, true, true] },
       ],

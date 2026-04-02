@@ -145,7 +145,7 @@ const PricingSection = () => {
                     className="w-full text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
                     style={p.ctaStyle}
                   >
-                    {loadingPlan === (p.monthlyPrice === 399 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise") ? (
+                    {loadingPlan === (p.monthlyPrice === 499 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise") ? (
                       <Loader2 size={16} className="animate-spin inline mr-1" />
                     ) : null}
                     {p.cta}
