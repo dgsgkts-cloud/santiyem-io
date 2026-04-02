@@ -191,6 +191,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [chartRange, setChartRange] = useState<"6" | "12" | "all">("12");
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfSig, setPdfSig] = useState<PDFSignatureInfo>(() => {
+    try { return JSON.parse(localStorage.getItem("muhendisai_pdf_sig") || "{}"); } catch { return {}; }
+  });
 
   const contract = Number(project?.contract_amount) || 0;
   const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);
