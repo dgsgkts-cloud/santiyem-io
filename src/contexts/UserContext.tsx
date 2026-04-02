@@ -2,40 +2,35 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-export type PlanType = "free" | "plus" | "pro" | "office_free" | "office_pro" | "office_custom";
+export type PlanType = "free" | "pro" | "team" | "enterprise" | "plus" | "office_free" | "office_pro" | "office_custom";
 export type UserRole = "free" | "pro" | "office" | "admin";
 
 interface UsageLimits {
   aiQuestions: { used: number; max: number };
   photoAnalysis: { used: number; max: number };
   render: { used: number; max: number };
-  reminders: { used: number; max: number }; // max active at once
+  reminders: { used: number; max: number };
 }
 
 const FREE_LIMITS: UsageLimits = {
-  aiQuestions: { used: 0, max: 5 },
+  aiQuestions: { used: 0, max: 3 },
   photoAnalysis: { used: 0, max: 2 },
   render: { used: 0, max: 2 },
   reminders: { used: 0, max: 3 },
 };
 
-const PLUS_LIMITS: UsageLimits = {
-  aiQuestions: { used: 0, max: 20 },
-  photoAnalysis: { used: 0, max: 10 },
-  render: { used: 0, max: 5 },
-  reminders: { used: 0, max: 10 },
-};
-
-// Helper to check if a plan is an office plan
-export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan === "office_pro" || plan === "office_custom";
+// Helper to check plan tiers
+export const isTeamOrAbove = (plan: PlanType) => plan === "team" || plan === "enterprise" || plan === "office_pro" || plan === "office_custom";
+export const isProOrAbove = (plan: PlanType) => plan === "pro" || isTeamOrAbove(plan);
+export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan === "office_pro" || plan === "office_custom" || plan === "team" || plan === "enterprise";
 export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === "plus" || plan === "pro";
 
 // Feature access helpers
-export const canAccessProjects = (plan: PlanType, role?: UserRole) => role === "admin" || isOfficePlan(plan);
-export const canAccessHakedis = (plan: PlanType, role?: UserRole) => role === "admin" || isOfficePlan(plan);
+export const canAccessProjects = (plan: PlanType, role?: UserRole) => role === "admin" || isProOrAbove(plan) || isOfficePlan(plan);
+export const canAccessHakedis = (plan: PlanType, role?: UserRole) => role === "admin" || isProOrAbove(plan) || isOfficePlan(plan);
 export const canAccessRender = (plan: PlanType) => true;
 export const canAccessReminders = (plan: PlanType) => true;
-export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);
+export const canDownload = (plan: PlanType) => plan !== "free";
 
 interface UserContextType {
   user: User | null;
@@ -63,8 +58,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const getLimitsForPlan = (p: PlanType): UsageLimits => {
     if (p === "free") return { ...FREE_LIMITS };
-    if (p === "plus") return { ...PLUS_LIMITS };
-    // pro, office plans = unlimited
+    // pro and above = unlimited
     return {
       aiQuestions: { used: 0, max: 999 },
       photoAnalysis: { used: 0, max: 999 },
@@ -138,7 +132,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
     }
-    // Reset daily
     setUsage(prev => ({
       ...prev,
       aiQuestions: { ...prev.aiQuestions, used: 0 },
@@ -156,12 +149,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = role === "admin";
 
   const canUse = (key: keyof UsageLimits) => {
-    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
+    if (isAdmin || isProOrAbove(plan) || isOfficePlan(plan)) return true;
     return usage[key].used < usage[key].max;
   };
 
   const incrementUsage = (key: keyof UsageLimits) => {
-    if (isAdmin || plan === "pro" || isOfficePlan(plan)) return true;
+    if (isAdmin || isProOrAbove(plan) || isOfficePlan(plan)) return true;
     if (usage[key].used >= usage[key].max) return false;
     setUsage(prev => ({
       ...prev,

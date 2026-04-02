@@ -196,11 +196,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  backgroundColor: isAdmin ? "rgba(139,92,246,0.2)" : plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
+                  backgroundColor: isAdmin ? "rgba(139,92,246,0.2)" : plan === "pro" || plan === "plus" || plan === "team" ? "rgba(255,107,43,0.15)" : plan === "enterprise" || isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                  color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" || plan === "team" ? "#FF6B2B" : plan === "enterprise" || isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
+                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
               {!isAdmin && plan === "free" && (
                 <button
@@ -215,11 +215,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               )}
             </div>
 
-            {!isAdmin && (plan === "free" || plan === "plus") && (
+            {!isAdmin && plan === "free" && (
               <div className="mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px]" style={{ color: "#64748B" }}>AI Soruları</span>
-                  <span className="text-[11px] font-mono" style={{ color: "#64748B" }}>{plan === "free" ? "Sınırlı" : "Daha Fazla"}</span>
+                  <span className="text-[11px] font-mono" style={{ color: "#64748B" }}>{usage.aiQuestions.used}/3</span>
                 </div>
                 <div className="w-full h-1 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                   <div className="h-full rounded-full transition-all duration-600" style={{ backgroundColor: "#FF6B2B", width: `${(usage.aiQuestions.used / usage.aiQuestions.max) * 100}%` }} />
