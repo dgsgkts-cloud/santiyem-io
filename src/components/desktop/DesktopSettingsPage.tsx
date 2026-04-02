@@ -70,20 +70,7 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "company" && <CompanyProfileTab />}
-          {activeTab === "notifications" && (
-            <div className="space-y-5 lg:space-y-6">
-              <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
-                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
-              </div>
-              <div className="space-y-3 lg:space-y-4">
-                <ToggleRow label="E-posta Bildirimleri" desc="Günlük özet ve önemli güncellemeler" defaultOn />
-                <ToggleRow label="Proje Güncellemeleri" desc="Proje durumu değişikliklerinde bildir" defaultOn />
-                <ToggleRow label="Hakediş Bildirimleri" desc="Hakediş onay ve ödeme bildirimleri" defaultOn />
-                <ToggleRow label="Pazarlama E-postaları" desc="Yeni özellik ve kampanya haberleri" />
-              </div>
-            </div>
-          )}
+          {activeTab === "notifications" && <NotificationsTab />}
           {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
