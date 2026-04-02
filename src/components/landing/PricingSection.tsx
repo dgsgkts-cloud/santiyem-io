@@ -11,13 +11,13 @@ const PLANS = [
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
-    name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: true,
+    name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: false,
     features: ["1 kullanıcı · 1 proje", "Sınırsız hakediş + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
     
   },
   {
-    name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: false,
+    name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: true,
     features: ["5 kullanıcı · 3 proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
