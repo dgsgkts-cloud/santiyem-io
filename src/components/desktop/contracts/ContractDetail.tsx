@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Contract } from "@/hooks/useContracts";
+import { useContractSignatures } from "@/hooks/useContractSignatures";
+import { useUser } from "@/contexts/UserContext";
 import {
   ArrowLeft, Edit2, Trash2, Download, RefreshCw, Bot, Building2, Calendar,
-  ChevronUp, ChevronDown, AlertTriangle, Plus, Clock, DollarSign, CheckCircle2, Shield
+  ChevronUp, ChevronDown, AlertTriangle, Plus, Clock, DollarSign, CheckCircle2, Shield,
+  Mail, Send, History, FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +13,7 @@ import {
   cardStyle, CONTRACT_TYPES, getDaysRemaining, getStatusInfo,
   formatCurrency, formatDate, getTimeProgress, ForceMajeure
 } from "./ContractTypes";
+import SendForSignatureModal from "./SendForSignatureModal";
 
 interface Props {
   contract: Contract;
@@ -21,10 +25,15 @@ interface Props {
 }
 
 export default function ContractDetail({ contract, onBack, onEdit, onDelete, onReanalyze, allHakedisler = [] }: Props) {
+  const { user } = useUser();
   const status = getStatusInfo(contract.end_date, contract.status);
   const tp = getTimeProgress(contract.start_date, contract.end_date);
   const daysLeft = getDaysRemaining(contract.end_date);
   const analysis = contract.ai_analysis;
+
+  const { requests, uploads, activities, sendForSignature, sendReminder, getSignatureStatus } = useContractSignatures(contract.id);
+  const sigStatus = getSignatureStatus();
+  const [showSendModal, setShowSendModal] = useState(false);
 
   // Hakediş comparison
   const projectHakedis = contract.project_id
@@ -60,7 +69,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   };
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    general: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false
+    general: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false, signature: true, activity: false
   });
   const toggle = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }));
 
@@ -78,6 +87,12 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
     </div>
   );
 
+  const handleSendForSignature = async (data: any) => {
+    return sendForSignature({
+      ...data,
+    });
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-4">
       {/* Header */}
@@ -86,6 +101,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <ArrowLeft className="w-4 h-4" /> Sözleşme Takibi
         </button>
         <div className="flex items-center gap-2">
+          {/* Send for Signature Button */}
+          <Button onClick={() => setShowSendModal(true)} size="sm" className="h-8 text-xs text-white"
+            style={{ backgroundColor: "#3B82F6" }}>
+            <Mail className="w-3 h-3 mr-1" /> İmzaya Gönder
+          </Button>
           <Button onClick={onEdit} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>
             <Edit2 className="w-3 h-3 mr-1" /> Düzenle
           </Button>
@@ -102,12 +122,87 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{contract.name}</h1>
         <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: status.color, backgroundColor: status.bg }}>
           {status.icon} {status.label}
         </span>
+        {/* Signature status badge */}
+        <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: sigStatus.color, backgroundColor: `${sigStatus.color}15` }}>
+          {sigStatus.label}
+        </span>
       </div>
+
+      {/* Signature Tracking Section */}
+      <Section id="signature" title="İmza Takibi" icon={<FileCheck className="w-4 h-4" style={{ color: "#3B82F6" }} />}
+        badge={requests.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${sigStatus.color}15`, color: sigStatus.color }}>{requests.length}</span> : undefined}
+      >
+        {requests.length === 0 ? (
+          <div className="text-center py-6">
+            <Mail className="w-8 h-8 mx-auto mb-2" style={{ color: "#334155" }} />
+            <p className="text-xs" style={{ color: "#64748B" }}>Henüz imzaya gönderilmedi</p>
+            <Button onClick={() => setShowSendModal(true)} size="sm" className="mt-3 h-8 text-xs text-white" style={{ backgroundColor: "#3B82F6" }}>
+              <Send className="w-3 h-3 mr-1" /> İmzaya Gönder
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {requests.map(req => {
+              const reqUploads = uploads.filter(u => u.signature_request_id === req.id);
+              const daysSince = Math.ceil((Date.now() - new Date(req.sent_at).getTime()) / (1000 * 60 * 60 * 24));
+              const isOverdue = req.deadline && new Date(req.deadline) < new Date();
+              const isWaiting = !reqUploads.length && req.status !== "imzalandi";
+
+              return (
+                <div key={req.id} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: `1px solid ${isOverdue ? "#EF444440" : "#1E2732"}` }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium" style={{ color: "#F1F5F9" }}>{req.recipient_name}</p>
+                      <p className="text-[10px]" style={{ color: "#64748B" }}>{req.recipient_email} • {new Date(req.sent_at).toLocaleDateString("tr-TR")}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isWaiting && daysSince >= 7 && (
+                        <Button onClick={() => sendReminder(req)} size="sm" className="h-7 text-[10px] text-white" style={{ backgroundColor: "#F59E0B" }}>
+                          Hatırlatma Gönder
+                        </Button>
+                      )}
+                      <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{
+                        color: reqUploads.length ? "#22C55E" : isOverdue ? "#EF4444" : "#F59E0B",
+                        backgroundColor: reqUploads.length ? "rgba(34,197,94,0.1)" : isOverdue ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)"
+                      }}>
+                        {reqUploads.length ? "✅ İmzalandı" : isOverdue ? "⌛ Süresi Doldu" : `⏳ ${daysSince}g bekleniyor`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {req.deadline && (
+                    <p className="text-[10px]" style={{ color: isOverdue ? "#EF4444" : "#F59E0B" }}>
+                      ⏰ Son tarih: {new Date(req.deadline).toLocaleDateString("tr-TR")}
+                    </p>
+                  )}
+
+                  {/* Show uploaded files */}
+                  {reqUploads.map(u => (
+                    <div key={u.id} className="flex items-center justify-between rounded p-2" style={{ backgroundColor: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                      <div>
+                        <p className="text-xs font-medium" style={{ color: "#F1F5F9" }}>
+                          📎 {u.file_name} — {u.signer_name}{u.signer_title ? ` (${u.signer_title})` : ""}
+                        </p>
+                        <p className="text-[10px]" style={{ color: "#64748B" }}>{new Date(u.created_at).toLocaleString("tr-TR")}</p>
+                      </div>
+                      <a href={u.file_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px]" style={{ borderColor: "#1E2732", color: "#3B82F6" }}>
+                          <Download className="w-3 h-3 mr-1" /> İndir
+                        </Button>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Section>
 
       {/* General Info */}
       <Section id="general" title="Genel Bilgiler" icon={<Building2 className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
@@ -371,12 +466,50 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         )}
       </Section>
 
+      {/* Activity Log */}
+      <Section id="activity" title="Aktivite Geçmişi" icon={<History className="w-4 h-4" style={{ color: "#FF6B2B" }} />}
+        badge={activities.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(148,163,184,0.1)", color: "#94A3B8" }}>{activities.length}</span> : undefined}
+      >
+        {activities.length === 0 ? (
+          <p className="text-xs text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
+        ) : (
+          <div className="space-y-2">
+            {activities.map(act => (
+              <div key={act.id} className="flex items-start gap-3 text-xs">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-2 h-2 rounded-full" style={{
+                    backgroundColor: act.action === "imzali_yuklendi" ? "#22C55E" : act.action === "imzaya_gonderildi" ? "#3B82F6" : "#64748B"
+                  }} />
+                </div>
+                <div className="flex-1">
+                  <p style={{ color: "#F1F5F9" }}>{act.description}</p>
+                  <p className="text-[10px]" style={{ color: "#64748B" }}>
+                    {new Date(act.created_at).toLocaleString("tr-TR")}
+                    {act.actor_name && ` — ${act.actor_name}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
       {/* Notes */}
       {contract.notes && (
         <div className="rounded-xl p-4" style={cardStyle}>
           <p className="text-xs font-semibold mb-2" style={{ color: "#F1F5F9" }}>📝 Notlar</p>
           <p className="text-xs whitespace-pre-wrap" style={{ color: "#94A3B8" }}>{contract.notes}</p>
         </div>
+      )}
+
+      {/* Send for Signature Modal */}
+      {showSendModal && (
+        <SendForSignatureModal
+          contract={contract}
+          senderName={user?.user_metadata?.full_name || user?.email || "MühendisAI"}
+          onSend={handleSendForSignature}
+          onClose={() => setShowSendModal(false)}
+        />
       )}
     </div>
   );
