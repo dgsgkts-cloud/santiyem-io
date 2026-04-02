@@ -732,10 +732,21 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <div className="flex gap-2">
               <button
                 disabled={pdfProgress !== null}
-                onClick={() => {
+                onClick={async () => {
                   localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
                   setPdfProgress(0);
                   try {
+                    // Fetch all work items for all hakedisler
+                    const allIds = hakedisler.map(h => h.id);
+                    const { data: allItems } = await supabase
+                      .from("hakedis_items")
+                      .select("*")
+                      .in("hakedis_id", allIds)
+                      .order("sort_order", { ascending: true });
+                    const workItems: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
+                      description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                      unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                    }));
                     exportHakedisPDF(
                       hakedisler,
                       project?.name || "Proje",
@@ -747,6 +758,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         onProgress: (pct) => setPdfProgress(pct),
                       },
                       project?.client,
+                      undefined,
+                      undefined,
+                      workItems.length > 0 ? workItems : undefined,
                     );
                     setTimeout(() => {
                       setPdfProgress(null);
