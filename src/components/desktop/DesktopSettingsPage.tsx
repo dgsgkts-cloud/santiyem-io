@@ -399,7 +399,7 @@ const NotificationsTab = () => {
 // ─── Subscription Tab ───
 const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; sub: string }> = {
   free: { emoji: "🆓", name: "Başlangıç Planı", price: "Ücretsiz", sub: "Sonsuza kadar ücretsiz" },
-  pro: { emoji: "⭐", name: "Profesyonel Plan", price: "399₺/ay", sub: "Serbest mühendis ve mimarlar için" },
+  pro: { emoji: "⭐", name: "Profesyonel Plan", price: "499₺/ay", sub: "Serbest mühendis ve mimarlar için" },
   plus: { emoji: "⭐", name: "Plus Plan", price: "199₺/ay", sub: "Bireysel kullanıcılar için" },
   team: { emoji: "👥", name: "Ekip Planı", price: "1.499₺/ay", sub: "Küçük mühendislik ofisleri için" },
   enterprise: { emoji: "🏢", name: "Kurumsal Plan", price: "4.999₺/ay", sub: "Büyük firmalar için" },
