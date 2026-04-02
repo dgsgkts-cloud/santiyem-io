@@ -34,6 +34,52 @@ cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none"
 const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
   const [yearly, setYearly] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useUser();
+  const navigate = useNavigate();
+
+  const handlePurchase = useCallback(async (planKey: string) => {
+    if (!user) {
+      navigate("/register");
+      return;
+    }
+    if (planKey === "enterprise") {
+      navigate("/iletisim");
+      return;
+    }
+    setLoadingPlan(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Ödeme başlatılamadı");
+        return;
+      }
+      // Open iyzico checkout form in a new div
+      const checkoutDiv = document.getElementById("iyzico-checkout-container");
+      if (checkoutDiv) {
+        checkoutDiv.innerHTML = data.checkoutFormContent;
+        checkoutDiv.style.display = "block";
+        // Execute scripts in the injected HTML
+        const scripts = checkoutDiv.querySelectorAll("script");
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ödeme başlatılırken bir hata oluştu");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }, [user, yearly, navigate]);
 
   return (
     <section id="pricing" className="py-24 px-6" style={{ background: "#0F1419" }}>
