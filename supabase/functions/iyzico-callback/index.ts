@@ -3,7 +3,7 @@ import { encodeBase64 } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
-const IYZICO_BASE_URL = 'https://sandbox-api.iyzipay.com'
+const IYZICO_BASE_URL = 'https://api.iyzipay.com'
 
 const PLAN_MAP: Record<string, string> = { pro: 'pro', team: 'team', enterprise: 'enterprise' }
 
