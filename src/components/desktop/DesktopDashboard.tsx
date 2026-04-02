@@ -39,34 +39,45 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const [monthRevenue, setMonthRevenue] = useState(0);
   const [monthExpense, setMonthExpense] = useState(0);
   const [cashWarning, setCashWarning] = useState("");
+  const [allHakedisData, setAllHakedisData] = useState<any[]>([]);
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [overdueTotal, setOverdueTotal] = useState(0);
+  const [overdueBannerDismissed, setOverdueBannerDismissed] = useState(() => {
+    try { const d = localStorage.getItem("muhendisai_overdue_dismiss"); return d === new Date().toISOString().slice(0, 10); } catch { return false; }
+  });
+  const [paymentTab, setPaymentTab] = useState<"week" | "month" | "overdue">("week");
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string; requiresOffice: boolean }>({ open: false, feature: "", requiresOffice: false });
   const openUpgrade = useCallback((feature: string, requiresOffice: boolean) => setUpgradeModal({ open: true, feature, requiresOffice }), []);
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
   const profitLocked = !canAccessProfitability(plan, role);
 
-  // Fetch hakedis totals + this month revenue
+  // Fetch hakedis totals + this month revenue + overdue tracking
   useEffect(() => {
     if (!user) return;
     supabase
       .from("project_hakedis")
-      .select("net,status,payment_date")
+      .select("*")
       .then(({ data }) => {
         if (!data) return;
+        setAllHakedisData(data);
         setTotalHakedis(data.reduce((s, h) => s + Number(h.net), 0));
         setPendingHakedis(data.filter(h => h.status === "Bekliyor").reduce((s, h) => s + Number(h.net), 0));
-        // This month revenue
         const now = new Date();
         const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-        const rev = data
-          .filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(ym))
-          .reduce((s, h) => s + Number(h.net), 0);
+        const rev = data.filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(ym)).reduce((s, h) => s + Number(h.net), 0);
         setMonthRevenue(rev);
-        // Cash warning
-        const pending = data.filter(h => h.status === "Bekliyor" || h.status === "Gecikmiş").reduce((s, h) => s + Number(h.net), 0);
-        if (pending > 0) {
-          setCashWarning(`⚠️ ${formatCurrency(pending)} tahsilat bekliyor. Detay →`);
-        }
+        const pendingTotal = data.filter(h => h.status === "Bekliyor" || h.status === "Gönderildi").reduce((s, h) => s + Number(h.net), 0);
+        if (pendingTotal > 0) setCashWarning(`⚠️ ${formatCurrency(pendingTotal)} tahsilat bekliyor. Detay →`);
+        // Overdue: 30+ days
+        const nowMs = Date.now();
+        const overdueItems = data.filter(h => {
+          if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+          if (h.expected_payment_date) return nowMs > new Date(h.expected_payment_date).getTime();
+          return (nowMs - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
+        });
+        setOverdueCount(overdueItems.length);
+        setOverdueTotal(overdueItems.reduce((s, h) => s + Number(h.net), 0));
       });
   }, [user]);
 
