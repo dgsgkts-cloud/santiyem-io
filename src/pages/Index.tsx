@@ -20,10 +20,10 @@ import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
-  RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
+  RotateCcw, MessageSquare,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, BarChart3, Settings, LogOut, User, Plus, Bell
+  Lightbulb, Settings, LogOut, User, Plus, Bell
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
