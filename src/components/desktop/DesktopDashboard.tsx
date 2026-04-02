@@ -217,23 +217,40 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </button>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>CİRO</p>
-            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthRevenue)}</p>
-            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
-          </div>
-          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>GİDER</p>
-            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthExpense)}</p>
-            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
-          </div>
-          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>NET KAR</p>
-            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#FF6B2B", fontFamily: "'Space Grotesk', sans-serif" }}>
-              {formatCurrency(monthRevenue - monthExpense)}
-            </p>
-            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
-          </div>
+          {(() => {
+            const calcChange = (curr: number, prev: number) => {
+              if (prev === 0) return curr > 0 ? 100 : 0;
+              return Math.round(((curr - prev) / prev) * 100);
+            };
+            const revenueChange = calcChange(monthRevenue, prevMonthRevenue);
+            const expenseChange = calcChange(monthExpense, prevMonthExpense);
+            const netProfit = monthRevenue - monthExpense;
+            const prevNetProfit = prevMonthRevenue - prevMonthExpense;
+            const profitChange = calcChange(netProfit, prevNetProfit);
+
+            const items = [
+              { label: "CİRO", value: monthRevenue, color: "#22C55E", change: revenueChange },
+              { label: "GİDER", value: monthExpense, color: "#EF4444", change: expenseChange },
+              { label: "NET KAR", value: netProfit, color: "#FF6B2B", change: profitChange },
+            ];
+
+            return items.map(item => {
+              const isUp = item.change >= 0;
+              const changeColor = item.label === "GİDER"
+                ? (isUp ? "#EF4444" : "#22C55E")
+                : (isUp ? "#22C55E" : "#EF4444");
+              return (
+                <div key={item.label} className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>{item.label}</p>
+                  <p className="text-xl lg:text-2xl font-bold" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
+                  <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: changeColor }}>
+                    {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                    <span>%{Math.abs(item.change)} geçen aya göre</span>
+                  </p>
+                </div>
+              );
+            });
+          })()}
         </div>
         {cashWarning && (
           <div
