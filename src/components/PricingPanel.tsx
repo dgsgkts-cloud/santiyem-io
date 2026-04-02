@@ -47,9 +47,9 @@ const PricingPanel = () => {
       featured: false,
       badge: null,
       btnText: "14 Gün Ücretsiz Dene",
-      btnStyle: "primary" as const,
+      btnStyle: "outline" as const,
       
-      color: "#FF6B2B",
+      color: "#94A3B8",
       features: [
         "1 kullanıcı",
 "1 proje",
