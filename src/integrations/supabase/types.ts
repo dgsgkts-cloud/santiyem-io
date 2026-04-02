@@ -711,6 +711,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          iyzico_payment_id: string | null
+          iyzico_token: string | null
+          plan_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          iyzico_payment_id?: string | null
+          iyzico_token?: string | null
+          plan_name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          iyzico_payment_id?: string | null
+          iyzico_token?: string | null
+          plan_name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null

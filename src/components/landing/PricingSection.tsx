@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { PaymentLogos } from "@/components/PaymentLogos";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
 
 const PLANS = [
   {
@@ -31,6 +34,52 @@ cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none"
 const PricingSection = () => {
   const { ref, isVisible } = useScrollAnimation();
   const [yearly, setYearly] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useUser();
+  const navigate = useNavigate();
+
+  const handlePurchase = useCallback(async (planKey: string) => {
+    if (!user) {
+      navigate("/register");
+      return;
+    }
+    if (planKey === "enterprise") {
+      navigate("/iletisim");
+      return;
+    }
+    setLoadingPlan(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Ödeme başlatılamadı");
+        return;
+      }
+      // Open iyzico checkout form in a new div
+      const checkoutDiv = document.getElementById("iyzico-checkout-container");
+      if (checkoutDiv) {
+        checkoutDiv.innerHTML = data.checkoutFormContent;
+        checkoutDiv.style.display = "block";
+        // Execute scripts in the injected HTML
+        const scripts = checkoutDiv.querySelectorAll("script");
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ödeme başlatılırken bir hata oluştu");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }, [user, yearly, navigate]);
 
   return (
     <section id="pricing" className="py-24 px-6" style={{ background: "#0F1419" }}>
@@ -85,9 +134,23 @@ const PricingSection = () => {
                   ))}
                 </ul>
 
-                <Link to="/register" className="block text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90" style={p.ctaStyle}>
-                  {p.cta}
-                </Link>
+                {p.monthlyPrice === 0 ? (
+                  <Link to="/register" className="block text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90" style={p.ctaStyle}>
+                    {p.cta}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => handlePurchase(p.monthlyPrice === 399 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise")}
+                    disabled={loadingPlan !== null}
+                    className="w-full text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                    style={p.ctaStyle}
+                  >
+                    {loadingPlan === (p.monthlyPrice === 399 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise") ? (
+                      <Loader2 size={16} className="animate-spin inline mr-1" />
+                    ) : null}
+                    {p.cta}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -103,6 +166,9 @@ const PricingSection = () => {
             Tüm ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.
           </p>
         </div>
+      </div>
+      {/* iyzico checkout form container */}
+      <div id="iyzico-checkout-container" style={{ display: "none" }} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
       </div>
     </section>
   );
