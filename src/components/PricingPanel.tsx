@@ -52,7 +52,7 @@ const PricingPanel = () => {
       color: "#FF6B2B",
       features: [
         "1 kullanıcı",
-        "Sınırsız proje",
+"1 proje",
         "Sınırsız hakediş",
         "Gecikmiş ödeme uyarısı + yasal faiz hesabı",
         "Şantiye günlüğü — sınırsız kayıt",
