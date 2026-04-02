@@ -16,6 +16,7 @@ import DesktopChatLayout from "@/components/desktop/DesktopChatLayout";
 import DesktopProjectsPage from "@/components/desktop/DesktopProjectsPage";
 import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
 import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
+import ProfitabilityCashFlowPage from "@/components/desktop/ProfitabilityCashFlowPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
