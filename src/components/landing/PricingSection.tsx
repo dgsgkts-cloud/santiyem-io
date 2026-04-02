@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Check } from "lucide-react";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const PLANS = [
   {
