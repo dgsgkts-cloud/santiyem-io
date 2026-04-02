@@ -414,7 +414,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               ))}
             </div>
             <button onClick={() => onTabChange("chat")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium mt-2" style={{ color: "#FF6B2B" }}>
-              Tüm Sohbetler <ChevronRight className="w-3 h-3" />
+              AI Asistanı Aç <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
