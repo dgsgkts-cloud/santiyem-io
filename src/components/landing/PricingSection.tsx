@@ -167,6 +167,9 @@ const PricingSection = () => {
           </p>
         </div>
       </div>
+      {/* iyzico checkout form container */}
+      <div id="iyzico-checkout-container" style={{ display: "none" }} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      </div>
     </section>
   );
 };
