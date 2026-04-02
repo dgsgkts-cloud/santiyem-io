@@ -222,12 +222,6 @@ const Index = () => {
                   <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
                 ) : activeTab === "daily" ? (
                   <DailyKnowledgePanel />
-                ) : activeTab === "weather" ? (
-                  <WeatherPanel />
-                ) : activeTab === "news" ? (
-                  <NewsPanel />
-                ) : activeTab === "events" ? (
-                  <EventsPanel />
                 ) : activeTab === "calc" ? (
                   <CalculatorsPanel />
                 ) : activeTab === "render" ? (
