@@ -98,6 +98,7 @@ const logoSection = {
   textAlign: 'center' as const,
 }
 const logoText = { fontSize: '28px', margin: '0', letterSpacing: '-0.5px' }
+const logoSubtext = { fontSize: '12px', color: '#94A3B8', margin: '4px 0 0', letterSpacing: '0.5px' }
 const contentSection = { padding: '30px 30px 20px' }
 const h1 = {
   fontSize: '24px',
