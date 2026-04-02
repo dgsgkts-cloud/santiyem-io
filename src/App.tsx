@@ -20,6 +20,7 @@ import Iletisim from "./pages/Iletisim.tsx";
 import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
+import ContractSignUpload from "./pages/ContractSignUpload.tsx";
 
 const queryClient = new QueryClient();
 
