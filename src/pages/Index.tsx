@@ -17,6 +17,7 @@ import DesktopProjectsPage from "@/components/desktop/DesktopProjectsPage";
 import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
 import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import ProfitabilityCashFlowPage from "@/components/desktop/ProfitabilityCashFlowPage";
+import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +35,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts";
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -57,6 +58,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
+  { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
   { id: "profitability", label: "Karlılık & Nakit Akışı", emoji: "📊", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
@@ -78,6 +80,7 @@ const TAB_TITLES: Record<string, string> = {
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
   "site-diary": "Şantiye Günlüğü",
+  contracts: "Sözleşme Takibi",
   profitability: "Karlılık & Nakit Akışı",
   settings: "Ayarlar",
   
@@ -222,6 +225,8 @@ const Index = () => {
                   <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
                 ) : activeTab === "hakedis" ? (
                   <DesktopHakedisPage />
+                ) : activeTab === "contracts" ? (
+                  <DesktopContractsPage />
                 ) : activeTab === "site-diary" ? (
                   <SiteDiaryPage />
                 ) : activeTab === "profitability" ? (

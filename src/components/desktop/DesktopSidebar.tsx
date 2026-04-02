@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessRender, canAccessReminders } from "@/contexts/UserContext";
+import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessRender, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
   FileText, BookOpen, Lightbulb, ClipboardList, BarChart3,
-  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock
+  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock, FileSignature
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -30,6 +30,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderOpen },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
+      { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
       { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: BarChart3 },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: ClipboardList },
     ],
@@ -135,6 +136,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isLocked =
                   (item.id === "projects" && !canAccessProjects(plan, role)) ||
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
+                  (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "render" && !canAccessRender(plan)) ||
