@@ -521,13 +521,10 @@ const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void
   </div>
 );
 
-const MiniStat = ({ emoji, label, value }: { emoji: string; label: string; value: string }) => (
-  <div className="flex items-center gap-2">
-    <span className="text-base lg:text-lg">{emoji}</span>
-    <div className="min-w-0">
-      <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
-      <p className="text-[12px] lg:text-[14px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{value}</p>
-    </div>
+const MiniStat = ({ label, value }: { label: string; value: string }) => (
+  <div className="min-w-0">
+    <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
+    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
   </div>
 );
 
