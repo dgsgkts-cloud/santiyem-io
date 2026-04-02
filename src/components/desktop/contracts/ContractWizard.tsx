@@ -117,13 +117,19 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
     if (!form.name.trim()) { toast.error("Sözleşme adı zorunludur."); setStep(1); return; }
     if (!form.counterparty.trim()) { toast.error("İşveren adı zorunludur."); setStep(1); return; }
     setSaving(true);
+    const { contract_no, ...formWithoutExtra } = form;
     const input: ContractInput = {
-      ...form,
+      ...formWithoutExtra,
+      project_id: formWithoutExtra.project_id || undefined,
+      start_date: formWithoutExtra.start_date || undefined,
+      end_date: formWithoutExtra.end_date || undefined,
+      file_url: formWithoutExtra.file_url || undefined,
+      file_name: formWithoutExtra.file_name || undefined,
       ai_analysis: {
-        ...(form.ai_analysis || {}),
+        ...(formWithoutExtra.ai_analysis || {}),
         kritik_maddeler: clauses,
         odeme_takvimi: schedule,
-        gecikme_cezasi: form.ai_analysis?.gecikme_cezasi || null,
+        gecikme_cezasi: formWithoutExtra.ai_analysis?.gecikme_cezasi || null,
       },
       payment_schedule: schedule,
     };
