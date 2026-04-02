@@ -1,6 +1,6 @@
 const ITEMS = [
-  "MSY Yapı", "Murt İnşaat", "Göktaş Global Mühendislik", "500+ Mühendis", "50+ Mimar Ofisi",
-  "100+ Aktif Proje", "MSY Yapı", "Murt İnşaat", "Göktaş Global Mühendislik",
+  "MSY Yapı", "Murt İnşaat", "500+ Mühendis", "50+ Mimar Ofisi",
+  "100+ Aktif Proje", "MSY Yapı", "Murt İnşaat",
   "500+ Mühendis", "50+ Mimar Ofisi", "100+ Aktif Proje",
 ];
 
