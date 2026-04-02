@@ -302,7 +302,37 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         )}
       </div>
 
-      {/* Main content */}
+      {/* 6-Month Revenue/Expense Chart */}
+      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Grafik", false)} />}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Son 6 Ay — Ciro & Gider</h3>
+          </div>
+        </div>
+        <div style={{ width: "100%", height: 220 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} barGap={4} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#1E2732" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "#F1F5F9", fontWeight: 600 }}
+                itemStyle={{ color: "#94A3B8" }}
+                formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                formatter={(value: string) => <span style={{ color: "#94A3B8" }}>{value === "ciro" ? "Ciro" : "Gider"}</span>}
+              />
+              <Bar dataKey="ciro" fill="#22C55E" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={32} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-4">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
