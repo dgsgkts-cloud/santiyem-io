@@ -29,7 +29,7 @@ const PricingPanel = () => {
       features: [
         "1 kullanıcı",
         "1 aktif proje",
-        "3 hakediş/ay",
+        "1 hakediş/ay",
         "Şantiye günlüğü — günde 1 kayıt",
         "Hesap araçları — sınırsız",
         "AI Asistan — günde 3 soru",
