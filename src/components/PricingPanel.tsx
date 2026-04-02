@@ -152,8 +152,8 @@ const PricingPanel = () => {
       title: "KULLANICI & PROJE",
       rows: [
         { label: "Kullanıcı sayısı", values: ["1", "1", "5", "Sınırsız"] },
-        { label: "Aktif proje", values: ["1", "Sınırsız", "Sınırsız", "Sınırsız"] },
-        { label: "Hakediş/ay", values: ["3", "Sınırsız", "Sınırsız", "Sınırsız"] },
+        { label: "Aktif proje", values: ["1", "1", "3", "Sınırsız"] },
+        { label: "Hakediş/ay", values: ["1", "3", "Sınırsız", "Sınırsız"] },
       ],
     },
     {
