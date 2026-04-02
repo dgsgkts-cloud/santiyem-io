@@ -80,6 +80,7 @@ const TAB_TITLES: Record<string, string> = {
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
   "site-diary": "Şantiye Günlüğü",
+  contracts: "Sözleşme Takibi",
   profitability: "Karlılık & Nakit Akışı",
   settings: "Ayarlar",
   
