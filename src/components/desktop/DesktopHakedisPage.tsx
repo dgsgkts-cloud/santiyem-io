@@ -342,7 +342,22 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
-              <button onClick={() => exportHakedisExcel(hakedisler, project?.name || "Proje")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
+              <button
+                onClick={async () => {
+                  try {
+                    const allIds = hakedisler.map(h => h.id);
+                    const { data: allItems } = await supabase.from("hakedis_items").select("*").in("hakedis_id", allIds).order("sort_order");
+                    const wi: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
+                      description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                      unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                    }));
+                    exportHakedisExcel(hakedisler, project?.name || "Proje", wi.length > 0 ? wi : undefined, project?.client);
+                    toast.success("✅ Excel indirildi");
+                  } catch { toast.error("Excel oluşturulamadı. Sayfayı yenileyip tekrar deneyin."); }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold"
+                style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#22C55E" }}
+              >
                 <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
               </button>
             </>
