@@ -327,7 +327,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
         <div className="flex items-center gap-2">
           {hakedisler.length > 0 && (
             <>
-              <button onClick={() => exportHakedisPDF(hakedisler, project?.name || "Proje")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
+              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
               <button onClick={() => exportHakedisExcel(hakedisler, project?.name || "Proje")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
