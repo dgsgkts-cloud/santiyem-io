@@ -56,6 +56,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
+  { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
