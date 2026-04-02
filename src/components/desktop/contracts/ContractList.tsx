@@ -5,11 +5,12 @@ import { cardStyle, CONTRACT_TYPES, getDaysRemaining, getStatusInfo, formatCurre
 
 interface Props {
   contracts: Contract[];
+  signatureMap?: Record<string, { status: string; label: string; color: string }>;
   onSelect: (c: Contract) => void;
   onAdd: () => void;
 }
 
-export default function ContractList({ contracts, onSelect, onAdd }: Props) {
+export default function ContractList({ contracts, signatureMap = {}, onSelect, onAdd }: Props) {
   const now = new Date();
   const stats = {
     total: contracts.length,
@@ -126,6 +127,12 @@ export default function ContractList({ contracts, onSelect, onAdd }: Props) {
 
                 {/* Bottom row */}
                 <div className="flex items-center gap-3 text-[10px]" style={{ color: "#64748B" }}>
+                  {signatureMap[c.id] && (
+                    <span className="font-semibold px-1.5 py-0.5 rounded" style={{ color: signatureMap[c.id].color, backgroundColor: `${signatureMap[c.id].color}15` }}>
+                      {signatureMap[c.id].label}
+                    </span>
+                  )}
+                  {!signatureMap[c.id] && <span>📝 Taslak</span>}
                   {hakedisCount > 0 && <span>📋 {hakedisCount} hakediş</span>}
                   {warningCount > 0 && <span style={{ color: "#F59E0B" }}>⚠️ {warningCount} uyarı</span>}
                   {c.ai_analysis && <span style={{ color: "#60A5FA" }}>🤖 AI Analiz</span>}

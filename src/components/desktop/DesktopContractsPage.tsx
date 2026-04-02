@@ -14,13 +14,37 @@ export default function DesktopContractsPage() {
   const [view, setView] = useState<"list" | "add" | "detail" | "edit">("list");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [allHakedisler, setAllHakedisler] = useState<any[]>([]);
+  const [signatureMap, setSignatureMap] = useState<Record<string, { status: string; label: string; color: string }>>({});
 
-  // Fetch all hakedis for comparison
+  // Fetch all hakedis + signature requests
   useEffect(() => {
     if (!user) return;
     supabase.from("project_hakedis").select("*").then(({ data }) => {
       if (data) setAllHakedisler(data);
     });
+
+    // Fetch all signature requests for user's contracts
+    (supabase as any).from("contract_signature_requests")
+      .select("contract_id, status, sent_at, deadline, signed_at")
+      .order("created_at", { ascending: false })
+      .then(({ data }: any) => {
+        if (!data) return;
+        const map: Record<string, { status: string; label: string; color: string }> = {};
+        for (const req of data) {
+          if (map[req.contract_id]) continue; // only latest per contract
+          const daysSinceSent = Math.ceil((Date.now() - new Date(req.sent_at).getTime()) / (1000 * 60 * 60 * 24));
+          if (req.status === "imzalandi" || req.signed_at) {
+            map[req.contract_id] = { status: "imzalandi", label: "✅ İmzalandı", color: "#22C55E" };
+          } else if (req.deadline && new Date(req.deadline) < new Date()) {
+            map[req.contract_id] = { status: "suresi_doldu", label: "⌛ Süresi Doldu", color: "#EF4444" };
+          } else if (daysSinceSent > 1) {
+            map[req.contract_id] = { status: "bekleniyor", label: `⏳ ${daysSinceSent}g bekleniyor`, color: "#F59E0B" };
+          } else {
+            map[req.contract_id] = { status: "gonderildi", label: "📧 Gönderildi", color: "#3B82F6" };
+          }
+        }
+        setSignatureMap(map);
+      });
   }, [user]);
 
   const displayContracts = contracts.length > 0 ? contracts : (user ? [] : MOCK_CONTRACTS);
@@ -71,6 +95,7 @@ export default function DesktopContractsPage() {
   return (
     <ContractList
       contracts={displayContracts}
+      signatureMap={signatureMap}
       onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
       onAdd={() => setView("add")}
     />
