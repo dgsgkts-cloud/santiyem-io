@@ -192,6 +192,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
   const [pdfSig, setPdfSig] = useState<PDFSignatureInfo>(() => {
     try { return JSON.parse(localStorage.getItem("muhendisai_pdf_sig") || "{}"); } catch { return {}; }
   });
+  const [pdfIncludeHeader, setPdfIncludeHeader] = useState(true);
+  const [pdfIncludeSignature, setPdfIncludeSignature] = useState(true);
+  const [pdfIncludeWarning, setPdfIncludeWarning] = useState(true);
+  const [pdfProgress, setPdfProgress] = useState<number | null>(null);
 
   // Payment reminder modal
   const [reminderModal, setReminderModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number } | null>(null);
