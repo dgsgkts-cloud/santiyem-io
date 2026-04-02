@@ -12,6 +12,50 @@ const PricingPanel = () => {
   const [showEnterpriseForm, setShowEnterpriseForm] = useState(false);
   const [formData, setFormData] = useState({ company: "", name: "", email: "", phone: "", teamSize: "", message: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useUser();
+
+  const handlePurchase = useCallback(async (planKey: string) => {
+    if (!user) {
+      toast.error("Lütfen önce giriş yapın");
+      return;
+    }
+    if (planKey === "enterprise") {
+      setShowEnterpriseForm(true);
+      return;
+    }
+    setLoadingPlan(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Ödeme başlatılamadı");
+        return;
+      }
+      // Open iyzico checkout form
+      const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
+      if (checkoutDiv) {
+        checkoutDiv.innerHTML = data.checkoutFormContent;
+        checkoutDiv.style.display = "flex";
+        const scripts = checkoutDiv.querySelectorAll("script");
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ödeme başlatılırken bir hata oluştu");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }, [user, yearly]);
 
   const plans = [
     {
