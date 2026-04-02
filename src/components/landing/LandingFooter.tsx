@@ -60,7 +60,7 @@ const LandingFooter = () => (
       <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.</p>
     </div>
     <div className="text-center px-6 py-3 border-t" style={{ borderColor: "#1E2732", color: "#334155", fontSize: 10 }}>
-      © 2025 Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001
+      © 2025 Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001 | ☎ +90 (542) 781 81 81
     </div>
   </footer>
 );

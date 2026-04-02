@@ -105,6 +105,7 @@ const Iletisim = () => {
                 <Phone className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#FF6B2B" }} />
                 <div>
                   <p>+90 (533) 377 11 56</p>
+                  <p>+90 (542) 781 81 81 <span className="text-xs" style={{ color: "#64748B" }}>(WhatsApp)</span></p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
