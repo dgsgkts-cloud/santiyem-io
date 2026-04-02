@@ -48,7 +48,7 @@ const PricingPanel = () => {
       badge: "EN POPÜLER",
       btnText: "14 Gün Ücretsiz Dene",
       btnStyle: "primary" as const,
-      btnSub: "Kredi kartı gerekmez",
+      
       color: "#FF6B2B",
       features: [
         "1 kullanıcı",
@@ -236,7 +236,7 @@ const PricingPanel = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Şantiyeniz İçin Doğru Plan</h1>
-        <p className="text-muted-foreground">İlk 14 gün ücretsiz. Kredi kartı gerekmez.</p>
+        <p className="text-muted-foreground">İlk 14 gün ücretsiz.</p>
       </div>
 
       {/* Toggle */}
@@ -301,9 +301,6 @@ const PricingPanel = () => {
                 >
                   {plan.btnText}
                 </Button>
-                {"btnSub" in plan && plan.btnSub && (
-                  <p className="text-center text-[10px] text-muted-foreground">{plan.btnSub}</p>
-                )}
               </div>
             </div>
           );

@@ -412,7 +412,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 style={{ backgroundColor: "#FF6B2B" }}>
                 🚀 Planını Yükselt
               </button>
-              <p className="text-center text-[11px]" style={{ color: "#64748B" }}>14 gün ücretsiz dene, kredi kartı gerekmez</p>
+              <p className="text-center text-[11px]" style={{ color: "#64748B" }}>14 gün ücretsiz dene</p>
             </>
           )}
           {plan === "pro" && (

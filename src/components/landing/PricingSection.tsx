@@ -14,7 +14,7 @@ const PLANS = [
     name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: true,
     features: ["1 kullanıcı · Sınırsız proje", "Sınırsız hakediş + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
-    ctaSub: "Kredi kartı gerekmez",
+    
   },
   {
     name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: false,
@@ -38,7 +38,7 @@ const PricingSection = () => {
         <div className="text-center mb-10">
           <span className="text-xs font-semibold uppercase tracking-widest mb-3 block" style={{ color: "#FF6B2B" }}>FİYATLANDIRMA</span>
           <h2 className="text-3xl md:text-[40px] font-bold text-white mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyeniz İçin Doğru Plan</h2>
-          <p style={{ color: "#94A3B8" }}>İlk 14 gün ücretsiz. Kredi kartı gerekmez.</p>
+          <p style={{ color: "#94A3B8" }}>İlk 14 gün ücretsiz.</p>
         </div>
 
         {/* Toggle */}
@@ -88,9 +88,6 @@ const PricingSection = () => {
                 <Link to="/register" className="block text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90" style={p.ctaStyle}>
                   {p.cta}
                 </Link>
-                {"ctaSub" in p && p.ctaSub && (
-                  <p className="text-center text-[10px] mt-2" style={{ color: "#64748B" }}>{p.ctaSub}</p>
-                )}
               </div>
             );
           })}
