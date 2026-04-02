@@ -225,16 +225,16 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileImport} />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
             className="text-[10px] font-medium flex items-center gap-1"
             style={{ color: "#22C55E" }}
-            title="CSV'den içe aktar"
+            title="CSV veya Excel dosyasından içe aktar"
           >
             <Upload className="w-3 h-3" />
-            {importing ? "Aktarılıyor..." : "CSV Aktar"}
+            {importing ? "Aktarılıyor..." : "CSV/Excel Aktar"}
           </button>
           <button onClick={() => setShowForm(!showForm)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
             {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
