@@ -374,6 +374,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          payment_due_reminder: boolean
+          payment_overdue_reminder: boolean
+          updated_at: string
+          user_id: string
+          weekly_summary: boolean
+          whatsapp_enabled: boolean
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_due_reminder?: boolean
+          payment_overdue_reminder?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_summary?: boolean
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_due_reminder?: boolean
+          payment_overdue_reminder?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_summary?: boolean
+          whatsapp_enabled?: boolean
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       office_invitations: {
         Row: {
           created_at: string
