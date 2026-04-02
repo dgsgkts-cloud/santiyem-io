@@ -34,6 +34,7 @@ export const RecoveryEmail = ({
           <Text style={logoText}>
             <span style={{ color: '#FF6B2B', fontWeight: 800 }}>Şantiyem</span>
           </Text>
+          <Text style={logoSubtext}>Şantiyenizi Tek Panelden Yönetin</Text>
         </Section>
 
         <Section style={contentSection}>
