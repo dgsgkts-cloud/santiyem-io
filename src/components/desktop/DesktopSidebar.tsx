@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessRender, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
+import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
-  Home, MessageSquare, FolderOpen, Receipt,
-  FileSearch, Camera, Zap, Calculator,
-  FileText, BookOpen, Lightbulb, ClipboardList, BarChart3,
-  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock, FileSignature
+  LayoutDashboard, MessageSquare, FolderKanban, Receipt,
+  BookOpen, TrendingUp, Calculator,
+  Bell, Crown, FileSignature,
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,32 +21,31 @@ const NAV_SECTIONS = [
   {
     label: "ANA",
     items: [
-      { id: "dashboard" as Tab, label: "Dashboard", icon: Home },
+      { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
       { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
     ],
   },
   {
     label: "PROJELER",
     items: [
-      { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderOpen },
+      { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderKanban },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
       { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
-      { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: BarChart3 },
-      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: ClipboardList },
+      { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: TrendingUp },
+      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
     ],
   },
   {
     label: "ARAÇLAR",
     items: [
-      { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
-      { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
+      { id: "calc" as Tab, label: "Hesap Araçları", icon: Calculator },
     ],
   },
   {
     label: "İÇERİK",
     items: [
-      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
-      { id: "pricing" as Tab, label: "Planlar", icon: Gem },
+      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
+      { id: "pricing" as Tab, label: "Planlar", icon: Crown },
     ],
   },
 ];
@@ -139,7 +138,6 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
-                  (item.id === "render" && !canAccessRender(plan)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
                 const handleClick = () => {
@@ -255,27 +253,28 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               </TooltipContent>
             </Tooltip>
           ) : (
-            <button
-              onClick={() => onTabChange("settings")}
-              className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 40 }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#161C23"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-            >
+            <div className="flex items-center gap-2.5 px-2 rounded-lg" style={{ height: 44 }}>
               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
                 <span className="text-white text-[11px] font-bold">{initials}</span>
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-[12px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
-                <p className="text-[10px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
+                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
               </div>
-              <Settings className="w-3.5 h-3.5 shrink-0" style={{ color: "#475569" }} />
-            </button>
+              <button
+                onClick={() => onTabChange("settings")}
+                className="shrink-0 p-1 rounded transition-colors duration-150"
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1E2732"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                <Settings className="w-3.5 h-3.5" style={{ color: "#475569" }} />
+              </button>
+            </div>
           )}
         </div>
 
         {/* Logout */}
-        <div className="px-1 pb-1">
+        <div className="px-1 pb-3">
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -297,45 +296,12 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             <button
               onClick={user ? signOut : () => navigate("/login")}
               className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 32, color: "#64748B" }}
+              style={{ height: 28, color: "#64748B" }}
               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
             >
-              <LogOut className="w-4 h-4" />
-              <span className="text-[13px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>
-            </button>
-          )}
-        </div>
-
-        {/* Plans button */}
-        <div className="px-1 pb-3">
-          {collapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onTabChange("pricing")}
-                  className="w-full flex items-center justify-center rounded-lg transition-all duration-150"
-                  style={{ height: 32, border: "1px solid #1E2732", color: "#64748B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
-                >
-                  <Gem className="w-3.5 h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #2A3441" }}>
-                Planlar
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={() => onTabChange("pricing")}
-              className="w-full flex items-center justify-center gap-1.5 rounded-lg transition-all duration-150"
-              style={{ height: 32, border: "1px solid #1E2732", color: "#64748B" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
-            >
-              <Gem className="w-3.5 h-3.5" />
-              <span className="text-[12px] font-medium">Planlar</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="text-[12px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>
             </button>
           )}
         </div>

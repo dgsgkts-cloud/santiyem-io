@@ -141,32 +141,40 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     .slice(0, 5);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
       {/* Welcome */}
-      <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", borderLeft: "3px solid #FF6B2B" }}>
-        <div className="flex items-center justify-between mb-3 lg:mb-4">
-          <h2 className="text-base lg:text-xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
-            ☀️ Günaydın, {name}
-          </h2>
-          <span className="text-[11px] lg:text-[13px] hidden sm:block" style={{ color: "#64748B" }}>{formatDate(new Date())}</span>
+      <div className="rounded-xl p-5 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", borderLeft: "3px solid #FF6B2B" }}>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+              Günaydın, {name} 👋
+            </h2>
+            <p className="text-[12px]" style={{ color: "#64748B" }}>{formatDate(new Date())} — Bugün şantiyende ne var?</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-4">
+            <MiniStat label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+            <MiniStat label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+            <MiniStat label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+            <MiniStat label="Geciken" value={remindersLocked ? "🔒" : String(delayedReminders)} />
+          </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MiniStat emoji="📌" label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
-          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
-          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
-          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={remindersLocked ? "🔒" : String(delayedReminders)} />
+        <div className="grid grid-cols-2 gap-3 sm:hidden mt-3">
+          <MiniStat label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+          <MiniStat label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+          <MiniStat label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+          <MiniStat label="Geciken" value={remindersLocked ? "🔒" : String(delayedReminders)} />
         </div>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.label}
-              className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+              className="rounded-xl transition-all duration-150 relative overflow-hidden"
+              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", padding: "20px 24px" }}
             >
               {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
@@ -187,9 +195,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* Financial Summary Widget */}
-      <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
         {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
             <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Finansal Özet — Bu Ay</h3>
@@ -198,20 +206,23 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             Detay <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Ciro</p>
-            <p className="text-lg lg:text-xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthRevenue)}</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>CİRO</p>
+            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthRevenue)}</p>
+            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
           </div>
-          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Gider</p>
-            <p className="text-lg lg:text-xl font-bold" style={{ color: "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthExpense)}</p>
+          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>GİDER</p>
+            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthExpense)}</p>
+            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
           </div>
-          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Net Kar</p>
-            <p className="text-lg lg:text-xl font-bold" style={{ color: monthRevenue - monthExpense >= 0 ? "#22C55E" : "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>
+          <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>NET KAR</p>
+            <p className="text-xl lg:text-2xl font-bold" style={{ color: "#FF6B2B", fontFamily: "'Space Grotesk', sans-serif" }}>
               {formatCurrency(monthRevenue - monthExpense)}
             </p>
+            <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>↑ geçen aya göre</p>
           </div>
         </div>
         {cashWarning && (
@@ -227,7 +238,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-4">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
           {/* Projects */}
@@ -403,7 +414,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               ))}
             </div>
             <button onClick={() => onTabChange("chat")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium mt-2" style={{ color: "#FF6B2B" }}>
-              Tüm Sohbetler <ChevronRight className="w-3 h-3" />
+              AI Asistanı Aç <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
@@ -510,13 +521,10 @@ const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void
   </div>
 );
 
-const MiniStat = ({ emoji, label, value }: { emoji: string; label: string; value: string }) => (
-  <div className="flex items-center gap-2">
-    <span className="text-base lg:text-lg">{emoji}</span>
-    <div className="min-w-0">
-      <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
-      <p className="text-[12px] lg:text-[14px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{value}</p>
-    </div>
+const MiniStat = ({ label, value }: { label: string; value: string }) => (
+  <div className="min-w-0">
+    <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
+    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
   </div>
 );
 
