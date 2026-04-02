@@ -1,0 +1,1 @@
+UPDATE contracts SET start_date = '2025-01-15', end_date = '2026-06-15' WHERE name = 'Akdeniz Villa Sözleşmesi' AND start_date IS NULL;
