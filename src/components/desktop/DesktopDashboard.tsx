@@ -59,6 +59,19 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const profitLocked = !canAccessProfitability(plan, role);
 
   // Fetch hakedis totals + this month revenue + overdue tracking
+  // Build 6 month keys helper
+  const monthKeys = useMemo(() => {
+    const keys: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return keys;
+  }, []);
+
+  const MONTH_LABELS = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -89,8 +102,31 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         });
         setOverdueCount(overdueItems.length);
         setOverdueTotal(overdueItems.reduce((s, h) => s + Number(h.net), 0));
+
+        // 6-month revenue map
+        const revenueByMonth: Record<string, number> = {};
+        monthKeys.forEach(k => { revenueByMonth[k] = 0; });
+        data.filter(h => h.status === "Ödendi" && h.payment_date).forEach(h => {
+          const key = (h.payment_date as string).slice(0, 7);
+          if (revenueByMonth[key] !== undefined) revenueByMonth[key] += Number(h.net);
+        });
+
+        // Fetch 6 months of expenses for chart
+        const sixMonthsAgo = `${monthKeys[0]}-01`;
+        supabase.from("project_expenses").select("amount,expense_date").gte("expense_date", sixMonthsAgo).then(({ data: expData }) => {
+          const expenseByMonth: Record<string, number> = {};
+          monthKeys.forEach(k => { expenseByMonth[k] = 0; });
+          (expData || []).forEach(e => {
+            const key = (e.expense_date as string).slice(0, 7);
+            if (expenseByMonth[key] !== undefined) expenseByMonth[key] += Number(e.amount);
+          });
+          setChartData(monthKeys.map(k => {
+            const monthIdx = parseInt(k.split("-")[1]) - 1;
+            return { month: MONTH_LABELS[monthIdx], ciro: revenueByMonth[k], gider: expenseByMonth[k] };
+          }));
+        });
       });
-  }, [user]);
+  }, [user, monthKeys]);
 
   // Fetch this month expenses
   useEffect(() => {
