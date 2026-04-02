@@ -15,6 +15,7 @@ import DesktopDashboard from "@/components/desktop/DesktopDashboard";
 import DesktopChatLayout from "@/components/desktop/DesktopChatLayout";
 import DesktopProjectsPage from "@/components/desktop/DesktopProjectsPage";
 import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
+import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary";
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -55,6 +56,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
+  { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
@@ -73,6 +75,7 @@ const TAB_TITLES: Record<string, string> = {
   pricing: "Planlar",
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
+  "site-diary": "Şantiye Günlüğü",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
@@ -216,6 +219,8 @@ const Index = () => {
                   <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
                 ) : activeTab === "hakedis" ? (
                   <DesktopHakedisPage />
+                ) : activeTab === "site-diary" ? (
+                  <SiteDiaryPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (

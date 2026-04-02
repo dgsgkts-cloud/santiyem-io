@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import {
   Home, MessageSquare, FolderOpen, Receipt,
   FileSearch, Camera, Zap, Calculator,
-  FileText, BookOpen, Lightbulb,
+  FileText, BookOpen, Lightbulb, ClipboardList,
   Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -30,6 +30,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderOpen },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
+      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: ClipboardList },
     ],
   },
   {
@@ -133,6 +134,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isLocked =
                   (item.id === "projects" && !canAccessProjects(plan, role)) ||
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
+                  (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "render" && !canAccessRender(plan)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 

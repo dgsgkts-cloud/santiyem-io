@@ -682,6 +682,112 @@ export type Database = {
         }
         Relationships: []
       }
+      site_diary_entries: {
+        Row: {
+          created_at: string
+          crews: Json
+          entry_date: string
+          general_note: string | null
+          id: string
+          machines: Json
+          materials: Json
+          project_id: string
+          special_events: Json
+          status: string
+          updated_at: string
+          user_id: string
+          weather_icon: string
+          weather_temp: number | null
+          work_done: string | null
+          work_status: string
+          work_stopped_reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          crews?: Json
+          entry_date?: string
+          general_note?: string | null
+          id?: string
+          machines?: Json
+          materials?: Json
+          project_id: string
+          special_events?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+          weather_icon?: string
+          weather_temp?: number | null
+          work_done?: string | null
+          work_status?: string
+          work_stopped_reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          crews?: Json
+          entry_date?: string
+          general_note?: string | null
+          id?: string
+          machines?: Json
+          materials?: Json
+          project_id?: string
+          special_events?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+          weather_icon?: string
+          weather_temp?: number | null
+          work_done?: string | null
+          work_status?: string
+          work_stopped_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_diary_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_diary_photos: {
+        Row: {
+          created_at: string
+          description: string | null
+          diary_entry_id: string
+          id: string
+          photo_url: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          diary_entry_id: string
+          id?: string
+          photo_url: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          diary_entry_id?: string
+          id?: string
+          photo_url?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_diary_photos_diary_entry_id_fkey"
+            columns: ["diary_entry_id"]
+            isOneToOne: false
+            referencedRelation: "site_diary_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
