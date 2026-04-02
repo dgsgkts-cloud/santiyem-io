@@ -59,9 +59,14 @@ export function useContracts() {
 
   const addContract = async (input: ContractInput) => {
     if (!user) return null;
+    const payload: Record<string, any> = { ...input, user_id: user.id };
+    // Remove empty strings for nullable columns
+    for (const key of ["project_id", "start_date", "end_date", "file_url", "file_name", "notes"]) {
+      if (payload[key] === "") payload[key] = null;
+    }
     const { data, error } = await (supabase as any)
       .from("contracts")
-      .insert({ ...input, user_id: user.id })
+      .insert(payload)
       .select()
       .single();
     if (error) { toast.error("Sözleşme eklenemedi."); return null; }
