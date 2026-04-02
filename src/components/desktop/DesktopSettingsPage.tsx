@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser, PlanType } from "@/contexts/UserContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
 import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera } from "lucide-react";
 import { toast } from "sonner";
