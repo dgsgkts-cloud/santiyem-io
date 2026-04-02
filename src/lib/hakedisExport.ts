@@ -435,39 +435,310 @@ export function exportHakedisPDF(
   doc.save(fileName);
 }
 
-export function exportHakedisExcel(hakedisler: ProjectHakedis[], projectName: string) {
+export function exportHakedisExcel(
+  hakedisler: ProjectHakedis[],
+  projectName: string,
+  workItems?: HakedisWorkItem[],
+  clientName?: string,
+) {
   const cp = getCompanyProfile();
-  const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);
-  const totalKdv = hakedisler.reduce((s, h) => s + h.kdv, 0);
-  const totalNet = hakedisler.reduce((s, h) => s + h.net, 0);
+  const wb = XLSX.utils.book_new();
+  const companyName = cp.companyName || "Göktaş Global Mühendislik";
+  const dateStr = new Date().toLocaleDateString("tr-TR");
+  const hakedisNo = `HKD-${new Date().getFullYear()}-${String(hakedisler.length).padStart(3, "0")}`;
+  const donemStr = hakedisler.length > 0 ? `${hakedisler[0].period} — ${hakedisler[hakedisler.length - 1].period}` : "—";
 
-  const data = [
-    [`Hakediş Raporu — ${cp.companyName || "Göktaş Global Mühendislik"}`],
-    [`Proje: ${projectName}`],
-    [`Tarih: ${new Date().toLocaleDateString("tr-TR")}`],
-    [],
-    ["No", "Dönem", "Tutar (₺)", "KDV (₺)", "Net (₺)", "Durum", "Ödeme Tarihi"],
-    ...hakedisler.map((h, i) => [
-      i + 1,
-      h.period,
+  // Color helpers
+  const headerFill = { fgColor: { rgb: "1F3864" } };
+  const headerFont = { color: { rgb: "FFFFFF" }, bold: true, sz: 11 };
+  const boldStyle = { font: { bold: true } };
+  const rightAlign = { alignment: { horizontal: "right" as const } };
+  const centerAlign = { alignment: { horizontal: "center" as const } };
+  const currencyFmt = '#,##0.00 "₺"';
+  const pctFmt = "0.0%";
+  const altRowFill = { fgColor: { rgb: "EBF3FB" } };
+  const orangeFill = { fgColor: { rgb: "FF6B2B" } };
+  const greenFill = { fgColor: { rgb: "C6EFCE" } };
+  const yellowFill = { fgColor: { rgb: "FFEB9C" } };
+  const redFill = { fgColor: { rgb: "FFC7CE" } };
+
+  // ─── SEKME 1: HAKEDİŞ İCMAL ───
+  const items = workItems || [];
+  const s1Data: any[][] = [];
+
+  // Header rows
+  s1Data.push(["HAKEDİŞ İCMAL FORMU"]);
+  s1Data.push([companyName]);
+  s1Data.push([`Proje: ${projectName}`, "", `İşveren: ${clientName || "—"}`]);
+  s1Data.push([`Hakediş No: ${hakedisNo}`, "", `Tarih: ${dateStr}`]);
+  s1Data.push([`Dönem: ${donemStr}`]);
+  s1Data.push([]); // blank row
+
+  // Table header row (row index 6 = Excel row 7)
+  s1Data.push(["Poz No", "İş Kalemi", "Birim", "Miktar", "Birim Fiyat (₺)", "Tutar (₺)"]);
+
+  // Data rows
+  if (items.length > 0) {
+    items.forEach((w, i) => {
+      const rowNum = 8 + i; // Excel 1-indexed
+      s1Data.push([
+        i + 1,
+        w.description,
+        w.unit,
+        w.quantity,
+        w.unit_price,
+        { f: `D${rowNum}*E${rowNum}` },
+      ]);
+    });
+  } else {
+    // If no work items, show hakedis lines as items
+    hakedisler.forEach((h, i) => {
+      s1Data.push([i + 1, h.period, "adet", 1, h.amount, h.amount]);
+    });
+  }
+
+  const dataCount = items.length > 0 ? items.length : hakedisler.length;
+  const firstDataRow = 8;
+  const lastDataRow = firstDataRow + dataCount - 1;
+  const sumRow = lastDataRow + 1;
+  const kdvRow = sumRow + 1;
+  const brutRow = kdvRow + 1;
+  const stopajRow = brutRow + 1;
+  const netRow = stopajRow + 1;
+
+  s1Data.push(["", "", "", "", "Ara Toplam", { f: `SUM(F${firstDataRow}:F${lastDataRow})` }]);
+  s1Data.push(["", "", "", "", "KDV (%20)", { f: `F${sumRow}*0.2` }]);
+  s1Data.push(["", "", "", "", "Brüt Toplam", { f: `F${sumRow}+F${kdvRow}` }]);
+  s1Data.push(["", "", "", "", "Stopaj (%3)", { f: `F${brutRow}*0.03` }]);
+  s1Data.push(["", "", "", "", "Net Ödenecek", { f: `F${brutRow}-F${stopajRow}` }]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(s1Data);
+
+  // Merges
+  ws1["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // A1:F1
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // A2:F2
+  ];
+
+  // Column widths
+  ws1["!cols"] = [
+    { wch: 8 }, { wch: 40 }, { wch: 10 }, { wch: 12 }, { wch: 18 }, { wch: 18 },
+  ];
+
+  // Style header cells
+  const applyStyle = (ws: any, ref: string, style: any) => {
+    if (!ws[ref]) ws[ref] = { v: "", t: "s" };
+    ws[ref].s = { ...ws[ref].s, ...style };
+  };
+
+  // Title style
+  applyStyle(ws1, "A1", { font: { bold: true, sz: 14 }, alignment: { horizontal: "center" } });
+  applyStyle(ws1, "A2", { font: { bold: true, sz: 11 }, alignment: { horizontal: "center" } });
+
+  // Table header row (row 7 = index 6)
+  ["A", "B", "C", "D", "E", "F"].forEach(col => {
+    const ref = `${col}7`;
+    applyStyle(ws1, ref, { font: headerFont, fill: headerFill, alignment: { horizontal: "center" } });
+  });
+
+  // Alternating row colors + number format
+  for (let i = 0; i < dataCount; i++) {
+    const row = firstDataRow + i;
+    const fill = i % 2 === 1 ? { fill: { patternType: "solid", ...altRowFill } } : {};
+    ["A", "B", "C", "D", "E", "F"].forEach(col => {
+      const ref = `${col}${row}`;
+      if (ws1[ref]) {
+        if (col === "D" || col === "E" || col === "F") {
+          ws1[ref].z = currencyFmt;
+          ws1[ref].s = { ...fill, alignment: { horizontal: "right" } };
+        } else if (col === "A") {
+          ws1[ref].s = { ...fill, alignment: { horizontal: "center" } };
+        } else {
+          ws1[ref].s = fill;
+        }
+      }
+    });
+  }
+
+  // Summary rows bold + currency format
+  [sumRow, kdvRow, brutRow, stopajRow, netRow].forEach(row => {
+    const eRef = `E${row}`;
+    const fRef = `F${row}`;
+    applyStyle(ws1, eRef, { font: { bold: true }, alignment: { horizontal: "right" } });
+    if (ws1[fRef]) {
+      ws1[fRef].z = currencyFmt;
+      ws1[fRef].s = { font: { bold: true }, alignment: { horizontal: "right" } };
+    }
+  });
+  // Net row orange
+  applyStyle(ws1, `E${netRow}`, { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { patternType: "solid", ...orangeFill }, alignment: { horizontal: "right" } });
+  applyStyle(ws1, `F${netRow}`, { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { patternType: "solid", ...orangeFill }, alignment: { horizontal: "right" } });
+
+  // Print settings
+  ws1["!print"] = { area: `A1:F${netRow}`, orientation: "landscape" };
+
+  XLSX.utils.book_append_sheet(wb, ws1, "Hakediş İcmal");
+
+  // ─── SEKME 2: KALEMLERİ DETAY ───
+  const s2Data: any[][] = [];
+  s2Data.push(["İŞ KALEMLERİ DETAY"]);
+  s2Data.push([]);
+  s2Data.push([
+    "Poz No", "İş Kalemi", "Birim", "Sözleşme Miktarı",
+    "Bu Hakediş Miktarı", "Önceki Miktar", "Birim Fiyat (₺)",
+    "Bu Hakediş Tutarı (₺)", "Önceki Toplam (₺)", "Bugüne Kadar Toplam (₺)",
+    "Kalan Miktar", "Kullanım %",
+  ]);
+
+  if (items.length > 0) {
+    items.forEach((w, i) => {
+      const row = 4 + i; // Excel row
+      const contractQty = w.quantity * 1.2; // estimate contract as 120% of current
+      s2Data.push([
+        i + 1,
+        w.description,
+        w.unit,
+        contractQty,
+        w.quantity,
+        0,
+        w.unit_price,
+        { f: `E${row}*G${row}` },
+        0,
+        { f: `H${row}+I${row}` },
+        { f: `D${row}-E${row}-F${row}` },
+        { f: `IF(D${row}>0,(E${row}+F${row})/D${row},0)` },
+      ]);
+    });
+  } else {
+    hakedisler.forEach((h, i) => {
+      const row = 4 + i;
+      s2Data.push([
+        i + 1, h.period, "adet", 1, 1, 0, h.amount,
+        h.amount, 0, h.amount, 0, 1,
+      ]);
+    });
+  }
+
+  const ws2 = XLSX.utils.aoa_to_sheet(s2Data);
+  ws2["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }];
+  ws2["!cols"] = [
+    { wch: 8 }, { wch: 35 }, { wch: 10 }, { wch: 16 },
+    { wch: 18 }, { wch: 14 }, { wch: 16 },
+    { wch: 18 }, { wch: 16 }, { wch: 20 },
+    { wch: 14 }, { wch: 12 },
+  ];
+
+  applyStyle(ws2, "A1", { font: { bold: true, sz: 14 } });
+
+  // Header row styles
+  ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].forEach(col => {
+    applyStyle(ws2, `${col}3`, { font: headerFont, fill: headerFill, alignment: { horizontal: "center" } });
+  });
+
+  // Format percentage and currency columns
+  const detailCount = items.length > 0 ? items.length : hakedisler.length;
+  for (let i = 0; i < detailCount; i++) {
+    const row = 4 + i;
+    // Currency columns
+    ["G", "H", "I", "J"].forEach(col => {
+      const ref = `${col}${row}`;
+      if (ws2[ref]) ws2[ref].z = currencyFmt;
+    });
+    // Percentage column
+    const pctRef = `L${row}`;
+    if (ws2[pctRef]) ws2[pctRef].z = pctFmt;
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws2, "Kalemleri Detay");
+
+  // ─── SEKME 3: FİNANSAL ÖZET ───
+  const s3Data: any[][] = [];
+  s3Data.push(["FİNANSAL ÖZET"]);
+  s3Data.push([]);
+  s3Data.push([
+    "Hakediş No", "Tarih", "KDV Hariç (₺)", "KDV (₺)",
+    "Brüt (₺)", "Stopaj (₺)", "Net (₺)", "Durum", "Ödeme Tarihi",
+  ]);
+
+  hakedisler.forEach((h, i) => {
+    const brut = h.amount + h.kdv;
+    const stopaj = Math.round(brut * 0.03 * 100) / 100;
+    const net = brut - stopaj;
+    s3Data.push([
+      `#${i + 1}`,
+      new Date(h.created_at).toLocaleDateString("tr-TR"),
       h.amount,
       h.kdv,
-      h.net,
+      brut,
+      stopaj,
+      net,
       h.status,
       h.payment_date ? new Date(h.payment_date).toLocaleDateString("tr-TR") : "—",
-    ]),
-    [],
-    ["", "TOPLAM", totalAmount, totalKdv, totalNet, "", ""],
+    ]);
+  });
+
+  // Total row
+  const f3First = 4;
+  const f3Last = f3First + hakedisler.length - 1;
+  const f3Total = f3Last + 1;
+  s3Data.push([
+    "TOPLAM", "",
+    { f: `SUM(C${f3First}:C${f3Last})` },
+    { f: `SUM(D${f3First}:D${f3Last})` },
+    { f: `SUM(E${f3First}:E${f3Last})` },
+    { f: `SUM(F${f3First}:F${f3Last})` },
+    { f: `SUM(G${f3First}:G${f3Last})` },
+    "", "",
+  ]);
+
+  const ws3 = XLSX.utils.aoa_to_sheet(s3Data);
+  ws3["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+  ws3["!cols"] = [
+    { wch: 12 }, { wch: 14 }, { wch: 16 }, { wch: 14 },
+    { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 14 },
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws["!cols"] = [
-    { wch: 5 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 14 }, { wch: 16 },
-  ];
+  applyStyle(ws3, "A1", { font: { bold: true, sz: 14 } });
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Hakediş");
-  XLSX.writeFile(wb, `hakedis-${projectName.replace(/\s+/g, "-").toLowerCase()}.xlsx`);
+  // Header row
+  ["A", "B", "C", "D", "E", "F", "G", "H", "I"].forEach(col => {
+    applyStyle(ws3, `${col}3`, { font: headerFont, fill: headerFill, alignment: { horizontal: "center" } });
+  });
+
+  // Currency format for data rows
+  for (let i = 0; i < hakedisler.length; i++) {
+    const row = f3First + i;
+    ["C", "D", "E", "F", "G"].forEach(col => {
+      const ref = `${col}${row}`;
+      if (ws3[ref]) ws3[ref].z = currencyFmt;
+    });
+    // Status color
+    const statusRef = `H${row}`;
+    const status = hakedisler[i].status;
+    if (ws3[statusRef]) {
+      if (status === "Ödendi") ws3[statusRef].s = { fill: { patternType: "solid", ...greenFill } };
+      else if (status === "Bekliyor" || status === "Onaylandı") ws3[statusRef].s = { fill: { patternType: "solid", ...yellowFill } };
+      else if (status === "Reddedildi") ws3[statusRef].s = { fill: { patternType: "solid", ...redFill } };
+    }
+  }
+
+  // Total row bold + currency
+  applyStyle(ws3, `A${f3Total}`, { font: { bold: true } });
+  ["C", "D", "E", "F", "G"].forEach(col => {
+    const ref = `${col}${f3Total}`;
+    if (ws3[ref]) {
+      ws3[ref].z = currencyFmt;
+      ws3[ref].s = { font: { bold: true } };
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws3, "Finansal Özet");
+
+  // ─── Save ───
+  const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ]/g, "_").replace(/_+/g, "_");
+  const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.xlsx`;
+  XLSX.writeFile(wb, fileName);
 }
 
 // Export the header function for use in other PDF generators
