@@ -2,12 +2,13 @@ import { useState, useMemo, useCallback } from "react";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis, ProjectHakedis } from "@/hooks/useProjectHakedis";
-import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo, type PDFOptions } from "@/lib/hakedisExport";
+import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo, type PDFOptions, type HakedisWorkItem } from "@/lib/hakedisExport";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import HakedisItemsSection from "./HakedisItemsSection";
 
 const STATUS_OPTIONS = [
   { label: "Taslak", color: "#64748B", emoji: "📝" },
@@ -522,8 +523,14 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                       </p>
                     )}
 
+                    <HakedisItemsSection hakedisId={h.id} />
+
                     <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
-                      <button onClick={() => exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
+                      <button onClick={async () => {
+                        const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
+                        const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
+                        exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
+                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
                       <button onClick={() => { if (confirm("Bu hakediş silinsin mi?")) deleteHakedis(h.id); }} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
@@ -729,10 +736,21 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <div className="flex gap-2">
               <button
                 disabled={pdfProgress !== null}
-                onClick={() => {
+                onClick={async () => {
                   localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
                   setPdfProgress(0);
                   try {
+                    // Fetch all work items for all hakedisler
+                    const allIds = hakedisler.map(h => h.id);
+                    const { data: allItems } = await supabase
+                      .from("hakedis_items")
+                      .select("*")
+                      .in("hakedis_id", allIds)
+                      .order("sort_order", { ascending: true });
+                    const workItems: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
+                      description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                      unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                    }));
                     exportHakedisPDF(
                       hakedisler,
                       project?.name || "Proje",
@@ -744,6 +762,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         onProgress: (pct) => setPdfProgress(pct),
                       },
                       project?.client,
+                      undefined,
+                      undefined,
+                      workItems.length > 0 ? workItems : undefined,
                     );
                     setTimeout(() => {
                       setPdfProgress(null);

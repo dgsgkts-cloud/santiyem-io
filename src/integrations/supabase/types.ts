@@ -243,6 +243,53 @@ export type Database = {
         }
         Relationships: []
       }
+      hakedis_items: {
+        Row: {
+          created_at: string
+          description: string
+          hakedis_id: string
+          id: string
+          quantity: number
+          sort_order: number
+          total_price: number
+          unit: string
+          unit_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          hakedis_id: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          hakedis_id?: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hakedis_items_hakedis_id_fkey"
+            columns: ["hakedis_id"]
+            isOneToOne: false
+            referencedRelation: "project_hakedis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           contact: string

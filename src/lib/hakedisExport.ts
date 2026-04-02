@@ -134,6 +134,14 @@ function addCompanyHeader(doc: jsPDF, docType: string, projectName?: string): nu
   return y;
 }
 
+export interface HakedisWorkItem {
+  description: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
 export function exportHakedisPDF(
   hakedisler: ProjectHakedis[],
   projectName: string,
@@ -141,6 +149,7 @@ export function exportHakedisPDF(
   clientName?: string,
   contractNo?: string,
   contractDate?: string,
+  workItems?: HakedisWorkItem[],
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -261,6 +270,55 @@ export function exportHakedisPDF(
 
   let finalY = (doc as any).lastAutoTable?.finalY || y + 60;
   finalY += 8;
+
+  // ─── Work Items Detail Table ───
+  if (workItems && workItems.length > 0) {
+    doc.setFontSize(11);
+    doc.setTextColor(51, 51, 51);
+    doc.text("İŞ KALEMLERİ DETAY TABLOSU", 15, finalY);
+    finalY += 6;
+
+    const itemsTotal = workItems.reduce((s, w) => s + w.total_price, 0);
+
+    autoTable(doc, {
+      startY: finalY,
+      head: [["#", "İş Kalemi / Açıklama", "Birim", "Miktar", "Birim Fiyat (₺)", "Toplam (₺)"]],
+      body: [
+        ...workItems.map((w, i) => [
+          String(i + 1),
+          w.description,
+          w.unit,
+          fmt(w.quantity),
+          fmt(w.unit_price),
+          fmt(w.total_price),
+        ]),
+        ["", "GENEL TOPLAM", "", "", "", fmt(itemsTotal)],
+      ],
+      styles: { font: robotoBase64 ? "Roboto" : "helvetica", fontSize: 8, cellPadding: 2.5, lineColor: [220, 220, 220], lineWidth: 0.2 },
+      headStyles: { fillColor: [51, 51, 51], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8, halign: "center" },
+      alternateRowStyles: { fillColor: [249, 249, 249] },
+      columnStyles: {
+        0: { cellWidth: 10, halign: "center" },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 18, halign: "center" },
+        3: { halign: "right" },
+        4: { halign: "right" },
+        5: { halign: "right" },
+      },
+      didParseCell: (data) => {
+        if (data.row.index === workItems.length) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.fillColor = [235, 235, 235];
+        }
+      },
+      margin: { left: 15, right: 15 },
+    });
+
+    finalY = (doc as any).lastAutoTable?.finalY || finalY + 40;
+    finalY += 8;
+  }
+
+  progress(65);
 
   // ─── Financial Summary (right-aligned box) ───
   const boxW = 85;
