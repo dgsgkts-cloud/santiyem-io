@@ -471,7 +471,6 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         badge={activities.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(148,163,184,0.1)", color: "#94A3B8" }}>{activities.length}</span> : undefined}
       >
         {activities.length === 0 ? (
-          <
           <p className="text-xs text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
         ) : (
           <div className="space-y-2">
