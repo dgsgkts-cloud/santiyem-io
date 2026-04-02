@@ -7,12 +7,12 @@ import { PaymentLogos } from "@/components/PaymentLogos";
 const PLANS = [
   {
     name: "Başlangıç", monthlyPrice: 0, yearlyPrice: 0, popular: false,
-    features: ["1 kullanıcı · 1 proje", "3 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "PDF çıktı — aylık 3"],
+    features: ["1 kullanıcı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "PDF çıktı — aylık 3"],
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
     name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: false,
-    features: ["1 kullanıcı · 1 proje", "Sınırsız hakediş + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
+    features: ["1 kullanıcı · 1 proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
     
   },

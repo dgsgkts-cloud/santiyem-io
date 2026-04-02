@@ -409,7 +409,7 @@ const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; su
 };
 
 const UPGRADE_CARDS = [
-  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "399₺/ay", features: ["1 proje · Sınırsız hakediş", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
+  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "399₺/ay", features: ["1 proje · 3 hakediş/ay", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
   { plan: "team", emoji: "👥", name: "Ekip", price: "1.499₺/ay", features: ["5 kullanıcı hesabı", "Ekip görevi atama", "Ortak proje takibi", "Öncelikli destek"], cta: "Planı İncele →", highlight: false },
   { plan: "enterprise", emoji: "🏢", name: "Kurumsal", price: "4.999₺/ay", features: ["Sınırsız kullanıcı", "Yetki rolleri", "Öncelikli telefon + WhatsApp desteği", "Özel onboarding"], cta: "Teklif Al →", highlight: false },
 ];
@@ -510,7 +510,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <p className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>Kullanım Limitlerin</p>
             <UsageBar label="AI Soruları" used={usage.aiQuestions.used} max={usage.aiQuestions.max} suffix="bugün" />
             <UsageBar label="Aktif Proje" used={1} max={1} suffix="" />
-            <UsageBar label="Hakediş" used={1} max={3} suffix="bu ay" />
+            <UsageBar label="Hakediş" used={1} max={1} suffix="bu ay" />
             <UsageBar label="PDF Çıktı" used={0} max={3} suffix="bu ay" />
           </div>
         )}

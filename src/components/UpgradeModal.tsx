@@ -29,7 +29,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
           <div className="space-y-2 mb-6">
             {(requiresOffice
               ? ["Ekip görevi atama", "Ortak proje takibi", "Sınırsız hakediş", "AI Proje Analizi", "Öncelikli destek"]
-              : ["Sınırsız AI Asistan", "1 proje · Sınırsız hakediş", "Şantiye günlüğü — sınırsız", "PDF — firma başlığı + imza alanı"]
+              : ["Sınırsız AI Asistan", "1 proje · 3 hakediş/ay", "Şantiye günlüğü — sınırsız", "PDF — firma başlığı + imza alanı"]
             ).map((f, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-white/80">
                 <Check className="w-4 h-4 text-green-500" /> {f}

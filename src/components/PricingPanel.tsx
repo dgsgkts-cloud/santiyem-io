@@ -29,7 +29,7 @@ const PricingPanel = () => {
       features: [
         "1 kullanıcı",
         "1 aktif proje",
-        "3 hakediş/ay",
+        "1 hakediş/ay",
         "Şantiye günlüğü — günde 1 kayıt",
         "Hesap araçları — sınırsız",
         "AI Asistan — günde 3 soru",
@@ -53,7 +53,7 @@ const PricingPanel = () => {
       features: [
         "1 kullanıcı",
 "1 proje",
-        "Sınırsız hakediş",
+        "3 hakediş/ay",
         "Gecikmiş ödeme uyarısı + yasal faiz hesabı",
         "Şantiye günlüğü — sınırsız kayıt",
         "Fotoğraf raporlama — aylık PDF rapor",
@@ -152,8 +152,8 @@ const PricingPanel = () => {
       title: "KULLANICI & PROJE",
       rows: [
         { label: "Kullanıcı sayısı", values: ["1", "1", "5", "Sınırsız"] },
-        { label: "Aktif proje", values: ["1", "Sınırsız", "Sınırsız", "Sınırsız"] },
-        { label: "Hakediş/ay", values: ["3", "Sınırsız", "Sınırsız", "Sınırsız"] },
+        { label: "Aktif proje", values: ["1", "1", "3", "Sınırsız"] },
+        { label: "Hakediş/ay", values: ["1", "3", "Sınırsız", "Sınırsız"] },
       ],
     },
     {
