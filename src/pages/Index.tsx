@@ -58,10 +58,6 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
-  
-  { id: "weather", label: "Hava Durumu", emoji: "🌤️", icon: CloudRain },
-  { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
-  { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
   { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
