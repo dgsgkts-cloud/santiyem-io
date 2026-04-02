@@ -43,7 +43,7 @@ const DemoSection = () => {
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FF5F57" }} />
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FEBC2E" }} />
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#28C840" }} />
-            <span className="ml-3 text-xs" style={{ color: "#475569" }}>MühendisAI — {TABS.find(t => t.id === active)?.label}</span>
+            <span className="ml-3 text-xs" style={{ color: "#475569" }}>Şantiyem — {TABS.find(t => t.id === active)?.label}</span>
           </div>
           <div className="p-6 md:p-8 min-h-[280px] transition-all duration-300">
             {active === "hakedis" && <HakedisDemo />}

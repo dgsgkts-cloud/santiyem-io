@@ -19,7 +19,7 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI doğrulama kodunuz</Preview>
+    <Preview>Şantiyem doğrulama kodunuz</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Kimlik Doğrulama</Heading>

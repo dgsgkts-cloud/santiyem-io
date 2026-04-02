@@ -36,7 +36,7 @@ const FEATURES = [
 ];
 
 const Register = () => {
-  useSEO({ title: "Ücretsiz Kayıt Ol | MühendisAI" });
+  useSEO({ title: "Ücretsiz Kayıt Ol | Şantiyem" });
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: "", email: "", password: "", passwordConfirm: "",
@@ -93,7 +93,7 @@ const Register = () => {
       <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "#0F1419" }}>
         <div className="w-full max-w-md rounded-2xl p-8 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
           <div className="text-5xl mb-4">🎉</div>
-          <h1 className="text-xl font-bold mb-2" style={{ color: "#F1F5F9" }}>MühendisAI'ya Hoş Geldiniz!</h1>
+          <h1 className="text-xl font-bold mb-2" style={{ color: "#F1F5F9" }}>Şantiyem'ya Hoş Geldiniz!</h1>
           <p className="text-sm mb-2" style={{ color: "#64748B" }}>Hesabınız başarıyla oluşturuldu.</p>
           <p className="text-sm mb-6" style={{ color: "#FF6B2B" }}>
             E-posta adresinize doğrulama linki gönderildi. Lütfen e-postanızı kontrol edin.
@@ -113,7 +113,7 @@ const Register = () => {
     <div className="w-full max-w-[400px]">
       <div className="rounded-2xl p-6 lg:p-8" style={{ backgroundColor: isLg ? "#161C23" : "#1A1F2E", border: "1px solid #1E2732" }}>
         <div className="flex flex-col items-center mb-5">
-          <img src={logo} alt="MühendisAI" className="w-12 h-12 mb-3" />
+          <img src={logo} alt="Şantiyem" className="w-12 h-12 mb-3" />
           <h1 className="text-lg font-bold" style={{ color: "#F1F5F9", fontFamily: isLg ? "'Space Grotesk', sans-serif" : undefined }}>
             Ücretsiz Hesap Oluştur
           </h1>

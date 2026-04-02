@@ -95,7 +95,7 @@ export const template = {
     dueDate: '3 Mart 2025',
     daysOverdue: '30',
     interestAmount: '₺4.287,50',
-    detailUrl: 'https://muhendisai.com',
+    detailUrl: 'https://santiyem.io',
   },
 } satisfies TemplateEntry
 

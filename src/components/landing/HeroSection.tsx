@@ -70,7 +70,7 @@ const HeroSection = () => {
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FF5F57" }} />
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FEBC2E" }} />
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#28C840" }} />
-            <span className="ml-3 text-xs" style={{ color: "#475569" }}>muhendisai.com — Dashboard</span>
+            <span className="ml-3 text-xs" style={{ color: "#475569" }}>santiyem.io — Dashboard</span>
           </div>
           <div className="p-6 grid grid-cols-3 gap-4">
             {[

@@ -2,7 +2,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const FAQS = [
-  { q: "ChatGPT'den farkı ne?", a: "ChatGPT genel bir asistan. MühendisAI ise TBDY 2018, İmar Kanunu, TS standartları gibi Türk mühendislik mevzuatına özel eğitilmiş ve hakediş, proje takibi, EKB hesaplama gibi sektöre özel araçlara sahip." },
+  { q: "ChatGPT'den farkı ne?", a: "ChatGPT genel bir asistan. Şantiyem ise TBDY 2018, İmar Kanunu, TS standartları gibi Türk mühendislik mevzuatına özel eğitilmiş ve hakediş, proje takibi, EKB hesaplama gibi sektöre özel araçlara sahip." },
   { q: "Teknik bilgi gerekiyor mu?", a: "Hayır. Kurulum yok, kod yok. E-posta ile kayıt olup 5 dakika içinde kullanmaya başlayabilirsiniz." },
   { q: "Verilerim güvende mi?", a: "Tüm veriler 256-bit SSL şifreleme ile korunur. Verileriniz üçüncü taraflarla paylaşılmaz." },
   { q: "14 günlük deneme bittikten sonra ne olur?", a: "14 günlük deneme süreniz boyunca hiçbir ücret alınmaz. Deneme süresi sonunda üyeliğinizi iptal etmez veya ücretsiz plana geçmezseniz, seçtiğiniz planın ücreti kayıtlı kredi kartınızdan otomatik olarak tahsil edilir." },

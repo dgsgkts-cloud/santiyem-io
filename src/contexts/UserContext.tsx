@@ -120,7 +120,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Load usage from localStorage daily
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    const stored = localStorage.getItem("muhendisai_usage_v2");
+    const stored = localStorage.getItem("santiyem_usage_v2");
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === today) {
@@ -144,7 +144,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Save usage
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem("muhendisai_usage_v2", JSON.stringify({ date: today, usage }));
+    localStorage.setItem("santiyem_usage_v2", JSON.stringify({ date: today, usage }));
   }, [usage]);
 
   const isAdmin = role === "admin";

@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'MühendisAI'
+const SITE_NAME = 'Şantiyem'
 const BRAND_COLOR = '#FF6B2B'
 
 interface SignatureUploadedProps {
@@ -29,7 +29,7 @@ const SignatureUploadedEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>Mühendis<span style={{ color: BRAND_COLOR }}>AI</span></Text>
+          <Text style={logoText}>Şantiyem</Text>
         </Section>
 
         <Heading style={h1}>✅ İmzalı Sözleşme Yüklendi</Heading>

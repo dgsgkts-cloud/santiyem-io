@@ -12,7 +12,7 @@ import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 const LandingPage = () => {
-  useSEO({ title: "MühendisAI — Türk Mühendis, Mimar ve Müteahhitler için Yapay Zeka Platformu", description: "TBDY 2018, İmar Yönetmeliği, TS standartları sorularına anında cevap. Hakediş takibi, proje yönetimi, EKB hesaplama. 14 gün ücretsiz dene." });
+  useSEO({ title: "Şantiyem — Türk Mühendis, Mimar ve Müteahhitler için Yapay Zeka Platformu", description: "TBDY 2018, İmar Yönetmeliği, TS standartları sorularına anında cevap. Hakediş takibi, proje yönetimi, EKB hesaplama. 14 gün ücretsiz dene." });
   return (
     <div className="min-h-screen" style={{ background: "#0F1419" }}>
       <LandingNavbar />

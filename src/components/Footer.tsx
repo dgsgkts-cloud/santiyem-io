@@ -5,7 +5,7 @@ const Footer = () => (
   <footer className="shrink-0 mt-auto" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#0A0E13" }}>
     {/* Desktop: single row 52px */}
     <div className="hidden lg:flex items-center justify-between px-6" style={{ height: 52 }}>
-      <span className="text-xs" style={{ color: "#475569" }}>© 2026 MühendisAI. Tüm hakları saklıdır.</span>
+      <span className="text-xs" style={{ color: "#475569" }}>© 2026 Şantiyem. Tüm hakları saklıdır.</span>
       <div className="flex items-center gap-1 text-xs" style={{ color: "#475569" }}>
         <Link to="/kullanim-sartlari" className="hover:text-[#94A3B8] transition-colors">Kullanım Şartları</Link>
         <span>·</span>
@@ -36,7 +36,7 @@ const Footer = () => (
         <span>·</span>
         <Link to="/iletisim" className="hover:text-[#94A3B8] transition-colors">İletişim</Link>
       </div>
-      <span className="text-xs">© 2026 MühendisAI. Tüm hakları saklıdır.</span>
+      <span className="text-xs">© 2026 Şantiyem. Tüm hakları saklıdır.</span>
     </div>
 
     {/* Mobile: stacked center, smaller */}
@@ -55,7 +55,7 @@ const Footer = () => (
         <span>·</span>
         <Link to="/iletisim" className="hover:text-[#94A3B8] transition-colors">İletişim</Link>
       </div>
-      <span className="text-[11px]">© 2026 MühendisAI. Tüm hakları saklıdır.</span>
+      <span className="text-[11px]">© 2026 Şantiyem. Tüm hakları saklıdır.</span>
     </div>
 
     {/* Payment logos + Company info */}

@@ -109,10 +109,10 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         }}
         onClick={() => onTabChange("dashboard")}
       >
-        <img src={logo} alt="MühendisAI" className="w-8 h-8 shrink-0" />
+        <img src={logo} alt="Şantiyem" className="w-8 h-8 shrink-0" />
         {!collapsed && (
           <span className="whitespace-nowrap text-[16px] font-bold" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>
-            MühendisAI
+            Şantiyem
           </span>
         )}
       </div>

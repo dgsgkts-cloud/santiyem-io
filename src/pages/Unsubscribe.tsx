@@ -41,7 +41,7 @@ export default function Unsubscribe() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#0A0E13" }}>
       <div className="max-w-md w-full rounded-xl p-8 text-center" style={{ backgroundColor: "#111820", border: "1px solid #1E2732" }}>
         <h1 className="text-xl font-bold mb-2" style={{ color: "#F1F5F9" }}>
-          <span style={{ color: "#FF6B2B" }}>Mühendis</span>AI
+          <span style={{ color: "#FF6B2B" }}>Şantiyem</span>
         </h1>
 
         {status === "loading" && (

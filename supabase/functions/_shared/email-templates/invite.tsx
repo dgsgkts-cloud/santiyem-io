@@ -26,12 +26,12 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI'a davet edildiniz</Preview>
+    <Preview>Şantiyem'a davet edildiniz</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Ekibe Davet Edildiniz</Heading>
         <Text style={text}>
-          MühendisAI ekibine davet edildiniz. Daveti kabul edip hesabınızı
+          Şantiyem ekibine davet edildiniz. Daveti kabul edip hesabınızı
           oluşturmak için aşağıdaki butona tıklayın.
         </Text>
         <Button style={button} href={confirmationUrl}>

@@ -506,7 +506,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       {showSendModal && (
         <SendForSignatureModal
           contract={contract}
-          senderName={user?.user_metadata?.full_name || user?.email || "MühendisAI"}
+          senderName={user?.user_metadata?.full_name || user?.email || "Şantiyem"}
           onSend={handleSendForSignature}
           onClose={() => setShowSendModal(false)}
         />

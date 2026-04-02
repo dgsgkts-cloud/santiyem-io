@@ -4,13 +4,13 @@ import LegalPage from "./LegalPage";
 const sections = [
   {
     title: "Genel",
-    content: <p>MühendisAI ("Platform"), Göktaş Global Mühendislik İnşaat İç ve Dış Ticaret Limited Şirketi tarafından işletilmektedir. Platforma erişim sağlayarak aşağıdaki kullanım şartlarını kabul etmiş sayılırsınız.</p>,
+    content: <p>Şantiyem ("Platform"), Göktaş Global Mühendislik İnşaat İç ve Dış Ticaret Limited Şirketi tarafından işletilmektedir. Platforma erişim sağlayarak aşağıdaki kullanım şartlarını kabul etmiş sayılırsınız.</p>,
   },
   {
     title: "Hizmetin Kapsamı",
     content: (
       <>
-        <p>MühendisAI, Türk mimar, mühendis ve müteahhitlere yönelik yapay zeka destekli bir bilgi ve araç platformudur. Platform aşağıdaki hizmetleri sunar:</p>
+        <p>Şantiyem, Türk mimar, mühendis ve müteahhitlere yönelik yapay zeka destekli bir bilgi ve araç platformudur. Platform aşağıdaki hizmetleri sunar:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>Sektöre özel yapay zeka destekli soru-cevap asistanı</li>
           <li>Proje ve belge analizi</li>
@@ -71,5 +71,5 @@ const sections = [
   },
 ];
 
-const KullanimSartlari = () => { useSEO({ title: "Kullanım Şartları | MühendisAI" }); return <LegalPage title="Kullanım Şartları" sections={sections} />; };
+const KullanimSartlari = () => { useSEO({ title: "Kullanım Şartları | Şantiyem" }); return <LegalPage title="Kullanım Şartları" sections={sections} />; };
 export default KullanimSartlari;

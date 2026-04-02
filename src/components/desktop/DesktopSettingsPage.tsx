@@ -389,7 +389,7 @@ const NotificationsTab = () => {
 
       <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
         <p className="text-[11px]" style={{ color: "#22C55E" }}>
-          📧 Gönderen adres: <strong>noreply@muhendisai.com</strong>
+          📧 Gönderen adres: <strong>noreply@santiyem.io</strong>
         </p>
       </div>
     </div>

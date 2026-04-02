@@ -7,7 +7,7 @@ const sections = [
     content: (
       <>
         <p>
-          MühendisAI, Türk mimar, mühendis ve müteahhitlerin günlük iş süreçlerini yapay zeka teknolojisiyle
+          Şantiyem, Türk mimar, mühendis ve müteahhitlerin günlük iş süreçlerini yapay zeka teknolojisiyle
           kolaylaştırmak amacıyla GÖKTAŞ GLOBAL MÜHENDİSLİK İNŞAAT İÇ VE DIŞ TİC. LİM. ŞİRKETİ tarafından
           geliştirilmiştir.
         </p>
@@ -56,5 +56,5 @@ const sections = [
   },
 ];
 
-const Hakkimizda = () => { useSEO({ title: "Hakkımızda | MühendisAI" }); return <LegalPage title="Hakkımızda" sections={sections} />; };
+const Hakkimizda = () => { useSEO({ title: "Hakkımızda | Şantiyem" }); return <LegalPage title="Hakkımızda" sections={sections} />; };
 export default Hakkimizda;

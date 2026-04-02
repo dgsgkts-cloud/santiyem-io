@@ -17,13 +17,13 @@ const sections = [
   },
   {
     title: "KONU",
-    content: <p>İşbu sözleşme, Alıcı'nın MühendisAI platformunda satın aldığı dijital abonelik hizmetine ilişkin tarafların hak ve yükümlülüklerini düzenlemektedir.</p>,
+    content: <p>İşbu sözleşme, Alıcı'nın Şantiyem platformunda satın aldığı dijital abonelik hizmetine ilişkin tarafların hak ve yükümlülüklerini düzenlemektedir.</p>,
   },
   {
     title: "HİZMET BİLGİLERİ",
     content: (
       <>
-        <p><strong>Hizmet Adı:</strong> MühendisAI Dijital Abonelik</p>
+        <p><strong>Hizmet Adı:</strong> Şantiyem Dijital Abonelik</p>
         <p><strong>Hizmet Türü:</strong> Dijital hizmet — çevrimiçi yazılım aboneliği (SaaS)</p>
         <p><strong>Abonelik Dönemi:</strong> Aylık veya Yıllık (Alıcı tarafından seçilir)</p>
         <p><strong>Hizmet Kapsamı:</strong> AI asistan, hesap araçları, fotoğraf analizi, hakediş yönetimi, proje yönetimi, şantiye günlüğü ve diğer platform özellikleri</p>
@@ -83,5 +83,5 @@ const sections = [
   },
 ];
 
-const MesafeliSatisSozlesmesi = () => { useSEO({ title: "Mesafeli Satış Sözleşmesi | MühendisAI" }); return <LegalPage title="Mesafeli Satış Sözleşmesi" sections={sections} />; };
+const MesafeliSatisSozlesmesi = () => { useSEO({ title: "Mesafeli Satış Sözleşmesi | Şantiyem" }); return <LegalPage title="Mesafeli Satış Sözleşmesi" sections={sections} />; };
 export default MesafeliSatisSozlesmesi;

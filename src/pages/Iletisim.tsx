@@ -9,7 +9,7 @@ import { useSEO } from "@/hooks/useSEO";
 const SUBJECTS = ["Teknik Destek", "Abonelik ve Ödeme", "Öneri ve Görüş", "Diğer"];
 
 const Iletisim = () => {
-  useSEO({ title: "İletişim | MühendisAI" });
+  useSEO({ title: "İletişim | Şantiyem" });
   const [form, setForm] = useState({ name: "", email: "", subject: SUBJECTS[0], message: "" });
   const [sending, setSending] = useState(false);
 
@@ -21,7 +21,7 @@ const Iletisim = () => {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "Göktaş Global Mühendislik",
-      "url": "https://muhendisai.com",
+      "url": "https://santiyem.io",
       "email": "info@goktasglobal.com",
       "telephone": "+905333771156",
       "address": {

@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'MühendisAI'
+const SITE_NAME = 'Şantiyem'
 const BRAND_COLOR = '#FF6B2B'
 
 interface SignatureReminderProps {
@@ -27,7 +27,7 @@ const SignatureReminderEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>Mühendis<span style={{ color: BRAND_COLOR }}>AI</span></Text>
+          <Text style={logoText}>Şantiyem</Text>
         </Section>
 
         <Heading style={h1}>Hatırlatma: İmza Bekleniyor</Heading>
@@ -68,7 +68,7 @@ export const template = {
   previewData: {
     recipientName: 'Ahmet Kaya',
     contractName: 'Akdeniz Residence İnşaat Sözleşmesi',
-    uploadUrl: 'https://muhendis-ai.lovable.app/sozlesme-imza/abc123',
+    uploadUrl: 'https://santiyem.lovable.app/sozlesme-imza/abc123',
     sentDate: '02.04.2025',
   },
 } satisfies TemplateEntry

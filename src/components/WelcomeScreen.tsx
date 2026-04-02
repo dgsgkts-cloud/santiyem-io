@@ -15,8 +15,8 @@ const suggestions = [
 const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 animate-fade-in pt-8 sm:pt-0">
-      <img src={logo} alt="MühendisAI Logo" width={80} height={80} className="mb-4 mt-4 sm:mt-0" />
-      <h1 className="text-2xl font-bold text-foreground mb-1">MühendisAI</h1>
+      <img src={logo} alt="Şantiyem Logo" width={80} height={80} className="mb-4 mt-4 sm:mt-0" />
+      <h1 className="text-2xl font-bold text-foreground mb-1">Şantiyem</h1>
       <p className="text-muted-foreground text-sm mb-8 text-center max-w-md">
         Türk mimar, mühendis ve müteahhitler için yapay zeka asistanı
       </p>

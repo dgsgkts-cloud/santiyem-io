@@ -24,12 +24,12 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI giriş bağlantınız</Preview>
+    <Preview>Şantiyem giriş bağlantınız</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Giriş Bağlantınız</Heading>
         <Text style={text}>
-          MühendisAI'a giriş yapmak için aşağıdaki butona tıklayın.
+          Şantiyem'a giriş yapmak için aşağıdaki butona tıklayın.
           Bu bağlantı kısa süre içinde geçerliliğini yitirecektir.
         </Text>
         <Button style={button} href={confirmationUrl}>

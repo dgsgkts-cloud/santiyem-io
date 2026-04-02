@@ -16,7 +16,7 @@ export interface CompanyProfile {
   authorizedTitle: string;
 }
 
-const STORAGE_KEY = "muhendisai_company_profile";
+const STORAGE_KEY = "santiyem_company_profile";
 
 const DEFAULT_PROFILE: CompanyProfile = {
   logoDataUrl: "",
