@@ -78,7 +78,7 @@ const PricingPanel = () => {
       color: "#94A3B8",
       features: [
         "5 kullanıcı hesabı",
-        "Sınırsız proje",
+"3 proje",
         "Profesyonel plandaki her şey",
         "Ekip görevi atama + kişiye özel not",
         "Ortak proje ve hakediş takibi",

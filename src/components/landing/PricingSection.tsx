@@ -18,7 +18,7 @@ const PLANS = [
   },
   {
     name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: false,
-    features: ["5 kullanıcı · Sınırsız proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
+    features: ["5 kullanıcı · 3 proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {

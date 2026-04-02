@@ -409,7 +409,7 @@ const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; su
 };
 
 const UPGRADE_CARDS = [
-  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "399₺/ay", features: ["Sınırsız proje ve hakediş", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
+  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "399₺/ay", features: ["1 proje · Sınırsız hakediş", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
   { plan: "team", emoji: "👥", name: "Ekip", price: "1.499₺/ay", features: ["5 kullanıcı hesabı", "Ekip görevi atama", "Ortak proje takibi", "Öncelikli destek"], cta: "Planı İncele →", highlight: false },
   { plan: "enterprise", emoji: "🏢", name: "Kurumsal", price: "4.999₺/ay", features: ["Sınırsız kullanıcı", "Yetki rolleri", "Öncelikli telefon + WhatsApp desteği", "Özel onboarding"], cta: "Teklif Al →", highlight: false },
 ];
