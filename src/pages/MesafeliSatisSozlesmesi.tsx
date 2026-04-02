@@ -25,12 +25,13 @@ const sections = [
       <>
         <p><strong>Hizmet Adı:</strong> MühendisAI Dijital Abonelik</p>
         <p><strong>Hizmet Türü:</strong> Dijital hizmet — çevrimiçi yazılım aboneliği (SaaS)</p>
-        <p><strong>Abonelik Dönemi:</strong> Aylık (Alıcı tarafından seçilir)</p>
-        <p><strong>Hizmet Kapsamı:</strong> AI asistan, hesap araçları, fotoğraf analizi, AI mimari render, proje yönetimi, hakediş takibi ve diğer platform özellikleri</p>
-        <p className="mt-2"><strong>Bireysel Planlar:</strong></p>
-        <p>Başlangıç: Ücretsiz | Plus: 199 ₺/ay + KDV | Pro: 399 ₺/ay + KDV</p>
-        <p className="mt-1"><strong>Kurumsal Planlar:</strong></p>
-        <p>Ücretsiz: 0 ₺ | Kurumsal Pro: 2.499 ₺/ay + KDV (5 kullanıcı) | Özel Kurumsal: Talebe göre fiyatlandırma</p>
+        <p><strong>Abonelik Dönemi:</strong> Aylık veya Yıllık (Alıcı tarafından seçilir)</p>
+        <p><strong>Hizmet Kapsamı:</strong> AI asistan, hesap araçları, fotoğraf analizi, hakediş yönetimi, proje yönetimi, şantiye günlüğü ve diğer platform özellikleri</p>
+        <p className="mt-2"><strong>Planlar:</strong></p>
+        <p>Başlangıç: Ücretsiz</p>
+        <p>Profesyonel: 399 ₺/ay + KDV (yıllık: 3.828 ₺ + KDV)</p>
+        <p>Ekip: 1.499 ₺/ay + KDV (yıllık: 14.388 ₺ + KDV)</p>
+        <p>Kurumsal: 4.999 ₺/ay + KDV (yıllık: 47.988 ₺ + KDV)</p>
       </>
     ),
   },
