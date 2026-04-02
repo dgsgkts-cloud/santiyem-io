@@ -29,8 +29,8 @@ const FeaturesSection = () => {
       <div ref={ref} className={`max-w-6xl mx-auto transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
         <div className="text-center mb-16">
           <span className="text-xs font-semibold uppercase tracking-widest mb-3 block" style={{ color: "#FF6B2B" }}>ÖZELLİKLER</span>
-          <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>TBDY 2018 ve İmar Mevzuatını Anında Sorgula</h2>
-          <p style={{ color: "#94A3B8" }}>Saatlerce süren idari işleri dakikalara indirin</p>
+          <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyenizin Kontrolü Artık Sizde</h2>
+          <p style={{ color: "#94A3B8" }}>Hakediş, proje ve ekip yönetimini tek platformda birleştirin</p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURES.map((f, i) => <FeatureCard key={i} f={f} i={i} />)}

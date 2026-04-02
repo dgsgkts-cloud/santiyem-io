@@ -55,7 +55,7 @@ const HeroSection = () => {
 
         {/* Trust text */}
         <p className="text-xs" style={{ color: "#64748B" }}>
-          Kurulum yok · Anında başla · 14 gün ücretsiz dene
+          Kurulum yok · Anında başla · İstediğin zaman iptal
         </p>
 
         {/* Dashboard mock */}

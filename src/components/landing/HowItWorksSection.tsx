@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const STEPS = [
-  { num: "1", title: "Kayıt Ol", sub: "30 saniye", desc: "E-posta adresinizle ücretsiz hesap oluşturun. 14 gün ücretsiz deneyin." },
-  { num: "2", title: "Projenizi Ekleyin", sub: "", desc: "Şantiyenizi, müşterinizi ve iş kalemlerinizi sisteme girin. Varsayılan şablonlar hazır bekliyor." },
-  { num: "3", title: "AI'yi Çalıştırın", sub: "", desc: "Soru sorun, dosya yükleyin, hakediş hazırlayın. AI her adımda yanınızda." },
+  { num: "1", title: "Projenizi Ekleyin", sub: "", desc: "Şantiye adını, müşteriyi ve tarihleri girin. Sistem otomatik iş kalemlerini hazırlar." },
+  { num: "2", title: "Takibi Başlatın", sub: "", desc: "İş kalemlerini güncelleyin, ekibinize görev atayın, hakediş hazırlayın." },
+  { num: "3", title: "Kontrolü Elinizde Tutun", sub: "", desc: "Geciken işleri görün, hakedişleri takip edin, AI ile sorunları önceden tespit edin." },
 ];
 
 const HowItWorksSection = () => {
