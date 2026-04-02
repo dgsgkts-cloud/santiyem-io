@@ -472,19 +472,14 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       >
         {activities.length === 0 ? (
           <
-
-p className="text-xs text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
+          <p className="text-xs text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
         ) : (
           <div className="space-y-2">
             {activities.map(act => (
               <div key={act.id} className="flex items-start gap-3 text-xs">
                 <div className="flex flex-col items-center mt-1">
                   <div className="w-2 h-2 rounded-full" style={{
-                    backgroundColor: act.action === "imzali_yuklendi" ? "#22C55E" : act.action === "imzaya_gonderildi" ? "#3
-
-overdue
-
-" : "#64748B"
+                    backgroundColor: act.action === "imzali_yuklendi" ? "#22C55E" : act.action === "imzaya_gonderildi" ? "#3B82F6" : "#64748B"
                   }} />
                 </div>
                 <div className="flex-1">
