@@ -26,7 +26,7 @@ const LEGAL_INTEREST_RATE = 0.48; // %48/yıl 2025
 const DAILY_RATE = LEGAL_INTEREST_RATE / 365;
 
 const DesktopHakedisPage = () => {
-  const { projects, loading: projectsLoading, updateProject } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { allHakedisler } = useAllHakedis();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
