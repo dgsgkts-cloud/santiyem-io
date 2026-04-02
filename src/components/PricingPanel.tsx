@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PaymentLogos } from "@/components/PaymentLogos";
 
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
@@ -350,7 +351,7 @@ const PricingPanel = () => {
       </div>
 
       {/* Trust Section */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { icon: "🔒", title: "SSL Güvenli Ödeme" },
           { icon: "🔄", title: "İstediğin Zaman İptal" },
@@ -362,6 +363,17 @@ const PricingPanel = () => {
             <span className="text-sm font-medium text-foreground">{t.title}</span>
           </div>
         ))}
+      </div>
+
+      {/* iyzico Logo Band */}
+      <div className="flex flex-col items-center gap-3 mb-14 pt-6" style={{ borderTop: "1px solid #1E2732" }}>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium" style={{ color: "#22C55E" }}>🔒 SSL Güvenli</span>
+          <PaymentLogos />
+        </div>
+        <p className="text-[11px] text-center" style={{ color: "#475569" }}>
+          Tüm ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.
+        </p>
       </div>
 
       {/* FAQ */}
