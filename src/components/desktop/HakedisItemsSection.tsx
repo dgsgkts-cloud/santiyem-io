@@ -288,6 +288,9 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
             className="w-full py-2 rounded-lg text-[12px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
             Kalem Ekle
           </button>
+          <button onClick={downloadSampleCsv} className="w-full text-center text-[10px] underline" style={{ color: "#64748B" }}>
+            Örnek CSV şablonunu indir
+          </button>
         </div>
       )}
     </div>
