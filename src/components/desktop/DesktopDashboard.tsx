@@ -173,8 +173,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           return (
             <div
               key={stat.label}
-              className="rounded-xl p-3 lg:p-5 transition-all duration-150 relative overflow-hidden"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+              className="rounded-xl transition-all duration-150 relative overflow-hidden"
+              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", padding: "20px 24px" }}
             >
               {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
