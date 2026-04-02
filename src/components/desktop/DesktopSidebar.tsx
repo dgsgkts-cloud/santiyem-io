@@ -42,7 +42,6 @@ const NAV_SECTIONS = [
   {
     label: "İÇERİK",
     items: [
-      { id: "news" as Tab, label: "Haberler ve Mevzuat", icon: FileText },
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
       { id: "daily" as Tab, label: "Günlük Bilgi", icon: Lightbulb },
     ],

@@ -459,12 +459,6 @@ const Index = () => {
             <DesktopHakedisPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
-          ) : activeTab === "weather" ? (
-            <WeatherPanel />
-          ) : activeTab === "news" ? (
-            <NewsPanel />
-          ) : activeTab === "events" ? (
-            <EventsPanel />
           ) : activeTab === "calc" ? (
             <CalculatorsPanel />
           ) : activeTab === "render" ? (
