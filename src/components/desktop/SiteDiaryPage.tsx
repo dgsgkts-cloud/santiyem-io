@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/hooks/useSiteDiary";
 import { useUser } from "@/contexts/UserContext";
-import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -70,6 +70,10 @@ const SiteDiaryPage = () => {
   const [formPhotos, setFormPhotos] = useState<File[]>([]);
   const [isQuickMode, setIsQuickMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
+  const [periodStart, setPeriodStart] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [periodEnd, setPeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [includePhotos, setIncludePhotos] = useState(true);
 
   const resetForm = () => {
     setFormDate(format(new Date(), "yyyy-MM-dd"));
@@ -154,7 +158,7 @@ const SiteDiaryPage = () => {
             <h1 className="text-xl font-bold" style={{ color: "#F1F5F9" }}>📔 Şantiye Günlüğü</h1>
             <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>Günlük şantiye kayıtlarınızı yönetin</p>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap">
             <select
               value={selectedProjectId}
               onChange={e => setSelectedProjectId(e.target.value)}
@@ -164,6 +168,15 @@ const SiteDiaryPage = () => {
               <option value="">Proje seçin...</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
+            {selectedProjectId && entries.length > 0 && (
+              <button
+                onClick={() => setShowPeriodModal(true)}
+                className="h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors"
+                style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+              >
+                <FileDown className="w-4 h-4" /> Dönem Raporu
+              </button>
+            )}
             <button
               onClick={() => { resetForm(); setView("form"); }}
               disabled={!selectedProjectId}
@@ -174,6 +187,53 @@ const SiteDiaryPage = () => {
             </button>
           </div>
         </div>
+
+        {/* Period Report Modal */}
+        {showPeriodModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+            <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold" style={{ color: "#F1F5F9" }}>📄 Dönem Raporu İndir</h3>
+                <button onClick={() => setShowPeriodModal(false)} style={{ color: "#64748B" }}><X className="w-5 h-5" /></button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Başlangıç</label>
+                  <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)}
+                    className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                </div>
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Bitiş</label>
+                  <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)}
+                    className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#94A3B8" }}>
+                <input type="checkbox" checked={includePhotos} onChange={e => setIncludePhotos(e.target.checked)} className="rounded" />
+                📷 Fotoğrafları dahil et
+              </label>
+              <p className="text-xs" style={{ color: "#475569" }}>
+                Seçili dönemde {entries.filter(e => e.entry_date >= periodStart && e.entry_date <= periodEnd).length} kayıt bulundu
+              </p>
+              <button
+                onClick={() => {
+                  const filtered = entries.filter(e => e.entry_date >= periodStart && e.entry_date <= periodEnd);
+                  if (filtered.length === 0) { toast.error("Seçili dönemde kayıt bulunamadı"); return; }
+                  const projName = projects.find(pr => pr.id === selectedProjectId)?.name || "Proje";
+                  import("@/lib/siteDiaryExport").then(m => {
+                    m.exportPeriodPDF(filtered, projName, photos, includePhotos, periodStart, periodEnd);
+                    toast.success("Dönem raporu indirildi");
+                  });
+                  setShowPeriodModal(false);
+                }}
+                className="w-full h-10 rounded-lg text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: "#FF6B2B" }}
+              >
+                PDF Oluştur
+              </button>
+            </div>
+          </div>
+        )}
 
         {!selectedProjectId && (
           <div className="rounded-xl p-12 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
@@ -270,6 +330,19 @@ const SiteDiaryPage = () => {
             <ChevronLeft className="w-4 h-4" /> Şantiye Günlüğü
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const projName = projects.find(pr => pr.id === selectedProjectId)?.name || "Proje";
+                import("@/lib/siteDiaryExport").then(m => {
+                  m.exportSingleDayPDF(selectedEntry, projName, ep, true);
+                  toast.success("PDF indirildi");
+                });
+              }}
+              className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5"
+              style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+            >
+              <FileDown className="w-3.5 h-3.5" /> PDF İndir
+            </button>
             <button onClick={() => {
               setEditingEntry(selectedEntry);
               setFormDate(selectedEntry.entry_date);
