@@ -28,6 +28,7 @@ const SignatureReminderEmail = ({
       <Container style={container}>
         <Section style={logoSection}>
           <Text style={logoText}>Şantiyem</Text>
+          <Text style={logoSubtext}>Şantiyenizi Tek Panelden Yönetin</Text>
         </Section>
 
         <Heading style={h1}>Hatırlatma: İmza Bekleniyor</Heading>

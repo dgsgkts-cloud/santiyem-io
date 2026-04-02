@@ -30,6 +30,7 @@ const SignatureUploadedEmail = ({
       <Container style={container}>
         <Section style={logoSection}>
           <Text style={logoText}>Şantiyem</Text>
+          <Text style={logoSubtext}>Şantiyenizi Tek Panelden Yönetin</Text>
         </Section>
 
         <Heading style={h1}>✅ İmzalı Sözleşme Yüklendi</Heading>
