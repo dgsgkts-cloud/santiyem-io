@@ -45,6 +45,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const [prevMonthExpense, setPrevMonthExpense] = useState(0);
   const [cashWarning, setCashWarning] = useState("");
   const [allHakedisData, setAllHakedisData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<{ month: string; ciro: number; gider: number }[]>([]);
   const [overdueCount, setOverdueCount] = useState(0);
   const [overdueTotal, setOverdueTotal] = useState(0);
   const [overdueBannerDismissed, setOverdueBannerDismissed] = useState(() => {
