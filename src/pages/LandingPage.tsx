@@ -1,15 +1,17 @@
+import { lazy, Suspense } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import HeroSection from "@/components/landing/HeroSection";
 import SocialProofBand from "@/components/landing/SocialProofBand";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import DemoSection from "@/components/landing/DemoSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import PricingSection from "@/components/landing/PricingSection";
-import FAQSection from "@/components/landing/FAQSection";
-import FinalCTASection from "@/components/landing/FinalCTASection";
-import LandingFooter from "@/components/landing/LandingFooter";
+
+const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
+const HowItWorksSection = lazy(() => import("@/components/landing/HowItWorksSection"));
+const DemoSection = lazy(() => import("@/components/landing/DemoSection"));
+const TestimonialsSection = lazy(() => import("@/components/landing/TestimonialsSection"));
+const PricingSection = lazy(() => import("@/components/landing/PricingSection"));
+const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
+const FinalCTASection = lazy(() => import("@/components/landing/FinalCTASection"));
+const LandingFooter = lazy(() => import("@/components/landing/LandingFooter"));
 
 const LandingPage = () => {
   useSEO({ title: "Şantiyem — Türk Mühendis, Mimar ve Müteahhitler için Şantiye Yönetim Platformu", description: "Hakediş takibi, proje yönetimi, şantiye günlüğü ve AI asistan — hepsi bir arada. Türk mühendis, mimar ve müteahhitler için tasarlandı. 14 gün ücretsiz dene." });
@@ -18,14 +20,16 @@ const LandingPage = () => {
       <LandingNavbar />
       <HeroSection />
       <SocialProofBand />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <DemoSection />
-      <TestimonialsSection />
-      <PricingSection />
-      <FAQSection />
-      <FinalCTASection />
-      <LandingFooter />
+      <Suspense fallback={<div className="min-h-[200px]" />}>
+        <FeaturesSection />
+        <HowItWorksSection />
+        <DemoSection />
+        <TestimonialsSection />
+        <PricingSection />
+        <FAQSection />
+        <FinalCTASection />
+        <LandingFooter />
+      </Suspense>
     </div>
   );
 };
