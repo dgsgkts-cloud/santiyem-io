@@ -72,8 +72,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     return diff >= 0 && diff <= 7;
   }).length;
 
-  const projectsLocked = !canAccessProjects(plan);
-  const hakedisLocked = !canAccessHakedis(plan);
+  const projectsLocked = !canAccessProjects(plan, role);
+  const hakedisLocked = !canAccessHakedis(plan, role);
   const remindersLocked = !canAccessReminders(plan);
 
   const statCards = [
