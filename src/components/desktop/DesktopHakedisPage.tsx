@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis } from "@/hooks/useProjectHakedis";
-import { exportHakedisPDF, exportHakedisExcel } from "@/lib/hakedisExport";
+import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo } from "@/lib/hakedisExport";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -191,6 +191,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [chartRange, setChartRange] = useState<"6" | "12" | "all">("12");
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfSig, setPdfSig] = useState<PDFSignatureInfo>(() => {
+    try { return JSON.parse(localStorage.getItem("muhendisai_pdf_sig") || "{}"); } catch { return {}; }
+  });
 
   const contract = Number(project?.contract_amount) || 0;
   const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);
@@ -323,7 +327,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
         <div className="flex items-center gap-2">
           {hakedisler.length > 0 && (
             <>
-              <button onClick={() => exportHakedisPDF(hakedisler, project?.name || "Proje")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
+              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
               <button onClick={() => exportHakedisExcel(hakedisler, project?.name || "Proje")} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
@@ -527,7 +531,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
                     )}
 
                     <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
-                      <button onClick={() => exportHakedisPDF([h], project?.name || "Proje")} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
+                      <button onClick={() => exportHakedisPDF([h], project?.name || "Proje", pdfSig, project?.client)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
                       <button onClick={() => { if (confirm("Bu hakediş silinsin mi?")) deleteHakedis(h.id); }} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
@@ -626,6 +630,69 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
               className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
               Hakediş Ekle
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Signature Modal */}
+      {showPdfModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
+          <div className="rounded-xl p-5 w-full max-w-lg space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>PDF İmza Bilgileri</h3>
+              <button onClick={() => setShowPdfModal(false)} style={{ color: "#94A3B8" }}><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-[11px]" style={{ color: "#64748B" }}>Bu bilgiler PDF'in alt kısmındaki imza alanına yazılacaktır. Boş bırakabilirsiniz.</p>
+
+            {/* Hazırlayan */}
+            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <p className="text-[11px] font-semibold" style={{ color: "#FF6B2B" }}>Hazırlayan</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="Adı Soyadı" value={pdfSig.hazirlayan?.name || ""} onChange={e => setPdfSig(p => ({ ...p, hazirlayan: { ...p.hazirlayan, name: e.target.value, title: p.hazirlayan?.title || "" } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                <input placeholder="Ünvanı" value={pdfSig.hazirlayan?.title || ""} onChange={e => setPdfSig(p => ({ ...p, hazirlayan: { ...p.hazirlayan, name: p.hazirlayan?.name || "", title: e.target.value } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+              </div>
+            </div>
+
+            {/* Kontrol Eden */}
+            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <p className="text-[11px] font-semibold" style={{ color: "#3B82F6" }}>Kontrol Eden (opsiyonel)</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="Adı Soyadı" value={pdfSig.kontrolEden?.name || ""} onChange={e => setPdfSig(p => ({ ...p, kontrolEden: { ...p.kontrolEden, name: e.target.value, title: p.kontrolEden?.title || "" } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                <input placeholder="Ünvanı" value={pdfSig.kontrolEden?.title || ""} onChange={e => setPdfSig(p => ({ ...p, kontrolEden: { ...p.kontrolEden, name: p.kontrolEden?.name || "", title: e.target.value } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+              </div>
+            </div>
+
+            {/* İşveren */}
+            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <p className="text-[11px] font-semibold" style={{ color: "#22C55E" }}>İşveren / Onaylayan (opsiyonel)</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="Adı Soyadı" value={pdfSig.isveren?.name || ""} onChange={e => setPdfSig(p => ({ ...p, isveren: { ...p.isveren, name: e.target.value, title: p.isveren?.title || "" } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                <input placeholder="Ünvanı" value={pdfSig.isveren?.title || ""} onChange={e => setPdfSig(p => ({ ...p, isveren: { ...p.isveren, name: p.isveren?.name || "", title: e.target.value } }))}
+                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
+                  exportHakedisPDF(hakedisler, project?.name || "Proje", pdfSig, project?.client);
+                  setShowPdfModal(false);
+                  toast.success("PDF oluşturuldu");
+                }}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
+                📄 PDF İndir
+              </button>
+              <button onClick={() => setShowPdfModal(false)}
+                className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
+                İptal
+              </button>
+            </div>
           </div>
         </div>
       )}
