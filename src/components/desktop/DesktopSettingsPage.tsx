@@ -92,10 +92,10 @@ const DesktopSettingsPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <span className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
-                      {plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz Plan"}
+                      {plan === "pro" ? "Profesyonel Plan" : plan === "team" ? "Ekip Planı" : plan === "enterprise" ? "Kurumsal Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Başlangıç Planı"}
                     </span>
                     <p className="text-[11px] lg:text-[12px] mt-0.5" style={{ color: "#64748B" }}>
-                      {plan === "free" ? "Temel özellikler" : "Tüm özellikler aktif"}
+                      {plan === "free" ? "Temel özellikler" : plan === "pro" ? "399₺/ay" : plan === "team" ? "1.499₺/ay · 5 kullanıcı" : plan === "enterprise" ? "4.999₺/ay · Sınırsız" : "Tüm özellikler aktif"}
                     </p>
                   </div>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md self-start" style={{
