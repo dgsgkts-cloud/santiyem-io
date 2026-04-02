@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis, ProjectHakedis } from "@/hooks/useProjectHakedis";
-import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo } from "@/lib/hakedisExport";
+import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo, type PDFOptions } from "@/lib/hakedisExport";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";

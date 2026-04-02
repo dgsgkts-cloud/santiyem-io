@@ -287,7 +287,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {hakedisler.length > 0 && (
               <>
                 <button
-                  onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name)); }}
+                  onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name, { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: {} }, p.client)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
                   style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
                 >
