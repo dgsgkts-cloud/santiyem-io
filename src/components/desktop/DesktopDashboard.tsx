@@ -36,21 +36,52 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
+  const [monthRevenue, setMonthRevenue] = useState(0);
+  const [monthExpense, setMonthExpense] = useState(0);
+  const [cashWarning, setCashWarning] = useState("");
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string; requiresOffice: boolean }>({ open: false, feature: "", requiresOffice: false });
   const openUpgrade = useCallback((feature: string, requiresOffice: boolean) => setUpgradeModal({ open: true, feature, requiresOffice }), []);
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
-  // Fetch hakedis totals
+  const profitLocked = !canAccessProfitability(plan, role);
+
+  // Fetch hakedis totals + this month revenue
   useEffect(() => {
     if (!user) return;
     supabase
       .from("project_hakedis")
-      .select("net,status")
-      .eq("user_id", user.id)
+      .select("net,status,payment_date")
       .then(({ data }) => {
         if (!data) return;
         setTotalHakedis(data.reduce((s, h) => s + Number(h.net), 0));
         setPendingHakedis(data.filter(h => h.status === "Bekliyor").reduce((s, h) => s + Number(h.net), 0));
+        // This month revenue
+        const now = new Date();
+        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const rev = data
+          .filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(ym))
+          .reduce((s, h) => s + Number(h.net), 0);
+        setMonthRevenue(rev);
+        // Cash warning
+        const pending = data.filter(h => h.status === "Bekliyor" || h.status === "Gecikmiş").reduce((s, h) => s + Number(h.net), 0);
+        if (pending > 0) {
+          setCashWarning(`⚠️ ${formatCurrency(pending)} tahsilat bekliyor. Detay →`);
+        }
+      });
+  }, [user]);
+
+  // Fetch this month expenses
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    supabase
+      .from("project_expenses")
+      .select("amount")
+      .gte("expense_date", startOfMonth)
+      .then(({ data }) => {
+        if (!data) return;
+        setMonthExpense(data.reduce((s, e) => s + Number(e.amount), 0));
       });
   }, [user]);
 
