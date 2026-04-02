@@ -1,13 +1,27 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Package, X, Pencil, Check, GripVertical, Upload } from "lucide-react";
+import { Plus, Trash2, Package, X, Pencil, Check, GripVertical, Upload, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useHakedisItems, type HakedisItem } from "@/hooks/useHakedisItems";
+import { Progress } from "@/components/ui/progress";
 
 const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "gün", "saat", "sefer"];
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const inputStyle = { backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" };
+
+interface ImportError {
+  row: number;
+  reason: string;
+  data: string;
+}
+
+interface ImportProgress {
+  total: number;
+  current: number;
+  added: number;
+  errors: ImportError[];
+}
 
 function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, onDrop, isDragOver }: {
   item: HakedisItem; index: number;
@@ -132,6 +146,8 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
+  const [showErrors, setShowErrors] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const total = items.reduce((s, i) => s + i.total_price, 0);
@@ -159,9 +175,11 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
     const file = e.target.files?.[0];
     if (!file) return;
     setImporting(true);
+    setShowErrors(false);
+    setImportProgress(null);
+
     try {
       const isXlsx = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
-
       let rows: string[][] = [];
 
       if (isXlsx) {
@@ -180,23 +198,46 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
 
       if (rows.length < 2) { toast.error("Dosya boş veya başlık satırı eksik"); return; }
 
-      let added = 0;
-      for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i];
-        if (cols.length < 4) continue;
+      const dataRows = rows.slice(1);
+      const progress: ImportProgress = { total: dataRows.length, current: 0, added: 0, errors: [] };
+      setImportProgress({ ...progress });
+
+      for (let i = 0; i < dataRows.length; i++) {
+        const cols = dataRows[i];
+        progress.current = i + 1;
+
+        if (cols.length < 4) {
+          progress.errors.push({ row: i + 2, reason: "Yetersiz sütun (en az 4 sütun gerekli)", data: cols.join(" | ") });
+          setImportProgress({ ...progress });
+          continue;
+        }
+
         const description = cols[0];
         const csvUnit = cols[1] || "adet";
         const quantity = parseFloat(cols[2]?.replace(",", ".")) || 0;
         const unit_price = parseFloat(cols[3]?.replace(",", ".")) || 0;
-        if (!description || quantity <= 0 || unit_price <= 0) continue;
-        await addItem({ description, unit: csvUnit, quantity, unit_price });
-        added++;
+
+        if (!description) {
+          progress.errors.push({ row: i + 2, reason: "İş kalemi açıklaması boş", data: cols.join(" | ") });
+        } else if (quantity <= 0) {
+          progress.errors.push({ row: i + 2, reason: "Miktar 0 veya negatif", data: cols.join(" | ") });
+        } else if (unit_price <= 0) {
+          progress.errors.push({ row: i + 2, reason: "Birim fiyat 0 veya negatif", data: cols.join(" | ") });
+        } else {
+          await addItem({ description, unit: csvUnit, quantity, unit_price });
+          progress.added++;
+        }
+        setImportProgress({ ...progress });
       }
 
-      if (added > 0) {
-        toast.success(`${added} iş kalemi ${isXlsx ? "Excel" : "CSV"}'den aktarıldı`);
+      if (progress.added > 0 && progress.errors.length === 0) {
+        toast.success(`${progress.added} iş kalemi başarıyla aktarıldı`);
+      } else if (progress.added > 0 && progress.errors.length > 0) {
+        toast.warning(`${progress.added} kalem aktarıldı, ${progress.errors.length} satırda hata`);
+        setShowErrors(true);
       } else {
-        toast.error("Geçerli kalem bulunamadı. Format: İş Kalemi | Birim | Miktar | Birim Fiyat");
+        toast.error("Geçerli kalem bulunamadı");
+        if (progress.errors.length > 0) setShowErrors(true);
       }
     } catch {
       toast.error("Dosya okunamadı");
@@ -214,6 +255,8 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
     a.href = url; a.download = "is_kalemleri_sablonu.csv"; a.click();
     URL.revokeObjectURL(url);
   };
+
+  const progressPercent = importProgress ? Math.round((importProgress.current / importProgress.total) * 100) : 0;
 
   return (
     <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
@@ -242,6 +285,74 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           </button>
         </div>
       </div>
+
+      {/* Import Progress */}
+      {importing && importProgress && (
+        <div className="mb-2 rounded-lg p-2.5 space-y-1.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium" style={{ color: "#F1F5F9" }}>
+              İçe aktarılıyor... ({importProgress.current}/{importProgress.total})
+            </span>
+            <span className="text-[11px] font-mono" style={{ color: "#FF6B2B" }}>%{progressPercent}</span>
+          </div>
+          <Progress value={progressPercent} className="h-1.5 bg-[#1E2732]" />
+          <div className="flex items-center gap-3 text-[10px]">
+            <span style={{ color: "#22C55E" }}>✓ {importProgress.added} eklendi</span>
+            {importProgress.errors.length > 0 && (
+              <span style={{ color: "#EF4444" }}>✗ {importProgress.errors.length} hata</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Import Result Summary */}
+      {!importing && importProgress && importProgress.errors.length > 0 && (
+        <div className="mb-2 rounded-lg p-2.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5">
+              <AlertTriangle className="w-3 h-3" style={{ color: "#F59E0B" }} />
+              <span className="text-[11px] font-semibold" style={{ color: "#F59E0B" }}>
+                {importProgress.errors.length} satırda hata bulundu
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowErrors(!showErrors)} className="text-[10px] underline" style={{ color: "#94A3B8" }}>
+                {showErrors ? "Gizle" : "Detayları göster"}
+              </button>
+              <button onClick={() => setImportProgress(null)} style={{ color: "#64748B" }}>
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] mb-1">
+            <span style={{ color: "#22C55E" }}>✓ {importProgress.added} başarılı</span>
+            <span style={{ color: "#EF4444" }}>✗ {importProgress.errors.length} başarısız</span>
+            <span style={{ color: "#64748B" }}>Toplam: {importProgress.total} satır</span>
+          </div>
+          {showErrors && (
+            <div className="mt-1.5 max-h-32 overflow-y-auto rounded" style={{ border: "1px solid #1E2732" }}>
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr style={{ backgroundColor: "#161C23" }}>
+                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Satır</th>
+                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Hata</th>
+                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Veri</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importProgress.errors.map((err, i) => (
+                    <tr key={i} style={{ borderTop: "1px solid #1E2732" }}>
+                      <td className="px-2 py-1 font-mono" style={{ color: "#EF4444" }}>{err.row}</td>
+                      <td className="px-2 py-1" style={{ color: "#F59E0B" }}>{err.reason}</td>
+                      <td className="px-2 py-1 truncate max-w-[200px]" style={{ color: "#64748B" }}>{err.data}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {loading && <p className="text-[11px]" style={{ color: "#64748B" }}>Yükleniyor...</p>}
 
