@@ -253,27 +253,28 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               </TooltipContent>
             </Tooltip>
           ) : (
-            <button
-              onClick={() => onTabChange("settings")}
-              className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 40 }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#161C23"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-            >
+            <div className="flex items-center gap-2.5 px-2 rounded-lg" style={{ height: 44 }}>
               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
                 <span className="text-white text-[11px] font-bold">{initials}</span>
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-[12px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
-                <p className="text-[10px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
+                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
               </div>
-              <Settings className="w-3.5 h-3.5 shrink-0" style={{ color: "#475569" }} />
-            </button>
+              <button
+                onClick={() => onTabChange("settings")}
+                className="shrink-0 p-1 rounded transition-colors duration-150"
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1E2732"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                <Settings className="w-3.5 h-3.5" style={{ color: "#475569" }} />
+              </button>
+            </div>
           )}
         </div>
 
         {/* Logout */}
-        <div className="px-1 pb-1">
+        <div className="px-1 pb-3">
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -295,45 +296,12 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             <button
               onClick={user ? signOut : () => navigate("/login")}
               className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 32, color: "#64748B" }}
+              style={{ height: 28, color: "#64748B" }}
               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
             >
-              <LogOut className="w-4 h-4" />
-              <span className="text-[13px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>
-            </button>
-          )}
-        </div>
-
-        {/* Plans button */}
-        <div className="px-1 pb-3">
-          {collapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onTabChange("pricing")}
-                  className="w-full flex items-center justify-center rounded-lg transition-all duration-150"
-                  style={{ height: 32, border: "1px solid #1E2732", color: "#64748B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
-                >
-                  <Gem className="w-3.5 h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #2A3441" }}>
-                Planlar
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={() => onTabChange("pricing")}
-              className="w-full flex items-center justify-center gap-1.5 rounded-lg transition-all duration-150"
-              style={{ height: 32, border: "1px solid #1E2732", color: "#64748B" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
-            >
-              <Gem className="w-3.5 h-3.5" />
-              <span className="text-[12px] font-medium">Planlar</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="text-[12px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>
             </button>
           )}
         </div>
