@@ -6,6 +6,8 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 import { useProjectNotes } from "@/hooks/useProjectNotes";
+import { useTasks } from "@/hooks/useTasks";
+import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 
 const STATUS_OPTIONS = [
@@ -45,6 +47,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [hakedisStatusMenuId, setHakedisStatusMenuId] = useState<string | null>(null);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const { notes, loading: nLoading, addNote, deleteNote } = useProjectNotes(p.id);
+  const { tasks } = useTasks(p.id);
   const [newNoteContent, setNewNoteContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,7 +136,33 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               </div>
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => {
+                  import("@/lib/projectExport").then(m => {
+                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                    m.exportProjectPDF(p, tasks, ms);
+                    toast.success("PDF raporu indirildi");
+                  });
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+              >
+                <FileDown className="w-3.5 h-3.5" /> PDF
+              </button>
+              <button
+                onClick={() => {
+                  import("@/lib/projectExport").then(m => {
+                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                    m.exportProjectExcel(p, tasks, ms);
+                    toast.success("Excel raporu indirildi");
+                  });
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+              </button>
               <div className="relative w-14 h-14 lg:w-16 lg:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                   <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
