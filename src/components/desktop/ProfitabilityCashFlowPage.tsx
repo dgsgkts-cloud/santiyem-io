@@ -381,8 +381,12 @@ const ProfitabilityCashFlowPage = () => {
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {selectedProject.expenseItems.map((e: ProjectExpense) => (
                   <div key={e.id} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <span className="text-xs font-medium" style={{ color: "#F1F5F9" }}>{e.description || e.category}</span>
+                      {e.source === "site_diary" && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(59,130,246,0.15)", color: "#60A5FA" }}>📔 Günlük</span>
+                      )}
+                    </div>
                       <p className="text-[11px]" style={{ color: "#64748B" }}>{e.category} • {e.expense_date}</p>
                     </div>
                     <div className="flex items-center gap-2">
