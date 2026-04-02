@@ -17,12 +17,12 @@ const PLAN_PRICES: Record<string, { price: number; name: string }> = {
 }
 
 function toBase64(str: string): string {
-  return base64Encode(new TextEncoder().encode(str))
+  return encodeBase64(new TextEncoder().encode(str))
 }
 
 async function sha256Base64(data: string): Promise<string> {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data))
-  return base64Encode(new Uint8Array(hash))
+  return encodeBase64(new Uint8Array(hash))
 }
 
 async function generateAuthorizationHeader(pki: string): Promise<string> {
