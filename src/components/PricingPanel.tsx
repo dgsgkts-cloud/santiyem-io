@@ -1,16 +1,61 @@
-import { useState } from "react";
-import { Check, X, Shield, Lock, RefreshCw, FileText, MessageCircle, Send } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Check, X, Shield, Lock, RefreshCw, FileText, MessageCircle, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
+import { useUser } from "@/contexts/UserContext";
 
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
   const [showEnterpriseForm, setShowEnterpriseForm] = useState(false);
   const [formData, setFormData] = useState({ company: "", name: "", email: "", phone: "", teamSize: "", message: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useUser();
+
+  const handlePurchase = useCallback(async (planKey: string) => {
+    if (!user) {
+      toast.error("Lütfen önce giriş yapın");
+      return;
+    }
+    if (planKey === "enterprise") {
+      setShowEnterpriseForm(true);
+      return;
+    }
+    setLoadingPlan(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Ödeme başlatılamadı");
+        return;
+      }
+      // Open iyzico checkout form
+      const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
+      if (checkoutDiv) {
+        checkoutDiv.innerHTML = data.checkoutFormContent;
+        checkoutDiv.style.display = "flex";
+        const scripts = checkoutDiv.querySelectorAll("script");
+        scripts.forEach((oldScript) => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          document.body.appendChild(newScript);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ödeme başlatılırken bir hata oluştu");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }, [user, yearly]);
 
   const plans = [
     {
@@ -295,10 +340,12 @@ const PricingPanel = () => {
 
               <div className="space-y-2">
                 <Button
-                  onClick={plan.id === "enterprise" ? () => setShowEnterpriseForm(true) : undefined}
+                  onClick={() => plan.id === "free" ? undefined : handlePurchase(plan.id)}
+                  disabled={loadingPlan !== null && loadingPlan !== plan.id}
                   className={`w-full font-semibold h-11 ${plan.btnStyle === "primary" ? "text-white" : "bg-transparent border border-border text-foreground hover:bg-secondary"}`}
                   style={plan.btnStyle === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
                 >
+                  {loadingPlan === plan.id && <Loader2 size={16} className="animate-spin mr-1" />}
                   {plan.btnText}
                 </Button>
               </div>
@@ -440,6 +487,8 @@ const PricingPanel = () => {
           </div>
         </>
       )}
+      {/* iyzico checkout container */}
+      <div id="iyzico-checkout-container-panel" style={{ display: "none" }} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" />
     </div>
   );
 };
