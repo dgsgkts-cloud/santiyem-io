@@ -44,8 +44,8 @@ const PricingPanel = () => {
       subtitle: "Serbest mühendis ve mimarlar için",
       users: "1",
       projects: "Sınırsız",
-      featured: true,
-      badge: "EN POPÜLER",
+      featured: false,
+      badge: null,
       btnText: "14 Gün Ücretsiz Dene",
       btnStyle: "primary" as const,
       
