@@ -680,10 +680,11 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
           <div className="rounded-xl p-5 w-full max-w-lg space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>PDF İmza Bilgileri</h3>
+              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>📄 PDF Ayarları</h3>
               <button onClick={() => setShowPdfModal(false)} style={{ color: "#94A3B8" }}><X className="w-4 h-4" /></button>
             </div>
-            <p className="text-[11px]" style={{ color: "#64748B" }}>Bu bilgiler PDF'in alt kısmındaki imza alanına yazılacaktır.</p>
+
+            {/* Signature fields */}
             {(["hazirlayan", "kontrolEden", "isveren"] as const).map((key, ki) => {
               const labels = ["Hazırlayan", "Kontrol Eden (opsiyonel)", "İşveren / Onaylayan (opsiyonel)"];
               const colors = ["#FF6B2B", "#3B82F6", "#22C55E"];
@@ -699,9 +700,65 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                 </div>
               );
             })}
+
+            {/* Checkboxes */}
+            <div className="space-y-2 rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              {[
+                { label: "Firma başlığı ekle", checked: pdfIncludeHeader, set: setPdfIncludeHeader },
+                { label: "İmza alanı ekle", checked: pdfIncludeSignature, set: setPdfIncludeSignature },
+                { label: "Uyarı metni ekle", checked: pdfIncludeWarning, set: setPdfIncludeWarning },
+              ].map(opt => (
+                <label key={opt.label} className="flex items-center gap-2 text-[12px] cursor-pointer" style={{ color: "#CBD5E1" }}>
+                  <input type="checkbox" checked={opt.checked} onChange={e => opt.set(e.target.checked)}
+                    className="rounded accent-[#FF6B2B]" />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+
+            {/* Progress bar */}
+            {pdfProgress !== null && (
+              <div className="space-y-1">
+                <div className="h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                  <div className="h-full rounded-full transition-all duration-300" style={{ backgroundColor: "#FF6B2B", width: `${pdfProgress}%` }} />
+                </div>
+                <p className="text-[11px] text-center" style={{ color: "#94A3B8" }}>PDF hazırlanıyor... %{pdfProgress}</p>
+              </div>
+            )}
+
             <div className="flex gap-2">
-              <button onClick={() => { localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig)); exportHakedisPDF(hakedisler, project?.name || "Proje", pdfSig, project?.client); setShowPdfModal(false); toast.success("PDF oluşturuldu"); }}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>📄 PDF İndir</button>
+              <button
+                disabled={pdfProgress !== null}
+                onClick={() => {
+                  localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
+                  setPdfProgress(0);
+                  try {
+                    exportHakedisPDF(
+                      hakedisler,
+                      project?.name || "Proje",
+                      {
+                        includeHeader: pdfIncludeHeader,
+                        includeSignature: pdfIncludeSignature,
+                        includeWarning: pdfIncludeWarning,
+                        signatureInfo: pdfSig,
+                        onProgress: (pct) => setPdfProgress(pct),
+                      },
+                      project?.client,
+                    );
+                    setTimeout(() => {
+                      setPdfProgress(null);
+                      setShowPdfModal(false);
+                      toast.success("✅ PDF indirildi");
+                    }, 400);
+                  } catch (err) {
+                    console.error("PDF oluşturma hatası:", err);
+                    setPdfProgress(null);
+                    toast.error("PDF oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-50" style={{ backgroundColor: "#FF6B2B" }}>
+                📄 PDF Oluştur
+              </button>
               <button onClick={() => setShowPdfModal(false)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>İptal</button>
             </div>
           </div>
