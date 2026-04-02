@@ -1,4 +1,4 @@
-import { Building2, FileSearch, Zap, Calculator, HardHat, Camera } from "lucide-react";
+import { Wallet, FolderOpen, HardHat, TrendingUp, FileSearch, BarChart3 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 
 interface WelcomeScreenProps {
@@ -6,10 +6,10 @@ interface WelcomeScreenProps {
 }
 
 const suggestions = [
-  { icon: Building2, text: "TBDY 2018'e göre deprem yükü hesabı nasıl yapılır?", label: "Yapısal" },
-  { icon: FileSearch, text: "İmar planında TAKS ve KAKS nasıl hesaplanır?", label: "Ruhsat" },
-  { icon: Zap, text: "TS 825'e göre yalıtım kalınlığı nasıl belirlenir?", label: "Enerji" },
-  { icon: Calculator, text: "Hakediş hesaplamasında nelere dikkat edilmeli?", label: "Yönetim" },
+  { icon: Wallet, text: "Bu hakedişte hangi kalemlerde anormal artış var?", label: "HAKEDİŞ" },
+  { icon: FolderOpen, text: "Eylül'de en çok harcama yaptığımız 3 kalem hangisi?", label: "PROJE" },
+  { icon: HardHat, text: "Bu hızla proje ne zaman tamamlanır, gecikme riski var mı?", label: "ŞANTİYE" },
+  { icon: TrendingUp, text: "Önümüzdeki 30 günde nakit açığı oluşur mu?", label: "NAKİT" },
 ];
 
 const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
@@ -43,16 +43,16 @@ const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
 
       <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <HardHat className="w-3.5 h-3.5" />
-          <span>Yapısal Analiz</span>
+          <Wallet className="w-3.5 h-3.5" />
+          <span>Hakediş Analizi</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Camera className="w-3.5 h-3.5" />
-          <span>Fotoğraf Analizi</span>
+          <FolderOpen className="w-3.5 h-3.5" />
+          <span>Proje Durumu</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <FileSearch className="w-3.5 h-3.5" />
-          <span>Mevzuat Rehberi</span>
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>Nakit Akışı</span>
         </div>
       </div>
     </div>

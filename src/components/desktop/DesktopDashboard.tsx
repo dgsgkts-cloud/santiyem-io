@@ -389,7 +389,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <span className="text-[12px] lg:text-[13px]" style={{ color: "#475569" }}>Bir şey sorun...</span>
             </div>
             <div className="space-y-1.5">
-              {["Deprem yükü hesabı nasıl yapılır?", "TAKS/KAKS hesaplama yöntemi", "TS 825 yalıtım kalınlığı"].map((q, i) => (
+              {["Hangi projede maliyet sapması var?", "Bu ay en geciken hakedişim hangisi?", "Şantiye verimliliğim geçen haftaya göre nasıl?"].map((q, i) => (
                 <button
                   key={i}
                   onClick={() => { onTabChange("chat"); onSend?.(q); }}
