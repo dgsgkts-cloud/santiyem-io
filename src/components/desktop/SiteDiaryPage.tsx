@@ -70,6 +70,10 @@ const SiteDiaryPage = () => {
   const [formPhotos, setFormPhotos] = useState<File[]>([]);
   const [isQuickMode, setIsQuickMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
+  const [periodStart, setPeriodStart] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [periodEnd, setPeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [includePhotos, setIncludePhotos] = useState(true);
 
   const resetForm = () => {
     setFormDate(format(new Date(), "yyyy-MM-dd"));
