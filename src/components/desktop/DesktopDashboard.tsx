@@ -238,7 +238,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-4">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
           {/* Projects */}
