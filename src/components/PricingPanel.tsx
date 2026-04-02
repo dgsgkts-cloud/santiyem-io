@@ -487,6 +487,8 @@ const PricingPanel = () => {
           </div>
         </>
       )}
+      {/* iyzico checkout container */}
+      <div id="iyzico-checkout-container-panel" style={{ display: "none" }} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" />
     </div>
   );
 };
