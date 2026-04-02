@@ -10,11 +10,11 @@ import { toast } from "sonner";
 const PLANS = [
   {
     name: "Başlangıç", monthlyPrice: 0, yearlyPrice: 0, popular: false,
-    features: ["1 kullanıcı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "PDF çıktı — aylık 3"],
+    features: ["1 kullanıcı hesabı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "Şantiye günlüğü — günde 1 kayıt"],
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
-    name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: false,
+    name: "Profesyonel", monthlyPrice: 499, yearlyPrice: 399, popular: false,
     features: ["1 kullanıcı · 1 proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
     
@@ -140,12 +140,12 @@ const PricingSection = () => {
                   </Link>
                 ) : (
                   <button
-                    onClick={() => handlePurchase(p.monthlyPrice === 399 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise")}
+                    onClick={() => handlePurchase(p.monthlyPrice === 499 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise")}
                     disabled={loadingPlan !== null}
                     className="w-full text-center py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50"
                     style={p.ctaStyle}
                   >
-                    {loadingPlan === (p.monthlyPrice === 399 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise") ? (
+                    {loadingPlan === (p.monthlyPrice === 499 ? "pro" : p.monthlyPrice === 1499 ? "team" : "enterprise") ? (
                       <Loader2 size={16} className="animate-spin inline mr-1" />
                     ) : null}
                     {p.cta}

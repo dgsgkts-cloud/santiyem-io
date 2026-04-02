@@ -399,7 +399,7 @@ const NotificationsTab = () => {
 // ─── Subscription Tab ───
 const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; sub: string }> = {
   free: { emoji: "🆓", name: "Başlangıç Planı", price: "Ücretsiz", sub: "Sonsuza kadar ücretsiz" },
-  pro: { emoji: "⭐", name: "Profesyonel Plan", price: "399₺/ay", sub: "Serbest mühendis ve mimarlar için" },
+  pro: { emoji: "⭐", name: "Profesyonel Plan", price: "499₺/ay", sub: "Serbest mühendis ve mimarlar için" },
   plus: { emoji: "⭐", name: "Plus Plan", price: "199₺/ay", sub: "Bireysel kullanıcılar için" },
   team: { emoji: "👥", name: "Ekip Planı", price: "1.499₺/ay", sub: "Küçük mühendislik ofisleri için" },
   enterprise: { emoji: "🏢", name: "Kurumsal Plan", price: "4.999₺/ay", sub: "Büyük firmalar için" },
@@ -409,7 +409,7 @@ const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; su
 };
 
 const UPGRADE_CARDS = [
-  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "399₺/ay", features: ["1 proje · 3 hakediş/ay", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
+  { plan: "pro", emoji: "⭐", name: "Profesyonel", price: "499₺/ay", features: ["1 proje · 3 hakediş/ay", "AI Asistan sınırsız", "Şantiye günlüğü sınırsız", "Firma başlıklı PDF"], cta: "14 Gün Ücretsiz Dene →", highlight: true },
   { plan: "team", emoji: "👥", name: "Ekip", price: "1.499₺/ay", features: ["5 kullanıcı hesabı", "Ekip görevi atama", "Ortak proje takibi", "Öncelikli destek"], cta: "Planı İncele →", highlight: false },
   { plan: "enterprise", emoji: "🏢", name: "Kurumsal", price: "4.999₺/ay", features: ["Sınırsız kullanıcı", "Yetki rolleri", "Öncelikli telefon + WhatsApp desteği", "Özel onboarding"], cta: "Teklif Al →", highlight: false },
 ];

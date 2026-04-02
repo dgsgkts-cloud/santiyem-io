@@ -72,20 +72,19 @@ const PricingPanel = () => {
       btnStyle: "outline" as const,
       color: null,
       features: [
-        "1 kullanıcı",
+        "1 kullanıcı hesabı",
         "1 aktif proje",
         "1 hakediş/ay",
         "Şantiye günlüğü — günde 1 kayıt",
-        "Hesap araçları — sınırsız",
         "AI Asistan — günde 3 soru",
-        "PDF çıktı — aylık 3 adet",
+        "Hesap araçları — sınırsız",
       ],
     },
     {
       id: "pro",
       name: "Profesyonel",
-      monthlyPrice: 399,
-      yearlyPrice: 319,
+      monthlyPrice: 499,
+      yearlyPrice: 399,
       subtitle: "Serbest mühendis ve mimarlar için",
       users: "1",
       projects: "Sınırsız",
@@ -221,7 +220,7 @@ const PricingPanel = () => {
     {
       title: "RAPORLAMA",
       rows: [
-        { label: "PDF Çıktı", values: ["3/ay", "Sınırsız", "Sınırsız", "Sınırsız"] },
+        { label: "PDF Çıktı", values: ["—", "Sınırsız", "Sınırsız", "Sınırsız"] },
         { label: "Firma Logosu + Kaşe", values: [false, true, true, true] },
         { label: "Fotoğraf Raporu", values: [false, true, true, true] },
       ],

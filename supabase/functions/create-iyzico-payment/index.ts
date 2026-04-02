@@ -11,7 +11,7 @@ const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
 const IYZICO_BASE_URL = 'https://api.iyzipay.com'
 
 const PLAN_PRICES: Record<string, { price: number; name: string }> = {
-  pro: { price: 399, name: 'Profesyonel Plan' },
+  pro: { price: 499, name: 'Profesyonel Plan' },
   team: { price: 1499, name: 'Ekip Plani' },
   enterprise: { price: 4999, name: 'Kurumsal Plan' },
 }
