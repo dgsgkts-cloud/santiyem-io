@@ -141,20 +141,28 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     .slice(0, 5);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
       {/* Welcome */}
-      <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", borderLeft: "3px solid #FF6B2B" }}>
-        <div className="flex items-center justify-between mb-3 lg:mb-4">
-          <h2 className="text-base lg:text-xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
-            ☀️ Günaydın, {name}
-          </h2>
-          <span className="text-[11px] lg:text-[13px] hidden sm:block" style={{ color: "#64748B" }}>{formatDate(new Date())}</span>
+      <div className="rounded-xl p-5 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", borderLeft: "3px solid #FF6B2B" }}>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+              Günaydın, {name} 👋
+            </h2>
+            <p className="text-[12px]" style={{ color: "#64748B" }}>{formatDate(new Date())} — Bugün şantiyende ne var?</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-4">
+            <MiniStat label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+            <MiniStat label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+            <MiniStat label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+            <MiniStat label="Geciken" value={remindersLocked ? "🔒" : String(delayedReminders)} />
+          </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MiniStat emoji="📌" label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
-          <MiniStat emoji="⏰" label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
-          <MiniStat emoji="💰" label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
-          <MiniStat emoji="⚠️" label="Geciken Hatırlatıcı" value={remindersLocked ? "🔒" : String(delayedReminders)} />
+        <div className="grid grid-cols-2 gap-3 sm:hidden mt-3">
+          <MiniStat label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
+          <MiniStat label="Bu Hafta Teslim" value={remindersLocked ? "🔒" : String(upcomingThisWeek)} />
+          <MiniStat label="Bekleyen Tahsilat" value={hakedisLocked ? "🔒" : formatCurrency(pendingHakedis)} />
+          <MiniStat label="Geciken" value={remindersLocked ? "🔒" : String(delayedReminders)} />
         </div>
       </div>
 
