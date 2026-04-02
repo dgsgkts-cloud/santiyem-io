@@ -47,6 +47,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [hakedisStatusMenuId, setHakedisStatusMenuId] = useState<string | null>(null);
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const { notes, loading: nLoading, addNote, deleteNote } = useProjectNotes(p.id);
+  const { tasks } = useTasks(p.id);
   const [newNoteContent, setNewNoteContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
