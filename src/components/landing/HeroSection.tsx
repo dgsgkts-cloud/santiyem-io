@@ -37,7 +37,7 @@ const HeroSection = () => {
 
         {/* Subtitle */}
         <p className="text-base md:text-lg max-w-[560px]" style={{ color: "#94A3B8" }}>
-          TBDY, İmar Yönetmeliği, hakediş takibi, şantiye analizi — hepsi bir arada. Türk mühendis, mimar ve müteahhitler için tasarlandı.
+          Hakediş takibi, proje yönetimi ve ekip koordinasyonu — artık otomatik. Türk mühendis, mimar ve müteahhitler için tasarlandı.
         </p>
 
         {/* CTA Buttons */}
