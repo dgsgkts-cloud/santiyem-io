@@ -3,6 +3,7 @@ import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, Ref
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo } from "@/lib/hakedisExport";
+import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
