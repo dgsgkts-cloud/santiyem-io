@@ -19,6 +19,7 @@ import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi.tsx";
 import Iletisim from "./pages/Iletisim.tsx";
 import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 
 const queryClient = new QueryClient();
 
