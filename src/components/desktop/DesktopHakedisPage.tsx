@@ -526,7 +526,11 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     <HakedisItemsSection hakedisId={h.id} />
 
                     <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
-                      <button onClick={() => exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
+                      <button onClick={async () => {
+                        const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
+                        const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
+                        exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
+                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
                       <button onClick={() => { if (confirm("Bu hakediş silinsin mi?")) deleteHakedis(h.id); }} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
