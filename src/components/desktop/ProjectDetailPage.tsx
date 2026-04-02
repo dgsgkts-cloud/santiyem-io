@@ -6,6 +6,8 @@ import { useProjectFiles } from "@/hooks/useProjectFiles";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useUser } from "@/contexts/UserContext";
 import { useProjectNotes } from "@/hooks/useProjectNotes";
+import { useTasks } from "@/hooks/useTasks";
+import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 
 const STATUS_OPTIONS = [
