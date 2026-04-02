@@ -340,10 +340,12 @@ const PricingPanel = () => {
 
               <div className="space-y-2">
                 <Button
-                  onClick={plan.id === "enterprise" ? () => setShowEnterpriseForm(true) : undefined}
+                  onClick={() => plan.id === "free" ? undefined : handlePurchase(plan.id)}
+                  disabled={loadingPlan !== null && loadingPlan !== plan.id}
                   className={`w-full font-semibold h-11 ${plan.btnStyle === "primary" ? "text-white" : "bg-transparent border border-border text-foreground hover:bg-secondary"}`}
                   style={plan.btnStyle === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
                 >
+                  {loadingPlan === plan.id && <Loader2 size={16} className="animate-spin mr-1" />}
                   {plan.btnText}
                 </Button>
               </div>
