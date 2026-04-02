@@ -200,7 +200,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" ? "#FF6B2B" : isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Pro ⭐" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
+                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
               {!isAdmin && plan === "free" && (
                 <button
