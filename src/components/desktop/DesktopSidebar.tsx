@@ -135,6 +135,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isLocked =
                   (item.id === "projects" && !canAccessProjects(plan, role)) ||
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
+                  (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "render" && !canAccessRender(plan)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
