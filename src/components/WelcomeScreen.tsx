@@ -43,16 +43,16 @@ const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
 
       <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <HardHat className="w-3.5 h-3.5" />
-          <span>Yapısal Analiz</span>
+          <Wallet className="w-3.5 h-3.5" />
+          <span>Hakediş Analizi</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Camera className="w-3.5 h-3.5" />
-          <span>Fotoğraf Analizi</span>
+          <FolderOpen className="w-3.5 h-3.5" />
+          <span>Proje Durumu</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <FileSearch className="w-3.5 h-3.5" />
-          <span>Mevzuat Rehberi</span>
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>Nakit Akışı</span>
         </div>
       </div>
     </div>
