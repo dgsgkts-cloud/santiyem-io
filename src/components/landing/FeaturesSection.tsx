@@ -1,12 +1,12 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const FEATURES = [
-  { emoji: "💬", title: "Sektöre Özel AI Asistan", desc: "TBDY 2018, İmar Yönetmeliği ve TS standartlarına göre anında Türkçe yanıt. ChatGPT'nin yapamadığı sektöre özel cevaplar.", sub: "→ Mevzuat sorgula, hesap yaptır, belge analiz et" },
-  { emoji: "📋", title: "Şantiye Takip Sistemi", desc: "Villa 1'den Arsuz Apt.'a kadar tüm projelerinizi takip edin. İş kalemleri, alt kalemler, hatırlatıcılar, fotoğraf belgeleme.", sub: "→ Geciken işleri anında görün" },
-  { emoji: "🧾", title: "Akıllı Hakediş Hazırlama", desc: "Poz girişinden KDV-stopaj hesabına, PDF çıktısına kadar tek akışta. AI hataları tespit eder, siz onaylarsınız.", sub: "→ Saatlik iş 10 dakikaya iner" },
-  { emoji: "📸", title: "Şantiye AI Analizi", desc: "Segregasyon, çatlak, donatı sorunu — fotoğraf yükleyin, AI tespit etsin. Sebep, risk seviyesi ve çözüm önerisiyle.", sub: "→ Sahada anlık kontrol" },
-  { emoji: "⚡", title: "EKB Ön Hesaplama", desc: "Bina bilgilerini girin, enerji sınıfını görün. BEP-TR'ye gitmeden önce A'dan G'ye tahmini sınıfınızı öğrenin.", sub: "→ Resmi başvuru öncesi hazırlık" },
-  { emoji: "🧮", title: "Mühendislik Hesap Kütüphanesi", desc: "TAKS/KAKS, beton hacmi, demir miktarı, ısı kaybı, inşaat maliyeti — tüm hesaplar bir tıkla, PDF çıktısıyla.", sub: "→ Excel'e veda edin" },
+  { emoji: "🧾", title: "Hakedişi Dakikada Hazırla", desc: "KDV ve stopaj otomatik hesaplanır. AI hata kontrolü yapar. PDF ve Excel olarak indir.", sub: "→ Saatlik iş 10 dakikaya iner" },
+  { emoji: "📋", title: "Tüm Şantiyeni Tek Ekranda Gör", desc: "İş kalemleri, kişi atama, hatırlatıcılar ve fotoğraf belgeleme. Geciken işleri anında fark et.", sub: "→ Proje & Şantiye Takibi" },
+  { emoji: "👥", title: "Ekibinle Ortak Çalış", desc: "Görev ata, not bırak, ilerlemeyi takip et. Ofis planında tüm ekip aynı panelde.", sub: "→ Ekip Koordinasyonu" },
+  { emoji: "💬", title: "Mevzuat ve Teknik Sorulara Anında Cevap", desc: "TBDY 2018, İmar Yönetmeliği, TS standartları — madde numarasıyla kaynaklı yanıt.", sub: "→ AI Asistan" },
+  { emoji: "🧮", title: "Mühendislik Hesaplarını Hızlandır", desc: "Zemin basıncı, rüzgar yükü, EKB, maliyet tahmini ve daha fazlası.", sub: "→ Hesap Araçları" },
+  { emoji: "📸", title: "Şantiye Sorunlarını Fotoğraftan Tespit Et", desc: "Segregasyon, çatlak, donatı hatası — fotoğraf yükle, AI saniyeler içinde raporlar.", sub: "→ Fotoğraf Analizi" },
 ];
 
 const FeatureCard = ({ f, i }: { f: typeof FEATURES[0]; i: number }) => {
