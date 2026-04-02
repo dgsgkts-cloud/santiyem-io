@@ -10,7 +10,7 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -36,15 +36,12 @@ const NAV_SECTIONS = [
     label: "ARAÇLAR",
     items: [
       { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
-      { id: "weather" as Tab, label: "Hava Durumu", icon: Camera },
       { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
-      { id: "events" as Tab, label: "Etkinlik Takvimi", icon: Calculator },
     ],
   },
   {
     label: "İÇERİK",
     items: [
-      { id: "news" as Tab, label: "Haberler ve Mevzuat", icon: FileText },
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
       { id: "daily" as Tab, label: "Günlük Bilgi", icon: Lightbulb },
     ],

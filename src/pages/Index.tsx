@@ -3,9 +3,6 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
-import WeatherPanel from "@/components/WeatherPanel";
-import NewsPanel from "@/components/NewsPanel";
-import EventsPanel from "@/components/EventsPanel";
 import CalculatorsPanel from "@/components/CalculatorsPanel";
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
@@ -23,10 +20,10 @@ import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
-  RotateCcw, MessageSquare, CloudRain, Newspaper, Calendar,
+  RotateCcw, MessageSquare,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, BarChart3, Settings, LogOut, User, Plus, Bell
+  Lightbulb, Settings, LogOut, User, Plus, Bell
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
@@ -35,7 +32,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "weather" | "news" | "events" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings";
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -44,9 +41,6 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
-  { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
-  { id: "news", label: "Haberler", shortLabel: "Haber", icon: Newspaper },
-  { id: "events", label: "Etkinlikler", shortLabel: "Etkinlik", icon: Calendar },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   
@@ -64,10 +58,6 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
-  
-  { id: "weather", label: "Hava Durumu", emoji: "🌤️", icon: CloudRain },
-  { id: "news", label: "Haberler & Piyasa", emoji: "📊", icon: BarChart3 },
-  { id: "events", label: "Etkinlikler", emoji: "📅", icon: Calendar },
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
   { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
@@ -77,10 +67,7 @@ const TAB_TITLES: Record<string, string> = {
   dashboard: "Dashboard",
   chat: "AI Asistan",
   daily: "Günlük Bilgi",
-  weather: "Fotoğraf Analizi",
-  news: "Belge Arşivi",
-  events: "Hesap Araçları",
-  calc: "EKB Hesaplama",
+  calc: "Hesap Araçları",
   render: "Proje Analizi",
   reminders: "Mevzuat Arama",
   pricing: "Planlar",
@@ -235,12 +222,6 @@ const Index = () => {
                   <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
                 ) : activeTab === "daily" ? (
                   <DailyKnowledgePanel />
-                ) : activeTab === "weather" ? (
-                  <WeatherPanel />
-                ) : activeTab === "news" ? (
-                  <NewsPanel />
-                ) : activeTab === "events" ? (
-                  <EventsPanel />
                 ) : activeTab === "calc" ? (
                   <CalculatorsPanel />
                 ) : activeTab === "render" ? (
@@ -478,12 +459,6 @@ const Index = () => {
             <DesktopHakedisPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
-          ) : activeTab === "weather" ? (
-            <WeatherPanel />
-          ) : activeTab === "news" ? (
-            <NewsPanel />
-          ) : activeTab === "events" ? (
-            <EventsPanel />
           ) : activeTab === "calc" ? (
             <CalculatorsPanel />
           ) : activeTab === "render" ? (
