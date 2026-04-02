@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Package, X, Pencil, Check, GripVertical } from "lucide-react";
+import { Plus, Trash2, Package, X, Pencil, Check, GripVertical, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { useHakedisItems, type HakedisItem } from "@/hooks/useHakedisItems";
 
 const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "gün", "saat", "sefer"];
@@ -130,6 +131,8 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
   const [price, setPrice] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const total = items.reduce((s, i) => s + i.total_price, 0);
 
@@ -152,6 +155,55 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
     setDragOverIndex(null);
   };
 
+  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) { toast.error("CSV dosyası boş veya başlık satırı eksik"); return; }
+
+      // Skip header row
+      let added = 0;
+      for (let i = 1; i < lines.length; i++) {
+        // Support both ; and , as delimiter
+        const delimiter = lines[0].includes(";") ? ";" : ",";
+        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ""));
+        if (cols.length < 4) continue;
+
+        const description = cols[0];
+        const csvUnit = cols[1] || "adet";
+        const quantity = parseFloat(cols[2]?.replace(",", ".")) || 0;
+        const unit_price = parseFloat(cols[3]?.replace(",", ".")) || 0;
+
+        if (!description || quantity <= 0 || unit_price <= 0) continue;
+        await addItem({ description, unit: csvUnit, quantity, unit_price });
+        added++;
+      }
+
+      if (added > 0) {
+        toast.success(`${added} iş kalemi CSV'den aktarıldı`);
+      } else {
+        toast.error("Geçerli kalem bulunamadı. Format: İş Kalemi;Birim;Miktar;Birim Fiyat");
+      }
+    } catch {
+      toast.error("CSV dosyası okunamadı");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const downloadSampleCsv = () => {
+    const csv = "İş Kalemi;Birim;Miktar;Birim Fiyat\nBeton Dökümü C30;m³;120;850\nDemir İşçiliği;kg;5000;32\nKalıp İşçiliği;m²;400;180\n";
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "is_kalemleri_sablonu.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
       <div className="flex items-center justify-between mb-2">
@@ -161,10 +213,23 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
             İş Kalemleri {items.length > 0 && `(${items.length})`}
           </span>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
-          {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-          {showForm ? "Kapat" : "Ekle"}
-        </button>
+        <div className="flex items-center gap-2">
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="text-[10px] font-medium flex items-center gap-1"
+            style={{ color: "#22C55E" }}
+            title="CSV'den içe aktar"
+          >
+            <Upload className="w-3 h-3" />
+            {importing ? "Aktarılıyor..." : "CSV Aktar"}
+          </button>
+          <button onClick={() => setShowForm(!showForm)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
+            {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+            {showForm ? "Kapat" : "Ekle"}
+          </button>
+        </div>
       </div>
 
       {loading && <p className="text-[11px]" style={{ color: "#64748B" }}>Yükleniyor...</p>}
@@ -222,6 +287,9 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           <button onClick={handleAdd} disabled={!desc || !qty || !price}
             className="w-full py-2 rounded-lg text-[12px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
             Kalem Ekle
+          </button>
+          <button onClick={downloadSampleCsv} className="w-full text-center text-[10px] underline" style={{ color: "#64748B" }}>
+            Örnek CSV şablonunu indir
           </button>
         </div>
       )}
