@@ -405,23 +405,6 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </button>
           </div>
 
-          {/* Daily Knowledge */}
-          <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-              <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Günlük Bilgi</h3>
-            </div>
-            <p className="text-[12px] lg:text-[13px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Deprem Yönetmeliğinde Min. Kolon Boyutu</p>
-            <p className="text-[11px] lg:text-[12px] leading-relaxed mb-2" style={{ color: "#64748B" }}>
-              TBDY 2018'e göre deprem bölgelerinde minimum kolon kesit boyutu 300mm olarak belirlenmiştir...
-            </p>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>TBDY 2018</span>
-              <button onClick={() => onTabChange("daily")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium ml-auto" style={{ color: "#FF6B2B" }}>
-                Devamı <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
 
           {/* Upcoming */}
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
