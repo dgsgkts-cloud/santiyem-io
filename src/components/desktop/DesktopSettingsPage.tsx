@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, PlanType } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
 import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
+import { supabase } from "@/integrations/supabase/client";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
@@ -69,20 +70,7 @@ const DesktopSettingsPage = () => {
             </div>
           )}
           {activeTab === "company" && <CompanyProfileTab />}
-          {activeTab === "notifications" && (
-            <div className="space-y-5 lg:space-y-6">
-              <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
-                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
-              </div>
-              <div className="space-y-3 lg:space-y-4">
-                <ToggleRow label="E-posta Bildirimleri" desc="Günlük özet ve önemli güncellemeler" defaultOn />
-                <ToggleRow label="Proje Güncellemeleri" desc="Proje durumu değişikliklerinde bildir" defaultOn />
-                <ToggleRow label="Hakediş Bildirimleri" desc="Hakediş onay ve ödeme bildirimleri" defaultOn />
-                <ToggleRow label="Pazarlama E-postaları" desc="Yeni özellik ve kampanya haberleri" />
-              </div>
-            </div>
-          )}
+          {activeTab === "notifications" && <NotificationsTab />}
           {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
@@ -263,24 +251,147 @@ const FormField = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const ToggleRow = ({ label, desc, defaultOn }: { label: string; desc: string; defaultOn?: boolean }) => {
-  const [on, setOn] = useState(!!defaultOn);
+const ToggleRow = ({ label, desc, on, onChange, disabled }: { label: string; desc: string; on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) => {
   return (
-    <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732" }}>
+    <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732", opacity: disabled ? 0.6 : 1 }}>
       <div className="min-w-0">
         <p className="text-[12px] lg:text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{label}</p>
         <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{desc}</p>
       </div>
       <button
-        onClick={() => setOn(!on)}
+        onClick={() => !disabled && onChange(!on)}
         className="relative w-10 h-5 rounded-full transition-colors duration-150 shrink-0"
-        style={{ backgroundColor: on ? "#FF6B2B" : "#1E2732" }}
+        style={{ backgroundColor: on ? "#FF6B2B" : "#1E2732", cursor: disabled ? "not-allowed" : "pointer" }}
       >
         <div
           className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150"
           style={{ transform: on ? "translateX(20px)" : "translateX(2px)" }}
         />
       </button>
+    </div>
+  );
+};
+
+// ─── Notifications Tab ───
+const NotificationsTab = () => {
+  const { user } = useUser();
+  const [prefs, setPrefs] = useState({
+    payment_due_reminder: true,
+    payment_overdue_reminder: true,
+    weekly_summary: true,
+    whatsapp_enabled: false,
+    whatsapp_number: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("notification_preferences")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setPrefs({
+          payment_due_reminder: data.payment_due_reminder,
+          payment_overdue_reminder: data.payment_overdue_reminder,
+          weekly_summary: data.weekly_summary,
+          whatsapp_enabled: data.whatsapp_enabled,
+          whatsapp_number: data.whatsapp_number || "",
+        });
+      } else {
+        await supabase.from("notification_preferences").insert({ user_id: user.id });
+      }
+      setLoading(false);
+    })();
+  }, [user]);
+
+  const save = async (updates: Partial<typeof prefs>) => {
+    if (!user) return;
+    const newPrefs = { ...prefs, ...updates };
+    setPrefs(newPrefs);
+    setSaving(true);
+    const { error } = await supabase
+      .from("notification_preferences")
+      .update({
+        payment_due_reminder: newPrefs.payment_due_reminder,
+        payment_overdue_reminder: newPrefs.payment_overdue_reminder,
+        weekly_summary: newPrefs.weekly_summary,
+        whatsapp_enabled: newPrefs.whatsapp_enabled,
+        whatsapp_number: newPrefs.whatsapp_number || null,
+      })
+      .eq("user_id", user.id);
+    setSaving(false);
+    if (error) toast.error("Tercihler kaydedilemedi");
+    else toast.success("Bildirim tercihleri güncellendi");
+  };
+
+  if (loading) return <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>Yükleniyor...</p>;
+
+  return (
+    <div className="space-y-5 lg:space-y-6">
+      <div>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
+        <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>ZORUNLU BİLDİRİMLER</p>
+        <ToggleRow label="Kayıt Onay E-postası" desc="Hesap doğrulama e-postası (kapatılamaz)" on={true} onChange={() => {}} disabled />
+        <ToggleRow label="Şifre Sıfırlama" desc="Şifre sıfırlama bağlantısı (kapatılamaz)" on={true} onChange={() => {}} disabled />
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>E-POSTA BİLDİRİMLERİ</p>
+        <ToggleRow
+          label="Gecikmiş Ödeme Bildirimi"
+          desc="Hakediş vade günü gelince otomatik e-posta"
+          on={prefs.payment_due_reminder}
+          onChange={v => save({ payment_due_reminder: v })}
+        />
+        <ToggleRow
+          label="30+ Gün Gecikme Uyarısı"
+          desc="30 gün ödenmemiş hakedişler için uyarı"
+          on={prefs.payment_overdue_reminder}
+          onChange={v => save({ payment_overdue_reminder: v })}
+        />
+        <ToggleRow
+          label="Haftalık Özet (Pazartesi 08:00)"
+          desc="Haftalık proje ve hakediş durumu özeti"
+          on={prefs.weekly_summary}
+          onChange={v => save({ weekly_summary: v })}
+        />
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>WHATSAPP BİLDİRİMLERİ</p>
+        <ToggleRow
+          label="WhatsApp Bildirimi"
+          desc="Numara girilince aktif olur"
+          on={prefs.whatsapp_enabled}
+          onChange={v => save({ whatsapp_enabled: v })}
+        />
+        {prefs.whatsapp_enabled && (
+          <div className="mt-2">
+            <input
+              value={prefs.whatsapp_number}
+              onChange={e => setPrefs(p => ({ ...p, whatsapp_number: e.target.value }))}
+              onBlur={() => save({ whatsapp_number: prefs.whatsapp_number })}
+              placeholder="+90 5XX XXX XX XX"
+              className="w-full rounded-lg px-3 text-[13px] outline-none"
+              style={{ height: 36, backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+        <p className="text-[11px]" style={{ color: "#22C55E" }}>
+          📧 Gönderen adres: <strong>noreply@muhendisai.com</strong>
+        </p>
+      </div>
     </div>
   );
 };
