@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useUser, canAccessProjects, canAccessHakedis, canAccessReminders } from "@/contexts/UserContext";
+import { useUser, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders } from "@/contexts/UserContext";
 import {
-  FolderOpen, Clock, TrendingUp, AlertTriangle,
+  FolderOpen, Clock, TrendingUp, AlertTriangle, Wallet,
   MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
@@ -36,21 +36,52 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
+  const [monthRevenue, setMonthRevenue] = useState(0);
+  const [monthExpense, setMonthExpense] = useState(0);
+  const [cashWarning, setCashWarning] = useState("");
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string; requiresOffice: boolean }>({ open: false, feature: "", requiresOffice: false });
   const openUpgrade = useCallback((feature: string, requiresOffice: boolean) => setUpgradeModal({ open: true, feature, requiresOffice }), []);
   const name = profile?.full_name?.split(" ")[0] || "Mühendis";
 
-  // Fetch hakedis totals
+  const profitLocked = !canAccessProfitability(plan, role);
+
+  // Fetch hakedis totals + this month revenue
   useEffect(() => {
     if (!user) return;
     supabase
       .from("project_hakedis")
-      .select("net,status")
-      .eq("user_id", user.id)
+      .select("net,status,payment_date")
       .then(({ data }) => {
         if (!data) return;
         setTotalHakedis(data.reduce((s, h) => s + Number(h.net), 0));
         setPendingHakedis(data.filter(h => h.status === "Bekliyor").reduce((s, h) => s + Number(h.net), 0));
+        // This month revenue
+        const now = new Date();
+        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const rev = data
+          .filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(ym))
+          .reduce((s, h) => s + Number(h.net), 0);
+        setMonthRevenue(rev);
+        // Cash warning
+        const pending = data.filter(h => h.status === "Bekliyor" || h.status === "Gecikmiş").reduce((s, h) => s + Number(h.net), 0);
+        if (pending > 0) {
+          setCashWarning(`⚠️ ${formatCurrency(pending)} tahsilat bekliyor. Detay →`);
+        }
+      });
+  }, [user]);
+
+  // Fetch this month expenses
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    supabase
+      .from("project_expenses")
+      .select("amount")
+      .gte("expense_date", startOfMonth)
+      .then(({ data }) => {
+        if (!data) return;
+        setMonthExpense(data.reduce((s, e) => s + Number(e.amount), 0));
       });
   }, [user]);
 
@@ -140,6 +171,46 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </div>
           );
         })}
+      </div>
+
+      {/* Financial Summary Widget */}
+      <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Finansal Özet — Bu Ay</h3>
+          </div>
+          <button onClick={() => onTabChange("profitability")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+            Detay <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Ciro</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthRevenue)}</p>
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Gider</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(monthExpense)}</p>
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>Net Kar</p>
+            <p className="text-lg lg:text-xl font-bold" style={{ color: monthRevenue - monthExpense >= 0 ? "#22C55E" : "#EF4444", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {formatCurrency(monthRevenue - monthExpense)}
+            </p>
+          </div>
+        </div>
+        {cashWarning && (
+          <div
+            className="mt-3 rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:opacity-90"
+            style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+            onClick={() => onTabChange("profitability")}
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#EF4444" }} />
+            <span className="text-[11px] lg:text-[12px] font-medium" style={{ color: "#FCA5A5" }}>{cashWarning}</span>
+          </div>
+        )}
       </div>
 
       {/* Main content */}
