@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import { encode as base64Encode } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
+import { encodeBase64 } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
