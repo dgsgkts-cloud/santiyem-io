@@ -236,7 +236,7 @@ const PricingPanel = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Şantiyeniz İçin Doğru Plan</h1>
-        <p className="text-muted-foreground">İlk 14 gün ücretsiz. Kredi kartı gerekmez.</p>
+        <p className="text-muted-foreground">İlk 14 gün ücretsiz.</p>
       </div>
 
       {/* Toggle */}

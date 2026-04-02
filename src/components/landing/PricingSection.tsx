@@ -38,7 +38,7 @@ const PricingSection = () => {
         <div className="text-center mb-10">
           <span className="text-xs font-semibold uppercase tracking-widest mb-3 block" style={{ color: "#FF6B2B" }}>FİYATLANDIRMA</span>
           <h2 className="text-3xl md:text-[40px] font-bold text-white mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyeniz İçin Doğru Plan</h2>
-          <p style={{ color: "#94A3B8" }}>İlk 14 gün ücretsiz. Kredi kartı gerekmez.</p>
+          <p style={{ color: "#94A3B8" }}>İlk 14 gün ücretsiz.</p>
         </div>
 
         {/* Toggle */}
