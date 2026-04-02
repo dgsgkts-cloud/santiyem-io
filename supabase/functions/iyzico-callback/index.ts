@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { encode as base64Encode } from 'https://deno.land/std@0.224.0/encoding/base64.ts'
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
-const IYZICO_BASE_URL = 'https://sandbox-api.iyzipay.com' // sandbox mode
+const IYZICO_BASE_URL = 'https://sandbox-api.iyzipay.com'
 
 const PLAN_MAP: Record<string, string> = {
   pro: 'pro',
@@ -10,32 +11,21 @@ const PLAN_MAP: Record<string, string> = {
   enterprise: 'enterprise',
 }
 
-function generatePKIString(obj: Record<string, unknown>): string {
-  let pki = '['
-  for (const [key, value] of Object.entries(obj)) {
-    if (value !== undefined && value !== null) {
-      pki += `${key}=${value},`
-    }
-  }
-  pki = pki.replace(/,$/, '')
-  pki += ']'
-  return pki
+function toBase64(str: string): string {
+  return base64Encode(new TextEncoder().encode(str))
 }
 
 async function sha256Base64(data: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(data))
-  return btoa(String.fromCharCode(...new Uint8Array(hash)))
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data))
+  return base64Encode(new Uint8Array(hash))
 }
 
-async function generateAuthorizationHeader(request: Record<string, unknown>): Promise<string> {
-  const pki = generatePKIString(request)
+async function generateAuthorizationHeader(pki: string): Promise<string> {
   const randomString = crypto.randomUUID().replace(/-/g, '').substring(0, 8)
   const hashStr = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + pki
   const shaHash = await sha256Base64(hashStr)
   const authorizationParams = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${shaHash}`
-  const base64 = btoa(authorizationParams)
-  return `IYZWS ${base64}`
+  return `IYZWS ${toBase64(authorizationParams)}`
 }
 
 Deno.serve(async (req) => {
@@ -47,7 +37,6 @@ Deno.serve(async (req) => {
       return new Response('Missing txnId', { status: 400 })
     }
 
-    // Parse form data from iyzico callback (POST with form-urlencoded)
     let token = ''
     if (req.method === 'POST') {
       const formData = await req.formData()
@@ -55,7 +44,7 @@ Deno.serve(async (req) => {
     }
 
     if (!token) {
-      return redirectWithStatus('failed', 'Token bulunamadı')
+      return redirectWithStatus('failed', 'Token bulunamadi')
     }
 
     const supabaseAdmin = createClient(
@@ -63,14 +52,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Retrieve payment result from iyzico
-    const requestBody: Record<string, unknown> = {
-      locale: 'tr',
-      conversationId: txnId.substring(0, 20),
-      token: token,
-    }
-
-    const authorization = await generateAuthorizationHeader(requestBody)
+    const pki = `[locale=tr,conversationId=${txnId.substring(0, 20)},token=${token}]`
+    const authorization = await generateAuthorizationHeader(pki)
 
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/auth/ecom/detail`, {
       method: 'POST',
@@ -78,14 +61,17 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         'Authorization': authorization,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        locale: 'tr',
+        conversationId: txnId.substring(0, 20),
+        token,
+      }),
     })
 
     const iyzicoData = await iyzicoResponse.json()
     console.log('iyzico callback result:', iyzicoData.status, iyzicoData.paymentStatus)
 
     if (iyzicoData.status === 'success' && iyzicoData.paymentStatus === 'SUCCESS') {
-      // Payment successful - update transaction
       await supabaseAdmin
         .from('payment_transactions')
         .update({
@@ -96,7 +82,6 @@ Deno.serve(async (req) => {
         })
         .eq('id', txnId)
 
-      // Get transaction to find user and plan
       const { data: txn } = await supabaseAdmin
         .from('payment_transactions')
         .select('user_id, plan_name')
@@ -104,20 +89,17 @@ Deno.serve(async (req) => {
         .single()
 
       if (txn) {
-        // Update user plan
         const planCode = PLAN_MAP[txn.plan_name] || txn.plan_name
         await supabaseAdmin
           .from('profiles')
           .update({ plan: planCode, updated_at: new Date().toISOString() })
           .eq('user_id', txn.user_id)
-
         console.log(`Plan updated to ${planCode} for user ${txn.user_id}`)
       }
 
       return redirectWithStatus('success')
     } else {
-      // Payment failed
-      const errorMsg = iyzicoData.errorMessage || 'Ödeme başarısız'
+      const errorMsg = iyzicoData.errorMessage || 'Odeme basarisiz'
       await supabaseAdmin
         .from('payment_transactions')
         .update({
@@ -132,7 +114,7 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error('Callback error:', err)
-    return redirectWithStatus('failed', 'Sunucu hatası')
+    return redirectWithStatus('failed', 'Sunucu hatasi')
   }
 })
 
@@ -143,8 +125,6 @@ function redirectWithStatus(status: string, message?: string): Response {
   
   return new Response(null, {
     status: 302,
-    headers: {
-      'Location': `${baseUrl}/odeme-sonucu?${params.toString()}`,
-    },
+    headers: { 'Location': `${baseUrl}/odeme-sonucu?${params.toString()}` },
   })
 }
