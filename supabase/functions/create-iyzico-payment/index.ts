@@ -113,11 +113,11 @@ Deno.serve(async (req) => {
 
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
     const bodyJson = JSON.stringify(requestBody)
-    const authorization = await generateAuthV2(uri, bodyJson)
+    const { authorization, randomKey } = await generateAuthV2(uri, bodyJson)
 
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}${uri}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': authorization },
+      headers: { 'Content-Type': 'application/json', 'Authorization': authorization, 'x-iyzi-rnd': randomKey },
       body: bodyJson,
     })
 
