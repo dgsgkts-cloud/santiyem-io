@@ -31,8 +31,8 @@ export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan =
 export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === "plus" || plan === "pro";
 
 // Feature access helpers
-export const canAccessProjects = (plan: PlanType) => isOfficePlan(plan);
-export const canAccessHakedis = (plan: PlanType) => isOfficePlan(plan);
+export const canAccessProjects = (plan: PlanType, role?: UserRole) => role === "admin" || isOfficePlan(plan);
+export const canAccessHakedis = (plan: PlanType, role?: UserRole) => role === "admin" || isOfficePlan(plan);
 export const canAccessRender = (plan: PlanType) => true;
 export const canAccessReminders = (plan: PlanType) => true;
 export const canDownload = (plan: PlanType) => plan === "plus" || plan === "pro" || isOfficePlan(plan);

@@ -31,7 +31,7 @@ const UPCOMING_STATIC = [
 ];
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile, user, plan } = useUser();
+  const { profile, user, plan, role } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
@@ -72,8 +72,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     return diff >= 0 && diff <= 7;
   }).length;
 
-  const projectsLocked = !canAccessProjects(plan);
-  const hakedisLocked = !canAccessHakedis(plan);
+  const projectsLocked = !canAccessProjects(plan, role);
+  const hakedisLocked = !canAccessHakedis(plan, role);
   const remindersLocked = !canAccessReminders(plan);
 
   const statCards = [

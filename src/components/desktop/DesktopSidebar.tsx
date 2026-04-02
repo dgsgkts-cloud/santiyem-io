@@ -131,8 +131,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
                 // Check if feature is locked
                 const isLocked =
-                  (item.id === "projects" && !canAccessProjects(plan)) ||
-                  (item.id === "hakedis" && !canAccessHakedis(plan)) ||
+                  (item.id === "projects" && !canAccessProjects(plan, role)) ||
+                  (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
                   (item.id === "render" && !canAccessRender(plan)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
