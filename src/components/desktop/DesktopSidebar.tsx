@@ -138,7 +138,6 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
-                  (item.id === "render" && !canAccessRender(plan)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
                 const handleClick = () => {
