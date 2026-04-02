@@ -8,8 +8,8 @@ const LandingFooter = () => (
       {/* Brand */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <img src={logo} alt="MühendisAI" className="h-7 w-7" />
-          <span className="font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>MühendisAI</span>
+          <img src={logo} alt="Şantiyem" className="h-7 w-7" />
+          <span className="font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyem</span>
         </div>
         <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
           Türk mühendis, mimar ve müteahhitler için tasarlanmış yapay zeka destekli mesleki platform.

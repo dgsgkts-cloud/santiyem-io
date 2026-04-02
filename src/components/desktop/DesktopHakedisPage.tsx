@@ -191,7 +191,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
   const [chartRange, setChartRange] = useState<"6" | "12" | "all">("12");
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [pdfSig, setPdfSig] = useState<PDFSignatureInfo>(() => {
-    try { return JSON.parse(localStorage.getItem("muhendisai_pdf_sig") || "{}"); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem("santiyem_pdf_sig") || "{}"); } catch { return {}; }
   });
   const [pdfIncludeHeader, setPdfIncludeHeader] = useState(true);
   const [pdfIncludeSignature, setPdfIncludeSignature] = useState(true);
@@ -752,7 +752,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               <button
                 disabled={pdfProgress !== null}
                 onClick={async () => {
-                  localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
+                  localStorage.setItem("santiyem_pdf_sig", JSON.stringify(pdfSig));
                   setPdfProgress(0);
                   try {
                     // Fetch all work items for all hakedisler

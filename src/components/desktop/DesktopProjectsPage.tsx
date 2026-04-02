@@ -33,7 +33,7 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
-const HIDDEN_PROJECTS_KEY = "muhendisai_hidden_projects";
+const HIDDEN_PROJECTS_KEY = "santiyem_hidden_projects";
 
 const getHiddenProjects = (): string[] => {
   try {

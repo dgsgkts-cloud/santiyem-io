@@ -13,7 +13,7 @@ export interface Reminder {
   assignee_name?: string;
 }
 
-const STORAGE_KEY = "muhendisai_reminders";
+const STORAGE_KEY = "santiyem_reminders";
 
 export function useReminders() {
   const { user } = useUser();

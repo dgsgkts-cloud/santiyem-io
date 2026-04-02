@@ -27,7 +27,7 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI — Şifre Sıfırlama Talebi</Preview>
+    <Preview>Şantiyem — Şifre Sıfırlama Talebi</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
@@ -45,7 +45,7 @@ export const RecoveryEmail = ({
           </Text>
 
           <Text style={text}>
-            MühendisAI hesabınız için şifre sıfırlama talebinde bulundunuz.
+            Şantiyem hesabınız için şifre sıfırlama talebinde bulundunuz.
             Yeni bir şifre belirlemek için aşağıdaki butona tıklayın.
           </Text>
 

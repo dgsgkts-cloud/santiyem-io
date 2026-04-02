@@ -374,7 +374,7 @@ export function exportHakedisPDF(
     doc.setFontSize(8);
     doc.setTextColor(150);
     doc.text(
-      "Bu belge MühendisAI platformu tarafından oluşturulmuştur. Taslak niteliğinde olup yetkili kişilerce kontrol edilmesi gerekmektedir.",
+      "Bu belge Şantiyem platformu tarafından oluşturulmuştur. Taslak niteliğinde olup yetkili kişilerce kontrol edilmesi gerekmektedir.",
       15, finalY, { maxWidth: pageWidth - 30 }
     );
     finalY += 10;

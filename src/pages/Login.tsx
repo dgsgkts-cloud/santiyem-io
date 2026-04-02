@@ -19,7 +19,7 @@ const FEATURES = [
 ];
 
 const Login = () => {
-  useSEO({ title: "Giriş Yap | MühendisAI" });
+  useSEO({ title: "Giriş Yap | Şantiyem" });
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,9 +59,9 @@ const Login = () => {
     <div className="w-full max-w-[400px]" style={isLg ? {} : undefined}>
       <div className="rounded-2xl p-6 lg:p-8" style={{ backgroundColor: isLg ? "#161C23" : "#1A1F2E", border: "1px solid #1E2732" }}>
         <div className="flex flex-col items-center mb-6 lg:mb-8">
-          <img src={logo} alt="MühendisAI" className="w-12 h-12 lg:w-14 lg:h-14 mb-3" />
+          <img src={logo} alt="Şantiyem" className="w-12 h-12 lg:w-14 lg:h-14 mb-3" />
           <h1 className="text-lg lg:text-xl font-bold" style={{ color: "#F1F5F9", fontFamily: isLg ? "'Space Grotesk', sans-serif" : undefined }}>
-            MühendisAI'ya Giriş Yap
+            Şantiyem'ya Giriş Yap
           </h1>
           <p className="text-sm mt-1" style={{ color: "#64748B" }}>İnşaat & Mühendislik Asistanınız</p>
         </div>

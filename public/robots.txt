@@ -10,4 +10,4 @@ Disallow: /proje-yonetimi
 Disallow: /hakedis-yonetimi
 Disallow: /ayarlar
 
-Sitemap: https://muhendisai.com/sitemap.xml
+Sitemap: https://santiyem.io/sitemap.xml

@@ -4,7 +4,7 @@ import LegalPage from "./LegalPage";
 const sections = [
   {
     title: "Hizmet Teslimatı",
-    content: <p>MühendisAI dijital bir hizmet platformudur. Fiziksel teslimat söz konusu değildir. Abonelik satın alımı tamamlandıktan sonra hizmetlere anında ve kesintisiz erişim sağlanır. Hizmet erişimi 7/24 aktiftir.</p>,
+    content: <p>Şantiyem dijital bir hizmet platformudur. Fiziksel teslimat söz konusu değildir. Abonelik satın alımı tamamlandıktan sonra hizmetlere anında ve kesintisiz erişim sağlanır. Hizmet erişimi 7/24 aktiftir.</p>,
   },
   {
     title: "Ücretsiz Deneme",
@@ -34,5 +34,5 @@ const sections = [
   },
 ];
 
-const TeslimatIade = () => { useSEO({ title: "Teslimat ve İade Şartları | MühendisAI" }); return <LegalPage title="Teslimat ve İade Şartları" sections={sections} />; };
+const TeslimatIade = () => { useSEO({ title: "Teslimat ve İade Şartları | Şantiyem" }); return <LegalPage title="Teslimat ve İade Şartları" sections={sections} />; };
 export default TeslimatIade;

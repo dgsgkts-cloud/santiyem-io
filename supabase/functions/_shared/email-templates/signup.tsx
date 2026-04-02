@@ -35,7 +35,7 @@ export const SignupEmail = ({
   return (
     <Html lang="tr" dir="ltr">
       <Head />
-      <Preview>MühendisAI'ya Hoş Geldiniz! E-posta adresinizi doğrulayın</Preview>
+      <Preview>Şantiyem'ya Hoş Geldiniz! E-posta adresinizi doğrulayın</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={logoSection}>
@@ -53,7 +53,7 @@ export const SignupEmail = ({
             </Text>
 
             <Text style={text}>
-              <strong>MühendisAI</strong>'ya kayıt olduğunuz için teşekkürler.
+              <strong>Şantiyem</strong>'ya kayıt olduğunuz için teşekkürler.
               Türkiye'nin inşaat sektörüne özel yapay zeka asistanına artık erişebilirsiniz.
             </Text>
 

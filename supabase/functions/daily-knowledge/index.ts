@@ -17,7 +17,7 @@ serve(async (req) => {
     let userPrompt = "";
 
     if (type === "technical") {
-      systemPrompt = `Sen MühendisAI'nın içerik üreticisisin. Türk mimar, mühendis ve müteahhitler için günlük teknik bilgi kartları üretiyorsun.
+      systemPrompt = `Sen Şantiyem'nın içerik üreticisisin. Türk mimar, mühendis ve müteahhitler için günlük teknik bilgi kartları üretiyorsun.
 
 KATEGORİLER (her gün farklı birini seç): TBDY 2018 deprem yönetmeliği / TS standartları / İmar mevzuatı / Yapı malzemeleri / Zemin ve temel / İş güvenliği / Enerji verimliliği
 
@@ -38,7 +38,7 @@ KURALLAR:
 - İçeriğin sonuna ekle: "⚠️ Güncel mevzuat değişiklikleri için resmi kaynakları kontrol ediniz."`;
       userPrompt = `Bugün için bir teknik bilgi kartı üret. Tarih: ${date}. Farklı bir kategori seç.`;
     } else {
-      systemPrompt = `Sen MühendisAI'nın içerik üreticisisin. Türk mühendisler için ilham verici, ilginç inşaat ve mühendislik içerikleri üretiyorsun.
+      systemPrompt = `Sen Şantiyem'nın içerik üreticisisin. Türk mühendisler için ilham verici, ilginç inşaat ve mühendislik içerikleri üretiyorsun.
 
 KATEGORİLER (her gün farklı birini seç): Dünya rekorları / İlginç mimari projeler / Yeni inşaat teknolojileri / Tarihten ilginç yapılar / Türkiye'den önemli projeler
 

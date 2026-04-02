@@ -46,8 +46,8 @@ const LandingNavbar = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-12" style={{ height: 64 }}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="MühendisAI" className="h-8 w-8" />
-            <span className="font-bold text-white text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>MühendisAI</span>
+            <img src={logo} alt="Şantiyem" className="h-8 w-8" />
+            <span className="font-bold text-white text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyem</span>
           </Link>
 
           {/* Desktop links */}

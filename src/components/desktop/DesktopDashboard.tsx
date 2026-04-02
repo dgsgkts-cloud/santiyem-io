@@ -49,7 +49,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const [overdueCount, setOverdueCount] = useState(0);
   const [overdueTotal, setOverdueTotal] = useState(0);
   const [overdueBannerDismissed, setOverdueBannerDismissed] = useState(() => {
-    try { const d = localStorage.getItem("muhendisai_overdue_dismiss"); return d === new Date().toISOString().slice(0, 10); } catch { return false; }
+    try { const d = localStorage.getItem("santiyem_overdue_dismiss"); return d === new Date().toISOString().slice(0, 10); } catch { return false; }
   });
   const [paymentTab, setPaymentTab] = useState<"week" | "month" | "overdue">("week");
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string; requiresOffice: boolean }>({ open: false, feature: "", requiresOffice: false });

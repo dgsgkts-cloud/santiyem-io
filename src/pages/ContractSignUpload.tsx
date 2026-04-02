@@ -169,7 +169,7 @@ export default function ContractSignUpload() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#FF6B2B" }}>
               <FileText className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-bold" style={{ color: "#F1F5F9" }}>MühendisAI Sözleşme Sistemi</span>
+            <span className="text-sm font-bold" style={{ color: "#F1F5F9" }}>Şantiyem Sözleşme Sistemi</span>
           </div>
           <h1 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{contract?.name || "Sözleşme"}</h1>
           <p className="text-xs mt-1" style={{ color: "#64748B" }}>Gönderen: {contract?.counterparty || "—"}</p>

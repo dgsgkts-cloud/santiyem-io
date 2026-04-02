@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 })
 
 function redirectWithStatus(status: string, message?: string): Response {
-  const baseUrl = 'https://muhendis-ai.lovable.app'
+  const baseUrl = 'https://santiyem.lovable.app'
   const params = new URLSearchParams({ status })
   if (message) params.set('message', message)
   return new Response(null, { status: 302, headers: { 'Location': `${baseUrl}/odeme-sonucu?${params.toString()}` } })

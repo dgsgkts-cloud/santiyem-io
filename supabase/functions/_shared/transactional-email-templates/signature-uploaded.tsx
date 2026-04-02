@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'MühendisAI'
+const SITE_NAME = 'Şantiyem'
 const BRAND_COLOR = '#FF6B2B'
 
 interface SignatureUploadedProps {

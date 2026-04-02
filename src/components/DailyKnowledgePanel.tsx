@@ -88,13 +88,13 @@ const DailyKnowledgePanel = () => {
   // Load saved items from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("muhendisai_saved_knowledge");
+      const saved = localStorage.getItem("santiyem_saved_knowledge");
       if (saved) setSavedItems(JSON.parse(saved));
     } catch {}
   }, []);
 
   const fetchContent = useCallback(async () => {
-    const key = `muhendisai_daily_${todayKey()}`;
+    const key = `santiyem_daily_${todayKey()}`;
     const cached = localStorage.getItem(key);
     if (cached) {
       try {
@@ -164,15 +164,15 @@ const DailyKnowledgePanel = () => {
     }
     const updated = [newItem, ...savedItems];
     setSavedItems(updated);
-    localStorage.setItem("muhendisai_saved_knowledge", JSON.stringify(updated));
+    localStorage.setItem("santiyem_saved_knowledge", JSON.stringify(updated));
     toast.success("İçerik kaydedildi!");
   };
 
   const handleShare = (title: string) => {
     if (navigator.share) {
-      navigator.share({ title, text: `MühendisAI - ${title}`, url: window.location.href });
+      navigator.share({ title, text: `Şantiyem - ${title}`, url: window.location.href });
     } else {
-      navigator.clipboard.writeText(`MühendisAI - ${title}`);
+      navigator.clipboard.writeText(`Şantiyem - ${title}`);
       toast.success("Panoya kopyalandı!");
     }
   };
@@ -180,7 +180,7 @@ const DailyKnowledgePanel = () => {
   const handleRemoveSaved = (index: number) => {
     const updated = savedItems.filter((_, i) => i !== index);
     setSavedItems(updated);
-    localStorage.setItem("muhendisai_saved_knowledge", JSON.stringify(updated));
+    localStorage.setItem("santiyem_saved_knowledge", JSON.stringify(updated));
     toast.success("Kayıt kaldırıldı.");
   };
 

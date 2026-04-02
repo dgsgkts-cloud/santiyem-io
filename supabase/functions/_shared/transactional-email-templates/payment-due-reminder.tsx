@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'MühendisAI'
+const SITE_NAME = 'Şantiyem'
 
 interface PaymentDueReminderProps {
   projectName?: string
@@ -86,7 +86,7 @@ export const template = {
     hakedisNo: '3',
     amount: '₺245.000,00',
     dueDate: '2 Nisan 2025',
-    detailUrl: 'https://muhendisai.com',
+    detailUrl: 'https://santiyem.io',
   },
 } satisfies TemplateEntry
 

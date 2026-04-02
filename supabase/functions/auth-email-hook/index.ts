@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: "MühendisAI'ya Hoş Geldiniz! E-posta adresinizi doğrulayın",
-  invite: 'MühendisAI — Ekip Davetiyesi',
-  magiclink: 'MühendisAI — Giriş Bağlantınız',
-  recovery: 'MühendisAI — Şifre Sıfırlama Talebi',
-  email_change: 'MühendisAI — Yeni E-posta Onayı',
-  reauthentication: 'MühendisAI — Doğrulama Kodunuz',
+  signup: "Şantiyem'ya Hoş Geldiniz! E-posta adresinizi doğrulayın",
+  invite: 'Şantiyem — Ekip Davetiyesi',
+  magiclink: 'Şantiyem — Giriş Bağlantınız',
+  recovery: 'Şantiyem — Şifre Sıfırlama Talebi',
+  email_change: 'Şantiyem — Yeni E-posta Onayı',
+  reauthentication: 'Şantiyem — Doğrulama Kodunuz',
 }
 
 // Template mapping
@@ -36,17 +36,17 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "muhendis-ai"
-const SENDER_DOMAIN = "notify.muhendisai.com"
-const ROOT_DOMAIN = "muhendisai.com"
-const FROM_DOMAIN = "muhendisai.com" // Domain shown in From address (may be root or sender subdomain)
+const SITE_NAME = "santiyem"
+const SENDER_DOMAIN = "notify.santiyem.io"
+const ROOT_DOMAIN = "santiyem.io"
+const FROM_DOMAIN = "santiyem.io" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://muhendis-ai.lovable.app"
+const SAMPLE_PROJECT_URL = "https://santiyem.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {

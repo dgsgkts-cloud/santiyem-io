@@ -29,12 +29,12 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI e-posta değişikliği onayı</Preview>
+    <Preview>Şantiyem e-posta değişikliği onayı</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>E-posta Değişikliği Onayı</Heading>
         <Text style={text}>
-          MühendisAI hesabınızda e-posta adresinizi{' '}
+          Şantiyem hesabınızda e-posta adresinizi{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>
           {' '}adresinden{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>

@@ -24,7 +24,7 @@ const WeeklySummaryEmail = ({
 }: WeeklySummaryProps) => (
   <Html lang="tr" dir="ltr">
     <Head />
-    <Preview>MühendisAI — Haftalık Özet</Preview>
+    <Preview>Şantiyem — Haftalık Özet</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
@@ -94,7 +94,7 @@ const WeeklySummaryEmail = ({
 
 export const template = {
   component: WeeklySummaryEmail,
-  subject: 'MühendisAI — Haftalık Özet',
+  subject: 'Şantiyem — Haftalık Özet',
   displayName: 'Haftalık özet',
   previewData: {
     userName: 'Doğuş',
@@ -105,7 +105,7 @@ export const template = {
       { name: 'Akdeniz Residence', progress: '%67', status: 'Devam Ediyor' },
       { name: 'AVM İnşaatı', progress: '%42', status: 'Gecikmiş' },
     ],
-    summaryUrl: 'https://muhendisai.com',
+    summaryUrl: 'https://santiyem.io',
   },
 } satisfies TemplateEntry
 
