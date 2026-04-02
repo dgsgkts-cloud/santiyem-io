@@ -52,6 +52,66 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          ai_analysis: Json | null
+          amount: number
+          contract_type: string
+          counterparty: string
+          created_at: string
+          end_date: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          name: string
+          notes: string | null
+          payment_schedule: Json | null
+          project_id: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          amount?: number
+          contract_type?: string
+          counterparty?: string
+          created_at?: string
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          amount?: number
+          contract_type?: string
+          counterparty?: string
+          created_at?: string
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
