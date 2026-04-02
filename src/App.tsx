@@ -21,6 +21,7 @@ import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import ContractSignUpload from "./pages/ContractSignUpload.tsx";
+import PaymentResult from "./pages/PaymentResult.tsx";
 
 const queryClient = new QueryClient();
 
