@@ -155,40 +155,51 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
     setDragOverIndex(null);
   };
 
-  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImporting(true);
     try {
-      const text = await file.text();
-      const lines = text.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) { toast.error("CSV dosyası boş veya başlık satırı eksik"); return; }
+      const isXlsx = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
 
-      // Skip header row
+      let rows: string[][] = [];
+
+      if (isXlsx) {
+        const XLSX = await import("xlsx");
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        rows = data.map(r => r.map((c: any) => String(c ?? "").trim()));
+      } else {
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const delimiter = lines[0]?.includes(";") ? ";" : ",";
+        rows = lines.map(l => l.split(delimiter).map(c => c.trim().replace(/^"|"$/g, "")));
+      }
+
+      if (rows.length < 2) { toast.error("Dosya boş veya başlık satırı eksik"); return; }
+
       let added = 0;
-      for (let i = 1; i < lines.length; i++) {
-        // Support both ; and , as delimiter
-        const delimiter = lines[0].includes(";") ? ";" : ",";
-        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ""));
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i];
         if (cols.length < 4) continue;
-
         const description = cols[0];
         const csvUnit = cols[1] || "adet";
         const quantity = parseFloat(cols[2]?.replace(",", ".")) || 0;
         const unit_price = parseFloat(cols[3]?.replace(",", ".")) || 0;
-
         if (!description || quantity <= 0 || unit_price <= 0) continue;
         await addItem({ description, unit: csvUnit, quantity, unit_price });
         added++;
       }
 
       if (added > 0) {
-        toast.success(`${added} iş kalemi CSV'den aktarıldı`);
+        toast.success(`${added} iş kalemi ${isXlsx ? "Excel" : "CSV"}'den aktarıldı`);
       } else {
-        toast.error("Geçerli kalem bulunamadı. Format: İş Kalemi;Birim;Miktar;Birim Fiyat");
+        toast.error("Geçerli kalem bulunamadı. Format: İş Kalemi | Birim | Miktar | Birim Fiyat");
       }
     } catch {
-      toast.error("CSV dosyası okunamadı");
+      toast.error("Dosya okunamadı");
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -214,16 +225,16 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileImport} />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
             className="text-[10px] font-medium flex items-center gap-1"
             style={{ color: "#22C55E" }}
-            title="CSV'den içe aktar"
+            title="CSV veya Excel dosyasından içe aktar"
           >
             <Upload className="w-3 h-3" />
-            {importing ? "Aktarılıyor..." : "CSV Aktar"}
+            {importing ? "Aktarılıyor..." : "CSV/Excel Aktar"}
           </button>
           <button onClick={() => setShowForm(!showForm)} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
             {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
