@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessRender, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
+import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
-  Home, MessageSquare, FolderOpen, Receipt,
-  FileSearch, Camera, Zap, Calculator,
-  FileText, BookOpen, Lightbulb, ClipboardList, BarChart3,
-  Settings, LogOut, Gem, User, ChevronLeft, ChevronRight, Lock, FileSignature
+  LayoutDashboard, MessageSquare, FolderKanban, Receipt,
+  BookOpen, TrendingUp, Calculator,
+  Bell, Crown, FileSignature,
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,32 +21,31 @@ const NAV_SECTIONS = [
   {
     label: "ANA",
     items: [
-      { id: "dashboard" as Tab, label: "Dashboard", icon: Home },
+      { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
       { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
     ],
   },
   {
     label: "PROJELER",
     items: [
-      { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderOpen },
+      { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderKanban },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
       { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
-      { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: BarChart3 },
-      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: ClipboardList },
+      { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: TrendingUp },
+      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
     ],
   },
   {
     label: "ARAÇLAR",
     items: [
-      { id: "render" as Tab, label: "AI Mimari Render", icon: FileSearch },
-      { id: "calc" as Tab, label: "Hesap Araçları", icon: Zap },
+      { id: "calc" as Tab, label: "Hesap Araçları", icon: Calculator },
     ],
   },
   {
     label: "İÇERİK",
     items: [
-      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: BookOpen },
-      { id: "pricing" as Tab, label: "Planlar", icon: Gem },
+      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
+      { id: "pricing" as Tab, label: "Planlar", icon: Crown },
     ],
   },
 ];
