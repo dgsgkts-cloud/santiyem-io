@@ -548,12 +548,14 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          expected_payment_date: string | null
           id: string
           kdv: number
           net: number
           payment_date: string | null
           period: string
           project_id: string
+          reminder_days_before: number | null
           status: string
           status_color: string
           user_id: string
@@ -561,12 +563,14 @@ export type Database = {
         Insert: {
           amount?: number
           created_at?: string
+          expected_payment_date?: string | null
           id?: string
           kdv?: number
           net?: number
           payment_date?: string | null
           period: string
           project_id: string
+          reminder_days_before?: number | null
           status?: string
           status_color?: string
           user_id: string
@@ -574,12 +578,14 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          expected_payment_date?: string | null
           id?: string
           kdv?: number
           net?: number
           payment_date?: string | null
           period?: string
           project_id?: string
+          reminder_days_before?: number | null
           status?: string
           status_color?: string
           user_id?: string
