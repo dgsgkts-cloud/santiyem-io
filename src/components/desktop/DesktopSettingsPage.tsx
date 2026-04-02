@@ -102,7 +102,7 @@ const DesktopSettingsPage = () => {
                     backgroundColor: plan === "pro" || plan === "plus" ? "rgba(255,107,43,0.15)" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
                     color: plan === "pro" || plan === "plus" ? "#FF6B2B" : plan === "office_pro" || plan === "office_free" || plan === "office_custom" ? "#60A5FA" : "#64748B",
                   }}>
-                    {plan === "pro" ? "Pro" : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal" : plan === "office_custom" ? "Özel" : "Ücretsiz"}
+                    {plan === "pro" ? "Profesyonel" : plan === "team" ? "Ekip" : plan === "enterprise" ? "Kurumsal" : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal" : plan === "office_custom" ? "Özel" : "Başlangıç"}
                   </span>
                 </div>
               </div>
