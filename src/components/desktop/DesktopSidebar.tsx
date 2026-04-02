@@ -10,7 +10,7 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
