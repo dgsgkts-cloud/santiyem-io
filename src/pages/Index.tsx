@@ -218,6 +218,8 @@ const Index = () => {
                   <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
                 ) : activeTab === "hakedis" ? (
                   <DesktopHakedisPage />
+                ) : activeTab === "site-diary" ? (
+                  <SiteDiaryPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
