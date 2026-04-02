@@ -41,9 +41,6 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
-  { id: "weather", label: "Hava Durumu", shortLabel: "Hava", icon: CloudRain },
-  { id: "news", label: "Haberler", shortLabel: "Haber", icon: Newspaper },
-  { id: "events", label: "Etkinlikler", shortLabel: "Etkinlik", icon: Calendar },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
   
