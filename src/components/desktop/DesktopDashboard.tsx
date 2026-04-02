@@ -407,8 +407,64 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </button>
           </div>
 
+          {/* Contract Warnings Widget */}
+          {(plan === "pro" || plan === "office" || role === "admin") && (
+            <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FileSignature className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+                  <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Sözleşme Uyarıları</h3>
+                </div>
+                <button onClick={() => onTabChange("contracts")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+                  Tümü <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+              {(() => {
+                const now = new Date();
+                const expiring = contracts.filter(c => {
+                  if (!c.end_date) return false;
+                  const end = new Date(c.end_date);
+                  const diff = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                  return diff > 0 && diff <= 30;
+                });
+                const expired = contracts.filter(c => {
+                  if (!c.end_date) return false;
+                  return new Date(c.end_date) < now;
+                });
+                const warnings = [
+                  ...expired.map(c => {
+                    const days = Math.round((now.getTime() - new Date(c.end_date!).getTime()) / (1000*60*60*24));
+                    return { ...c, label: `${days}g süresi doldu`, color: "#EF4444", bgColor: "rgba(239,68,68,0.1)" };
+                  }),
+                  ...expiring.map(c => {
+                    const days = Math.round((new Date(c.end_date!).getTime() - now.getTime()) / (1000*60*60*24));
+                    return { ...c, label: `${days}g kaldı`, color: "#F59E0B", bgColor: "rgba(245,158,11,0.1)" };
+                  }),
+                ];
+                if (warnings.length === 0) {
+                  return <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Yaklaşan sözleşme uyarısı yok ✓</p>;
+                }
+                return (
+                  <div className="space-y-2.5">
+                    {warnings.slice(0, 5).map((w) => (
+                      <div key={w.id} className="flex items-start gap-2 cursor-pointer" onClick={() => onTabChange("contracts")}>
+                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: w.color }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] lg:text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{w.name}</p>
+                          <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{w.counterparty}</p>
+                        </div>
+                        <span className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: w.bgColor, color: w.color }}>
+                          {w.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
-          {/* Upcoming */}
+
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
