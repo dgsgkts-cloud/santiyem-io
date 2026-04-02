@@ -17,6 +17,7 @@ export interface UserProject {
   status: string;
   status_color: string;
   progress: number;
+  contract_amount: number | null;
   created_at: string;
 }
 
