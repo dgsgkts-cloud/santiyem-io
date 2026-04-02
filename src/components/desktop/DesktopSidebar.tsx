@@ -30,6 +30,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderOpen },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
+      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: ClipboardList },
     ],
   },
   {
