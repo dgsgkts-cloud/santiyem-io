@@ -14,7 +14,7 @@ const PLANS = [
     name: "Profesyonel", monthlyPrice: 399, yearlyPrice: 319, popular: true,
     features: ["1 kullanıcı · Sınırsız proje", "Sınırsız hakediş + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
-    ctaSub: "Kredi kartı gerekmez",
+    
   },
   {
     name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: false,
