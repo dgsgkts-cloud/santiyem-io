@@ -23,8 +23,8 @@ const HeroSection = () => {
             background: "linear-gradient(90deg, transparent, rgba(255,107,43,0.15), transparent)",
             animation: "shimmer 2.5s infinite"
           }} />
-          <span>⚡</span>
-          <span className="relative">Türkiye'nin İlk İnşaat AI Platformu</span>
+          <span>🏗️</span>
+          <span className="relative">Türkiye'nin İnşaat Yönetim Platformu</span>
         </div>
 
         {/* Title */}
