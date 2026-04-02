@@ -5,6 +5,7 @@ import { cardStyle, CONTRACT_TYPES, getDaysRemaining, getStatusInfo, formatCurre
 
 interface Props {
   contracts: Contract[];
+  signatureMap?: Record<string, { status: string; label: string; color: string }>;
   onSelect: (c: Contract) => void;
   onAdd: () => void;
 }

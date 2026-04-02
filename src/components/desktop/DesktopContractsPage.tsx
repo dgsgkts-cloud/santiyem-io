@@ -95,6 +95,7 @@ export default function DesktopContractsPage() {
   return (
     <ContractList
       contracts={displayContracts}
+      signatureMap={signatureMap}
       onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
       onAdd={() => setView("add")}
     />
