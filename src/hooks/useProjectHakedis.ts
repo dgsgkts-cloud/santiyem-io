@@ -14,6 +14,8 @@ export interface ProjectHakedis {
   status_color: string;
   created_at: string;
   payment_date: string | null;
+  expected_payment_date: string | null;
+  reminder_days_before: number | null;
 }
 
 export function useProjectHakedis(projectId: string) {
@@ -69,7 +71,17 @@ export function useProjectHakedis(projectId: string) {
     toast.success("Hakediş durumu güncellendi");
   };
 
-  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, refetch: fetchHakedisler };
+  const setExpectedPaymentDate = async (id: string, date: string, reminderDays: number) => {
+    const { error } = await supabase.from("project_hakedis").update({
+      expected_payment_date: date,
+      reminder_days_before: reminderDays,
+    }).eq("id", id);
+    if (error) { toast.error("Ödeme tarihi kaydedilemedi"); return; }
+    setHakedisler(prev => prev.map(h => h.id === id ? { ...h, expected_payment_date: date, reminder_days_before: reminderDays } : h));
+    toast.success("Ödeme hatırlatıcısı kuruldu 🔔");
+  };
+
+  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, refetch: fetchHakedisler };
 }
 
 // Hook to fetch all hakedis across all projects
