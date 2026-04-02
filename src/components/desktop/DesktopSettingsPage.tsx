@@ -510,7 +510,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <p className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>Kullanım Limitlerin</p>
             <UsageBar label="AI Soruları" used={usage.aiQuestions.used} max={usage.aiQuestions.max} suffix="bugün" />
             <UsageBar label="Aktif Proje" used={1} max={1} suffix="" />
-            <UsageBar label="Hakediş" used={1} max={3} suffix="bu ay" />
+            <UsageBar label="Hakediş" used={1} max={1} suffix="bu ay" />
             <UsageBar label="PDF Çıktı" used={0} max={3} suffix="bu ay" />
           </div>
         )}
