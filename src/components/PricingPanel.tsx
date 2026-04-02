@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Check, X, Shield, Lock, RefreshCw, FileText, MessageCircle, Send } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Check, X, Shield, Lock, RefreshCw, FileText, MessageCircle, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
+import { useUser } from "@/contexts/UserContext";
 
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
