@@ -31,7 +31,7 @@ const UPCOMING_STATIC = [
 ];
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile, user, plan } = useUser();
+  const { profile, user, plan, role } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const [totalHakedis, setTotalHakedis] = useState(0);
