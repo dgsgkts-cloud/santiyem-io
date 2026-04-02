@@ -1,19 +1,21 @@
-import { useState, useMemo } from "react";
-import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3 } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
-import { useAllHakedis, useProjectHakedis } from "@/hooks/useProjectHakedis";
+import { useAllHakedis, useProjectHakedis, ProjectHakedis } from "@/hooks/useProjectHakedis";
 import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo } from "@/lib/hakedisExport";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 const STATUS_OPTIONS = [
-  { label: "Bekliyor", color: "#F59E0B" },
-  { label: "Onaylandı", color: "#22C55E" },
-  { label: "Reddedildi", color: "#EF4444" },
-  { label: "Hazırlanıyor", color: "#3B82F6" },
-  { label: "Ödendi", color: "#10B981" },
+  { label: "Taslak", color: "#64748B", emoji: "📝" },
+  { label: "Gönderildi", color: "#3B82F6", emoji: "📤" },
+  { label: "Bekliyor", color: "#F59E0B", emoji: "⏳" },
+  { label: "Onaylandı", color: "#22C55E", emoji: "✅" },
+  { label: "Reddedildi", color: "#EF4444", emoji: "❌" },
+  { label: "Ödendi", color: "#10B981", emoji: "✅" },
 ];
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
@@ -23,8 +25,40 @@ const fmtShort = (n: number) => {
   return `₺${Math.round(n)}`;
 };
 
-const LEGAL_INTEREST_RATE = 0.48; // %48/yıl 2025
+const LEGAL_INTEREST_RATE = 0.48;
 const DAILY_RATE = LEGAL_INTEREST_RATE / 365;
+
+const fireConfetti = () => {
+  const colors = ["#FF6B2B", "#FFFFFF", "#FFD700"];
+  confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors });
+  setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { y: 0.5 }, colors }), 200);
+};
+
+// Compute enriched status
+const getEnrichedStatus = (h: ProjectHakedis) => {
+  const now = Date.now();
+  if (h.status === "Ödendi") return { label: "Ödendi ✅", color: "#10B981", emoji: "✅", sortOrder: 5 };
+  if (h.status === "Taslak") return { label: "Taslak", color: "#64748B", emoji: "📝", sortOrder: 4 };
+  if (h.status === "Reddedildi") return { label: "Reddedildi", color: "#EF4444", emoji: "❌", sortOrder: 3 };
+
+  // Check overdue
+  const created = new Date(h.created_at).getTime();
+  const daysSinceCreated = Math.round((now - created) / (1000 * 60 * 60 * 24));
+  const expectedDate = h.expected_payment_date ? new Date(h.expected_payment_date).getTime() : null;
+  const daysOverdue = expectedDate ? Math.round((now - expectedDate) / (1000 * 60 * 60 * 24)) : daysSinceCreated;
+  const isOverdue = expectedDate ? now > expectedDate : daysSinceCreated > 30;
+
+  if (isOverdue && daysOverdue > 0) {
+    return { label: `Gecikmiş — ${daysOverdue} gündür ödenmedi`, color: "#EF4444", emoji: "⚠️", sortOrder: 0, overdueDays: daysOverdue };
+  }
+
+  if (h.status === "Gönderildi") {
+    const daysWaiting = expectedDate ? Math.max(0, Math.round((expectedDate - now) / (1000 * 60 * 60 * 24))) : daysSinceCreated;
+    return { label: `Gönderildi — ${daysSinceCreated} gün`, color: "#3B82F6", emoji: "📤", sortOrder: 2, daysWaiting };
+  }
+
+  return { label: `Ödeme Bekleniyor — ${daysSinceCreated} gün`, color: "#F59E0B", emoji: "⏳", sortOrder: 1, daysWaiting: daysSinceCreated };
+};
 
 const DesktopHakedisPage = () => {
   const { projects, loading: projectsLoading } = useProjects();
@@ -41,13 +75,7 @@ const DesktopHakedisPage = () => {
 };
 
 // ─── LEVEL 1: Project List ───────────────────────────────────
-interface ProjectListViewProps {
-  projects: any[];
-  allHakedisler: any[];
-  onSelectProject: (id: string) => void;
-}
-
-const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectListViewProps) => {
+const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void }) => {
   const projectCards = useMemo(() => {
     return projects.map(p => {
       const hakedisler = allHakedisler.filter(h => h.project_id === p.id);
@@ -56,18 +84,20 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectLi
       const remaining = contract - totalHakedis;
       const pct = contract > 0 ? Math.min(100, Math.round((totalHakedis / contract) * 100)) : 0;
       const collected = hakedisler.filter((h: any) => h.status === "Ödendi").reduce((s: number, h: any) => s + h.net, 0);
-      const pending = hakedisler.filter((h: any) => h.status === "Bekliyor" || h.status === "Onaylandı").reduce((s: number, h: any) => s + h.net, 0);
+      const pending = hakedisler.filter((h: any) => ["Bekliyor", "Onaylandı", "Gönderildi"].includes(h.status)).reduce((s: number, h: any) => s + h.net, 0);
 
-      // Overdue: status Bekliyor and created > 30 days ago
       const now = Date.now();
       const overdueItems = hakedisler.filter((h: any) => {
-        if (h.status !== "Bekliyor") return false;
-        const created = new Date(h.created_at).getTime();
-        return (now - created) > 30 * 24 * 60 * 60 * 1000;
+        if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+        if (h.expected_payment_date) return now > new Date(h.expected_payment_date).getTime();
+        return (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
       });
       const overdueAmount = overdueItems.reduce((s: number, h: any) => s + h.net, 0);
       const maxOverdueDays = overdueItems.length > 0
-        ? Math.max(...overdueItems.map((h: any) => Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24))))
+        ? Math.max(...overdueItems.map((h: any) => {
+          if (h.expected_payment_date) return Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24));
+          return Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        }))
         : 0;
 
       return { ...p, hakedisler, contract, totalHakedis, remaining, pct, collected, pending, overdueAmount, maxOverdueDays };
@@ -88,19 +118,15 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectLi
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4">
       <h2 className="text-base md:text-lg font-bold" style={{ color: "#F1F5F9" }}>Hakediş Yönetimi</h2>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {projectCards.map(p => (
           <div key={p.id} className="rounded-xl overflow-hidden relative" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            {/* Overdue stripe */}
             {p.maxOverdueDays > 0 && (
               <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
                 <AlertTriangle className="w-3 h-3" /> {p.maxOverdueDays} gündür ödeme bekliyor
               </div>
             )}
-
             <div className="p-4 space-y-3">
-              {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
@@ -110,8 +136,6 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectLi
                   {p.status}
                 </span>
               </div>
-
-              {/* Contract vs Hakedis */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[12px]">
                   <span style={{ color: "#64748B" }}>Sözleşme Tutarı:</span>
@@ -128,41 +152,20 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectLi
                   </div>
                 )}
               </div>
-
-              {/* Progress bar */}
               {p.contract > 0 && (
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                      <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
-                    </div>
-                    <span className="text-[11px] font-mono font-semibold" style={{ color: "#94A3B8" }}>%{p.pct}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                    <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
                   </div>
+                  <span className="text-[11px] font-mono font-semibold" style={{ color: "#94A3B8" }}>%{p.pct}</span>
                 </div>
               )}
-
-              {/* Mini stats */}
               <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
-                <div>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>✅ Tahsil</p>
-                  <p className="text-[12px] font-semibold" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>⏳ Bekleyen</p>
-                  <p className="text-[12px] font-semibold" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>⚠️ Gecikmiş</p>
-                  <p className="text-[12px] font-semibold" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p>
-                </div>
+                <div><p className="text-[10px]" style={{ color: "#64748B" }}>✅ Tahsil</p><p className="text-[12px] font-semibold" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></div>
+                <div><p className="text-[10px]" style={{ color: "#64748B" }}>⏳ Bekleyen</p><p className="text-[12px] font-semibold" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></div>
+                <div><p className="text-[10px]" style={{ color: "#64748B" }}>⚠️ Gecikmiş</p><p className="text-[12px] font-semibold" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></div>
               </div>
-
-              {/* Detail button */}
-              <button
-                onClick={() => onSelectProject(p.id)}
-                className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors"
-                style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}
-              >
+              <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
                 Detay →
               </button>
             </div>
@@ -174,16 +177,9 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: ProjectLi
 };
 
 // ─── LEVEL 2: Project Detail ─────────────────────────────────
-interface ProjectDetailViewProps {
-  projectId: string;
-  projects: any[];
-  allHakedisler: any[];
-  onBack: () => void;
-}
-
-const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewProps) => {
+const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus } = useProjectHakedis(projectId);
+  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate } = useProjectHakedis(projectId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formPeriod, setFormPeriod] = useState("");
   const [formAmount, setFormAmount] = useState("");
@@ -197,26 +193,41 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
     try { return JSON.parse(localStorage.getItem("muhendisai_pdf_sig") || "{}"); } catch { return {}; }
   });
 
+  // Payment reminder modal
+  const [reminderModal, setReminderModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number } | null>(null);
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderDays, setReminderDays] = useState("3");
+
+  // Payment confirmation modal
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
+
   const contract = Number(project?.contract_amount) || 0;
   const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);
   const totalNet = hakedisler.reduce((s, h) => s + h.net, 0);
   const collected = hakedisler.filter(h => h.status === "Ödendi").reduce((s, h) => s + h.net, 0);
-  const pending = hakedisler.filter(h => h.status === "Bekliyor" || h.status === "Onaylandı").reduce((s, h) => s + h.net, 0);
+  const pending = hakedisler.filter(h => ["Bekliyor", "Onaylandı", "Gönderildi"].includes(h.status)).reduce((s, h) => s + h.net, 0);
   const remaining = contract - totalAmount;
   const pct = contract > 0 ? Math.min(100, Math.round((totalAmount / contract) * 100)) : 0;
 
   const now = Date.now();
   const overdueItems = hakedisler.filter(h => {
-    if (h.status !== "Bekliyor") return false;
-    const created = new Date(h.created_at).getTime();
-    return (now - created) > 30 * 24 * 60 * 60 * 1000;
+    if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+    if (h.expected_payment_date) return now > new Date(h.expected_payment_date).getTime();
+    return (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
   });
 
-  // Chart data
+  // Sort hakedisler: overdue first
+  const sortedHakedisler = useMemo(() => {
+    return [...hakedisler].sort((a, b) => {
+      const sa = getEnrichedStatus(a);
+      const sb = getEnrichedStatus(b);
+      return sa.sortOrder - sb.sortOrder;
+    });
+  }, [hakedisler]);
+
   const chartData = useMemo(() => {
     const months: Record<string, { name: string; hakedis: number; tahsil: number; gecikme: number }> = {};
     const sorted = [...hakedisler].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
     sorted.forEach(h => {
       const d = new Date(h.created_at);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -225,16 +236,14 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
       if (!months[key]) months[key] = { name, hakedis: 0, tahsil: 0, gecikme: 0 };
       months[key].hakedis += h.amount;
       if (h.status === "Ödendi") months[key].tahsil += h.net;
-      if (h.status === "Bekliyor" && (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000) {
-        months[key].gecikme += h.net;
-      }
+      const es = getEnrichedStatus(h);
+      if ((es as any).overdueDays) months[key].gecikme += h.net;
     });
-
     let data = Object.entries(months).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
     if (chartRange === "6") data = data.slice(-6);
     else if (chartRange === "12") data = data.slice(-12);
     return data;
-  }, [hakedisler, chartRange, now]);
+  }, [hakedisler, chartRange]);
 
   const avgMonthly = chartData.length > 0 ? chartData.reduce((s, d) => s + d.hakedis, 0) / chartData.length : 0;
   const maxMonth = chartData.length > 0 ? chartData.reduce((max, d) => d.hakedis > max.hakedis ? d : max, chartData[0]) : null;
@@ -248,26 +257,49 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
     setShowAddForm(false);
   };
 
+  const handleStatusChange = (hakedisId: string, label: string, color: string) => {
+    updateHakedisStatus(hakedisId, label, color);
+    setStatusMenuId(null);
+    // Show reminder modal when status changes to "Gönderildi"
+    if (label === "Gönderildi") {
+      const h = hakedisler.find(x => x.id === hakedisId);
+      if (h) {
+        setReminderModal({ open: true, hakedisId, hakedisNet: h.net });
+        setReminderDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+      }
+    }
+  };
+
+  const handlePaymentConfirm = (id: string) => {
+    updateHakedisStatus(id, "Ödendi", "#10B981");
+    setPaymentModal(null);
+    fireConfetti();
+    const h = hakedisler.find(x => x.id === id);
+    toast.success(`${h ? fmt(h.net) : ""} tahsil edildi! Tebrikler! 🎉`);
+  };
+
+  const handleReminderSave = () => {
+    if (!reminderModal || !reminderDate) return;
+    setExpectedPaymentDate(reminderModal.hakedisId, reminderDate, parseInt(reminderDays));
+    setReminderModal(null);
+  };
+
   const generateAIAnalysis = async () => {
     setAiLoading(true);
     try {
       const analysisPrompts: string[] = [];
-
-      // Anomaly check
       if (hakedisler.length >= 2) {
         const prev = hakedisler[hakedisler.length - 2];
         const curr = hakedisler[hakedisler.length - 1];
         const change = prev.amount > 0 ? ((curr.amount - prev.amount) / prev.amount) * 100 : 0;
         if (change > 30) {
-          analysisPrompts.push(`⚠️ ${curr.period} döneminde önceki döneme göre %${Math.round(change)} artış tespit edildi. Önceki dönem ${fmt(prev.amount)} iken bu dönem ${fmt(curr.amount)}. Kontrol ediniz.`);
+          analysisPrompts.push(`⚠️ ${curr.period} döneminde önceki döneme göre %${Math.round(change)} artış tespit edildi.`);
         } else {
           analysisPrompts.push("✅ Hakediş kalemleri arasında anormal artış tespit edilmedi.");
         }
       } else {
         analysisPrompts.push("✅ Hakediş kalemleri arasında anormal artış tespit edilmedi.");
       }
-
-      // Budget projection
       if (contract > 0 && hakedisler.length >= 2) {
         const firstDate = new Date(hakedisler[0].created_at).getTime();
         const lastDate = new Date(hakedisler[hakedisler.length - 1].created_at).getTime();
@@ -276,47 +308,21 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
         const remainingMonths = monthlyRate > 0 ? remaining / monthlyRate : 999;
         const budgetEndDate = new Date(Date.now() + remainingMonths * 30 * 24 * 60 * 60 * 1000);
         const endDate = project?.end_date ? new Date(project.end_date) : null;
-
         if (endDate && budgetEndDate < endDate) {
           const monthsBefore = Math.round((endDate.getTime() - budgetEndDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
-          analysisPrompts.push(`📊 Mevcut harcama hızıyla sözleşme tutarı ${budgetEndDate.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}'te dolacak. Projenin tahmini bitiş tarihi ${endDate.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })} olduğundan ${monthsBefore} ay önce bütçe tükenebilir. Erken önlem almanız önerilir.`);
+          analysisPrompts.push(`📊 Mevcut harcama hızıyla bütçe ${budgetEndDate.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}'te dolacak. ${monthsBefore} ay önce bütçe tükenebilir.`);
         } else {
-          analysisPrompts.push("✅ Mevcut harcama hızıyla sözleşme bütçesi proje bitiş tarihine kadar yeterli görünüyor.");
+          analysisPrompts.push("✅ Bütçe proje bitiş tarihine kadar yeterli.");
         }
-      } else if (contract === 0) {
-        analysisPrompts.push("ℹ️ Sözleşme tutarı belirtilmediği için bütçe projeksiyonu yapılamadı.");
-      } else {
-        analysisPrompts.push("✅ Mevcut harcama hızıyla sözleşme bütçesi proje bitiş tarihine kadar yeterli görünüyor.");
       }
-
       setAiAnalysis(analysisPrompts);
-    } catch {
-      toast.error("AI analizi oluşturulamadı");
-    } finally {
-      setAiLoading(false);
-    }
+    } catch { toast.error("AI analizi oluşturulamadı"); }
+    finally { setAiLoading(false); }
   };
 
-  // Auto generate AI analysis on load
   useMemo(() => {
-    if (hakedisler.length > 0 && !aiAnalysis && !aiLoading) {
-      generateAIAnalysis();
-    }
+    if (hakedisler.length > 0 && !aiAnalysis && !aiLoading) generateAIAnalysis();
   }, [hakedisler.length]);
-
-  const statusBorder = (status: string) => {
-    if (status === "Ödendi") return "#22C55E";
-    if (status === "Bekliyor") return "#F59E0B";
-    if (status === "Reddedildi") return "#EF4444";
-    return "#64748B";
-  };
-
-  const statusIcon = (status: string) => {
-    if (status === "Ödendi") return <CheckCircle className="w-4 h-4" style={{ color: "#22C55E" }} />;
-    if (status === "Bekliyor") return <Clock className="w-4 h-4" style={{ color: "#F59E0B" }} />;
-    if (status === "Reddedildi") return <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />;
-    return <FileText className="w-4 h-4" style={{ color: "#64748B" }} />;
-  };
 
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
@@ -342,13 +348,12 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
         </div>
       </div>
 
-      {/* Project title */}
       <div>
         <h2 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{project?.name}</h2>
         <p className="text-[13px]" style={{ color: "#64748B" }}>{project?.client}</p>
       </div>
 
-      {/* SECTION 1: Financial Summary */}
+      {/* Financial Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Sözleşme Tutarı", value: contract > 0 ? fmt(contract) : "—", color: "#64748B" },
@@ -375,11 +380,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
             <span className="font-semibold" style={{ color: "#FF6B2B" }}>%{pct}</span>
             <span style={{ color: "#94A3B8" }}>Kalan: {fmt(remaining)}</span>
           </div>
-          <p className="text-[10px] mt-1" style={{ color: "#475569" }}>Toplam sözleşme: {fmt(contract)} + KDV</p>
         </div>
       )}
 
-      {/* SECTION 2: AI Analysis */}
+      {/* AI Analysis */}
       <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid rgba(255,107,43,0.3)" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -394,17 +398,14 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
           <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Analiz oluşturuluyor...</div>
         ) : aiAnalysis ? (
           <div className="space-y-2">
-            {aiAnalysis.map((a, i) => (
-              <p key={i} className="text-[12px] leading-relaxed" style={{ color: "#94A3B8" }}>{a}</p>
-            ))}
+            {aiAnalysis.map((a, i) => <p key={i} className="text-[12px] leading-relaxed" style={{ color: "#94A3B8" }}>{a}</p>)}
           </div>
         ) : (
           <p className="text-[12px]" style={{ color: "#64748B" }}>Henüz analiz oluşturulmadı.</p>
         )}
-        <p className="text-[10px] mt-3" style={{ color: "#475569" }}>⚠️ AI yorumu referans amaçlıdır. Kesin karar için hakediş belgelerini kontrol ediniz.</p>
       </div>
 
-      {/* SECTION 3: Monthly Cash Flow Chart */}
+      {/* Chart */}
       {chartData.length > 0 && (
         <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
           <div className="flex items-center justify-between mb-4">
@@ -422,11 +423,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
               <ComposedChart data={chartData}>
                 <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 10 }} />
                 <YAxis tick={{ fill: "#64748B", fontSize: 10 }} tickFormatter={v => fmtShort(v)} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#1C242D", border: "1px solid #2D3748", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#F1F5F9" }}
-                  formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]}
-                />
+                <Tooltip contentStyle={{ backgroundColor: "#1C242D", border: "1px solid #2D3748", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "#F1F5F9" }} formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]} />
                 <Legend formatter={v => v === "hakedis" ? "Hakediş" : v === "tahsil" ? "Tahsilat" : "Gecikmiş"} />
                 <Bar dataKey="hakedis" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="tahsil" fill="#22C55E" radius={[4, 4, 0, 0]} />
@@ -435,72 +432,71 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-3 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
-            <div>
-              <p className="text-[10px]" style={{ color: "#64748B" }}>Ort. Aylık Hakediş</p>
-              <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{fmt(avgMonthly)}</p>
-            </div>
-            <div>
-              <p className="text-[10px]" style={{ color: "#64748B" }}>En Yüksek Ay</p>
-              <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p>
-            </div>
-            <div>
-              <p className="text-[10px]" style={{ color: "#64748B" }}>Tahsilat Oranı</p>
-              <p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p>
-            </div>
+            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{fmt(avgMonthly)}</p></div>
+            <div><p className="text-[10px]" style={{ color: "#64748B" }}>En Yüksek Ay</p><p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
+            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tahsilat Oranı</p><p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
           </div>
         </div>
       )}
 
-      {/* SECTION 4: Timeline */}
+      {/* Hakedis Timeline - sorted with overdue first */}
       <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
         <p className="text-[13px] font-semibold mb-4" style={{ color: "#F1F5F9" }}>Hakediş Geçmişi</p>
-
         {loading ? (
           <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Yükleniyor...</div>
         ) : hakedisler.length === 0 ? (
           <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Bu projeye ait hakediş yok.</div>
         ) : (
           <div className="space-y-0">
-            {[...hakedisler].reverse().map((h, i) => {
+            {sortedHakedisler.map((h, i) => {
+              const enriched = getEnrichedStatus(h);
               const createdDate = new Date(h.created_at);
-              const isOverdue = h.status === "Bekliyor" && (now - createdDate.getTime()) > 30 * 24 * 60 * 60 * 1000;
-              const overdueDays = isOverdue ? Math.round((now - createdDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-              const borderColor = isOverdue ? "#EF4444" : statusBorder(h.status);
+              const hakedisNum = hakedisler.indexOf(h) + 1;
 
               return (
                 <div key={h.id} className="flex gap-3">
-                  {/* Timeline line */}
                   <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: borderColor }} />
+                    <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: enriched.color }} />
                     {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1" style={{ backgroundColor: "#1E2732" }} />}
                   </div>
-
-                  {/* Card */}
-                  <div className="flex-1 mb-4 rounded-lg p-3" style={{ backgroundColor: "#0F1419", borderLeft: `3px solid ${borderColor}`, border: "1px solid #1E2732" }}>
+                  <div className="flex-1 mb-4 rounded-lg p-3" style={{ backgroundColor: "#0F1419", borderLeft: `3px solid ${enriched.color}`, border: "1px solid #1E2732" }}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Hakediş #{hakedisler.length - i}</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>Düzenleme: {createdDate.toLocaleDateString("tr-TR")}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Hakediş #{hakedisNum}</p>
+                          {h.expected_payment_date && <Bell className="w-3 h-3" style={{ color: "#F59E0B" }} />}
+                        </div>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
+                          {h.period} • Düzenleme: {createdDate.toLocaleDateString("tr-TR")}
+                          {h.expected_payment_date && ` • Beklenen: ${new Date(h.expected_payment_date).toLocaleDateString("tr-TR")}`}
+                        </p>
                       </div>
                       <div className="flex items-center gap-1.5">
+                        {/* Payment button for non-paid */}
+                        {h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi" && (
+                          <button
+                            onClick={() => setPaymentModal({ open: true, hakedisId: h.id, hakedisNet: h.net, hakedisNum })}
+                            className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md transition-colors hover:opacity-90"
+                            style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#22C55E" }}
+                          >
+                            <CheckCircle className="w-3 h-3" /> Ödeme Geldi
+                          </button>
+                        )}
                         {/* Status dropdown */}
                         <div className="relative">
-                          <button
-                            onClick={() => setStatusMenuId(statusMenuId === h.id ? null : h.id)}
+                          <button onClick={() => setStatusMenuId(statusMenuId === h.id ? null : h.id)}
                             className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md"
-                            style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}
-                          >
-                            {statusIcon(h.status)}
-                            {h.status}
-                            {isOverdue && <span className="ml-1">({overdueDays}g)</span>}
+                            style={{ backgroundColor: `${enriched.color}15`, color: enriched.color }}>
+                            <span>{enriched.emoji}</span>
+                            <span className="max-w-[120px] truncate">{enriched.label}</span>
                             <ChevronDown className="w-3 h-3" />
                           </button>
                           {statusMenuId === h.id && (
                             <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px]" style={{ backgroundColor: "#1C242D", border: "1px solid #2D3748" }}>
                               {STATUS_OPTIONS.map(opt => (
-                                <button key={opt.label} onClick={() => { updateHakedisStatus(h.id, opt.label, opt.color); setStatusMenuId(null); }}
+                                <button key={opt.label} onClick={() => handleStatusChange(h.id, opt.label, opt.color)}
                                   className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/5 flex items-center gap-2" style={{ color: opt.color }}>
-                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} /> {opt.label}
+                                  <span>{opt.emoji}</span> {opt.label}
                                 </button>
                               ))}
                             </div>
@@ -510,18 +506,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                      <div>
-                        <p className="text-[10px]" style={{ color: "#64748B" }}>Tutar</p>
-                        <p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.amount)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px]" style={{ color: "#64748B" }}>KDV</p>
-                        <p className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{fmt(h.kdv)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px]" style={{ color: "#64748B" }}>Net</p>
-                        <p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.net)}</p>
-                      </div>
+                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tutar</p><p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.amount)}</p></div>
+                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>KDV</p><p className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{fmt(h.kdv)}</p></div>
+                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Net</p><p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.net)}</p></div>
                     </div>
 
                     {h.payment_date && (
@@ -545,20 +532,18 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
             })}
           </div>
         )}
-
         <button onClick={() => setShowAddForm(true)} className="w-full py-2.5 rounded-lg text-[12px] font-semibold text-white mt-2" style={{ backgroundColor: "#FF6B2B" }}>
           + Yeni Hakediş Hazırla
         </button>
       </div>
 
-      {/* SECTION 5: Overdue Payments */}
+      {/* Overdue Section */}
       {overdueItems.length > 0 && (
         <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)" }}>
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />
             <p className="text-[13px] font-semibold" style={{ color: "#EF4444" }}>Gecikmiş Ödeme Tespit Edildi</p>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>
@@ -569,8 +554,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
                 </tr>
               </thead>
               <tbody>
-                {overdueItems.map((h, i) => {
-                  const days = Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                {overdueItems.map((h) => {
+                  const days = h.expected_payment_date
+                    ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+                    : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
                   const interest = Math.round(h.net * DAILY_RATE * days);
                   return (
                     <tr key={h.id}>
@@ -585,19 +572,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
               </tbody>
             </table>
           </div>
-
-          {overdueItems.map((h) => {
-            const days = Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-            const interest = Math.round(h.net * DAILY_RATE * days);
-            return (
-              <p key={h.id} className="text-[11px] mt-2" style={{ color: "#94A3B8" }}>
-                Formül: {fmt(h.net)} × %{(DAILY_RATE * 100).toFixed(3)} × {days} gün = {fmt(interest)} yasal faiz hakkı
-              </p>
-            );
-          })}
-
           <p className="text-[10px] mt-3" style={{ color: "#475569" }}>
-            Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir. Hukuki süreç için avukat danışınız.
+            Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir.
           </p>
         </div>
       )}
@@ -635,6 +611,66 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
         </div>
       )}
 
+      {/* Payment Reminder Modal */}
+      {reminderModal?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setReminderModal(null)}>
+          <div className="rounded-xl p-5 w-full max-w-sm space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5" style={{ color: "#FF6B2B" }} />
+              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>📅 Ödeme Hatırlatıcısı Kur</h3>
+            </div>
+            <p className="text-[12px]" style={{ color: "#94A3B8" }}>Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım.</p>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Beklenen Ödeme Tarihi</label>
+              <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Kaç gün önce uyarılsın?</label>
+              <select value={reminderDays} onChange={e => setReminderDays(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }}>
+                <option value="3">3 gün önce</option>
+                <option value="1">1 gün önce</option>
+                <option value="0">Vade günü</option>
+                <option value="-1">Vade geçince (1 gün sonra)</option>
+              </select>
+            </div>
+            <button onClick={handleReminderSave} disabled={!reminderDate}
+              className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
+              🔔 Hatırlatıcı Kur
+            </button>
+            <button onClick={() => setReminderModal(null)} className="w-full text-center text-[12px]" style={{ color: "#64748B" }}>
+              Şimdi Değil
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Confirmation Modal */}
+      {paymentModal?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPaymentModal(null)}>
+          <div className="rounded-xl p-5 w-full max-w-sm space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" style={{ color: "#22C55E" }} />
+              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Ödeme Onayı</h3>
+            </div>
+            <p className="text-[13px]" style={{ color: "#CBD5E1" }}>
+              Hakediş #{paymentModal.hakedisNum} — <span className="font-bold" style={{ color: "#22C55E" }}>{fmt(paymentModal.hakedisNet)}</span> ödemesi tahsil edildi olarak işaretlensin mi?
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => handlePaymentConfirm(paymentModal.hakedisId)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>
+                ✅ Evet, Tahsil Edildi
+              </button>
+              <button onClick={() => setPaymentModal(null)}
+                className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PDF Signature Modal */}
       {showPdfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
@@ -643,56 +679,26 @@ const ProjectDetailView = ({ projectId, projects, onBack }: ProjectDetailViewPro
               <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>PDF İmza Bilgileri</h3>
               <button onClick={() => setShowPdfModal(false)} style={{ color: "#94A3B8" }}><X className="w-4 h-4" /></button>
             </div>
-            <p className="text-[11px]" style={{ color: "#64748B" }}>Bu bilgiler PDF'in alt kısmındaki imza alanına yazılacaktır. Boş bırakabilirsiniz.</p>
-
-            {/* Hazırlayan */}
-            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-              <p className="text-[11px] font-semibold" style={{ color: "#FF6B2B" }}>Hazırlayan</p>
-              <div className="grid grid-cols-2 gap-2">
-                <input placeholder="Adı Soyadı" value={pdfSig.hazirlayan?.name || ""} onChange={e => setPdfSig(p => ({ ...p, hazirlayan: { ...p.hazirlayan, name: e.target.value, title: p.hazirlayan?.title || "" } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-                <input placeholder="Ünvanı" value={pdfSig.hazirlayan?.title || ""} onChange={e => setPdfSig(p => ({ ...p, hazirlayan: { ...p.hazirlayan, name: p.hazirlayan?.name || "", title: e.target.value } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-              </div>
-            </div>
-
-            {/* Kontrol Eden */}
-            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-              <p className="text-[11px] font-semibold" style={{ color: "#3B82F6" }}>Kontrol Eden (opsiyonel)</p>
-              <div className="grid grid-cols-2 gap-2">
-                <input placeholder="Adı Soyadı" value={pdfSig.kontrolEden?.name || ""} onChange={e => setPdfSig(p => ({ ...p, kontrolEden: { ...p.kontrolEden, name: e.target.value, title: p.kontrolEden?.title || "" } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-                <input placeholder="Ünvanı" value={pdfSig.kontrolEden?.title || ""} onChange={e => setPdfSig(p => ({ ...p, kontrolEden: { ...p.kontrolEden, name: p.kontrolEden?.name || "", title: e.target.value } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-              </div>
-            </div>
-
-            {/* İşveren */}
-            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-              <p className="text-[11px] font-semibold" style={{ color: "#22C55E" }}>İşveren / Onaylayan (opsiyonel)</p>
-              <div className="grid grid-cols-2 gap-2">
-                <input placeholder="Adı Soyadı" value={pdfSig.isveren?.name || ""} onChange={e => setPdfSig(p => ({ ...p, isveren: { ...p.isveren, name: e.target.value, title: p.isveren?.title || "" } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-                <input placeholder="Ünvanı" value={pdfSig.isveren?.title || ""} onChange={e => setPdfSig(p => ({ ...p, isveren: { ...p.isveren, name: p.isveren?.name || "", title: e.target.value } }))}
-                  className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
-              </div>
-            </div>
-
+            <p className="text-[11px]" style={{ color: "#64748B" }}>Bu bilgiler PDF'in alt kısmındaki imza alanına yazılacaktır.</p>
+            {(["hazirlayan", "kontrolEden", "isveren"] as const).map((key, ki) => {
+              const labels = ["Hazırlayan", "Kontrol Eden (opsiyonel)", "İşveren / Onaylayan (opsiyonel)"];
+              const colors = ["#FF6B2B", "#3B82F6", "#22C55E"];
+              return (
+                <div key={key} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                  <p className="text-[11px] font-semibold" style={{ color: colors[ki] }}>{labels[ki]}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input placeholder="Adı Soyadı" value={pdfSig[key]?.name || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: e.target.value, title: p[key]?.title || "" } }))}
+                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                    <input placeholder="Ünvanı" value={pdfSig[key]?.title || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: p[key]?.name || "", title: e.target.value } }))}
+                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                  </div>
+                </div>
+              );
+            })}
             <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig));
-                  exportHakedisPDF(hakedisler, project?.name || "Proje", pdfSig, project?.client);
-                  setShowPdfModal(false);
-                  toast.success("PDF oluşturuldu");
-                }}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
-                📄 PDF İndir
-              </button>
-              <button onClick={() => setShowPdfModal(false)}
-                className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
-                İptal
-              </button>
+              <button onClick={() => { localStorage.setItem("muhendisai_pdf_sig", JSON.stringify(pdfSig)); exportHakedisPDF(hakedisler, project?.name || "Proje", pdfSig, project?.client); setShowPdfModal(false); toast.success("PDF oluşturuldu"); }}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>📄 PDF İndir</button>
+              <button onClick={() => setShowPdfModal(false)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>İptal</button>
             </div>
           </div>
         </div>
