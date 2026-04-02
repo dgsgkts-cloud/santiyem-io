@@ -32,8 +32,7 @@ export const RecoveryEmail = ({
       <Container style={container}>
         <Section style={logoSection}>
           <Text style={logoText}>
-            <span style={{ color: '#FF6B2B', fontWeight: 800 }}>Mühendis</span>
-            <span style={{ color: '#F1F5F9', fontWeight: 800 }}>AI</span>
+            <span style={{ color: '#FF6B2B', fontWeight: 800 }}>Şantiyem</span>
           </Text>
         </Section>
 
