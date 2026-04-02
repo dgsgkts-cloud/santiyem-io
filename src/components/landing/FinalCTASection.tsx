@@ -10,9 +10,9 @@ const FinalCTASection = () => {
     }}>
       <div ref={ref} className={`max-w-3xl mx-auto text-center transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
         <h2 className="text-3xl md:text-[48px] font-bold text-white mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Bugün Başlayın
+          Şantiyenizin Kontrolünü Geri Alın
         </h2>
-        <p className="mb-8" style={{ color: "#94A3B8" }}>500'den fazla mühendis, mimar ve müteahhit zaten kullanıyor.</p>
+        <p className="mb-8" style={{ color: "#94A3B8" }}>Hakediş için saatler harcamayı, projeler için WhatsApp grubu yönetmeyi bırakın.</p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
           <Link to="/register" className="px-8 py-3.5 rounded-lg text-white font-semibold transition-all hover:opacity-90"
             style={{ background: "#FF6B2B", boxShadow: "0 0 40px rgba(255,107,43,0.3)" }}>

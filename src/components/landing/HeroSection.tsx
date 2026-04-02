@@ -23,22 +23,21 @@ const HeroSection = () => {
             background: "linear-gradient(90deg, transparent, rgba(255,107,43,0.15), transparent)",
             animation: "shimmer 2.5s infinite"
           }} />
-          <span>⚡</span>
-          <span className="relative">Türkiye'nin İlk İnşaat AI Platformu</span>
+          <span>🏗️</span>
+          <span className="relative">Türkiye'nin İnşaat Yönetim Platformu</span>
         </div>
 
         {/* Title */}
         <h1 className="text-4xl md:text-5xl lg:text-[64px] font-bold text-white leading-[1.1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Mühendisliğin Zor İşlerini{" "}
+          Şantiyenizi{" "}
           <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg, #FF6B2B, #FFB347)" }}>
-            Yapay Zekaya
-          </span>{" "}
-          Bırak
+            Tek Panelden Yönetin
+          </span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-base md:text-lg max-w-[560px]" style={{ color: "#94A3B8" }}>
-          TBDY, İmar Yönetmeliği, hakediş takibi, şantiye analizi — hepsi bir arada. Türk mühendis, mimar ve müteahhitler için tasarlandı.
+          Hakediş takibi, proje yönetimi ve ekip koordinasyonu — artık otomatik. Türk mühendis, mimar ve müteahhitler için tasarlandı.
         </p>
 
         {/* CTA Buttons */}
@@ -56,7 +55,7 @@ const HeroSection = () => {
 
         {/* Trust text */}
         <p className="text-xs" style={{ color: "#64748B" }}>
-          Kurulum yok · Anında başla · 14 gün ücretsiz dene
+          Kurulum yok · Anında başla · İstediğin zaman iptal
         </p>
 
         {/* Dashboard mock */}
