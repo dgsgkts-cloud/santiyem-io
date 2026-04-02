@@ -71,6 +71,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
         const rev = data.filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(ym)).reduce((s, h) => s + Number(h.net), 0);
         setMonthRevenue(rev);
+        // Previous month revenue
+        const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const pym = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
+        const prevRev = data.filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(pym)).reduce((s, h) => s + Number(h.net), 0);
+        setPrevMonthRevenue(prevRev);
         const pendingTotal = data.filter(h => h.status === "Bekliyor" || h.status === "Gönderildi").reduce((s, h) => s + Number(h.net), 0);
         if (pendingTotal > 0) setCashWarning(`⚠️ ${formatCurrency(pendingTotal)} tahsilat bekliyor. Detay →`);
         // Overdue: 30+ days
