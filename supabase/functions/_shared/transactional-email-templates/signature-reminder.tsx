@@ -28,6 +28,7 @@ const SignatureReminderEmail = ({
       <Container style={container}>
         <Section style={logoSection}>
           <Text style={logoText}>Şantiyem</Text>
+          <Text style={logoSubtext}>Şantiyenizi Tek Panelden Yönetin</Text>
         </Section>
 
         <Heading style={h1}>Hatırlatma: İmza Bekleniyor</Heading>
@@ -77,6 +78,7 @@ const main = { backgroundColor: '#ffffff', fontFamily: "'Arial', 'Helvetica', sa
 const container = { padding: '20px 25px', maxWidth: '560px', margin: '0 auto' }
 const logoSection = { textAlign: 'center' as const, marginBottom: '20px' }
 const logoText = { fontSize: '22px', fontWeight: 'bold' as const, color: '#000000' }
+const logoSubtext = { fontSize: '12px', color: '#94A3B8', margin: '4px 0 0', letterSpacing: '0.5px' }
 const h1 = { fontSize: '20px', fontWeight: 'bold' as const, color: '#000000', margin: '0 0 8px', textAlign: 'center' as const }
 const subtitle = { fontSize: '14px', color: '#64748B', margin: '0 0 20px', textAlign: 'center' as const }
 const divider = { borderColor: '#E2E8F0', margin: '20px 0' }
