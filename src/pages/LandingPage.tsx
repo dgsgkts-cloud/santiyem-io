@@ -19,7 +19,7 @@ const LandingPage = () => {
     <div className="min-h-screen" style={{ background: "#0F1419" }}>
       <LandingNavbar />
       <HeroSection />
-      <SocialProofBand />
+      
       <Suspense fallback={<div className="min-h-[200px]" />}>
         <FeaturesSection />
         <HowItWorksSection />
