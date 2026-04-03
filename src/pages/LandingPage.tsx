@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import HeroSection from "@/components/landing/HeroSection";
-import SocialProofBand from "@/components/landing/SocialProofBand";
+
 
 const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
 const HowItWorksSection = lazy(() => import("@/components/landing/HowItWorksSection"));
@@ -19,7 +19,7 @@ const LandingPage = () => {
     <div className="min-h-screen" style={{ background: "#0F1419" }}>
       <LandingNavbar />
       <HeroSection />
-      <SocialProofBand />
+      
       <Suspense fallback={<div className="min-h-[200px]" />}>
         <FeaturesSection />
         <HowItWorksSection />
