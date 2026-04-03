@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import HeroSection from "@/components/landing/HeroSection";
-import SocialProofBand from "@/components/landing/SocialProofBand";
+
 
 const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
 const HowItWorksSection = lazy(() => import("@/components/landing/HowItWorksSection"));
