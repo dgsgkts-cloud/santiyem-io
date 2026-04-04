@@ -277,7 +277,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>İlgili Mevzuat</p>
           <div className="space-y-1.5">
-            {["TBDY 2018 Madde 7.3", "TS 500", "Deprem Yönetmeliği"].map((link) => (
+            {["Hakediş Yönetmeliği", "İmar Kanunu", "İş Güvenliği"].map((link) => (
               <button key={link} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
