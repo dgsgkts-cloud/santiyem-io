@@ -23,7 +23,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     }
     setLoadingPlan(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+      const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly: false },
       });
       if (error || data?.error) {
@@ -91,7 +91,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
               style={{ backgroundColor: "#FF6B2B" }}
             >
               {loadingPlan === "pro" && <Loader2 size={16} className="animate-spin mr-1" />}
-              Profesyonel'e Geç — 499₺/ay
+              14 Gün Ücretsiz Dene — Profesyonel
             </Button>
             {requiresOffice && (
               <Button
@@ -100,10 +100,16 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
                 className="w-full h-11 font-semibold bg-transparent border border-[#FF6B2B] text-[#FF6B2B] hover:bg-[#FF6B2B]/10"
               >
                 {loadingPlan === "team" && <Loader2 size={16} className="animate-spin mr-1" />}
-                Ekip Planı — 1.499₺/ay
+                14 Gün Ücretsiz Dene — Ekip
               </Button>
             )}
-            <p className="text-center text-xs text-white/40">14 gün ücretsiz deneme</p>
+            <div className="mt-3 p-3 rounded-lg border border-white/10" style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
+              <p className="text-xs text-white/70 text-center leading-relaxed">
+                🔒 <strong className="text-white">14 gün boyunca ücret alınmaz.</strong><br />
+                15. günden itibaren aylık plan ücreti otomatik tahsil edilir.<br />
+                İstediğiniz zaman iptal edebilirsiniz.
+              </p>
+            </div>
           </div>
         </div>
       </div>

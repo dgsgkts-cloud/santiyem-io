@@ -49,7 +49,7 @@ const PricingSection = () => {
     }
     setLoadingPlan(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+      const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly },
       });
       if (error || data?.error) {
@@ -150,6 +150,11 @@ const PricingSection = () => {
                     ) : null}
                     {p.cta}
                   </button>
+                )}
+                {p.monthlyPrice > 0 && p.monthlyPrice < 4999 && (
+                  <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: "#64748B" }}>
+                    14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir.
+                  </p>
                 )}
               </div>
             );
