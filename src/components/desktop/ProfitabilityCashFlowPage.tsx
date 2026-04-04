@@ -631,15 +631,4 @@ const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, savin
   </Dialog>
 );
 
-      <DeleteConfirmModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => { if (deleteTarget) deleteExpense.mutate(deleteTarget.id); }}
-        title="Gideri Sil"
-        itemName={deleteTarget?.name}
-      />
-    </>
-  );
-};
-
 export default ProfitabilityCashFlowPage;
