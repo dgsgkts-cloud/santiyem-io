@@ -23,7 +23,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     }
     setLoadingPlan(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+      const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly: false },
       });
       if (error || data?.error) {
