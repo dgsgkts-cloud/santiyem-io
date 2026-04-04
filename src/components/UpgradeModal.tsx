@@ -40,6 +40,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   };
 
   const handleTrial = useCallback(async (planKey: string) => {
+    if (PAYMENT_DISABLED) { setShowPaymentDisabled(true); onClose(); return; }
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`trial-${planKey}`);
     try {
