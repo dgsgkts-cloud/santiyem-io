@@ -674,7 +674,24 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                     style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>
                     {resp.primary}
                   </button>
-                  <button onClick={() => setCancelStep("done")}
+                  <button onClick={async () => {
+                    setCancelling(true);
+                    try {
+                      if (user) {
+                        // Cancel active subscriptions
+                        await supabase.from('user_subscriptions' as any).update({
+                          status: 'cancelled',
+                          cancelled_at: new Date().toISOString(),
+                        } as any).eq('user_id', user.id).in('status', ['trial', 'active']);
+                        // Downgrade plan at end of period (keep access until trial_end/next_payment_date)
+                      }
+                    } catch (err) {
+                      console.error('Cancel error:', err);
+                    }
+                    setCancelling(false);
+                    setCancelStep("done");
+                  }}
+                    disabled={cancelling}
                     className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors"
                     style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
                     {resp.secondary}
