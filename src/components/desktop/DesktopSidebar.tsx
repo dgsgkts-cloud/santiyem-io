@@ -257,8 +257,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 <span className="text-white text-[11px] font-bold">{initials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
-                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
+                <p className="text-[13px] font-bold truncate text-foreground">{displayName}</p>
+                <p className="text-[11px] truncate text-muted-foreground">{profile?.title || "Mühendis"}</p>
               </div>
               <button
                 onClick={() => onTabChange("settings")}
