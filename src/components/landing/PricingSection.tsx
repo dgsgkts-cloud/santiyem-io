@@ -15,19 +15,18 @@ const PLANS = [
   },
   {
     name: "Profesyonel", monthlyPrice: 499, yearlyPrice: 399, popular: false,
-    features: ["1 kullanıcı · 1 proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
-    cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
-    
+    features: ["1 kullanıcı hesabı · Sınırsız aktif proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
+    cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
     name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: true,
-    features: ["5 kullanıcı · 3 proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
-cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
+    features: ["5 kullanıcı hesabı · Sınırsız aktif proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
+    cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
     name: "Kurumsal", monthlyPrice: 4999, yearlyPrice: 3999, popular: false, isPremium: true,
-    features: ["Sınırsız kullanıcı · proje", "Ekip'teki her şey", "Gelişmiş yetki rolleri", "AI Bütçe Sapma Analizi", "Tel + WhatsApp + özel onboarding"],
-    cta: "Teklif Al", ctaStyle: { background: "transparent", border: "1px solid #2A3441", color: "#fff" },
+    features: ["Sınırsız kullanıcı hesabı · Sınırsız aktif proje", "Ekip'teki her şey", "Gelişmiş yetki rolleri", "AI Bütçe Sapma Analizi", "Tel + WhatsApp + özel onboarding"],
+    cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
 ];
 
