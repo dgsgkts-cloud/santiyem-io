@@ -184,13 +184,11 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
                       <div key={chat.id} className="relative group">
                         <button
                           onClick={() => handleSelectConversation(chat)}
-                          className="w-full text-left px-2.5 py-2 rounded-lg transition-colors duration-150 pr-8"
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover-row pr-8"
                           style={{
-                            backgroundColor: isActive ? "#161C23" : "transparent",
-                            borderLeft: isActive ? "2px solid #FF6B2B" : "2px solid transparent",
+                            backgroundColor: isActive ? "hsl(var(--muted))" : "transparent",
+                            borderLeft: isActive ? "2px solid hsl(var(--primary))" : "2px solid transparent",
                           }}
-                          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#161C23"; }}
-                          onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "transparent"; }}
                         >
                           <p className="text-[13px] truncate" style={{ color: isActive ? "#F1F5F9" : "#94A3B8" }}>{chat.title}</p>
                           <p className="text-[11px] text-muted-foreground">

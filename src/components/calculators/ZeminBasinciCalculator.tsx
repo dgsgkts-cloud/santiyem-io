@@ -355,12 +355,10 @@ const ZeminBasinciCalculator = () => {
                     const isMax = i === results.maxCombIdx;
                     return (
                       <tr key={c.id}
-                        className="transition-colors"
+                        className={`transition-colors ${!isMax ? 'hover-row' : ''} ${i % 2 === 0 ? 'bg-card' : 'bg-background'}`}
                         style={{
-                          backgroundColor: isMax ? "rgba(255,107,43,0.08)" : i % 2 === 0 ? "#161C23" : "#0F1419",
+                          backgroundColor: isMax ? "rgba(255,107,43,0.08)" : undefined,
                         }}
-                        onMouseEnter={e => { if (!isMax) e.currentTarget.style.backgroundColor = "#1C242D"; }}
-                        onMouseLeave={e => { if (!isMax) e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#161C23" : "#0F1419"; }}
                       >
                         <td className="px-3 py-2" style={{ color: isMax ? "#FF6B2B" : "#64748B" }}>{c.id}</td>
                         <td className="px-3 py-2" style={{ color: isMax ? "#FF6B2B" : "#F1F5F9", fontWeight: isMax ? 700 : 400 }}>{c.label}</td>

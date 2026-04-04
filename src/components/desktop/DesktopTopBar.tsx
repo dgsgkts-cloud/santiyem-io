@@ -94,13 +94,11 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
                         <button
                           key={n.id}
                           onClick={() => handleNotifClick(n)}
-                          className="w-full text-left px-3 py-3 transition-colors duration-150 flex items-start gap-3"
+                          className="w-full text-left px-3 py-3 hover-row flex items-start gap-3"
                           style={{
-                            borderBottom: i < notifications.length - 1 ? "1px solid #1E2732" : undefined,
+                            borderBottom: i < notifications.length - 1 ? "1px solid hsl(var(--border))" : undefined,
                             backgroundColor: isRead ? "transparent" : "rgba(255,107,43,0.04)",
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1C242D"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isRead ? "transparent" : "rgba(255,107,43,0.04)"; }}
                         >
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: `${iconColor}15` }}>
                             <Icon className="w-4 h-4" style={{ color: iconColor }} />

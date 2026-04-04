@@ -278,10 +278,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           ) : (
             <button
               onClick={user ? signOut : () => navigate("/login")}
-              className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 28, color: "#64748B" }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+              className="w-full flex items-center gap-2.5 px-2 rounded-lg hover-logout"
+              style={{ height: 28 }}
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="text-[12px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>

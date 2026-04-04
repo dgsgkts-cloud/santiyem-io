@@ -25,10 +25,7 @@ const ListingTypeStep = ({ onSelect, onBack }: ListingTypeStepProps) => {
 
         <button
           onClick={() => onSelect("gayrimenkul")}
-          className="flex flex-col items-center gap-3 p-6 rounded-xl transition-all hover:scale-[1.02] text-center"
-          style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#10B981"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; }}
+          className="flex flex-col items-center gap-3 p-6 rounded-xl hover:scale-[1.02] text-center bg-card hover-border-green"
         >
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "rgba(59,130,246,0.12)" }}>
             <Building className="w-7 h-7" style={{ color: "#3B82F6" }} />
