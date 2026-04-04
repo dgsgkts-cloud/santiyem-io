@@ -347,6 +347,11 @@ const PricingPanel = () => {
                   {loadingPlan === plan.id && <Loader2 size={16} className="animate-spin mr-1" />}
                   {plan.btnText}
                 </Button>
+                {plan.id !== "free" && plan.id !== "enterprise" && (
+                  <p className="text-[11px] text-center text-muted-foreground mt-2 leading-relaxed">
+                    14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                  </p>
+                )}
               </div>
             </div>
           );
