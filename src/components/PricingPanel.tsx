@@ -98,8 +98,7 @@ const PricingPanel = () => {
       
       color: "#94A3B8",
       features: [
-        "1 kullanıcı",
-"1 proje",
+        "1 kullanıcı hesabı · Sınırsız aktif proje",
         "3 hakediş/ay",
         "Gecikmiş ödeme uyarısı + yasal faiz hesabı",
         "Şantiye günlüğü — sınırsız kayıt",
