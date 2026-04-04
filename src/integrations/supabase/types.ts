@@ -1558,6 +1558,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          amount: number
+          cancelled_at: string | null
+          card_token: string | null
+          card_user_key: string | null
+          created_at: string
+          id: string
+          iyzico_payment_id: string | null
+          last_payment_date: string | null
+          next_payment_date: string | null
+          plan_name: string
+          reminder_sent: boolean
+          status: string
+          trial_end: string
+          trial_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          cancelled_at?: string | null
+          card_token?: string | null
+          card_user_key?: string | null
+          created_at?: string
+          id?: string
+          iyzico_payment_id?: string | null
+          last_payment_date?: string | null
+          next_payment_date?: string | null
+          plan_name: string
+          reminder_sent?: boolean
+          status?: string
+          trial_end?: string
+          trial_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cancelled_at?: string | null
+          card_token?: string | null
+          card_user_key?: string | null
+          created_at?: string
+          id?: string
+          iyzico_payment_id?: string | null
+          last_payment_date?: string | null
+          next_payment_date?: string | null
+          plan_name?: string
+          reminder_sent?: boolean
+          status?: string
+          trial_end?: string
+          trial_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
