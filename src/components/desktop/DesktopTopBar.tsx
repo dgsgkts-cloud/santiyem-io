@@ -57,9 +57,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         <div className="relative">
           <button
             onClick={() => { setNotifOpen(!notifOpen); }}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 relative text-muted-foreground"
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center relative hover-icon-btn"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
