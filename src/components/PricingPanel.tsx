@@ -268,7 +268,7 @@ const PricingPanel = () => {
   const planHeaders = ["Başlangıç", "Profesyonel", "Ekip", "Kurumsal"];
 
   const faqs = [
-    { q: "14 günlük deneme gerçekten ücretsiz mi?", a: "Evet. Kredi kartı bilgisi gerekmez. Süre sonunda otomatik ücretlendirme yapılmaz." },
+    { q: "14 günlük deneme gerçekten ücretsiz mi?", a: "Evet. 14 gün boyunca kartınızdan hiçbir ücret alınmaz. Sadece kartınız doğrulama amaçlı kaydedilir ve 1₺'lik doğrulama tutarı anında iade edilir. 15. günden itibaren plan ücreti otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz." },
     { q: "Ekip planında 5 kişiden fazla kullanıcı ekleyebilir miyim?", a: "Daha fazla kullanıcı için Kurumsal planı değerlendirebilir veya bizimle iletişime geçebilirsiniz." },
     { q: "Bireysel mi kurumsal mı fatura kesiliyor?", a: "Her ikisi de mümkün. Kayıt sırasında tercih edebilirsiniz." },
     { q: "Verilerim güvende mi?", a: "Tüm veriler 256-bit SSL şifreleme ile korunur. KVKK kapsamında işlenir." },
