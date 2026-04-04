@@ -372,7 +372,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
               {items.map((item, i) => (
                 <EditableRow
                   key={item.id} item={item} index={i}
-                  onSave={updateItem} onDelete={deleteItem}
+                  onSave={updateItem} onDelete={(id) => { const itm = items.find(x => x.id === id); setDeleteTarget({ id, name: itm?.description || "İş kalemi" }); }}
                   onDragStart={handleDragStart}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
