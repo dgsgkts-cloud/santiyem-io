@@ -603,7 +603,6 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <div key={card.plan} className="rounded-xl p-4 flex flex-col bg-card border" style={{
                 borderColor: card.highlight ? "#FF6B2B60" : undefined,
               }}>
-              }}>
                 <div className="flex items-center gap-2 mb-2">
                   <span>{card.emoji}</span>
                   <span className="text-sm font-bold text-foreground">{card.name}</span>
