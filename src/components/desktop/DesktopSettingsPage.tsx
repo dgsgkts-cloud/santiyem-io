@@ -87,6 +87,51 @@ const DesktopSettingsPage = () => {
   );
 };
 
+// ─── Appearance Tab ───
+const AppearanceTab = () => {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Görünüm</h3>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">Uygulama temasını seçin</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3 max-w-sm">
+        <button
+          onClick={() => setTheme("dark")}
+          className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all"
+          style={{
+            borderColor: theme === "dark" ? "#FF6B2B" : "hsl(var(--border))",
+            backgroundColor: theme === "dark" ? "rgba(255,107,43,0.06)" : "transparent",
+          }}
+        >
+          <Moon className="w-6 h-6" style={{ color: theme === "dark" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
+          <span className="text-[13px] font-medium text-foreground">Koyu Tema</span>
+          {theme === "dark" && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
+          )}
+        </button>
+        <button
+          onClick={() => setTheme("light")}
+          className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all"
+          style={{
+            borderColor: theme === "light" ? "#FF6B2B" : "hsl(var(--border))",
+            backgroundColor: theme === "light" ? "rgba(255,107,43,0.06)" : "transparent",
+          }}
+        >
+          <Sun className="w-6 h-6" style={{ color: theme === "light" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
+          <span className="text-[13px] font-medium text-foreground">Açık Tema</span>
+          {theme === "light" && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
+          )}
+        </button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Tema tercihiniz hesabınıza kaydedilir ve her girişte hatırlanır.</p>
+    </div>
+  );
+};
+
 // ─── Company Profile Tab ───
 const CompanyProfileTab = () => {
   const [cp, setCp] = useState<CompanyProfile>(() => getCompanyProfile());
