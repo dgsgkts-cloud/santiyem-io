@@ -147,8 +147,7 @@ const PricingPanel = () => {
       color: null,
       isPremium: true,
       features: [
-        "Sınırsız kullanıcı",
-        "Sınırsız proje",
+        "Sınırsız kullanıcı hesabı · Sınırsız aktif proje",
         "Ekip planındaki her şey",
         "Gelişmiş yetki rolleri (yönetici / editör / görüntüleyici)",
         "AI Bütçe Sapma Analizi",
