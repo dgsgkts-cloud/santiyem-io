@@ -31,7 +31,7 @@ const LandingNavbar = () => {
   return (
     <>
       {/* Progress bar */}
-      <div className="fixed top-0 left-0 w-full z-[1001] h-[2px]">
+      <div className="fixed top-0 left-0 w-full z-[1001] h-[2px]" style={{ marginTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="h-full bg-[#FF6B2B] transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
       </div>
 
@@ -41,6 +41,7 @@ const LandingNavbar = () => {
           background: "rgba(15,20,25,0.85)",
           backdropFilter: "blur(12px)",
           borderColor: "rgba(255,255,255,0.06)",
+          paddingTop: "env(safe-area-inset-top, 0px)",
         }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-12" style={{ height: 64 }}>
