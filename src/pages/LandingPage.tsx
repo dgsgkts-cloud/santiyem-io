@@ -16,7 +16,7 @@ const LandingFooter = lazy(() => import("@/components/landing/LandingFooter"));
 const LandingPage = () => {
   useSEO({ title: "Şantiyem — Türk Mühendis, Mimar ve Müteahhitler için Şantiye Yönetim Platformu", description: "Hakediş takibi, proje yönetimi, şantiye günlüğü ve AI asistan — hepsi bir arada. Türk mühendis, mimar ve müteahhitler için tasarlandı. 14 gün ücretsiz dene." });
   return (
-    <div className="min-h-screen" style={{ background: "#0F1419" }}>
+    <div className="min-h-screen landing-dark" style={{ background: "#0F1419" }}>
       <LandingNavbar />
       <HeroSection />
       
