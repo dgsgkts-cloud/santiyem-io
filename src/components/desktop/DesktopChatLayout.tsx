@@ -290,7 +290,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Kısayollar</p>
           <div className="space-y-1.5">
-            {["Deprem yükü hesapla", "Kolon boyutlandırma", "Donatı hesabı"].map((shortcut) => (
+            {["Hakediş hazırla", "Proje durumu özetle", "Nakit akışı analizi"].map((shortcut) => (
               <button key={shortcut} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
