@@ -57,7 +57,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const { checks } = useCashChecks();
   const [newNoteContent, setNewNoteContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddHakedis, setShowAddHakedis] = useState(false);
   const [newPeriod, setNewPeriod] = useState("");
   const [newAmount, setNewAmount] = useState("");

@@ -40,6 +40,7 @@ const RemindersPanel = () => {
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "done" | "overdue">("all");
 
   const handleAdd = async () => {

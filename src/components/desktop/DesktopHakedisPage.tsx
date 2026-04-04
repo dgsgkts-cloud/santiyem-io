@@ -206,6 +206,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
   // Payment confirmation modal
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   const contract = Number(project?.contract_amount) || 0;
   const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);

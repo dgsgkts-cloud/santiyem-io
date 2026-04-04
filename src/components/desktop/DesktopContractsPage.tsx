@@ -16,6 +16,7 @@ export default function DesktopContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [allHakedisler, setAllHakedisler] = useState<any[]>([]);
   const [signatureMap, setSignatureMap] = useState<Record<string, { status: string; label: string; color: string }>>({});
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   // Fetch all hakedis + signature requests
   useEffect(() => {
