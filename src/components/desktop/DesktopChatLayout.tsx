@@ -5,6 +5,7 @@ import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
 import { useDocuments } from "@/hooks/useDocuments";
@@ -27,6 +28,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
   const [searchQuery, setSearchQuery] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Use persistent data when logged in, fallback props when not
   const messages = user ? conv.messages : (fallbackProps.messages || localMessages);
@@ -137,6 +139,15 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
 
   return (
     <div className="flex h-full overflow-hidden">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) await conv.deleteConversation(deleteTarget.id);
+        }}
+        title="Sohbeti Sil"
+        itemName={deleteTarget?.title}
+      />
       {/* Left - Chat history */}
       <div className="w-[240px] shrink-0 flex flex-col" style={{ backgroundColor: "#0F1419", borderRight: "1px solid #1E2732" }}>
         <div className="p-3">
@@ -190,7 +201,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
                           </p>
                         </button>
                         <button
-                          onClick={() => conv.deleteConversation(chat.id)}
+                          onClick={() => setDeleteTarget({ id: chat.id, title: chat.title })}
                           className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
                           style={{ color: "#64748B" }}
                         >

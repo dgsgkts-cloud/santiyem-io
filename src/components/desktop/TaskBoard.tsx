@@ -3,6 +3,7 @@ import { useTasks, Task } from "@/hooks/useTasks";
 import { useTeam } from "@/hooks/useTeam";
 import { useUser } from "@/contexts/UserContext";
 import { Plus, X, Trash2, User, Calendar, Flag, ChevronRight, GripVertical } from "lucide-react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 const STATUS_COLS = [
   { key: "todo" as const, label: "Yapılacak", color: "#64748B", bg: "rgba(100,116,139,0.08)" },
@@ -31,6 +32,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
   const [newPriority, setNewPriority] = useState<Task["priority"]>("normal");
   const [newDueDate, setNewDueDate] = useState("");
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleAdd = () => {
     if (!newTitle.trim()) return;
@@ -60,6 +62,15 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
 
   return (
     <div className="space-y-4">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) await deleteTask(deleteTarget.id);
+        }}
+        title="Görevi Sil"
+        itemName={deleteTarget?.name}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Görevlendirme</h3>
@@ -176,7 +187,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
                         </div>
                       </div>
                       <button
-                        onClick={() => deleteTask(task.id)}
+                        onClick={() => setDeleteTarget({ id: task.id, name: task.title })}
                         className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
                         style={{ color: "#EF4444" }}
                       >
