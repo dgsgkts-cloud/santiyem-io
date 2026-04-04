@@ -210,77 +210,11 @@
   100% { transform: scale(1.1) translate(1%,-1%); }
 }
 
-/* ─── Light Theme: Override hardcoded inline dark colors ─── */
-/* Exclude landing page (.landing-dark) from light overrides */
-:root.light :not(.landing-dark) > [style*="background-color: rgb(15, 20, 25)"],
-:root.light :not(.landing-dark) > [style*="background-color: #0F1419"],
-:root.light :not(.landing-dark) > [style*="background-color: rgb(10, 14, 19)"],
-:root.light :not(.landing-dark) > [style*="background-color: #0A0E13"] {
-  background-color: #F8F9FA !important;
-}
-
-:root.light :not(.landing-dark) > [style*="background-color: rgb(22, 28, 35)"],
-:root.light :not(.landing-dark) > [style*="background-color: #161C23"] {
-  background-color: #FFFFFF !important;
-  border-color: #E5E7EB !important;
-}
-
-:root.light :not(.landing-dark) > [style*="background-color: rgb(30, 39, 50)"],
-:root.light :not(.landing-dark) > [style*="background-color: #1E2732"] {
-  background-color: #F1F5F9 !important;
-  border-color: #E5E7EB !important;
-}
-
-:root.light :not(.landing-dark) > [style*="color: #F1F5F9"] {
-  color: #1A1A1A !important;
-}
-
-:root.light :not(.landing-dark) > [style*="color: #94A3B8"] {
-  color: #4B5563 !important;
-}
-
-:root.light :not(.landing-dark) > [style*="color: #64748B"] {
-  color: #6B7280 !important;
-}
-
-:root.light :not(.landing-dark) > [style*="color: #475569"] {
-  color: #9CA3AF !important;
-}
-
-:root.light :not(.landing-dark) > [style*="color: #334155"] {
-  color: #D1D5DB !important;
-}
-
-:root.light :not(.landing-dark) > [style*="border-color: #1E2732"] {
-  border-color: #E5E7EB !important;
-}
-
-:root.light :not(.landing-dark) > [style*="border-color: #334155"] {
-  border-color: #D1D5DB !important;
-}
-
-/* Select and input elements - app only */
-:root.light select,
-:root.light input[type="text"],
-:root.light input[type="number"],
-:root.light input[type="date"],
-:root.light input[type="email"],
-:root.light input[type="password"],
-:root.light textarea {
-  background-color: #FFFFFF !important;
-  color: #1A1A1A !important;
-  border-color: #E5E7EB !important;
-}
-
-/* Preserve orange brand color */
+/* ─── Preserve brand and status colors globally ─── */
 [style*="color: #FF6B2B"] { color: #FF6B2B !important; }
 [style*="background-color: #FF6B2B"] { background-color: #FF6B2B !important; }
-
-/* Preserve status colors */
 [style*="color: #22C55E"] { color: #22C55E !important; }
 [style*="color: #EF4444"] { color: #EF4444 !important; }
 [style*="color: #F59E0B"] { color: #F59E0B !important; }
 [style*="color: #3B82F6"] { color: #3B82F6 !important; }
 [style*="color: #10B981"] { color: #10B981 !important; }
-[style*="background-color: #EF4444"] { background-color: #EF4444 !important; }
-[style*="background-color: #22C55E"] { background-color: #22C55E !important; }
