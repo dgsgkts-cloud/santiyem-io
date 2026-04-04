@@ -14,6 +14,253 @@ export type Database = {
   }
   public: {
     Tables: {
+      cash_accounts: {
+        Row: {
+          account_no: string | null
+          account_type: string
+          balance: number
+          bank_name: string | null
+          branch: string | null
+          created_at: string
+          iban: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_no?: string | null
+          account_type?: string
+          balance?: number
+          bank_name?: string | null
+          branch?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_no?: string | null
+          account_type?: string
+          balance?: number
+          bank_name?: string | null
+          branch?: string | null
+          created_at?: string
+          iban?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cash_checks: {
+        Row: {
+          account_no: string | null
+          amount: number
+          bank_name: string
+          branch: string | null
+          check_no: string
+          check_type: string
+          counterparty: string
+          created_at: string
+          due_date: string
+          id: string
+          image_url: string | null
+          project_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_no?: string | null
+          amount?: number
+          bank_name?: string
+          branch?: string | null
+          check_no?: string
+          check_type?: string
+          counterparty?: string
+          created_at?: string
+          due_date: string
+          id?: string
+          image_url?: string | null
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_no?: string | null
+          amount?: number
+          bank_name?: string
+          branch?: string | null
+          check_no?: string
+          check_type?: string
+          counterparty?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          image_url?: string | null
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cash_collections: {
+        Row: {
+          account_id: string | null
+          amount: number
+          check_bank: string | null
+          check_due_date: string | null
+          check_no: string | null
+          collection_date: string
+          collection_type: string
+          created_at: string
+          description: string | null
+          hakedis_id: string | null
+          id: string
+          payment_type: string
+          project_id: string | null
+          receipt_url: string | null
+          sender: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount?: number
+          check_bank?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
+          collection_date?: string
+          collection_type?: string
+          created_at?: string
+          description?: string | null
+          hakedis_id?: string | null
+          id?: string
+          payment_type?: string
+          project_id?: string | null
+          receipt_url?: string | null
+          sender?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          check_bank?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
+          collection_date?: string
+          collection_type?: string
+          created_at?: string
+          description?: string | null
+          hakedis_id?: string | null
+          id?: string
+          payment_type?: string
+          project_id?: string | null
+          receipt_url?: string | null
+          sender?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_collections_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "cash_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_payments: {
+        Row: {
+          account_id: string | null
+          amount: number
+          bank_name: string | null
+          category: string
+          check_bank: string | null
+          check_due_date: string | null
+          check_no: string | null
+          created_at: string
+          description: string | null
+          iban: string | null
+          id: string
+          invoice_url: string | null
+          is_recurring: boolean
+          payment_date: string
+          payment_type: string
+          project_id: string | null
+          recipient: string
+          recurring_interval: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount?: number
+          bank_name?: string | null
+          category?: string
+          check_bank?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
+          created_at?: string
+          description?: string | null
+          iban?: string | null
+          id?: string
+          invoice_url?: string | null
+          is_recurring?: boolean
+          payment_date?: string
+          payment_type?: string
+          project_id?: string | null
+          recipient?: string
+          recurring_interval?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          bank_name?: string | null
+          category?: string
+          check_bank?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
+          created_at?: string
+          description?: string | null
+          iban?: string | null
+          id?: string
+          invoice_url?: string | null
+          is_recurring?: boolean
+          payment_date?: string
+          payment_type?: string
+          project_id?: string | null
+          recipient?: string
+          recurring_interval?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "cash_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           attachments: Json | null
