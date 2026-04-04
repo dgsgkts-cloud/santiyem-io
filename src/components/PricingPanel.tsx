@@ -34,6 +34,7 @@ const PricingPanel = () => {
   };
 
   const handleTrial = useCallback(async (planKey: string) => {
+    if (PAYMENT_DISABLED) { setShowPaymentDisabled(true); return; }
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`trial-${planKey}`);
     try {
