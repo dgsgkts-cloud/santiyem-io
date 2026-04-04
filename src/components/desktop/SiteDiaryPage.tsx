@@ -236,9 +236,58 @@ const SiteDiaryPage = () => {
         )}
 
         {!selectedProjectId && (
-          <div className="rounded-xl p-12 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <Calendar className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />
-            <p className="text-sm" style={{ color: "#64748B" }}>Kayıtları görmek için bir proje seçin</p>
+          <div className="rounded-2xl p-10 sm:p-16 text-center flex flex-col items-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            {projects.length === 0 ? (
+              <>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ backgroundColor: "rgba(255,107,43,0.12)" }}>
+                  <FileText className="w-8 h-8" style={{ color: "#FF6B2B" }} />
+                </div>
+                <h2 className="text-lg font-bold mb-2" style={{ color: "#F1F5F9" }}>Henüz Proje Eklenmemiş</h2>
+                <p className="text-sm mb-6 max-w-sm" style={{ color: "#64748B" }}>
+                  Şantiye günlüğü tutmak için önce bir proje oluşturun.
+                </p>
+                <button
+                  onClick={() => {
+                    const event = new CustomEvent("navigate-tab", { detail: "projects" });
+                    window.dispatchEvent(event);
+                  }}
+                  className="h-11 px-6 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}
+                >
+                  Proje Oluştur
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ backgroundColor: "rgba(255,107,43,0.12)" }}>
+                  <Calendar className="w-8 h-8" style={{ color: "#FF6B2B" }} />
+                </div>
+                <h2 className="text-lg font-bold mb-2" style={{ color: "#F1F5F9" }}>Şantiye Günlüğüne Hoş Geldiniz</h2>
+                <p className="text-sm mb-6 max-w-sm" style={{ color: "#64748B" }}>
+                  Günlük kayıt tutmak için önce bir proje seçin
+                </p>
+                <select
+                  value={selectedProjectId}
+                  onChange={e => setSelectedProjectId(e.target.value)}
+                  className="w-full max-w-xs h-11 rounded-xl px-4 text-sm mb-4 cursor-pointer"
+                  style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+                >
+                  <option value="">Proje seçin...</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <button
+                  onClick={() => {
+                    if (!selectedProjectId) { toast.error("Önce bir proje seçin"); return; }
+                    resetForm();
+                    setView("form");
+                  }}
+                  className="h-11 px-6 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors"
+                  style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}
+                >
+                  <Plus className="w-4 h-4" /> Bugünün Kaydını Başlat
+                </button>
+              </>
+            )}
           </div>
         )}
 
