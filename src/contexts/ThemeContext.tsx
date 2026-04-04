@@ -42,8 +42,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (theme === "light") {
       root.classList.add("light-theme");
       root.classList.remove("dark");
+      document.body.style.backgroundColor = "#F8F9FA";
+      document.body.style.color = "#1A1A1A";
     } else {
       root.classList.remove("light-theme");
+      document.body.style.backgroundColor = "";
+      document.body.style.color = "";
     }
   }, [theme]);
 

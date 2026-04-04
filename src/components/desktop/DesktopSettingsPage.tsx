@@ -107,7 +107,7 @@ const AppearanceTab = () => {
           }}
         >
           <Moon className="w-6 h-6" style={{ color: theme === "dark" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
-          <span className="text-[13px] font-medium text-foreground">Koyu Tema</span>
+          <span className="text-[13px] font-medium text-foreground">🌙 Koyu</span>
           {theme === "dark" && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
           )}
@@ -121,7 +121,7 @@ const AppearanceTab = () => {
           }}
         >
           <Sun className="w-6 h-6" style={{ color: theme === "light" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
-          <span className="text-[13px] font-medium text-foreground">Açık Tema</span>
+          <span className="text-[13px] font-medium text-foreground">☀️ Açık</span>
           {theme === "light" && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
           )}
