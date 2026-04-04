@@ -195,7 +195,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
       {/* Welcome */}
-      <div className="rounded-xl p-5 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", borderLeft: "3px solid #FF6B2B" }}>
+      <div className="rounded-xl p-5 lg:p-6" className="bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
@@ -226,7 +226,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div
               key={stat.label}
               className="rounded-xl transition-all duration-150 relative overflow-hidden"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", padding: "20px 24px" }}
+              className="bg-card border border-border" style={{ padding: "20px 24px" }}
             >
               {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
               <div className="flex items-center gap-2 mb-2 lg:mb-3">
@@ -247,7 +247,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* Financial Summary Widget */}
-      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" className="bg-card border border-border">
         {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 ? (isUp ? "#EF4444" : "#22C55E")
                 : (isUp ? "#22C55E" : "#EF4444");
               return (
-                <div key={item.label} className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div key={item.label} className="rounded-lg p-4" className="bg-background border border-border">
                   <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>{item.label}</p>
                   <p className="text-xl lg:text-2xl font-bold" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
                   <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: changeColor }}>
@@ -307,7 +307,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* 6-Month Revenue/Expense Chart */}
-      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+      <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" className="bg-card border border-border">
         {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Grafik", false)} />}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         });
 
         return (
-          <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" className="bg-card border border-border">
             {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Kasa Durumu", false)} />}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -362,21 +362,21 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-4" className="bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Nakit Kasa</p>
                 </div>
                 <p className="text-xl lg:text-2xl font-bold" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-4" className="bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Building2 className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Banka</p>
                 </div>
                 <p className="text-xl lg:text-2xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-4" className="bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Banknote className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Toplam</p>
@@ -413,7 +413,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
           {/* Projects */}
-          <div className="rounded-xl overflow-hidden relative" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl overflow-hidden relative" className="bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />}
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
               <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
@@ -483,7 +483,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </div>
 
           {/* Activities - still static for now, could be event-sourced later */}
-          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" className="bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Son Aktiviteler", true)} />}
             <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
             {projects.length === 0 ? (
@@ -510,7 +510,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           {/* Hatırlatıcılar */}
           <div
             className="rounded-xl p-4 lg:p-5 cursor-pointer transition-colors duration-150 hover:border-[#FF6B2B]/30 relative overflow-hidden"
-            style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+            className="bg-card border border-border"
             onClick={() => !remindersLocked && onTabChange("reminders")}
           >
             {remindersLocked && <LockedOverlay label="Plus Paket" onClick={() => openUpgrade("Hatırlatıcılar", false)} />}
@@ -560,7 +560,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {/* Right column */}
         <div className="space-y-4 lg:space-y-5">
           {/* AI Widget */}
-          <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 lg:p-5" className="bg-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <MessageSquare className="w-4 h-4" style={{ color: "#FF6B2B" }} />
               <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>AI Asistan</h3>
@@ -591,7 +591,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           {/* Contract Warnings Widget */}
           {(plan === "pro" || plan === "team" || plan === "enterprise" || role === "admin") && (
-            <div className="rounded-xl p-4 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            <div className="rounded-xl p-4 lg:p-5" className="bg-card border border-border">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <FileSignature className="w-4 h-4" style={{ color: "#FF6B2B" }} />
@@ -647,7 +647,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           )}
 
 
-          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden" className="bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
             <div className="space-y-2.5">
