@@ -236,7 +236,8 @@
   /* Force override inline background colors */
   [style*="background-color: rgb(15, 20, 25)"],
   [style*="background-color: #0F1419"],
-  [style*="backgroundColor: rgb(15, 20, 25)"] {
+  [style*="background-color: rgb(10, 14, 19)"],
+  [style*="background-color: #0A0E13"] {
     background-color: #F8F9FA !important;
   }
 
