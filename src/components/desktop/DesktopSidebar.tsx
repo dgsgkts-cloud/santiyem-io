@@ -86,7 +86,6 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           borderRadius: "0 6px 6px 0",
         }}
       >
-      >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
