@@ -193,7 +193,7 @@ const Login = () => {
 
   // Mobile layout (unchanged)
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ backgroundColor: "#0F1419" }}>
+    <div className="min-h-screen flex items-center justify-center px-4 relative login-dark" style={{ backgroundColor: "#0F1419" }}>
       <button onClick={() => navigate("/")}
         className="absolute top-4 left-4 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
         <ArrowLeft className="w-4 h-4" /> Ana Sayfa
