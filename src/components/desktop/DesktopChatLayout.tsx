@@ -297,10 +297,8 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           </div>
         </div>
         <button
-          className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto transition-colors duration-150"
-          style={{ height: 32, color: "#64748B" }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto hover-primary-text border border-border"
+          style={{ height: 32 }}
         >
           📄 Sohbeti PDF Kaydet
         </button>

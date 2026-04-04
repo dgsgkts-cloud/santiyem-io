@@ -261,6 +261,13 @@
   .hover-muted-text:hover {
     @apply text-foreground;
   }
+
+  .hover-primary-text {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-primary-text:hover {
+    color: hsl(var(--primary));
+  }
 }
 
 @keyframes fadeInOut {
