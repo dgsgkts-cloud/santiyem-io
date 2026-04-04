@@ -56,7 +56,7 @@
   }
 
   .light-theme {
-    --background: 210 20% 98%;
+    --background: 210 17% 98%;
     --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
@@ -93,7 +93,7 @@
     --chat-user: 21 100% 55%;
     --chat-ai: 0 0% 97%;
 
-    --sidebar-background: 210 20% 98%;
+    --sidebar-background: 210 17% 98%;
     --sidebar-foreground: 0 0% 10%;
     --sidebar-primary: 21 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
