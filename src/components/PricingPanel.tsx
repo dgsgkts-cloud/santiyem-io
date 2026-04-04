@@ -7,9 +7,12 @@ import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
 import { useUser } from "@/contexts/UserContext";
 
+const PAYMENT_DISABLED = true; // Toggle this to re-enable iyzico payments
+
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
   const [showEnterpriseForm, setShowEnterpriseForm] = useState(false);
+  const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const [formData, setFormData] = useState({ company: "", name: "", email: "", phone: "", teamSize: "", message: "" });
   const [formLoading, setFormLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
