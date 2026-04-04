@@ -20,6 +20,7 @@ const CashAccountsTab = () => {
   const { accounts, addAccount, updateAccount, deleteAccount } = useCashAccounts();
   const [showForm, setShowForm] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
     name: "", account_type: "nakit_kasa", balance: "", bank_name: "", iban: "", account_no: "", branch: "",
   });
