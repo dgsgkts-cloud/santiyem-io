@@ -8,11 +8,6 @@ const TESTIMONIALS = [
   { initials: "FY", color: "#8B5CF6", name: "Fatma Y.", title: "Mimar, Bursa", text: "Ofisimizdeki 4 kişi aynı projeyi takip ediyor. Kimin hangi işi yaptığını, ne zaman tamamlandığını artık WhatsApp'ta sormak zorunda kalmıyoruz." },
 ];
 
-const STATS = [
-  { value: "500+", label: "Aktif Kullanıcı" },
-  { value: "15.000+", label: "Hazırlanan Hakediş" },
-  { value: "98%", label: "Memnuniyet Oranı" },
-];
 
 const TestimonialsSection = () => {
   const { ref, isVisible } = useScrollAnimation();
