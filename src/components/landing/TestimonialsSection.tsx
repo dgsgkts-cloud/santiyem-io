@@ -8,11 +8,6 @@ const TESTIMONIALS = [
   { initials: "FY", color: "#8B5CF6", name: "Fatma Y.", title: "Mimar, Bursa", text: "Ofisimizdeki 4 kişi aynı projeyi takip ediyor. Kimin hangi işi yaptığını, ne zaman tamamlandığını artık WhatsApp'ta sormak zorunda kalmıyoruz." },
 ];
 
-const STATS = [
-  { value: "500+", label: "Aktif Kullanıcı" },
-  { value: "15.000+", label: "Hazırlanan Hakediş" },
-  { value: "98%", label: "Memnuniyet Oranı" },
-];
 
 const TestimonialsSection = () => {
   const { ref, isVisible } = useScrollAnimation();
@@ -44,14 +39,6 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {STATS.map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-3xl md:text-4xl font-bold mb-1" style={{ color: "#FF6B2B", fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-              <p className="text-sm" style={{ color: "#64748B" }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
