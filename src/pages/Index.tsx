@@ -18,6 +18,7 @@ import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
 import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import ProfitabilityCashFlowPage from "@/components/desktop/ProfitabilityCashFlowPage";
 import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
+import CashTrackingPage from "@/components/desktop/CashTrackingPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +36,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking";
 
 // Desktop tab bar items (kept for mobile)
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -60,6 +61,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
   { id: "profitability", label: "Karlılık & Nakit Akışı", emoji: "📊", icon: FileText },
+  { id: "cash-tracking", label: "Kasa & Ödeme Takibi", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
@@ -82,6 +84,7 @@ const TAB_TITLES: Record<string, string> = {
   "site-diary": "Şantiye Günlüğü",
   contracts: "Sözleşme Takibi",
   profitability: "Karlılık & Nakit Akışı",
+  "cash-tracking": "Kasa & Ödeme Takibi",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
@@ -231,6 +234,8 @@ const Index = () => {
                   <SiteDiaryPage />
                 ) : activeTab === "profitability" ? (
                   <ProfitabilityCashFlowPage />
+                ) : activeTab === "cash-tracking" ? (
+                  <CashTrackingPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (

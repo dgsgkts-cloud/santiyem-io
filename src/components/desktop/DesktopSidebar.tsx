@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
-  Bell, Crown, FileSignature,
+  Bell, Crown, FileSignature, Wallet,
   Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -32,6 +32,7 @@ const NAV_SECTIONS = [
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
       { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
       { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: TrendingUp },
+      { id: "cash-tracking" as Tab, label: "Kasa & Ödeme Takibi", icon: Wallet },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
     ],
   },
@@ -137,6 +138,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
+                  (item.id === "cash-tracking" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
