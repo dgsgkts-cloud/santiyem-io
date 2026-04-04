@@ -265,10 +265,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={user ? signOut : () => navigate("/login")}
-                  className="w-full flex items-center justify-center rounded-lg transition-colors duration-150"
-                  style={{ height: 32, color: "#64748B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+                  className="w-full flex items-center justify-center rounded-lg hover-logout"
+                  style={{ height: 32 }}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
