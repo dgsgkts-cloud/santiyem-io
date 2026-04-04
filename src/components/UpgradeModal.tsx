@@ -5,6 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 
+const PAYMENT_DISABLED = true; // Toggle this to re-enable iyzico payments
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
+
 interface UpgradeModalProps {
   open: boolean;
   onClose: () => void;
