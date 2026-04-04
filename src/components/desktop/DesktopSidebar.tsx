@@ -76,7 +76,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       {/* Toggle button */}
       <button
         onClick={() => setCollapsed(c => !c)}
-        className="absolute z-10 flex items-center justify-center"
+        className="absolute z-10 flex items-center justify-center bg-muted border border-border border-l-0 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors duration-200"
         style={{
           right: -10,
           top: "50%",
@@ -84,14 +84,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           width: 20,
           height: 48,
           borderRadius: "0 6px 6px 0",
-          backgroundColor: "#1E2732",
-          border: "1px solid #2A3441",
-          borderLeft: "none",
-          color: "#64748B",
-          transition: "background-color 200ms, color 200ms",
         }}
-        onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#2A3441"; e.currentTarget.style.color = "#94A3B8"; }}
-        onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
+      >
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
