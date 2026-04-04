@@ -27,6 +27,7 @@ const CashCollectionsTab = () => {
   const { collections, addCollection, deleteCollection } = useCashCollections();
   const { projects } = useProjects();
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
     collection_date: new Date().toISOString().slice(0, 10),
     sender: "",
