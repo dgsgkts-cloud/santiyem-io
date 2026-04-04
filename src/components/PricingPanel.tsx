@@ -7,9 +7,12 @@ import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
 import { useUser } from "@/contexts/UserContext";
 
+const PAYMENT_DISABLED = true; // Toggle this to re-enable iyzico payments
+
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
   const [showEnterpriseForm, setShowEnterpriseForm] = useState(false);
+  const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const [formData, setFormData] = useState({ company: "", name: "", email: "", phone: "", teamSize: "", message: "" });
   const [formLoading, setFormLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -31,6 +34,7 @@ const PricingPanel = () => {
   };
 
   const handleTrial = useCallback(async (planKey: string) => {
+    if (PAYMENT_DISABLED) { setShowPaymentDisabled(true); return; }
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`trial-${planKey}`);
     try {
@@ -46,6 +50,7 @@ const PricingPanel = () => {
   }, [user, yearly]);
 
   const handleDirectPurchase = useCallback(async (planKey: string) => {
+    if (PAYMENT_DISABLED) { setShowPaymentDisabled(true); return; }
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`direct-${planKey}`);
     try {
@@ -507,6 +512,27 @@ const PricingPanel = () => {
       )}
       {/* iyzico checkout container */}
       <div id="iyzico-checkout-container-panel" style={{ display: "none" }} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" />
+
+      {/* Payment disabled modal */}
+      {showPaymentDisabled && (
+        <>
+          <div className="fixed inset-0 z-[200] bg-black/60" onClick={() => setShowPaymentDisabled(false)} />
+          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4">
+            <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+              <h3 className="text-lg font-bold text-foreground mb-3">Ödeme Sistemi Güncelleniyor</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Ödeme sistemimiz yakında aktif olacak. Şu an ücretsiz planla kullanmaya devam edebilirsiniz.
+                Bilgilendirilmek için{" "}
+                <a href="mailto:info@santiyem.io" className="text-primary underline">info@santiyem.io</a>{" "}
+                adresine e-posta gönderin.
+              </p>
+              <Button onClick={() => setShowPaymentDisabled(false)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                Tamam
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
