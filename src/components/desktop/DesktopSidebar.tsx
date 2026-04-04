@@ -67,11 +67,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
   return (
     <aside
-      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative"
+      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative bg-sidebar border-r border-sidebar-border"
       style={{
         width: collapsed ? 48 : 240,
-        backgroundColor: "#0F1419",
-        borderRight: "1px solid #1E2732",
         transition: "width 250ms ease-in-out",
       }}
     >

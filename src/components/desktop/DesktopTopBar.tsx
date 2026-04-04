@@ -25,8 +25,8 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
 
   return (
     <div
-      className="hidden lg:flex items-center justify-between px-6 shrink-0"
-      style={{ height: 52, backgroundColor: "#0F1419", borderBottom: "1px solid #1E2732" }}
+      className="hidden lg:flex items-center justify-between px-6 shrink-0 bg-background border-b border-border"
+      style={{ height: 52 }}
     >
       <div className="flex items-center gap-2">
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: "#F1F5F9" }}>
