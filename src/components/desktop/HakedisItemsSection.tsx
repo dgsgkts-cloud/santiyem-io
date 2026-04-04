@@ -417,6 +417,13 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           </button>
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteItem(deleteTarget.id); }}
+        title="İş Kalemini Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 }
