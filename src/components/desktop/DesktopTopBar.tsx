@@ -48,8 +48,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         {actions}
 
         <button
-          className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150"
-          style={{ color: "#64748B" }}
+          className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 text-muted-foreground"
           onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
         >
@@ -60,8 +59,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         <div className="relative">
           <button
             onClick={() => { setNotifOpen(!notifOpen); }}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 relative"
-            style={{ color: "#64748B" }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 relative text-muted-foreground"
             onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
           >
@@ -76,9 +74,9 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
           {notifOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-              <div className="absolute right-0 top-11 z-50 w-[320px] rounded-xl shadow-2xl max-h-[400px] flex flex-col" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+              <div className="absolute right-0 top-11 z-50 w-[320px] rounded-xl shadow-2xl max-h-[400px] flex flex-col bg-card border border-border">
                 <div className="p-3 flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #1E2732" }}>
-                  <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Bildirimler</p>
+                  <p className="text-[13px] font-semibold text-foreground">Bildirimler</p>
                   {unreadCount > 0 && (
                     <button onClick={markAllAsRead} className="text-[11px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
                       <Check className="w-3 h-3" /> Tümünü Okundu
@@ -89,7 +87,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
                   {notifications.length === 0 ? (
                     <div className="p-6 text-center">
                       <Bell className="w-8 h-8 mx-auto mb-2" style={{ color: "#334155" }} />
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>Bildirim yok</p>
+                      <p className="text-[12px] text-muted-foreground">Bildirim yok</p>
                     </div>
                   ) : (
                     notifications.map((n, i) => {

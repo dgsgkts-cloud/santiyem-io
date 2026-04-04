@@ -100,9 +100,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const cardStyle = { backgroundColor: "#161C23", border: "1px solid #1E2732" };
+  const cardStyle = {  };
   const labelStyle = { color: "#64748B" };
-  const textStyle = { color: "#F1F5F9" };
+  const textStyle = {  };
   const getNotePreview = (content: string) => content.length > 60 ? `${content.slice(0, 60)}...` : content;
 
   const handleConfirmDeleteTarget = async () => {
@@ -162,7 +162,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                     {currentStatus} {onStatusChange && "▾"}
                   </button>
                   {showStatusMenu && (
-                    <div className="absolute top-full left-0 mt-1 z-50 rounded-lg py-1 min-w-[160px] shadow-xl" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+                    <div className="absolute top-full left-0 mt-1 z-50 rounded-lg py-1 min-w-[160px] shadow-xl bg-card border border-border">
                       {STATUS_OPTIONS.map(opt => (
                         <button
                           key={opt.label}
@@ -172,8 +172,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                             onStatusChange?.(p.id, opt.label, opt.color);
                             setShowStatusMenu(false);
                           }}
-                          className="w-full text-left px-3 py-2 text-[12px] flex items-center gap-2 transition-colors hover:bg-white/5"
-                          style={{ color: "#F1F5F9" }}
+                          className="w-full text-left px-3 py-2 text-[12px] flex items-center gap-2 transition-colors hover:bg-white/5 text-foreground"
                         >
                           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                           {opt.label}
@@ -196,7 +195,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   });
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+                style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
               >
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
@@ -283,11 +282,11 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
           </div>
 
           {showAddMilestone && (
-            <div className="flex flex-col sm:flex-row gap-2 mb-4 p-3 rounded-lg" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <div className="flex flex-col sm:flex-row gap-2 mb-4 p-3 rounded-lg bg-background border border-border">
               <input value={newMilestoneTitle} onChange={e => setNewMilestoneTitle(e.target.value)} placeholder="Görev adı"
-                className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" />
               <input value={newMilestoneDate} onChange={e => setNewMilestoneDate(e.target.value)} placeholder="Tarih (ör: 01.05.2026)"
-                className="w-full sm:w-36 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                className="w-full sm:w-36 px-3 py-2 rounded-lg text-[13px] outline-none" />
               <button onClick={handleAddMilestone} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>Ekle</button>
             </div>
           )}
@@ -338,7 +337,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {p.recentActivity.map((a, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
-                <span className="text-[12px] lg:text-[13px] flex-1 min-w-0" style={{ color: "#94A3B8" }}>{a.text}</span>
+                <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 text-muted-foreground">{a.text}</span>
                 <span className="text-[10px] lg:text-[11px] shrink-0" style={labelStyle}>{a.time}</span>
               </div>
             ))}
@@ -368,14 +367,14 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name, { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: {} }, p.client)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                  style={{ backgroundColor: "#1E2732" }}
                 >
                   <FileDown className="w-3 h-3" /> PDF
                 </button>
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                  style={{ backgroundColor: "#1E2732" }}
                 >
                   <FileSpreadsheet className="w-3 h-3" /> Excel
                 </button>
@@ -394,13 +393,12 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         </div>
 
         {showAddHakedis && (
-          <div className="flex flex-col sm:flex-row gap-3 mb-4 p-3 rounded-lg" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 p-3 rounded-lg bg-background border border-border">
             <input
               value={newPeriod}
               onChange={e => setNewPeriod(e.target.value)}
               placeholder="Dönem (ör: Nisan 2026)"
               className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <input
               value={newAmount}
@@ -408,7 +406,6 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               type="number"
               placeholder="Tutar (₺)"
               className="w-full sm:w-40 px-3 py-2 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <button
               onClick={handleAddHakedis}
@@ -434,7 +431,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr style={{ backgroundColor: "#0F1419" }}>
+                  <tr className="bg-background">
                     {["No", "Dönem", "Tutar", "KDV", "Net", "Durum", ""].map(h => (
                       <th key={h} className="text-left px-4 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
                     ))}
@@ -444,9 +441,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   {hakedisler.map((h, i) => (
                     <tr key={h.id} style={{ borderBottom: "1px solid #1E2732" }}>
                       <td className="px-4 py-3 font-mono" style={textStyle}>{i + 1}</td>
-                      <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{h.period}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{h.period}</td>
                       <td className="px-4 py-3 font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</td>
-                      <td className="px-4 py-3 font-mono" style={{ color: "#94A3B8" }}>₺{h.kdv.toLocaleString("tr-TR")}</td>
+                      <td className="px-4 py-3 font-mono text-muted-foreground">₺{h.kdv.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 relative">
                         <button
@@ -474,7 +471,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                        <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -486,7 +483,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {/* Mobile cards */}
             <div className="lg:hidden space-y-2">
               {hakedisler.map((h, i) => (
-                <div key={h.id} className="p-3 rounded-lg relative" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div key={h.id} className="p-3 rounded-lg relative bg-background border border-border">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[12px] font-semibold" style={textStyle}>#{i + 1} — {h.period}</span>
                     <button
@@ -515,7 +512,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <div className="flex items-center justify-between text-[11px]">
                     <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</span></span>
                     <span style={labelStyle}>Net: <span className="font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</span></span>
-                    <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} style={{ color: "#64748B" }}><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               ))}
@@ -561,7 +558,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         ) : (
           <div className="space-y-2">
             {files.map(f => (
-              <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg transition-colors" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg transition-colors bg-background border border-border">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.1)" }}>
                   <FileText className="w-4 h-4" style={{ color: "#FF6B2B" }} />
                 </div>
@@ -570,10 +567,10 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <p className="text-[10px]" style={labelStyle}>{formatBytes(f.file_size)} · {new Date(f.created_at).toLocaleDateString("tr-TR")}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                  <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                     <FileDown className="w-3.5 h-3.5" />
                   </a>
-                  <button onClick={() => setDeleteTarget({ type: "file", id: f.id, name: f.file_name, fileUrl: f.file_url })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                  <button onClick={() => setDeleteTarget({ type: "file", id: f.id, name: f.file_name, fileUrl: f.file_url })} className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -602,7 +599,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
 
             {/* Summary cards */}
             <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-3 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-1">
                   <ArrowUpRight className="w-3.5 h-3.5" style={{ color: "#EF4444" }} />
                   <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Ödemeler</span>
@@ -610,7 +607,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <p className="text-[16px] font-bold" style={{ color: "#EF4444" }}>₺{fmt(totalPayments)}</p>
                 <p className="text-[10px]" style={labelStyle}>{projectPayments.length} işlem</p>
               </div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-3 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-1">
                   <ArrowDownLeft className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
                   <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Tahsilatlar</span>
@@ -618,7 +615,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <p className="text-[16px] font-bold" style={{ color: "#22C55E" }}>₺{fmt(totalCollections)}</p>
                 <p className="text-[10px]" style={labelStyle}>{projectCollections.length} işlem</p>
               </div>
-              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div className="rounded-lg p-3 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign className="w-3.5 h-3.5" style={{ color: netCashFlow >= 0 ? "#22C55E" : "#EF4444" }} />
                   <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Net Nakit Akışı</span>
@@ -640,7 +637,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 ) : (
                   <div className="space-y-1.5">
                     {projectPayments.slice(0, 5).map(pay => (
-                      <div key={pay.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                      <div key={pay.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-background">
                         <div>
                           <p className="text-[12px] font-medium" style={textStyle}>{pay.recipient}</p>
                           <p className="text-[10px]" style={labelStyle}>{pay.category} • {pay.payment_date}</p>
@@ -660,7 +657,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 ) : (
                   <div className="space-y-1.5">
                     {projectCollections.slice(0, 5).map(col => (
-                      <div key={col.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                      <div key={col.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-background">
                         <div>
                           <p className="text-[12px] font-medium" style={textStyle}>{col.sender}</p>
                           <p className="text-[10px]" style={labelStyle}>{col.collection_type} • {col.collection_date}</p>
@@ -679,7 +676,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Proje Çekleri</p>
                 <div className="space-y-1.5">
                   {projectChecks.map(chk => (
-                    <div key={chk.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                    <div key={chk.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-background">
                       <div>
                         <p className="text-[12px] font-medium" style={textStyle}>
                           {chk.check_type === "verilen" ? "Verilen" : "Alınan"} — {chk.counterparty}
@@ -718,7 +715,6 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNote(newNoteContent); setNewNoteContent(""); } }}
               placeholder="Not veya yorum ekleyin..."
               className="flex-1 px-3 py-2.5 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <button
               onClick={() => { addNote(newNoteContent); setNewNoteContent(""); }}
@@ -738,7 +734,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         ) : (
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
             {notes.map(note => (
-              <div key={note.id} className="p-3 rounded-lg group" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div key={note.id} className="p-3 rounded-lg group bg-background border border-border">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-[12px] lg:text-[13px] whitespace-pre-wrap flex-1" style={textStyle}>{note.content}</p>
                   {user && (

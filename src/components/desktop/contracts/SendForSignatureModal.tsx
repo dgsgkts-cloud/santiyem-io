@@ -53,10 +53,10 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
       <div className="w-full max-w-lg rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" style={cardStyle}>
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: "#F1F5F9" }}>
+          <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
             <Mail className="w-4 h-4" style={{ color: "#3B82F6" }} /> Sözleşmeyi İmzaya Gönder
           </h2>
-          <button onClick={onClose}><X className="w-4 h-4" style={{ color: "#64748B" }} /></button>
+          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
         </div>
 
         <div className="space-y-3">
@@ -116,9 +116,9 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
 
           {/* PDF Preview */}
           {contract.file_url && (
-            <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
-              <p className="text-[10px] font-medium mb-1" style={{ color: "#64748B" }}>📎 Ekli Dosya</p>
-              <p className="text-xs truncate" style={{ color: "#F1F5F9" }}>{contract.file_name || "Sözleşme PDF"}</p>
+            <div className="rounded-lg p-3 bg-background border border-border">
+              <p className="text-[10px] font-medium mb-1 text-muted-foreground">📎 Ekli Dosya</p>
+              <p className="text-xs truncate text-foreground">{contract.file_name || "Sözleşme PDF"}</p>
             </div>
           )}
 

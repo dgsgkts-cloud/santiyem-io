@@ -198,10 +198,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <div className="rounded-xl p-5 lg:p-6 bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Günaydın, {name} 👋
             </h2>
-            <p className="text-[12px]" style={{ color: "#64748B" }}>{formatDate(new Date())} — Bugün şantiyende ne var?</p>
+            <p className="text-[12px] text-muted-foreground">{formatDate(new Date())} — Bugün şantiyende ne var?</p>
           </div>
           <div className="hidden sm:flex items-center gap-4">
             <MiniStat label="Aktif Projeler" value={projectsLocked ? "🔒" : String(activeProjects)} />
@@ -232,9 +232,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
                   <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
                 </div>
-                <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate" style={{ color: "#64748B" }}>{stat.label}</span>
+                <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">{stat.label}</span>
               </div>
-              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 {stat.locked ? "—" : stat.value}
               </p>
               <div className="flex items-center gap-1 mt-1">
@@ -251,7 +251,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Finansal Özet — Bu Ay</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Finansal Özet — Bu Ay</h3>
           </div>
           <button onClick={() => onTabChange("profitability")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
             Detay <ChevronRight className="w-3 h-3" />
@@ -282,7 +282,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 : (isUp ? "#22C55E" : "#EF4444");
               return (
                 <div key={item.label} className="rounded-lg p-4 bg-background border border-border">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: "#64748B" }}>{item.label}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground">{item.label}</p>
                   <p className="text-xl lg:text-2xl font-bold" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
                   <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: changeColor }}>
                     {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
@@ -311,7 +311,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Son 6 Ay — Ciro & Gider</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Son 6 Ay — Ciro & Gider</h3>
           </div>
         </div>
         <div style={{ width: "100%", height: 220 }}>
@@ -322,13 +322,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
               <Tooltip
                 contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#F1F5F9", fontWeight: 600 }}
+                labelStyle={{ fontWeight: 600 }}
                 itemStyle={{ color: "#94A3B8" }}
                 formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                formatter={(value: string) => <span style={{ color: "#94A3B8" }}>{value === "ciro" ? "Ciro" : "Gider"}</span>}
+                formatter={(value: string) => <span className="text-muted-foreground">{value === "ciro" ? "Ciro" : "Gider"}</span>}
               />
               <Bar dataKey="ciro" fill="#22C55E" radius={[4, 4, 0, 0]} maxBarSize={32} />
               <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={32} />
@@ -354,7 +354,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Banknote className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Kasa Durumu</h3>
+                <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Kasa Durumu</h3>
               </div>
               <button onClick={() => onTabChange("cash-tracking")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                 Detay <ChevronRight className="w-3 h-3" />
@@ -364,21 +364,21 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <div className="rounded-lg p-4 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Nakit Kasa</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nakit Kasa</p>
                 </div>
                 <p className="text-xl lg:text-2xl font-bold" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
               </div>
               <div className="rounded-lg p-4 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Building2 className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Banka</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Banka</p>
                 </div>
                 <p className="text-xl lg:text-2xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
               </div>
               <div className="rounded-lg p-4 bg-background border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Banknote className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Toplam</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Toplam</p>
                 </div>
                 <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
               </div>
@@ -415,14 +415,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl overflow-hidden relative bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />}
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
-              <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
+              <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Aktif Projeler</h3>
               <button onClick={() => onTabChange("projects")} className="flex items-center gap-0.5 text-[12px] font-medium shrink-0" style={{ color: "#FF6B2B" }}>
                 Tümü <ChevronRight className="w-3 h-3" />
               </button>
             </div>
 
             {displayProjects.length === 0 ? (
-              <p className="text-[12px] text-center py-6" style={{ color: "#64748B" }}>Henüz proje eklenmemiş</p>
+              <p className="text-[12px] text-center py-6 text-muted-foreground">Henüz proje eklenmemiş</p>
             ) : (
               <>
                 {/* Desktop table */}
@@ -438,14 +438,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                     <tbody>
                       {displayProjects.map((p) => (
                         <tr key={p.id} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer border-b border-border">
-                          <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
-                          <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
+                          <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
+                          <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-1.5 rounded-full bg-muted">
                                 <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                               </div>
-                              <span className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                              <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
                             </div>
                           </td>
                           <td className="px-5 py-3">
@@ -463,8 +463,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                     <div key={p.id} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-muted transition-colors border-border">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
-                          <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
+                          <p className="text-[13px] font-semibold truncate text-foreground">{p.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{p.client}</p>
                         </div>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                       </div>
@@ -472,7 +472,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                         <div className="flex-1 h-1.5 rounded-full bg-muted">
                           <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                         </div>
-                        <span className="text-[11px] font-mono shrink-0" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                        <span className="text-[11px] font-mono shrink-0 text-muted-foreground">{p.progress}%</span>
                       </div>
                     </div>
                   ))}
@@ -484,9 +484,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           {/* Activities - still static for now, could be event-sourced later */}
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Son Aktiviteler", true)} />}
-            <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
+            <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4 text-foreground">Son Aktiviteler</h3>
             {projects.length === 0 ? (
-              <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
+              <p className="text-[12px] text-center py-4 text-muted-foreground">Henüz aktivite yok</p>
             ) : (
               <div className="space-y-2.5 lg:space-y-3">
                 {projects.slice(0, 4).map((p, i) => {
@@ -495,10 +495,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   return (
                     <div key={p.id} className="flex items-center gap-2.5">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                      <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 truncate" style={{ color: "#94A3B8" }}>
+                      <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 truncate text-muted-foreground">
                         {p.name} — {p.status}
                       </span>
-                      <span className="text-[11px] lg:text-[12px] shrink-0" style={{ color: "#64748B" }}>{ago}g</span>
+                      <span className="text-[11px] lg:text-[12px] shrink-0 text-muted-foreground">{ago}g</span>
                     </div>
                   );
                 })}
@@ -515,14 +515,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Hatırlatıcılar</h3>
+                <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Hatırlatıcılar</h3>
               </div>
               <button className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                 Tümü <ChevronRight className="w-3 h-3" />
               </button>
             </div>
             {recentReminders.length === 0 ? (
-              <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz hatırlatıcı yok</p>
+              <p className="text-[12px] text-center py-4 text-muted-foreground">Henüz hatırlatıcı yok</p>
             ) : (
               <div className="space-y-2.5">
                 {recentReminders.map((r) => {
@@ -536,7 +536,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                       <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: r.done ? "#22C55E" : isOverdue ? "#EF4444" : isToday ? "#F59E0B" : "#3B82F6" }} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-[12px] lg:text-[13px] font-medium truncate ${r.done ? "line-through" : ""}`} style={{ color: r.done ? "#64748B" : "#F1F5F9" }}>{r.title}</p>
-                        {r.note && <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{r.note}</p>}
+                        {r.note && <p className="text-[10px] lg:text-[11px] truncate text-muted-foreground">{r.note}</p>}
                       </div>
                       <span
                         className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
@@ -561,7 +561,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl p-4 lg:p-5 bg-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <MessageSquare className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-              <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>AI Asistan</h3>
+              <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">AI Asistan</h3>
             </div>
             <div
               className="flex items-center gap-2 rounded-lg px-3 mb-3 cursor-pointer bg-background border border-border" style={{ height: 36 }}
@@ -574,8 +574,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <button
                   key={i}
                   onClick={() => { onTabChange("chat"); onSend?.(q); }}
-                  className="w-full text-left text-[11px] lg:text-[12px] px-3 py-2 rounded-lg transition-colors duration-150 truncate"
-                  style={{ color: "#94A3B8" }}
+                  className="w-full text-left text-[11px] lg:text-[12px] px-3 py-2 rounded-lg transition-colors duration-150 truncate text-muted-foreground"
                 >
                   {q}
                 </button>
@@ -592,7 +591,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <FileSignature className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                  <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Sözleşme Uyarıları</h3>
+                  <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Sözleşme Uyarıları</h3>
                 </div>
                 <button onClick={() => onTabChange("contracts")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                   Tümü <ChevronRight className="w-3 h-3" />
@@ -621,7 +620,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   }),
                 ];
                 if (warnings.length === 0) {
-                  return <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Yaklaşan sözleşme uyarısı yok ✓</p>;
+                  return <p className="text-[12px] text-center py-4 text-muted-foreground">Yaklaşan sözleşme uyarısı yok ✓</p>;
                 }
                 return (
                   <div className="space-y-2.5">
@@ -629,8 +628,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                       <div key={w.id} className="flex items-start gap-2 cursor-pointer" onClick={() => onTabChange("contracts")}>
                         <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: w.color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[12px] lg:text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{w.name}</p>
-                          <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{w.counterparty}</p>
+                          <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{w.name}</p>
+                          <p className="text-[10px] lg:text-[11px] truncate text-muted-foreground">{w.counterparty}</p>
                         </div>
                         <span className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: w.bgColor, color: w.color }}>
                           {w.label}
@@ -646,14 +645,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
-            <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3 text-foreground">Yaklaşan İşler</h3>
             <div className="space-y-2.5">
               {UPCOMING_STATIC.map((u, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: u.urgent ? "#EF4444" : "#F59E0B" }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] lg:text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{u.task}</p>
-                    <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{u.project}</p>
+                    <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.task}</p>
+                    <p className="text-[10px] lg:text-[11px] text-muted-foreground">{u.project}</p>
                   </div>
                   <span
                     className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
@@ -684,15 +683,15 @@ const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void
     onClick={(e) => { e.stopPropagation(); onClick?.(); }}
   >
     <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
-    <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
-    <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
+    <span className="text-[11px] font-semibold text-foreground">🔒 {label}</span>
+    <span className="text-[10px] mt-0.5 text-muted-foreground">Bu özellik için planınızı yükseltin</span>
   </div>
 );
 
 const MiniStat = ({ label, value }: { label: string; value: string }) => (
   <div className="min-w-0">
-    <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
-    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
+    <p className="text-[10px] lg:text-[11px] truncate text-muted-foreground">{label}</p>
+    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
   </div>
 );
 

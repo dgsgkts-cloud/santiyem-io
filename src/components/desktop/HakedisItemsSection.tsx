@@ -9,7 +9,7 @@ const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const inputStyle = { backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" };
+const inputStyle = {  };
 
 interface ImportError {
   row: number;
@@ -69,10 +69,10 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
     const calcTotal = (parseFloat(qty) || 0) * (parseFloat(price) || 0);
     return (
       <tr style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
-        <td className="px-1 py-1" style={{ color: "#64748B" }}>
+        <td className="px-1 py-1 text-muted-foreground">
           <GripVertical className="w-3 h-3 opacity-30" />
         </td>
-        <td className="px-2 py-1 font-mono" style={{ color: "#64748B" }}>{index + 1}</td>
+        <td className="px-2 py-1 font-mono text-muted-foreground">{index + 1}</td>
         <td className="px-1 py-1">
           <input value={desc} onChange={e => setDesc(e.target.value)}
             className="w-full rounded px-1.5 py-1 text-[11px] outline-none" style={inputStyle} />
@@ -97,7 +97,7 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
         <td className="px-2 py-1">
           <div className="flex items-center gap-1">
             <button onClick={handleSave} title="Kaydet" style={{ color: "#22C55E" }}><Check className="w-3 h-3" /></button>
-            <button onClick={handleCancel} title="İptal" style={{ color: "#94A3B8" }}><X className="w-3 h-3" /></button>
+            <button onClick={handleCancel} title="İptal" className="text-muted-foreground"><X className="w-3 h-3" /></button>
           </div>
         </td>
       </tr>
@@ -114,14 +114,14 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
         transition: "background-color 0.15s",
       }}
     >
-      <td className="px-1 py-1.5" style={{ color: "#64748B" }}>
+      <td className="px-1 py-1.5 text-muted-foreground">
         <GripVertical className="w-3 h-3 opacity-50 hover:opacity-100" />
       </td>
-      <td className="px-2 py-1.5 font-mono" style={{ color: "#64748B" }}>{index + 1}</td>
-      <td className="px-2 py-1.5" style={{ color: "#F1F5F9" }}>{item.description}</td>
-      <td className="px-2 py-1.5" style={{ color: "#94A3B8" }}>{item.unit}</td>
-      <td className="px-2 py-1.5 font-mono text-right" style={{ color: "#F1F5F9" }}>{fmt(item.quantity)}</td>
-      <td className="px-2 py-1.5 font-mono text-right" style={{ color: "#F1F5F9" }}>₺{fmt(item.unit_price)}</td>
+      <td className="px-2 py-1.5 font-mono text-muted-foreground">{index + 1}</td>
+      <td className="px-2 py-1.5 text-foreground">{item.description}</td>
+      <td className="px-2 py-1.5 text-muted-foreground">{item.unit}</td>
+      <td className="px-2 py-1.5 font-mono text-right text-foreground">{fmt(item.quantity)}</td>
+      <td className="px-2 py-1.5 font-mono text-right text-foreground">₺{fmt(item.unit_price)}</td>
       <td className="px-2 py-1.5 font-mono text-right font-semibold" style={{ color: "#FF6B2B" }}>₺{fmt(item.total_price)}</td>
       <td className="px-2 py-1.5">
         <div className="flex items-center gap-1">
@@ -265,7 +265,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <Package className="w-3 h-3" style={{ color: "#FF6B2B" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>
+          <span className="text-[11px] font-semibold text-muted-foreground">
             İş Kalemleri {items.length > 0 && `(${items.length})`}
           </span>
         </div>
@@ -290,9 +290,9 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
 
       {/* Import Progress */}
       {importing && importProgress && (
-        <div className="mb-2 rounded-lg p-2.5 space-y-1.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mb-2 rounded-lg p-2.5 space-y-1.5 bg-background border border-border">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium" style={{ color: "#F1F5F9" }}>
+            <span className="text-[11px] font-medium text-foreground">
               İçe aktarılıyor... ({importProgress.current}/{importProgress.total})
             </span>
             <span className="text-[11px] font-mono" style={{ color: "#FF6B2B" }}>%{progressPercent}</span>
@@ -309,7 +309,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
 
       {/* Import Result Summary */}
       {!importing && importProgress && importProgress.errors.length > 0 && (
-        <div className="mb-2 rounded-lg p-2.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mb-2 rounded-lg p-2.5 bg-background border border-border">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3" style={{ color: "#F59E0B" }} />
@@ -318,10 +318,10 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setShowErrors(!showErrors)} className="text-[10px] underline" style={{ color: "#94A3B8" }}>
+              <button onClick={() => setShowErrors(!showErrors)} className="text-[10px] underline text-muted-foreground">
                 {showErrors ? "Gizle" : "Detayları göster"}
               </button>
-              <button onClick={() => setImportProgress(null)} style={{ color: "#64748B" }}>
+              <button onClick={() => setImportProgress(null)} className="text-muted-foreground">
                 <X className="w-3 h-3" />
               </button>
             </div>
@@ -329,16 +329,16 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           <div className="flex items-center gap-3 text-[10px] mb-1">
             <span style={{ color: "#22C55E" }}>✓ {importProgress.added} başarılı</span>
             <span style={{ color: "#EF4444" }}>✗ {importProgress.errors.length} başarısız</span>
-            <span style={{ color: "#64748B" }}>Toplam: {importProgress.total} satır</span>
+            <span className="text-muted-foreground">Toplam: {importProgress.total} satır</span>
           </div>
           {showErrors && (
-            <div className="mt-1.5 max-h-32 overflow-y-auto rounded" style={{ border: "1px solid #1E2732" }}>
+            <div className="mt-1.5 max-h-32 overflow-y-auto rounded">
               <table className="w-full text-[10px]">
                 <thead>
-                  <tr style={{ backgroundColor: "#161C23" }}>
-                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Satır</th>
-                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Hata</th>
-                    <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Veri</th>
+                  <tr className="bg-card">
+                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Satır</th>
+                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Hata</th>
+                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Veri</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -346,7 +346,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
                     <tr key={i} style={{ borderTop: "1px solid #1E2732" }}>
                       <td className="px-2 py-1 font-mono" style={{ color: "#EF4444" }}>{err.row}</td>
                       <td className="px-2 py-1" style={{ color: "#F59E0B" }}>{err.reason}</td>
-                      <td className="px-2 py-1 truncate max-w-[200px]" style={{ color: "#64748B" }}>{err.data}</td>
+                      <td className="px-2 py-1 truncate max-w-[200px] text-muted-foreground">{err.data}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -356,13 +356,13 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
         </div>
       )}
 
-      {loading && <p className="text-[11px]" style={{ color: "#64748B" }}>Yükleniyor...</p>}
+      {loading && <p className="text-[11px] text-muted-foreground">Yükleniyor...</p>}
 
       {items.length > 0 && (
-        <div className="overflow-x-auto rounded-lg" style={{ border: "1px solid #1E2732" }}>
+        <div className="overflow-x-auto rounded-lg">
           <table className="w-full text-[11px]">
             <thead>
-              <tr style={{ backgroundColor: "#0F1419" }}>
+              <tr className="bg-background">
                 {["", "#", "İş Kalemi", "Birim", "Miktar", "Birim Fiyat", "Toplam", ""].map((h, i) => (
                   <th key={`${h}-${i}`} className="text-left px-2 py-1.5 font-semibold" style={{ color: "#64748B", fontSize: 10, borderBottom: "1px solid #1E2732", width: i === 0 ? 24 : undefined }}>{h}</th>
                 ))}
@@ -379,8 +379,8 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
                   isDragOver={dragOverIndex === i && dragIndex !== i}
                 />
               ))}
-              <tr style={{ backgroundColor: "#0F1419", borderTop: "1px solid #1E2732" }}>
-                <td colSpan={6} className="px-2 py-1.5 text-right font-semibold" style={{ color: "#94A3B8" }}>TOPLAM</td>
+              <tr style={{ borderTop: "1px solid #1E2732" }}>
+                <td colSpan={6} className="px-2 py-1.5 text-right font-semibold text-muted-foreground">TOPLAM</td>
                 <td className="px-2 py-1.5 font-mono text-right font-bold" style={{ color: "#FF6B2B" }}>₺{fmt(total)}</td>
                 <td />
               </tr>
@@ -390,7 +390,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
       )}
 
       {showForm && (
-        <div className="mt-2 rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mt-2 rounded-lg p-3 space-y-2 bg-background border border-border">
           <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="İş kalemi açıklaması"
             className="w-full rounded-lg px-2.5 py-1.5 text-[12px] outline-none" style={inputStyle} />
           <div className="grid grid-cols-3 gap-2">
@@ -404,7 +404,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
               className="rounded-lg px-2.5 py-1.5 text-[12px] outline-none" style={inputStyle} />
           </div>
           {qty && price && (
-            <p className="text-[11px] text-right" style={{ color: "#94A3B8" }}>
+            <p className="text-[11px] text-right text-muted-foreground">
               Toplam: <span className="font-semibold" style={{ color: "#FF6B2B" }}>₺{fmt(parseFloat(qty || "0") * parseFloat(price || "0"))}</span>
             </p>
           )}
@@ -412,7 +412,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
             className="w-full py-2 rounded-lg text-[12px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
             Kalem Ekle
           </button>
-          <button onClick={downloadSampleCsv} className="w-full text-center text-[10px] underline" style={{ color: "#64748B" }}>
+          <button onClick={downloadSampleCsv} className="w-full text-center text-[10px] underline text-muted-foreground">
             Örnek CSV şablonunu indir
           </button>
         </div>

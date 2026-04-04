@@ -53,15 +53,15 @@ const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
     onClose();
   };
 
-  const inputStyle = { backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" };
+  const inputStyle = {  };
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+      <div className="relative w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto bg-background border border-border">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[16px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>Yeni Proje Ekle</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#64748B" }}>
+          <h2 className="text-[16px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Yeni Proje Ekle</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -69,7 +69,7 @@ const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
         <div className="space-y-3">
           {FIELDS.map(f => (
             <div key={f.key}>
-              <label className="text-[11px] font-semibold uppercase tracking-wide mb-1 block" style={{ color: "#64748B" }}>{f.label}</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide mb-1 block text-muted-foreground">{f.label}</label>
               {f.key === "description" ? (
                 <textarea
                   value={form[f.key] || ""}
@@ -93,7 +93,7 @@ const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
         </div>
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-[13px] font-medium" style={{ border: "1px solid #1E2732", color: "#64748B" }}>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-[13px] font-medium text-muted-foreground">
             İptal
           </button>
           <button
