@@ -37,47 +37,49 @@ const PricingSection = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const handlePurchase = useCallback(async (planKey: string) => {
-    if (!user) {
-      navigate("/register");
-      return;
+  const openCheckoutForm = (data: any) => {
+    const checkoutDiv = document.getElementById("iyzico-checkout-container");
+    if (checkoutDiv) {
+      checkoutDiv.innerHTML = data.checkoutFormContent;
+      checkoutDiv.style.display = "block";
+      const scripts = checkoutDiv.querySelectorAll("script");
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) newScript.src = oldScript.src;
+        else newScript.textContent = oldScript.textContent;
+        document.body.appendChild(newScript);
+      });
     }
-    if (planKey === "enterprise") {
-      navigate("/iletisim");
-      return;
-    }
-    setLoadingPlan(planKey);
+  };
+
+  const handleTrial = useCallback(async (planKey: string) => {
+    if (!user) { navigate("/register"); return; }
+    setLoadingPlan(`trial-${planKey}`);
     try {
       const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly },
       });
-      if (error || data?.error) {
-        toast.error(data?.error || "Ödeme başlatılamadı");
-        return;
-      }
-      // Open iyzico checkout form in a new div
-      const checkoutDiv = document.getElementById("iyzico-checkout-container");
-      if (checkoutDiv) {
-        checkoutDiv.innerHTML = data.checkoutFormContent;
-        checkoutDiv.style.display = "block";
-        // Execute scripts in the injected HTML
-        const scripts = checkoutDiv.querySelectorAll("script");
-        scripts.forEach((oldScript) => {
-          const newScript = document.createElement("script");
-          if (oldScript.src) {
-            newScript.src = oldScript.src;
-          } else {
-            newScript.textContent = oldScript.textContent;
-          }
-          document.body.appendChild(newScript);
-        });
-      }
+      if (error || data?.error) { toast.error(data?.error || "İşlem başlatılamadı"); return; }
+      openCheckoutForm(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("İşlem başlatılırken bir hata oluştu");
+    } finally { setLoadingPlan(null); }
+  }, [user, yearly, navigate]);
+
+  const handleDirectPurchase = useCallback(async (planKey: string) => {
+    if (!user) { navigate("/register"); return; }
+    setLoadingPlan(`direct-${planKey}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) { toast.error(data?.error || "Ödeme başlatılamadı"); return; }
+      openCheckoutForm(data);
     } catch (err) {
       console.error(err);
       toast.error("Ödeme başlatılırken bir hata oluştu");
-    } finally {
-      setLoadingPlan(null);
-    }
+    } finally { setLoadingPlan(null); }
   }, [user, yearly, navigate]);
 
   return (
