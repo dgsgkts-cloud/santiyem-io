@@ -549,7 +549,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                       }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
-                      <button onClick={() => { if (confirm("Bu hakediş silinsin mi?")) deleteHakedis(h.id); }} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
+                      <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
                         <Trash2 className="w-3 h-3" /> Sil
                       </button>
                     </div>

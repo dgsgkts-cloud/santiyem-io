@@ -234,7 +234,7 @@ const RemindersPanel = () => {
                   {r.note && <p className="text-xs text-muted-foreground mt-1">{r.note}</p>}
                 </div>
                 <button
-                  onClick={() => deleteReminder(r.id)}
+                  onClick={() => setDeleteTarget({ id: r.id, name: r.title, type: "Hatırlatıcıyı" })}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />

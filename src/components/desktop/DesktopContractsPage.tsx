@@ -80,13 +80,7 @@ export default function DesktopContractsPage() {
         contract={selectedContract}
         onBack={() => { setView("list"); setSelectedContract(null); }}
         onEdit={() => setView("edit")}
-        onDelete={async () => {
-          if (confirm("Bu sözleşmeyi silmek istediğinize emin misiniz?")) {
-            await deleteContract(selectedContract.id);
-            setView("list");
-            setSelectedContract(null);
-          }
-        }}
+        onDelete={() => setDeleteTarget({ id: selectedContract.id, name: selectedContract.name, type: "Sözleşmeyi" })}
         onReanalyze={() => toast.info("Yeniden analiz için sözleşmeyi düzenleyip PDF yükleyin.")}
         allHakedisler={allHakedisler}
       />

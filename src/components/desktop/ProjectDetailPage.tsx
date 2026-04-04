@@ -719,21 +719,31 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
       )}
 
       {isDeletable && onDelete && user && (
-        <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderColor: "rgba(239,68,68,0.3)" }}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#EF4444" }}>Projeyi Sil</h3>
-              <p className="text-[12px] mt-0.5" style={labelStyle}>Bu işlem geri alınamaz. Tüm hakediş, dosya ve kilometre taşı verileri silinir.</p>
+        <>
+          <DeleteConfirmModal
+            open={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={async () => { onDelete(p.id); }}
+            title="Projeyi Sil"
+            itemName={p.name}
+            extraWarning="Projeye ait tüm iş kalemleri, hakedişler ve şantiye kayıtları da silinecektir."
+          />
+          <div className="rounded-xl p-4 lg:p-5" style={{ ...cardStyle, borderColor: "rgba(239,68,68,0.3)" }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#EF4444" }}>Projeyi Sil</h3>
+                <p className="text-[12px] mt-0.5" style={labelStyle}>Bu işlem geri alınamaz. Tüm hakediş, dosya ve kilometre taşı verileri silinir.</p>
+              </div>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold text-white transition-colors shrink-0"
+                style={{ backgroundColor: "#EF4444" }}
+              >
+                <Trash2 className="w-4 h-4" /> Projeyi Sil
+              </button>
             </div>
-            <button
-              onClick={() => { if (window.confirm("Bu projeyi silmek istediğinize emin misiniz?")) { onDelete(p.id); } }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold text-white transition-colors shrink-0"
-              style={{ backgroundColor: "#EF4444" }}
-            >
-              <Trash2 className="w-4 h-4" /> Projeyi Sil
-            </button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

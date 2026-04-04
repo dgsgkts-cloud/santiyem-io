@@ -127,7 +127,7 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
           <button onClick={() => setEditing(true)} title="Düzenle" style={{ color: "#3B82F6" }}>
             <Pencil className="w-3 h-3" />
           </button>
-          <button onClick={() => { if (confirm("Bu kalem silinsin mi?")) onDelete(item.id); }} style={{ color: "#EF4444" }}>
+          <button onClick={() => onDelete(item.id)} style={{ color: "#EF4444" }}>
             <Trash2 className="w-3 h-3" />
           </button>
         </div>

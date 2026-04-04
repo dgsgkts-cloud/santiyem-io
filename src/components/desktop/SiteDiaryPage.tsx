@@ -409,7 +409,7 @@ const SiteDiaryPage = () => {
             }} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
               <Edit className="w-3.5 h-3.5" /> Düzenle
             </button>
-            <button onClick={async () => { if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) { await deleteEntry.mutateAsync(selectedEntry.id); setSelectedEntry(null); setView("list"); } }} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
+            <button onClick={() => setDeleteTarget({ id: selectedEntry.id, name: format(parseISO(selectedEntry.entry_date), "d MMMM yyyy", { locale: tr }), type: "Günlük Kaydı" })} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
               <Trash2 className="w-3.5 h-3.5" /> Sil
             </button>
           </div>
