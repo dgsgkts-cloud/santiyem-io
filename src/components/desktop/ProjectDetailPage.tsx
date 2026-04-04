@@ -539,6 +539,121 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         )}
       </div>
 
+      {/* Ödemeler & Tahsilatlar */}
+      {user && (() => {
+        const fmt = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
+        const projectPayments = payments.filter(pay => pay.project_id === p.id);
+        const projectCollections = collections.filter(col => col.project_id === p.id);
+        const projectChecks = checks.filter(chk => chk.project_id === p.id);
+        const totalPayments = projectPayments.reduce((s, pay) => s + Number(pay.amount), 0);
+        const totalCollections = projectCollections.reduce((s, col) => s + Number(col.amount), 0);
+        const netCashFlow = totalCollections - totalPayments;
+
+        return (
+          <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+            <div className="flex items-center gap-2 mb-4">
+              <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+              <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>Ödemeler & Tahsilatlar</h3>
+            </div>
+
+            {/* Summary cards */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowUpRight className="w-3.5 h-3.5" style={{ color: "#EF4444" }} />
+                  <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Ödemeler</span>
+                </div>
+                <p className="text-[16px] font-bold" style={{ color: "#EF4444" }}>₺{fmt(totalPayments)}</p>
+                <p className="text-[10px]" style={labelStyle}>{projectPayments.length} işlem</p>
+              </div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowDownLeft className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
+                  <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Tahsilatlar</span>
+                </div>
+                <p className="text-[16px] font-bold" style={{ color: "#22C55E" }}>₺{fmt(totalCollections)}</p>
+                <p className="text-[10px]" style={labelStyle}>{projectCollections.length} işlem</p>
+              </div>
+              <div className="rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="w-3.5 h-3.5" style={{ color: netCashFlow >= 0 ? "#22C55E" : "#EF4444" }} />
+                  <span className="text-[10px] uppercase font-semibold" style={labelStyle}>Net Nakit Akışı</span>
+                </div>
+                <p className="text-[16px] font-bold" style={{ color: netCashFlow >= 0 ? "#22C55E" : "#EF4444" }}>
+                  {netCashFlow >= 0 ? "+" : ""}₺{fmt(netCashFlow)}
+                </p>
+                <p className="text-[10px]" style={labelStyle}>Tahsilat - Ödeme</p>
+              </div>
+            </div>
+
+            {/* Lists side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Payments list */}
+              <div>
+                <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Son Ödemeler</p>
+                {projectPayments.length === 0 ? (
+                  <p className="text-[12px] py-4 text-center" style={labelStyle}>Bu projeye ait ödeme yok</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {projectPayments.slice(0, 5).map(pay => (
+                      <div key={pay.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                        <div>
+                          <p className="text-[12px] font-medium" style={textStyle}>{pay.recipient}</p>
+                          <p className="text-[10px]" style={labelStyle}>{pay.category} • {pay.payment_date}</p>
+                        </div>
+                        <p className="text-[13px] font-semibold" style={{ color: "#EF4444" }}>-₺{fmt(pay.amount)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Collections list */}
+              <div>
+                <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Son Tahsilatlar</p>
+                {projectCollections.length === 0 ? (
+                  <p className="text-[12px] py-4 text-center" style={labelStyle}>Bu projeye ait tahsilat yok</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {projectCollections.slice(0, 5).map(col => (
+                      <div key={col.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                        <div>
+                          <p className="text-[12px] font-medium" style={textStyle}>{col.sender}</p>
+                          <p className="text-[10px]" style={labelStyle}>{col.collection_type} • {col.collection_date}</p>
+                        </div>
+                        <p className="text-[13px] font-semibold" style={{ color: "#22C55E" }}>+₺{fmt(col.amount)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Project checks */}
+            {projectChecks.length > 0 && (
+              <div className="mt-4 pt-4" style={{ borderTop: "1px solid #1E2732" }}>
+                <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Proje Çekleri</p>
+                <div className="space-y-1.5">
+                  {projectChecks.map(chk => (
+                    <div key={chk.id} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#0F1419" }}>
+                      <div>
+                        <p className="text-[12px] font-medium" style={textStyle}>
+                          {chk.check_type === "verilen" ? "Verilen" : "Alınan"} — {chk.counterparty}
+                        </p>
+                        <p className="text-[10px]" style={labelStyle}>{chk.bank_name} • Vade: {chk.due_date}</p>
+                      </div>
+                      <p className="text-[13px] font-semibold" style={{ color: chk.check_type === "verilen" ? "#EF4444" : "#22C55E" }}>
+                        ₺{fmt(chk.amount)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Notlar / Yorumlar */}
       <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
         <div className="flex items-center justify-between mb-4">
