@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useContracts, Contract, ContractInput } from "@/hooks/useContracts";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ export default function DesktopContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [allHakedisler, setAllHakedisler] = useState<any[]>([]);
   const [signatureMap, setSignatureMap] = useState<Record<string, { status: string; label: string; color: string }>>({});
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   // Fetch all hakedis + signature requests
   useEffect(() => {
@@ -79,13 +81,7 @@ export default function DesktopContractsPage() {
         contract={selectedContract}
         onBack={() => { setView("list"); setSelectedContract(null); }}
         onEdit={() => setView("edit")}
-        onDelete={async () => {
-          if (confirm("Bu sözleşmeyi silmek istediğinize emin misiniz?")) {
-            await deleteContract(selectedContract.id);
-            setView("list");
-            setSelectedContract(null);
-          }
-        }}
+        onDelete={() => setDeleteTarget({ id: selectedContract.id, name: selectedContract.name, type: "Sözleşmeyi" })}
         onReanalyze={() => toast.info("Yeniden analiz için sözleşmeyi düzenleyip PDF yükleyin.")}
         allHakedisler={allHakedisler}
       />
@@ -93,11 +89,26 @@ export default function DesktopContractsPage() {
   }
 
   return (
-    <ContractList
-      contracts={displayContracts}
-      signatureMap={signatureMap}
-      onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
-      onAdd={() => setView("add")}
-    />
+    <>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) {
+            await deleteContract(deleteTarget.id);
+            setView("list");
+            setSelectedContract(null);
+          }
+        }}
+        title={`${deleteTarget?.type || "Sözleşmeyi"} Sil`}
+        itemName={deleteTarget?.name}
+      />
+      <ContractList
+        contracts={displayContracts}
+        signatureMap={signatureMap}
+        onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
+        onAdd={() => setView("add")}
+      />
+    </>
   );
 }

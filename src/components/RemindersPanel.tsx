@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, User } from "lucide-react";
 import { useReminders } from "@/hooks/useReminders";
 import { useUser } from "@/contexts/UserContext";
@@ -39,6 +40,7 @@ const RemindersPanel = () => {
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "done" | "overdue">("all");
 
   const handleAdd = async () => {
@@ -233,7 +235,7 @@ const RemindersPanel = () => {
                   {r.note && <p className="text-xs text-muted-foreground mt-1">{r.note}</p>}
                 </div>
                 <button
-                  onClick={() => deleteReminder(r.id)}
+                  onClick={() => setDeleteTarget({ id: r.id, name: r.title, type: "Hatırlatıcıyı" })}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -243,6 +245,13 @@ const RemindersPanel = () => {
           })}
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteReminder(deleteTarget.id); }}
+        title={`${deleteTarget?.type || "Hatırlatıcıyı"} Sil`}
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

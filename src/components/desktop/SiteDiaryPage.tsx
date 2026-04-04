@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/hooks/useSiteDiary";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
@@ -49,6 +50,7 @@ const SiteDiaryPage = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   // Use mock data if no real entries
   const entries = dbEntries.length > 0 ? dbEntries : (selectedProjectId ? MOCK_ENTRIES.map((e, i) => ({ ...e, id: `mock-${i}`, project_id: selectedProjectId, user_id: user?.id || "" })) : []) as DiaryEntry[];
@@ -145,6 +147,16 @@ const SiteDiaryPage = () => {
   const totalWorkers = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count, 0);
   const totalManHours = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count * c.hours, 0);
 
+  const deleteModal = (
+    <DeleteConfirmModal
+      open={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={async () => { if (deleteTarget) { await deleteEntry.mutateAsync(deleteTarget.id); setSelectedEntry(null); setView("list"); } }}
+      title={`${deleteTarget?.type || "Kaydı"} Sil`}
+      itemName={deleteTarget?.name}
+    />
+  );
+
   // Calendar view
   if (view === "list") {
     const recent = [...entries].sort((a, b) => b.entry_date.localeCompare(a.entry_date)).slice(0, 5);
@@ -152,6 +164,7 @@ const SiteDiaryPage = () => {
 
     return (
       <div className="max-w-6xl mx-auto p-4 lg:p-6 space-y-6">
+        {deleteModal}
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
@@ -374,6 +387,7 @@ const SiteDiaryPage = () => {
     const ep = entryPhotos(selectedEntry.id);
     return (
       <div className="max-w-4xl mx-auto p-4 lg:p-6 space-y-6">
+        {deleteModal}
         <div className="flex items-center justify-between">
           <button onClick={() => { setSelectedEntry(null); setView("list"); }} className="flex items-center gap-1.5 text-sm" style={{ color: "#94A3B8" }}>
             <ChevronLeft className="w-4 h-4" /> Şantiye Günlüğü
@@ -409,7 +423,7 @@ const SiteDiaryPage = () => {
             }} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
               <Edit className="w-3.5 h-3.5" /> Düzenle
             </button>
-            <button onClick={async () => { if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) { await deleteEntry.mutateAsync(selectedEntry.id); setSelectedEntry(null); setView("list"); } }} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
+            <button onClick={() => setDeleteTarget({ id: selectedEntry.id, name: format(parseISO(selectedEntry.entry_date), "d MMMM yyyy", { locale: tr }), type: "Günlük Kaydı" })} className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444" }}>
               <Trash2 className="w-3.5 h-3.5" /> Sil
             </button>
           </div>

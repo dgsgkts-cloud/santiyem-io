@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { Plus, Trash2, Package, X, Pencil, Check, GripVertical, Upload, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useHakedisItems, type HakedisItem } from "@/hooks/useHakedisItems";
@@ -127,7 +128,7 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
           <button onClick={() => setEditing(true)} title="Düzenle" style={{ color: "#3B82F6" }}>
             <Pencil className="w-3 h-3" />
           </button>
-          <button onClick={() => { if (confirm("Bu kalem silinsin mi?")) onDelete(item.id); }} style={{ color: "#EF4444" }}>
+          <button onClick={() => onDelete(item.id)} style={{ color: "#EF4444" }}>
             <Trash2 className="w-3 h-3" />
           </button>
         </div>
@@ -149,6 +150,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const total = items.reduce((s, i) => s + i.total_price, 0);
 
@@ -370,7 +372,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
               {items.map((item, i) => (
                 <EditableRow
                   key={item.id} item={item} index={i}
-                  onSave={updateItem} onDelete={deleteItem}
+                  onSave={updateItem} onDelete={(id) => { const itm = items.find(x => x.id === id); setDeleteTarget({ id, name: itm?.description || "İş kalemi" }); }}
                   onDragStart={handleDragStart}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
@@ -415,6 +417,13 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
           </button>
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteItem(deleteTarget.id); }}
+        title="İş Kalemini Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 }

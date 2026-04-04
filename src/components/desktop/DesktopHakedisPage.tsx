@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis, ProjectHakedis } from "@/hooks/useProjectHakedis";
@@ -205,6 +206,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
   // Payment confirmation modal
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   const contract = Number(project?.contract_amount) || 0;
   const totalAmount = hakedisler.reduce((s, h) => s + h.amount, 0);
@@ -331,6 +333,13 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteHakedis(deleteTarget.id); }}
+        title={`${deleteTarget?.type || "Hakedişi"} Sil`}
+        itemName={deleteTarget?.name}
+      />
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "#94A3B8" }}>
@@ -548,7 +557,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                       }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
-                      <button onClick={() => { if (confirm("Bu hakediş silinsin mi?")) deleteHakedis(h.id); }} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
+                      <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
                         <Trash2 className="w-3 h-3" /> Sil
                       </button>
                     </div>

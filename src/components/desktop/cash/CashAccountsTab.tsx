@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ const CashAccountsTab = () => {
   const { accounts, addAccount, updateAccount, deleteAccount } = useCashAccounts();
   const [showForm, setShowForm] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
     name: "", account_type: "nakit_kasa", balance: "", bank_name: "", iban: "", account_no: "", branch: "",
   });
@@ -89,7 +91,7 @@ const CashAccountsTab = () => {
                       <p className="text-[11px]" style={{ color: "#64748B" }}>{type.label}</p>
                     </div>
                   </div>
-                  <button onClick={() => deleteAccount.mutate(acc.id)} className="p-1.5 rounded-lg hover:bg-red-500/10">
+                  <button onClick={() => setDeleteTarget({ id: acc.id, name: acc.name })} className="p-1.5 rounded-lg hover:bg-red-500/10">
                     <Trash2 className="w-4 h-4" style={{ color: "#EF4444" }} />
                   </button>
                 </div>
@@ -183,6 +185,13 @@ const CashAccountsTab = () => {
           <Button onClick={handleTransfer} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!transfer.from || !transfer.to || !transfer.amount}>Transfer Et</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteAccount.mutate(deleteTarget.id); }}
+        title="Hesabı Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

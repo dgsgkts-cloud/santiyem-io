@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { useProjects } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const CashChecksTab = () => {
   const { checks, addCheck, deleteCheck, updateCheck } = useCashChecks();
   const { projects } = useProjects();
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [formType, setFormType] = useState<"verilen" | "alınan">("verilen");
   const [form, setForm] = useState({
     check_no: "", bank_name: "", branch: "", account_no: "", counterparty: "", amount: "", due_date: "", project_id: "",
@@ -84,7 +86,7 @@ const CashChecksTab = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
-              <button onClick={() => deleteCheck.mutate(chk.id)} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+              <button onClick={() => setDeleteTarget({ id: chk.id, name: `Çek No: ${chk.check_no}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
             </div>
           </div>
           <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>Banka: {chk.bank_name}</p>
@@ -219,6 +221,13 @@ const CashChecksTab = () => {
           <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.check_no || !form.amount || !form.due_date}>Kaydet</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteCheck.mutate(deleteTarget.id); }}
+        title="Çeki Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

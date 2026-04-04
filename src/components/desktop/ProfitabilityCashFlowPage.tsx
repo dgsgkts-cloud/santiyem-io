@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectExpenses, ProjectExpense } from "@/hooks/useProjectExpenses";
 import { useUser } from "@/contexts/UserContext";
@@ -37,6 +38,7 @@ const ProfitabilityCashFlowPage = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [filter, setFilter] = useState<typeof FILTERS[number]>("Tümü");
   const [addModal, setAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [expForm, setExpForm] = useState({
     project_id: "", category: "İşçilik", description: "", amount: "",
     expense_date: new Date().toISOString().slice(0, 10), has_invoice: false,
@@ -140,10 +142,21 @@ const ProfitabilityCashFlowPage = () => {
     return "#991B1B";
   };
 
+  const expDeleteModal = (
+    <DeleteConfirmModal
+      open={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={async () => { if (deleteTarget) deleteExpense.mutate(deleteTarget.id); }}
+      title="Gideri Sil"
+      itemName={deleteTarget?.name}
+    />
+  );
+
   // ─── OVERVIEW PAGE ───
   if (page === "overview") {
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+        {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           {(["overview", "cashflow"] as Page[]).map(p => (
@@ -392,7 +405,7 @@ const ProfitabilityCashFlowPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold" style={{ color: "#EF4444" }}>{fmtFull(Number(e.amount))}</span>
-                      <button onClick={(ev) => { ev.stopPropagation(); deleteExpense.mutate(e.id); }}
+                      <button onClick={(ev) => { ev.stopPropagation(); setDeleteTarget({ id: e.id, name: `${e.description} - ${fmtFull(Number(e.amount))}` }); }}
                         className="p-1 rounded hover:bg-white/10"><Trash2 className="w-3 h-3" style={{ color: "#64748B" }} /></button>
                     </div>
                   </div>
@@ -451,6 +464,7 @@ const ProfitabilityCashFlowPage = () => {
 
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+        {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2">
           {(["overview", "cashflow"] as Page[]).map(p => (

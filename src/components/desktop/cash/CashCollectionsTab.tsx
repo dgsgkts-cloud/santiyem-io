@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useCashCollections } from "@/hooks/useCashCollections";
 import { useProjects } from "@/hooks/useProjects";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const CashCollectionsTab = () => {
   const { collections, addCollection, deleteCollection } = useCashCollections();
   const { projects } = useProjects();
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
     collection_date: new Date().toISOString().slice(0, 10),
     sender: "",
@@ -98,7 +100,7 @@ const CashCollectionsTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => deleteCollection.mutate(c.id)} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+                        <button onClick={() => setDeleteTarget({ id: c.id, name: `${c.sender} - ₺${fmt(c.amount)}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
                       </td>
                     </tr>
                   );
@@ -180,6 +182,13 @@ const CashCollectionsTab = () => {
           <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.sender || !form.amount}>Kaydet</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteCollection.mutate(deleteTarget.id); }}
+        title="Tahsilatı Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };
