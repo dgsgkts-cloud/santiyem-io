@@ -189,7 +189,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       </nav>
 
       {/* Bottom section */}
-      <div className="mt-auto shrink-0 overflow-hidden" style={{ borderTop: "1px solid #1E2732" }}>
+      <div className="mt-auto shrink-0 overflow-hidden border-t border-sidebar-border">
         {/* Plan badge — expanded only */}
         {!collapsed && (
           <div className="px-3 pt-3 pb-2">
