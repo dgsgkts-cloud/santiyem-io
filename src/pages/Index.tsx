@@ -252,7 +252,7 @@ const Index = () => {
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
-                  <div style={{ backgroundColor: "#0F1419" }}><PricingPanel /></div>
+                  <div className="bg-background"><PricingPanel /></div>
                 ) : activeTab === "daily" ? (
                   <DailyKnowledgePanel />
                 ) : activeTab === "calc" ? (
