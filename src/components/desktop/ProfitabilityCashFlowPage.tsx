@@ -394,7 +394,7 @@ const ProfitabilityCashFlowPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold" style={{ color: "#EF4444" }}>{fmtFull(Number(e.amount))}</span>
-                      <button onClick={(ev) => { ev.stopPropagation(); deleteExpense.mutate(e.id); }}
+                      <button onClick={(ev) => { ev.stopPropagation(); setDeleteTarget({ id: e.id, name: `${e.description} - ${fmtFull(Number(e.amount))}` }); }}
                         className="p-1 rounded hover:bg-white/10"><Trash2 className="w-3 h-3" style={{ color: "#64748B" }} /></button>
                     </div>
                   </div>
