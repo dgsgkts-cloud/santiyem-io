@@ -318,11 +318,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div style={{ width: "100%", height: 220 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={4} barCategoryGap="25%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2732" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
               <Tooltip
-                contentStyle={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
                 labelStyle={{ color: "#F1F5F9", fontWeight: 600 }}
                 itemStyle={{ color: "#94A3B8" }}
                 formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
@@ -430,7 +430,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <div className="hidden lg:block">
                   <table className="w-full text-[13px]">
                     <thead>
-                      <tr style={{ backgroundColor: "#0F1419" }}>
+                      <tr className="bg-background">
                         {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
                           <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
                         ))}
@@ -438,12 +438,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                     </thead>
                     <tbody>
                       {displayProjects.map((p) => (
-                        <tr key={p.id} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}>
+                        <tr key={p.id} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer" className="border-b border-border">
                           <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
                           <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                              <div className="flex-1 h-1.5 rounded-full" className="bg-muted">
                                 <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                               </div>
                               <span className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{p.progress}%</span>
@@ -459,9 +459,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 </div>
 
                 {/* Mobile/Tablet card list */}
-                <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
+                <div className="lg:hidden divide-y" className="border-border">
                   {displayProjects.map((p) => (
-                    <div key={p.id} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
+                    <div key={p.id} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-muted transition-colors" className="border-border">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
@@ -470,7 +470,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                        <div className="flex-1 h-1.5 rounded-full" className="bg-muted">
                           <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                         </div>
                         <span className="text-[11px] font-mono shrink-0" style={{ color: "#94A3B8" }}>{p.progress}%</span>
@@ -567,7 +567,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </div>
             <div
               className="flex items-center gap-2 rounded-lg px-3 mb-3 cursor-pointer"
-              style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", height: 36 }}
+              className="bg-background border border-border" style={{ height: 36 }}
               onClick={() => onTabChange("chat")}
             >
               <span className="text-[12px] lg:text-[13px]" style={{ color: "#475569" }}>Bir şey sorun...</span>
