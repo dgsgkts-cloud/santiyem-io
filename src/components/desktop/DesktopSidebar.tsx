@@ -250,11 +250,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               </div>
               <button
                 onClick={() => onTabChange("settings")}
-                className="shrink-0 p-1 rounded transition-colors duration-150"
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1E2732"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                className="shrink-0 p-1 rounded hover-icon-btn"
               >
-                <Settings className="w-3.5 h-3.5" style={{ color: "#475569" }} />
+                <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
