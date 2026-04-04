@@ -51,7 +51,7 @@ const DesktopSettingsPage = () => {
         </div>
 
         {/* Content */}
-        <div className="rounded-xl p-4 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 lg:p-6 bg-card border border-border">
           {activeTab === "profile" && (
             <div className="space-y-5 lg:space-y-6">
               <div>
