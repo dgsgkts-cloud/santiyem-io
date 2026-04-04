@@ -7,7 +7,7 @@ interface WelcomeScreenProps {
 
 const suggestions = [
   { icon: Wallet, text: "Bu hakedişte hangi kalemlerde anormal artış var?", label: "HAKEDİŞ" },
-  { icon: FolderOpen, text: "Eylül'de en çok harcama yaptığımız 3 kalem hangisi?", label: "PROJE" },
+  { icon: FolderOpen, text: "Bu ay en çok harcama yaptığımız 3 kalem hangisi?", label: "PROJE" },
   { icon: HardHat, text: "Bu hızla proje ne zaman tamamlanır, gecikme riski var mı?", label: "ŞANTİYE" },
   { icon: TrendingUp, text: "Önümüzdeki 30 günde nakit açığı oluşur mu?", label: "NAKİT" },
 ];
