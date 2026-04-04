@@ -385,11 +385,12 @@ const Index = () => {
         className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ backgroundColor: "#0F1419" }}
+        style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <button
           onClick={() => setDrawerOpen(false)}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
         >
           <X className="w-5 h-5" />
         </button>
