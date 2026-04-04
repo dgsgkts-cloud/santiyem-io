@@ -214,7 +214,7 @@ const Index = () => {
   // Desktop layout
   if (isLg) {
     return (
-      <div className="flex h-screen" style={{ backgroundColor: "#0A0E13" }}>
+      <div className="flex h-screen bg-background">
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
 
         <div className="flex-1 flex flex-col min-w-0">
