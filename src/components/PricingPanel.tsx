@@ -15,46 +15,49 @@ const PricingPanel = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useUser();
 
-  const handlePurchase = useCallback(async (planKey: string) => {
-    if (!user) {
-      toast.error("Lütfen önce giriş yapın");
-      return;
+  const openCheckoutForm = (data: any) => {
+    const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
+    if (checkoutDiv) {
+      checkoutDiv.innerHTML = data.checkoutFormContent;
+      checkoutDiv.style.display = "flex";
+      const scripts = checkoutDiv.querySelectorAll("script");
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) newScript.src = oldScript.src;
+        else newScript.textContent = oldScript.textContent;
+        document.body.appendChild(newScript);
+      });
     }
-    if (planKey === "enterprise") {
-      setShowEnterpriseForm(true);
-      return;
-    }
-    setLoadingPlan(planKey);
+  };
+
+  const handleTrial = useCallback(async (planKey: string) => {
+    if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
+    setLoadingPlan(`trial-${planKey}`);
     try {
       const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly },
       });
-      if (error || data?.error) {
-        toast.error(data?.error || "Ödeme başlatılamadı");
-        return;
-      }
-      // Open iyzico checkout form
-      const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
-      if (checkoutDiv) {
-        checkoutDiv.innerHTML = data.checkoutFormContent;
-        checkoutDiv.style.display = "flex";
-        const scripts = checkoutDiv.querySelectorAll("script");
-        scripts.forEach((oldScript) => {
-          const newScript = document.createElement("script");
-          if (oldScript.src) {
-            newScript.src = oldScript.src;
-          } else {
-            newScript.textContent = oldScript.textContent;
-          }
-          document.body.appendChild(newScript);
-        });
-      }
+      if (error || data?.error) { toast.error(data?.error || "İşlem başlatılamadı"); return; }
+      openCheckoutForm(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("İşlem başlatılırken bir hata oluştu");
+    } finally { setLoadingPlan(null); }
+  }, [user, yearly]);
+
+  const handleDirectPurchase = useCallback(async (planKey: string) => {
+    if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
+    setLoadingPlan(`direct-${planKey}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly },
+      });
+      if (error || data?.error) { toast.error(data?.error || "Ödeme başlatılamadı"); return; }
+      openCheckoutForm(data);
     } catch (err) {
       console.error(err);
       toast.error("Ödeme başlatılırken bir hata oluştu");
-    } finally {
-      setLoadingPlan(null);
-    }
+    } finally { setLoadingPlan(null); }
   }, [user, yearly]);
 
   const plans = [
@@ -95,8 +98,7 @@ const PricingPanel = () => {
       
       color: "#94A3B8",
       features: [
-        "1 kullanıcı",
-"1 proje",
+        "1 kullanıcı hesabı · Sınırsız aktif proje",
         "3 hakediş/ay",
         "Gecikmiş ödeme uyarısı + yasal faiz hesabı",
         "Şantiye günlüğü — sınırsız kayıt",
@@ -121,8 +123,7 @@ const PricingPanel = () => {
       btnStyle: "primary" as const,
       color: "#FF6B2B",
       features: [
-        "5 kullanıcı hesabı",
-"3 proje",
+        "5 kullanıcı hesabı · Sınırsız aktif proje",
         "Profesyonel plandaki her şey",
         "Ekip görevi atama + kişiye özel not",
         "Ortak proje ve hakediş takibi",
@@ -141,13 +142,12 @@ const PricingPanel = () => {
       projects: "Sınırsız",
       featured: false,
       badge: null,
-      btnText: "Teklif Al",
+      btnText: "14 Gün Ücretsiz Dene",
       btnStyle: "outline" as const,
       color: null,
       isPremium: true,
       features: [
-        "Sınırsız kullanıcı",
-        "Sınırsız proje",
+        "Sınırsız kullanıcı hesabı · Sınırsız aktif proje",
         "Ekip planındaki her şey",
         "Gelişmiş yetki rolleri (yönetici / editör / görüntüleyici)",
         "AI Bütçe Sapma Analizi",
@@ -338,19 +338,33 @@ const PricingPanel = () => {
               </div>
 
               <div className="space-y-2">
-                <Button
-                  onClick={() => plan.id === "free" ? undefined : handlePurchase(plan.id)}
-                  disabled={loadingPlan !== null && loadingPlan !== plan.id}
-                  className={`w-full font-semibold h-11 ${plan.btnStyle === "primary" ? "text-white" : "bg-transparent border border-border text-foreground hover:bg-secondary"}`}
-                  style={plan.btnStyle === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
-                >
-                  {loadingPlan === plan.id && <Loader2 size={16} className="animate-spin mr-1" />}
-                  {plan.btnText}
-                </Button>
-                {plan.id !== "free" && plan.id !== "enterprise" && (
-                  <p className="text-[11px] text-center text-muted-foreground mt-2 leading-relaxed">
-                    14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
-                  </p>
+                {plan.id === "free" ? (
+                  <Button className="w-full font-semibold h-11 bg-transparent border border-border text-foreground hover:bg-secondary">
+                    Ücretsiz Başla
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => handleTrial(plan.id)}
+                      disabled={loadingPlan !== null}
+                      className="w-full font-semibold h-11 text-white"
+                      style={{ backgroundColor: "#FF6B2B" }}
+                    >
+                      {loadingPlan === `trial-${plan.id}` && <Loader2 size={16} className="animate-spin mr-1" />}
+                      14 Gün Ücretsiz Dene
+                    </Button>
+                    <Button
+                      onClick={() => handleDirectPurchase(plan.id)}
+                      disabled={loadingPlan !== null}
+                      className="w-full font-semibold h-11 bg-transparent border border-border text-foreground hover:bg-secondary"
+                    >
+                      {loadingPlan === `direct-${plan.id}` && <Loader2 size={16} className="animate-spin mr-1" />}
+                      Hemen Başla — {(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")}₺/ay
+                    </Button>
+                    <p className="text-[11px] text-center text-muted-foreground mt-1 leading-relaxed">
+                      14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                    </p>
+                  </>
                 )}
               </div>
             </div>

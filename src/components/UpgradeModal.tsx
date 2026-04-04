@@ -16,47 +16,61 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useUser();
 
-  const handlePurchase = useCallback(async (planKey: string) => {
-    if (!user) {
-      toast.error("Lütfen önce giriş yapın");
-      return;
+  const openCheckoutForm = (data: any) => {
+    onClose();
+    let checkoutDiv = document.getElementById("iyzico-checkout-container-modal");
+    if (!checkoutDiv) {
+      checkoutDiv = document.createElement("div");
+      checkoutDiv.id = "iyzico-checkout-container-modal";
+      checkoutDiv.className = "fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4";
+      document.body.appendChild(checkoutDiv);
     }
-    setLoadingPlan(planKey);
+    checkoutDiv.innerHTML = data.checkoutFormContent;
+    checkoutDiv.style.display = "flex";
+    const scripts = checkoutDiv.querySelectorAll("script");
+    scripts.forEach((oldScript) => {
+      const newScript = document.createElement("script");
+      if (oldScript.src) newScript.src = oldScript.src;
+      else newScript.textContent = oldScript.textContent;
+      document.body.appendChild(newScript);
+    });
+  };
+
+  const handleTrial = useCallback(async (planKey: string) => {
+    if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
+    setLoadingPlan(`trial-${planKey}`);
     try {
       const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly: false },
       });
-      if (error || data?.error) {
-        toast.error(data?.error || "Ödeme başlatılamadı");
-        return;
-      }
-      onClose();
-      // Inject iyzico checkout form
-      let checkoutDiv = document.getElementById("iyzico-checkout-container-modal");
-      if (!checkoutDiv) {
-        checkoutDiv = document.createElement("div");
-        checkoutDiv.id = "iyzico-checkout-container-modal";
-        checkoutDiv.className = "fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4";
-        document.body.appendChild(checkoutDiv);
-      }
-      checkoutDiv.innerHTML = data.checkoutFormContent;
-      checkoutDiv.style.display = "flex";
-      const scripts = checkoutDiv.querySelectorAll("script");
-      scripts.forEach((oldScript) => {
-        const newScript = document.createElement("script");
-        if (oldScript.src) newScript.src = oldScript.src;
-        else newScript.textContent = oldScript.textContent;
-        document.body.appendChild(newScript);
+      if (error || data?.error) { toast.error(data?.error || "İşlem başlatılamadı"); return; }
+      openCheckoutForm(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("İşlem başlatılırken bir hata oluştu");
+    } finally { setLoadingPlan(null); }
+  }, [user, onClose]);
+
+  const handleDirectPurchase = useCallback(async (planKey: string) => {
+    if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
+    setLoadingPlan(`direct-${planKey}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+        body: { planKey, yearly: false },
       });
+      if (error || data?.error) { toast.error(data?.error || "Ödeme başlatılamadı"); return; }
+      openCheckoutForm(data);
     } catch (err) {
       console.error(err);
       toast.error("Ödeme başlatılırken bir hata oluştu");
-    } finally {
-      setLoadingPlan(null);
-    }
+    } finally { setLoadingPlan(null); }
   }, [user, onClose]);
 
   if (!open) return null;
+
+  const planKey = requiresOffice ? "team" : "pro";
+  const planPrice = requiresOffice ? "1.499" : "499";
+  const planName = requiresOffice ? "Ekip" : "Profesyonel";
 
   return (
     <>
@@ -76,7 +90,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
           <div className="space-y-2 mb-6">
             {(requiresOffice
               ? ["Ekip görevi atama", "Ortak proje takibi", "Sınırsız hakediş", "AI Proje Analizi", "Öncelikli destek"]
-              : ["Sınırsız AI Asistan", "1 proje · 3 hakediş/ay", "Şantiye günlüğü — sınırsız", "PDF — firma başlığı + imza alanı"]
+              : ["Sınırsız AI Asistan", "Sınırsız aktif proje · 3 hakediş/ay", "Şantiye günlüğü — sınırsız", "PDF — firma başlığı + imza alanı"]
             ).map((f, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-white/80">
                 <Check className="w-4 h-4 text-green-500" /> {f}
@@ -85,28 +99,26 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
           </div>
           <div className="space-y-2">
             <Button
-              onClick={() => handlePurchase("pro")}
+              onClick={() => handleTrial(planKey)}
               disabled={loadingPlan !== null}
               className="w-full h-11 font-semibold text-white"
               style={{ backgroundColor: "#FF6B2B" }}
             >
-              {loadingPlan === "pro" && <Loader2 size={16} className="animate-spin mr-1" />}
-              14 Gün Ücretsiz Dene — Profesyonel
+              {loadingPlan === `trial-${planKey}` && <Loader2 size={16} className="animate-spin mr-1" />}
+              14 Gün Ücretsiz Dene — {planName}
             </Button>
-            {requiresOffice && (
-              <Button
-                onClick={() => handlePurchase("team")}
-                disabled={loadingPlan !== null}
-                className="w-full h-11 font-semibold bg-transparent border border-[#FF6B2B] text-[#FF6B2B] hover:bg-[#FF6B2B]/10"
-              >
-                {loadingPlan === "team" && <Loader2 size={16} className="animate-spin mr-1" />}
-                14 Gün Ücretsiz Dene — Ekip
-              </Button>
-            )}
+            <Button
+              onClick={() => handleDirectPurchase(planKey)}
+              disabled={loadingPlan !== null}
+              className="w-full h-11 font-semibold bg-transparent border border-white/20 text-white hover:bg-white/5"
+            >
+              {loadingPlan === `direct-${planKey}` && <Loader2 size={16} className="animate-spin mr-1" />}
+              Hemen Başla — {planPrice}₺/ay
+            </Button>
             <div className="mt-3 p-3 rounded-lg border border-white/10" style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
               <p className="text-xs text-white/70 text-center leading-relaxed">
                 🔒 <strong className="text-white">14 gün boyunca ücret alınmaz.</strong><br />
-                15. günden itibaren aylık plan ücreti otomatik tahsil edilir.<br />
+                15. günden itibaren aylık ₺{planPrice} otomatik tahsil edilir.<br />
                 İstediğiniz zaman iptal edebilirsiniz.
               </p>
             </div>
