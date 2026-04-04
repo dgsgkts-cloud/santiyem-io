@@ -142,7 +142,7 @@ const PricingPanel = () => {
       projects: "Sınırsız",
       featured: false,
       badge: null,
-      btnText: "Teklif Al",
+      btnText: "14 Gün Ücretsiz Dene",
       btnStyle: "outline" as const,
       color: null,
       isPremium: true,
