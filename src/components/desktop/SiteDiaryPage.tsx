@@ -50,6 +50,7 @@ const SiteDiaryPage = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
   // Use mock data if no real entries
   const entries = dbEntries.length > 0 ? dbEntries : (selectedProjectId ? MOCK_ENTRIES.map((e, i) => ({ ...e, id: `mock-${i}`, project_id: selectedProjectId, user_id: user?.id || "" })) : []) as DiaryEntry[];
