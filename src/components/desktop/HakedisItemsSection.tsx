@@ -150,6 +150,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const total = items.reduce((s, i) => s + i.total_price, 0);
 
