@@ -333,6 +333,13 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteHakedis(deleteTarget.id); }}
+        title={`${deleteTarget?.type || "Hakedişi"} Sil`}
+        itemName={deleteTarget?.name}
+      />
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "#94A3B8" }}>

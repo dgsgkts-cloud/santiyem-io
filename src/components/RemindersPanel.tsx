@@ -245,6 +245,13 @@ const RemindersPanel = () => {
           })}
         </div>
       )}
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteReminder(deleteTarget.id); }}
+        title={`${deleteTarget?.type || "Hatırlatıcıyı"} Sil`}
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

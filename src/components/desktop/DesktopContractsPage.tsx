@@ -89,11 +89,26 @@ export default function DesktopContractsPage() {
   }
 
   return (
-    <ContractList
-      contracts={displayContracts}
-      signatureMap={signatureMap}
-      onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
-      onAdd={() => setView("add")}
-    />
+    <>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) {
+            await deleteContract(deleteTarget.id);
+            setView("list");
+            setSelectedContract(null);
+          }
+        }}
+        title={`${deleteTarget?.type || "Sözleşmeyi"} Sil`}
+        itemName={deleteTarget?.name}
+      />
+      <ContractList
+        contracts={displayContracts}
+        signatureMap={signatureMap}
+        onSelect={(c) => { setSelectedContract(c); setView("detail"); }}
+        onAdd={() => setView("add")}
+      />
+    </>
   );
 }
