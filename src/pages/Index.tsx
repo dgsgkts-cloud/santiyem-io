@@ -21,7 +21,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import CashTrackingPage from "@/components/desktop/CashTrackingPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
   RotateCcw, MessageSquare,
