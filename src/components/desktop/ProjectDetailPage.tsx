@@ -51,6 +51,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const { files, loading: fLoading, uploading, uploadFile, deleteFile } = useProjectFiles(p.id);
   const { notes, loading: nLoading, addNote, deleteNote } = useProjectNotes(p.id);
   const { tasks } = useTasks(p.id);
+  const { payments } = useCashPayments();
+  const { collections } = useCashCollections();
+  const { checks } = useCashChecks();
   const [newNoteContent, setNewNoteContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
