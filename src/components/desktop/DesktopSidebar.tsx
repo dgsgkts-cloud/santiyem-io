@@ -138,6 +138,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
+                  (item.id === "cash-tracking" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
