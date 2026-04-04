@@ -98,9 +98,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
       {/* Logo */}
       <div
-        className="flex items-center cursor-pointer shrink-0 overflow-hidden"
+        className="flex items-center cursor-pointer shrink-0 overflow-hidden border-b border-sidebar-border"
         style={{
-          borderBottom: "1px solid #1E2732",
           height: 56,
           padding: collapsed ? "0 8px" : "0 16px",
           justifyContent: collapsed ? "center" : "flex-start",
