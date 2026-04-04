@@ -600,9 +600,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           <h4 className="text-sm font-semibold mb-3 text-foreground">Daha Fazlası İçin</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleUpgrades.map(card => (
-              <div key={card.plan} className="rounded-xl p-4 flex flex-col" style={{
-                ,
-                border: card.highlight ? "1px solid #FF6B2B60" : "1px solid #1E2732",
+              <div key={card.plan} className="rounded-xl p-4 flex flex-col bg-card border" style={{
+                borderColor: card.highlight ? "#FF6B2B60" : undefined,
+              }}>
               }}>
                 <div className="flex items-center gap-2 mb-2">
                   <span>{card.emoji}</span>
