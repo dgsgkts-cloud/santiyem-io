@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
+  { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
