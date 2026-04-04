@@ -39,14 +39,6 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {STATS.map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-3xl md:text-4xl font-bold mb-1" style={{ color: "#FF6B2B", fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-              <p className="text-sm" style={{ color: "#64748B" }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
