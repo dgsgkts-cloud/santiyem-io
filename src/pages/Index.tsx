@@ -233,7 +233,7 @@ const Index = () => {
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto flex flex-col" style={{ backgroundColor: "#0F1419" }}>
+            <div className="flex-1 overflow-y-auto flex flex-col bg-background">
               <div className="flex-1 pb-12">
                 {activeTab === "dashboard" ? (
                   <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
