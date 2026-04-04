@@ -94,7 +94,6 @@ const CashAccountsTab = () => {
                   <button onClick={() => setDeleteTarget({ id: acc.id, name: acc.name })} className="p-1.5 rounded-lg hover:bg-red-500/10">
                     <Trash2 className="w-4 h-4" style={{ color: "#EF4444" }} />
                   </button>
-                  </button>
                 </div>
                 <p className="text-2xl font-bold mb-2" style={{ color: Number(acc.balance) >= 0 ? "#22C55E" : "#EF4444" }}>
                   ₺{fmt(acc.balance)}
