@@ -54,10 +54,10 @@ const CashSummaryTab = () => {
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: card.bg }}>
                   <card.icon className="w-5 h-5" style={{ color: card.color }} />
                 </div>
-                <p className="text-[12px] font-medium" style={{ color: "#94A3B8" }}>{card.label}</p>
+                <p className="text-[12px] font-medium text-muted-foreground">{card.label}</p>
               </div>
               <p className="text-2xl font-bold mb-1" style={{ color: card.color }}>₺{fmt(card.value)}</p>
-              <p className="text-[11px]" style={{ color: "#64748B" }}>{card.sub}</p>
+              <p className="text-[11px] text-muted-foreground">{card.sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -70,7 +70,7 @@ const CashSummaryTab = () => {
           <CardContent className="p-5">
             <h3 className="text-[14px] font-semibold mb-4 text-foreground">Son İşlemler</h3>
             {recentAll.length === 0 ? (
-              <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>Henüz işlem yok</p>
+              <p className="text-[13px] py-8 text-center text-muted-foreground">Henüz işlem yok</p>
             ) : (
               <div className="space-y-2">
                 {recentAll.map((tx, i) => (
@@ -81,7 +81,7 @@ const CashSummaryTab = () => {
                       </div>
                       <div>
                         <p className="text-[13px] font-medium text-foreground">{tx.name}</p>
-                        <p className="text-[11px]" style={{ color: "#64748B" }}>{tx.category} • {tx.date}</p>
+                        <p className="text-[11px] text-muted-foreground">{tx.category} • {tx.date}</p>
                       </div>
                     </div>
                     <p className="text-[14px] font-semibold" style={{ color: tx.type === "income" ? "#22C55E" : "#EF4444" }}>
@@ -99,7 +99,7 @@ const CashSummaryTab = () => {
           <CardContent className="p-5">
             <h3 className="text-[14px] font-semibold mb-4 text-foreground">Vadesi Yaklaşan Çekler</h3>
             {upcomingChecks.length === 0 ? (
-              <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>7 gün içinde vadesi gelen çek yok</p>
+              <p className="text-[13px] py-8 text-center text-muted-foreground">7 gün içinde vadesi gelen çek yok</p>
             ) : (
               <div className="space-y-2">
                 {upcomingChecks.map((chk) => {
@@ -113,7 +113,7 @@ const CashSummaryTab = () => {
                         </span>
                       </div>
                       <p className="text-[15px] font-bold" style={{ color: "#F59E0B" }}>₺{fmt(chk.amount)}</p>
-                      <p className="text-[11px]" style={{ color: "#64748B" }}>{chk.bank_name} • Çek No: {chk.check_no}</p>
+                      <p className="text-[11px] text-muted-foreground">{chk.bank_name} • Çek No: {chk.check_no}</p>
                     </div>
                   );
                 })}

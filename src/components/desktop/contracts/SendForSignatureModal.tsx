@@ -56,7 +56,7 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
           <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
             <Mail className="w-4 h-4" style={{ color: "#3B82F6" }} /> Sözleşmeyi İmzaya Gönder
           </h2>
-          <button onClick={onClose}><X className="w-4 h-4" style={{ color: "#64748B" }} /></button>
+          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
         </div>
 
         <div className="space-y-3">
@@ -117,7 +117,7 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
           {/* PDF Preview */}
           {contract.file_url && (
             <div className="rounded-lg p-3 bg-background border border-border">
-              <p className="text-[10px] font-medium mb-1" style={{ color: "#64748B" }}>📎 Ekli Dosya</p>
+              <p className="text-[10px] font-medium mb-1 text-muted-foreground">📎 Ekli Dosya</p>
               <p className="text-xs truncate text-foreground">{contract.file_name || "Sözleşme PDF"}</p>
             </div>
           )}

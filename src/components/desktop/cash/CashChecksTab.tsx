@@ -89,15 +89,15 @@ const CashChecksTab = () => {
               <button onClick={() => setDeleteTarget({ id: chk.id, name: `Çek No: ${chk.check_no}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
             </div>
           </div>
-          <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>Banka: {chk.bank_name}</p>
+          <p className="text-[11px] mb-1 text-muted-foreground">Banka: {chk.bank_name}</p>
           <p className="text-xl font-bold mb-1" style={{ color: si.color }}>₺{fmt(chk.amount)}</p>
-          <p className="text-[12px]" style={{ color: "#94A3B8" }}>
+          <p className="text-[12px] text-muted-foreground">
             Vade: {chk.due_date} {days >= 0 ? `(${days} gün sonra)` : `(${Math.abs(days)} gün geçti)`}
           </p>
-          <p className="text-[12px]" style={{ color: "#94A3B8" }}>
+          <p className="text-[12px] text-muted-foreground">
             {chk.check_type === "verilen" ? "Alıcı" : "Veren"}: {chk.counterparty}
           </p>
-          {proj && <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>Proje: {proj.name}</p>}
+          {proj && <p className="text-[11px] mt-1 text-muted-foreground">Proje: {proj.name}</p>}
 
           {/* Quick status update buttons */}
           {effectiveStatus !== "odendi" && effectiveStatus !== "tahsil_edildi" && (
@@ -152,14 +152,14 @@ const CashChecksTab = () => {
         <TabsContent value="verilen">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {verilenChecks.length === 0 ? (
-              <p className="col-span-3 text-center py-12 text-[13px]" style={{ color: "#64748B" }}>Verilen çek yok</p>
+              <p className="col-span-3 text-center py-12 text-[13px] text-muted-foreground">Verilen çek yok</p>
             ) : verilenChecks.map(renderCheckCard)}
           </div>
         </TabsContent>
         <TabsContent value="alinan">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {alinanChecks.length === 0 ? (
-              <p className="col-span-3 text-center py-12 text-[13px]" style={{ color: "#64748B" }}>Alınan çek yok</p>
+              <p className="col-span-3 text-center py-12 text-[13px] text-muted-foreground">Alınan çek yok</p>
             ) : alinanChecks.map(renderCheckCard)}
           </div>
         </TabsContent>
@@ -170,7 +170,7 @@ const CashChecksTab = () => {
           <DialogHeader><DialogTitle className="text-foreground">Çek Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek Türü</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Çek Türü</label>
               <Select value={formType} onValueChange={v => setFormType(v as any)}>
                 <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -181,34 +181,34 @@ const CashChecksTab = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek No</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Çek No</label>
                 <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Tutar (₺)</label>
                 <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Banka</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Banka</label>
                 <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Şube (opsiyonel)</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Şube (opsiyonel)</label>
                 <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>{formType === "verilen" ? "Alıcı" : "Veren"}</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">{formType === "verilen" ? "Alıcı" : "Veren"}</label>
               <Input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Vade Tarihi</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Vade Tarihi</label>
               <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Proje (opsiyonel)</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Proje (opsiyonel)</label>
               <Select value={form.project_id || "none"} onValueChange={v => setForm(f => ({ ...f, project_id: v === "none" ? "" : v }))}>
                 <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                 <SelectContent>

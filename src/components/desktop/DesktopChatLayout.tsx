@@ -195,14 +195,13 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
                           onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "transparent"; }}
                         >
                           <p className="text-[13px] truncate" style={{ color: isActive ? "#F1F5F9" : "#94A3B8" }}>{chat.title}</p>
-                          <p className="text-[11px]" style={{ color: "#64748B" }}>
+                          <p className="text-[11px] text-muted-foreground">
                             {new Date(chat.updated_at).toLocaleDateString("tr-TR")}
                           </p>
                         </button>
                         <button
                           onClick={() => setDeleteTarget({ id: chat.id, title: chat.title })}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
-                          style={{ color: "#64748B" }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity text-muted-foreground"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -230,8 +229,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150"
-                style={{ color: "#64748B" }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 text-muted-foreground"
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
               >
@@ -288,7 +286,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>İlgili Mevzuat</p>
           <div className="space-y-1.5">
             {["Hakediş Yönetmeliği", "İmar Kanunu", "İş Güvenliği"].map((link) => (
-              <button key={link} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
+              <button key={link} className="block text-[12px] transition-colors text-muted-foreground"
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
               >
@@ -301,7 +299,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Kısayollar</p>
           <div className="space-y-1.5">
             {["Hakediş hazırla", "Proje durumu özetle", "Nakit akışı analizi"].map((shortcut) => (
-              <button key={shortcut} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
+              <button key={shortcut} className="block text-[12px] transition-colors text-muted-foreground"
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
               >

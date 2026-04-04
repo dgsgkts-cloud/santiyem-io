@@ -74,7 +74,7 @@ const CashAccountsTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {accounts.length === 0 ? (
-          <p className="col-span-3 text-center py-16 text-[13px]" style={{ color: "#64748B" }}>Henüz hesap eklenmemiş</p>
+          <p className="col-span-3 text-center py-16 text-[13px] text-muted-foreground">Henüz hesap eklenmemiş</p>
         ) : accounts.map(acc => {
           const type = ACCOUNT_TYPES.find(t => t.value === acc.account_type) || ACCOUNT_TYPES[0];
           const Icon = type.icon;
@@ -88,7 +88,7 @@ const CashAccountsTab = () => {
                     </div>
                     <div>
                       <p className="text-[14px] font-semibold text-foreground">{acc.name}</p>
-                      <p className="text-[11px]" style={{ color: "#64748B" }}>{type.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{type.label}</p>
                     </div>
                   </div>
                   <button onClick={() => setDeleteTarget({ id: acc.id, name: acc.name })} className="p-1.5 rounded-lg hover:bg-red-500/10">
@@ -98,8 +98,8 @@ const CashAccountsTab = () => {
                 <p className="text-2xl font-bold mb-2" style={{ color: Number(acc.balance) >= 0 ? "#22C55E" : "#EF4444" }}>
                   ₺{fmt(acc.balance)}
                 </p>
-                {acc.bank_name && <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>Banka: {acc.bank_name}</p>}
-                {acc.iban && <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>IBAN: {acc.iban}</p>}
+                {acc.bank_name && <p className="text-[11px] mb-1 text-muted-foreground">Banka: {acc.bank_name}</p>}
+                {acc.iban && <p className="text-[11px] mb-1 text-muted-foreground">IBAN: {acc.iban}</p>}
                 <button
                   onClick={() => handleUpdateBalance(acc.id)}
                   className="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-md"
@@ -119,19 +119,19 @@ const CashAccountsTab = () => {
           <DialogHeader><DialogTitle className="text-foreground">Hesap Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Hesap Adı</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Hesap Adı</label>
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Örn: Şantiye Kasası" style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Hesap Tipi</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Hesap Tipi</label>
                 <Select value={form.account_type} onValueChange={v => setForm(f => ({ ...f, account_type: v }))}>
                   <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                   <SelectContent>{ACCOUNT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Bakiye (₺)</label>
+                <label className="text-[12px] mb-1 block text-muted-foreground">Bakiye (₺)</label>
                 <Input type="number" value={form.balance} onChange={e => setForm(f => ({ ...f, balance: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
@@ -139,16 +139,16 @@ const CashAccountsTab = () => {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Banka Adı</label>
+                    <label className="text-[12px] mb-1 block text-muted-foreground">Banka Adı</label>
                     <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                   </div>
                   <div>
-                    <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Şube</label>
+                    <label className="text-[12px] mb-1 block text-muted-foreground">Şube</label>
                     <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>IBAN</label>
+                  <label className="text-[12px] mb-1 block text-muted-foreground">IBAN</label>
                   <Input value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                 </div>
               </>
@@ -164,21 +164,21 @@ const CashAccountsTab = () => {
           <DialogHeader><DialogTitle className="text-foreground">Hesaplar Arası Transfer</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Kaynak Hesap</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Kaynak Hesap</label>
               <Select value={transfer.from} onValueChange={v => setTransfer(t => ({ ...t, from: v }))}>
                 <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue placeholder="Seçiniz" /></SelectTrigger>
                 <SelectContent>{accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name} (₺{fmt(a.balance)})</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Hedef Hesap</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Hedef Hesap</label>
               <Select value={transfer.to} onValueChange={v => setTransfer(t => ({ ...t, to: v }))}>
                 <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue placeholder="Seçiniz" /></SelectTrigger>
                 <SelectContent>{accounts.filter(a => a.id !== transfer.from).map(a => <SelectItem key={a.id} value={a.id}>{a.name} (₺{fmt(a.balance)})</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
+              <label className="text-[12px] mb-1 block text-muted-foreground">Tutar (₺)</label>
               <Input type="number" value={transfer.amount} onChange={e => setTransfer(t => ({ ...t, amount: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
           </div>

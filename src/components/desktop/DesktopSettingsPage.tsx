@@ -56,7 +56,7 @@ const DesktopSettingsPage = () => {
             <div className="space-y-5 lg:space-y-6">
               <div>
                 <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Profil Bilgileri</h3>
-                <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Kişisel bilgilerinizi güncelleyin</p>
+                <p className="text-[11px] lg:text-[12px] text-muted-foreground">Kişisel bilgilerinizi güncelleyin</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                 <FormField label="Ad Soyad" value={profile?.full_name || ""} />
@@ -78,7 +78,7 @@ const DesktopSettingsPage = () => {
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
-              <p className="text-[13px] lg:text-[14px]" style={{ color: "#64748B" }}>Bu bölüm yakında aktif olacaktır.</p>
+              <p className="text-[13px] lg:text-[14px] text-muted-foreground">Bu bölüm yakında aktif olacaktır.</p>
             </div>
           )}
         </div>
@@ -167,12 +167,12 @@ const CompanyProfileTab = () => {
     <div className="space-y-6">
       <div>
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">🏢 Firma Profili</h3>
-        <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>PDF çıktılarınızda kullanılacak firma bilgileri</p>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">PDF çıktılarınızda kullanılacak firma bilgileri</p>
       </div>
 
       {/* Logo Upload */}
       <div>
-        <label className="text-[12px] font-semibold mb-2 block" style={{ color: "#94A3B8" }}>Firma Logosu</label>
+        <label className="text-[12px] font-semibold mb-2 block text-muted-foreground">Firma Logosu</label>
         {cp.logoDataUrl ? (
           <div className="space-y-2">
             <div className="rounded-xl p-4 flex items-center justify-center" style={{ backgroundColor: "#FFF", minHeight: 80 }}>
@@ -193,7 +193,7 @@ const CompanyProfileTab = () => {
             onClick={() => document.getElementById("logo-upload")?.click()}
           >
             <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: "#475569" }} />
-            <p className="text-xs font-medium" style={{ color: "#94A3B8" }}>Logo Yükle</p>
+            <p className="text-xs font-medium text-muted-foreground">Logo Yükle</p>
             <p className="text-[10px] mt-1" style={{ color: "#475569" }}>PNG, JPG, SVG — max 2MB</p>
             <p className="text-[10px]" style={{ color: "#475569" }}>Önerilen: 300×100px veya 400×150px</p>
           </div>
@@ -203,7 +203,7 @@ const CompanyProfileTab = () => {
 
       {/* Company Info */}
       <div>
-        <label className="text-[12px] font-semibold mb-3 block" style={{ color: "#94A3B8" }}>Firma Bilgileri</label>
+        <label className="text-[12px] font-semibold mb-3 block text-muted-foreground">Firma Bilgileri</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
             <CompanyField label="Firma / Şahıs Adı *" value={cp.companyName} onChange={v => updateField("companyName", v)} />
@@ -217,7 +217,7 @@ const CompanyProfileTab = () => {
 
       {/* Contact Info */}
       <div>
-        <label className="text-[12px] font-semibold mb-3 block" style={{ color: "#94A3B8" }}>İletişim Bilgileri</label>
+        <label className="text-[12px] font-semibold mb-3 block text-muted-foreground">İletişim Bilgileri</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
             <CompanyField label="Adres" value={cp.address} onChange={v => updateField("address", v)} multiline />
@@ -232,7 +232,7 @@ const CompanyProfileTab = () => {
 
       {/* Signature settings */}
       <div>
-        <label className="text-[12px] font-semibold mb-3 block" style={{ color: "#94A3B8" }}>İmza Alanı Ayarları</label>
+        <label className="text-[12px] font-semibold mb-3 block text-muted-foreground">İmza Alanı Ayarları</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CompanyField label="Yetkili Kişi Adı Soyadı" value={cp.authorizedPerson} onChange={v => updateField("authorizedPerson", v)} placeholder="PDF'deki Hazırlayan alanına gelir" />
           <CompanyField label="Ünvanı" value={cp.authorizedTitle} onChange={v => updateField("authorizedTitle", v)} placeholder="İnşaat Mühendisi, Mimar vb." />
@@ -260,7 +260,7 @@ const CompanyProfileTab = () => {
 
 const CompanyField = ({ label, value, onChange, multiline, placeholder }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string }) => (
   <div>
-    <label className="text-[11px] font-medium mb-1.5 block" style={{ color: "#64748B" }}>{label}</label>
+    <label className="text-[11px] font-medium mb-1.5 block text-muted-foreground">{label}</label>
     {multiline ? (
       <textarea
         value={value}
@@ -287,7 +287,7 @@ const CompanyField = ({ label, value, onChange, multiline, placeholder }: { labe
 
 const FormField = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <label className="text-[11px] lg:text-[12px] font-semibold mb-1.5 block" style={{ color: "#94A3B8" }}>{label}</label>
+    <label className="text-[11px] lg:text-[12px] font-semibold mb-1.5 block text-muted-foreground">{label}</label>
     <input
       defaultValue={value}
       className="w-full rounded-lg px-3 text-[13px] outline-none transition-colors duration-150"
@@ -303,7 +303,7 @@ const ToggleRow = ({ label, desc, on, onChange, disabled }: { label: string; des
     <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732", opacity: disabled ? 0.6 : 1 }}>
       <div className="min-w-0">
         <p className="text-[12px] lg:text-[13px] font-medium text-foreground">{label}</p>
-        <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{desc}</p>
+        <p className="text-[10px] lg:text-[11px] text-muted-foreground">{desc}</p>
       </div>
       <button
         onClick={() => !disabled && onChange(!on)}
@@ -375,23 +375,23 @@ const NotificationsTab = () => {
     else toast.success("Bildirim tercihleri güncellendi");
   };
 
-  if (loading) return <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>Yükleniyor...</p>;
+  if (loading) return <p className="text-[13px] py-8 text-center text-muted-foreground">Yükleniyor...</p>;
 
   return (
     <div className="space-y-5 lg:space-y-6">
       <div>
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Bildirim Tercihleri</h3>
-        <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">Hangi bildirimleri almak istediğinizi seçin</p>
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>ZORUNLU BİLDİRİMLER</p>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">ZORUNLU BİLDİRİMLER</p>
         <ToggleRow label="Kayıt Onay E-postası" desc="Hesap doğrulama e-postası (kapatılamaz)" on={true} onChange={() => {}} disabled />
         <ToggleRow label="Şifre Sıfırlama" desc="Şifre sıfırlama bağlantısı (kapatılamaz)" on={true} onChange={() => {}} disabled />
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>E-POSTA BİLDİRİMLERİ</p>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">E-POSTA BİLDİRİMLERİ</p>
         <ToggleRow
           label="Gecikmiş Ödeme Bildirimi"
           desc="Hakediş vade günü gelince otomatik e-posta"
@@ -413,7 +413,7 @@ const NotificationsTab = () => {
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold mb-2" style={{ color: "#94A3B8" }}>WHATSAPP BİLDİRİMLERİ</p>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">WHATSAPP BİLDİRİMLERİ</p>
         <ToggleRow
           label="WhatsApp Bildirimi"
           desc="Numara girilince aktif olur"
@@ -524,7 +524,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
     <div className="space-y-6">
       <div>
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Abonelik Yönetimi</h3>
-        <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Mevcut planınız ve faturalama bilgileri</p>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">Mevcut planınız ve faturalama bilgileri</p>
       </div>
 
       {/* Current Plan Card */}
@@ -538,12 +538,12 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <p className="text-sm font-semibold" style={{ color: isPaid ? "#FF6B2B" : "#64748B" }}>{info.price}</p>
             {isPaid && (
               <>
-                <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>Sonraki fatura: 15 Mayıs 2025</p>
+                <p className="text-[11px] mt-1 text-muted-foreground">Sonraki fatura: 15 Mayıs 2025</p>
                 <p className="text-[11px] mt-0.5" style={{ color: "#22C55E" }}>✅ Aktif</p>
-                {plan === "team" && <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Kullanıcılar: 3/5</p>}
+                {plan === "team" && <p className="text-[11px] mt-0.5 text-muted-foreground">Kullanıcılar: 3/5</p>}
               </>
             )}
-            {isFree && <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>{info.sub}</p>}
+            {isFree && <p className="text-[11px] mt-1 text-muted-foreground">{info.sub}</p>}
           </div>
           {isAdmin && (
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ backgroundColor: "rgba(139,92,246,0.2)", color: "#A78BFA" }}>
@@ -555,7 +555,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
         {/* Usage bars for free plan */}
         {isFree && !isAdmin && (
           <div className="space-y-3 mt-4 pt-4" style={{ borderTop: "1px solid #1E2732" }}>
-            <p className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>Kullanım Limitlerin</p>
+            <p className="text-[11px] font-semibold text-muted-foreground">Kullanım Limitlerin</p>
             <UsageBar label="AI Soruları" used={usage.aiQuestions.used} max={usage.aiQuestions.max} suffix="bugün" />
             <UsageBar label="Aktif Proje" used={1} max={1} suffix="" />
             <UsageBar label="Hakediş" used={1} max={1} suffix="bu ay" />
@@ -571,7 +571,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 style={{ backgroundColor: "#FF6B2B" }}>
                 🚀 Planını Yükselt
               </button>
-              <p className="text-center text-[11px]" style={{ color: "#64748B" }}>14 gün ücretsiz dene</p>
+              <p className="text-center text-[11px] text-muted-foreground">14 gün ücretsiz dene</p>
             </>
           )}
           {plan === "pro" && (
@@ -611,7 +611,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 <p className="text-xs font-semibold mb-3" style={{ color: "#FF6B2B" }}>{card.price}</p>
                 <div className="space-y-1.5 flex-1 mb-4">
                   {card.features.map((f, i) => (
-                    <p key={i} className="text-[11px] flex items-center gap-1.5" style={{ color: "#94A3B8" }}>
+                    <p key={i} className="text-[11px] flex items-center gap-1.5 text-muted-foreground">
                       <span style={{ color: "#22C55E" }}>✓</span> {f}
                     </p>
                   ))}
@@ -639,7 +639,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
                   {["Tarih", "Plan", "Tutar", "Durum", ""].map(h => (
-                    <th key={h} className="text-left px-4 py-2.5 font-medium" style={{ color: "#64748B" }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -647,7 +647,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 {MOCK_INVOICES.map((inv, i) => (
                   <tr key={i} style={{ borderBottom: i < MOCK_INVOICES.length - 1 ? "1px solid #1E2732" : undefined }}>
                     <td className="px-4 py-3 text-foreground">{inv.date}</td>
-                    <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{inv.plan}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{inv.plan}</td>
                     <td className="px-4 py-3 font-semibold text-foreground">{inv.amount}</td>
                     <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ {inv.status}</span></td>
                     <td className="px-4 py-3"><button className="text-[11px] hover:underline" style={{ color: "#FF6B2B" }}>📄 İndir</button></td>
@@ -662,7 +662,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <div key={i} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
                 <div>
                   <p className="text-xs font-medium text-foreground">{inv.date}</p>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>{inv.plan} • {inv.amount}</p>
+                  <p className="text-[10px] text-muted-foreground">{inv.plan} • {inv.amount}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
@@ -686,7 +686,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
 
           {cancelStep === "reason" && (
             <div className="space-y-3 mt-2">
-              <p className="text-xs" style={{ color: "#94A3B8" }}>İptal nedeninizi öğrenmek isteriz:</p>
+              <p className="text-xs text-muted-foreground">İptal nedeninizi öğrenmek isteriz:</p>
               {CANCEL_REASONS.map(r => (
                 <label key={r.id} className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors"
                   style={{ backgroundColor: cancelReason === r.id ? "#FF6B2B10" : "transparent", border: cancelReason === r.id ? "1px solid #FF6B2B40" : "1px solid transparent" }}>
@@ -751,7 +751,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <div className="space-y-4 mt-2">
               <div className="rounded-lg p-4 text-center" style={{ backgroundColor: "#22C55E10", border: "1px solid #22C55E30" }}>
                 <p className="text-sm font-semibold" style={{ color: "#22C55E" }}>✅ Aboneliğin iptal edildi.</p>
-                <p className="text-xs mt-1" style={{ color: "#94A3B8" }}>
+                <p className="text-xs mt-1 text-muted-foreground">
                   15 Mayıs 2025'e kadar {info.name} özelliklerine erişmeye devam edebilirsin.
                 </p>
               </div>
@@ -774,7 +774,7 @@ const UsageBar = ({ label, used, max, suffix }: { label: string; used: number; m
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <span className="text-[11px]" style={{ color: "#94A3B8" }}>{label}</span>
+        <span className="text-[11px] text-muted-foreground">{label}</span>
         <span className="text-[11px] font-medium" style={{ color: isHigh ? "#EF4444" : "#F1F5F9" }}>
           {used}/{max}{suffix ? ` (${suffix})` : ""}
         </span>

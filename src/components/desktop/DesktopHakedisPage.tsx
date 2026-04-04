@@ -67,7 +67,7 @@ const DesktopHakedisPage = () => {
   const { allHakedisler } = useAllHakedis();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  if (projectsLoading) return <div className="p-6 text-center" style={{ color: "#94A3B8" }}>Yükleniyor...</div>;
+  if (projectsLoading) return <div className="p-6 text-center text-muted-foreground">Yükleniyor...</div>;
 
   if (selectedProjectId) {
     return <ProjectDetailView projectId={selectedProjectId} projects={projects} allHakedisler={allHakedisler} onBack={() => setSelectedProjectId(null)} />;
@@ -111,7 +111,7 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
       <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">
         <h2 className="text-base md:text-lg font-bold mb-4 text-foreground">Hakediş Yönetimi</h2>
         <div className="rounded-xl p-8 text-center bg-card border border-border">
-          <p style={{ color: "#64748B" }}>Henüz proje eklenmedi. Önce Proje Yönetimi'nden proje ekleyin.</p>
+          <p className="text-muted-foreground">Henüz proje eklenmedi. Önce Proje Yönetimi'nden proje ekleyin.</p>
         </div>
       </div>
     );
@@ -132,7 +132,7 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-semibold truncate text-foreground">{p.name}</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>{p.client}</p>
+                  <p className="text-[12px] mt-0.5 text-muted-foreground">{p.client}</p>
                 </div>
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}>
                   {p.status}
@@ -140,16 +140,16 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[12px]">
-                  <span style={{ color: "#64748B" }}>Sözleşme Tutarı:</span>
-                  <span style={{ color: "#64748B" }}>{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
+                  <span className="text-muted-foreground">Sözleşme Tutarı:</span>
+                  <span className="text-muted-foreground">{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
                 </div>
                 <div className="flex justify-between text-[12px]">
-                  <span style={{ color: "#94A3B8" }}>Toplam Hakediş:</span>
+                  <span className="text-muted-foreground">Toplam Hakediş:</span>
                   <span className="font-semibold text-foreground">{fmt(p.totalHakedis)}</span>
                 </div>
                 {p.contract > 0 && (
                   <div className="flex justify-between text-[12px]">
-                    <span style={{ color: "#94A3B8" }}>Kalan:</span>
+                    <span className="text-muted-foreground">Kalan:</span>
                     <span className="font-semibold" style={{ color: p.remaining >= 0 ? "#22C55E" : "#EF4444" }}>{fmt(p.remaining)}</span>
                   </div>
                 )}
@@ -159,13 +159,13 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
                   <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                     <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
                   </div>
-                  <span className="text-[11px] font-mono font-semibold" style={{ color: "#94A3B8" }}>%{p.pct}</span>
+                  <span className="text-[11px] font-mono font-semibold text-muted-foreground">%{p.pct}</span>
                 </div>
               )}
               <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
-                <div><p className="text-[10px]" style={{ color: "#64748B" }}>✅ Tahsil</p><p className="text-[12px] font-semibold" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></div>
-                <div><p className="text-[10px]" style={{ color: "#64748B" }}>⏳ Bekleyen</p><p className="text-[12px] font-semibold" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></div>
-                <div><p className="text-[10px]" style={{ color: "#64748B" }}>⚠️ Gecikmiş</p><p className="text-[12px] font-semibold" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></div>
+                <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><p className="text-[12px] font-semibold" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></div>
+                <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><p className="text-[12px] font-semibold" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></div>
+                <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><p className="text-[12px] font-semibold" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></div>
               </div>
               <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
                 Detay →
@@ -342,7 +342,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       />
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "#94A3B8" }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
           <ArrowLeft className="w-4 h-4" /> Hakediş Yönetimi
         </button>
         <div className="flex items-center gap-2">
@@ -379,7 +379,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
       <div>
         <h2 className="text-lg font-bold text-foreground">{project?.name}</h2>
-        <p className="text-[13px]" style={{ color: "#64748B" }}>{project?.client}</p>
+        <p className="text-[13px] text-muted-foreground">{project?.client}</p>
       </div>
 
       {/* Financial Summary */}
@@ -391,7 +391,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
           { label: pending > 0 ? "Bekleyen" : "Gecikmiş", value: fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0)), color: overdueItems.length > 0 ? "#EF4444" : "#F59E0B" },
         ].map(s => (
           <div key={s.label} className="rounded-xl p-4 bg-card border border-border">
-            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>{s.label}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1 text-muted-foreground">{s.label}</p>
             <p className="text-xl font-bold" style={{ color: s.color, fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
           </div>
         ))}
@@ -405,9 +405,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
           </div>
           <div className="flex justify-between text-[12px]">
-            <span style={{ color: "#94A3B8" }}>Kullanılan: {fmt(totalAmount)}</span>
+            <span className="text-muted-foreground">Kullanılan: {fmt(totalAmount)}</span>
             <span className="font-semibold" style={{ color: "#FF6B2B" }}>%{pct}</span>
-            <span style={{ color: "#94A3B8" }}>Kalan: {fmt(remaining)}</span>
+            <span className="text-muted-foreground">Kalan: {fmt(remaining)}</span>
           </div>
         </div>
       )}
@@ -424,13 +424,13 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
           </button>
         </div>
         {aiLoading ? (
-          <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Analiz oluşturuluyor...</div>
+          <div className="py-4 text-center text-[12px] text-muted-foreground">Analiz oluşturuluyor...</div>
         ) : aiAnalysis ? (
           <div className="space-y-2">
-            {aiAnalysis.map((a, i) => <p key={i} className="text-[12px] leading-relaxed" style={{ color: "#94A3B8" }}>{a}</p>)}
+            {aiAnalysis.map((a, i) => <p key={i} className="text-[12px] leading-relaxed text-muted-foreground">{a}</p>)}
           </div>
         ) : (
-          <p className="text-[12px]" style={{ color: "#64748B" }}>Henüz analiz oluşturulmadı.</p>
+          <p className="text-[12px] text-muted-foreground">Henüz analiz oluşturulmadı.</p>
         )}
       </div>
 
@@ -461,9 +461,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-3 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
-            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold text-foreground">{fmt(avgMonthly)}</p></div>
-            <div><p className="text-[10px]" style={{ color: "#64748B" }}>En Yüksek Ay</p><p className="text-[13px] font-semibold text-foreground">{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
-            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tahsilat Oranı</p><p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold text-foreground">{fmt(avgMonthly)}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">En Yüksek Ay</p><p className="text-[13px] font-semibold text-foreground">{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
+            <div><p className="text-[10px] text-muted-foreground">Tahsilat Oranı</p><p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
           </div>
         </div>
       )}
@@ -472,9 +472,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       <div className="rounded-xl p-4 bg-card border border-border">
         <p className="text-[13px] font-semibold mb-4 text-foreground">Hakediş Geçmişi</p>
         {loading ? (
-          <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Yükleniyor...</div>
+          <div className="py-4 text-center text-[12px] text-muted-foreground">Yükleniyor...</div>
         ) : hakedisler.length === 0 ? (
-          <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Bu projeye ait hakediş yok.</div>
+          <div className="py-4 text-center text-[12px] text-muted-foreground">Bu projeye ait hakediş yok.</div>
         ) : (
           <div className="space-y-0">
             {sortedHakedisler.map((h, i) => {
@@ -495,7 +495,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                           <p className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisNum}</p>
                           {h.expected_payment_date && <Bell className="w-3 h-3" style={{ color: "#F59E0B" }} />}
                         </div>
-                        <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
+                        <p className="text-[11px] mt-0.5 text-muted-foreground">
                           {h.period} • Düzenleme: {createdDate.toLocaleDateString("tr-TR")}
                           {h.expected_payment_date && ` • Beklenen: ${new Date(h.expected_payment_date).toLocaleDateString("tr-TR")}`}
                         </p>
@@ -535,9 +535,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tutar</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.amount)}</p></div>
-                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>KDV</p><p className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{fmt(h.kdv)}</p></div>
-                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Net</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.net)}</p></div>
+                      <div><p className="text-[10px] text-muted-foreground">Tutar</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.amount)}</p></div>
+                      <div><p className="text-[10px] text-muted-foreground">KDV</p><p className="text-[12px] font-mono text-muted-foreground">{fmt(h.kdv)}</p></div>
+                      <div><p className="text-[10px] text-muted-foreground">Net</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.net)}</p></div>
                     </div>
 
                     {h.payment_date && (
@@ -554,7 +554,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
                         const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
                         exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
-                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#94A3B8" }}>
+                      }} className="text-[10px] font-medium flex items-center gap-1 text-muted-foreground">
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
                       <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
@@ -598,7 +598,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     <tr key={h.id}>
                       <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
                       <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
-                      <td className="px-3 py-2" style={{ color: "#94A3B8" }}>{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
                       <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
                       <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
                     </tr>
@@ -622,18 +622,18 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
             <div>
-              <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Dönem</label>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
               <input value={formPeriod} onChange={e => setFormPeriod(e.target.value)} placeholder="ör: Ocak 2026"
                 className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
                 <input type="number" value={formAmount} onChange={e => setFormAmount(e.target.value)} placeholder="850000"
                   className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
               </div>
               <div>
-                <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>KDV Oranı (%)</label>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
                 <input type="number" value={formKdvRate} onChange={e => setFormKdvRate(e.target.value)}
                   className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
               </div>
@@ -654,14 +654,14 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               <Bell className="w-5 h-5" style={{ color: "#FF6B2B" }} />
               <h3 className="text-[15px] font-semibold text-foreground">📅 Ödeme Hatırlatıcısı Kur</h3>
             </div>
-            <p className="text-[12px]" style={{ color: "#94A3B8" }}>Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım.</p>
+            <p className="text-[12px] text-muted-foreground">Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım.</p>
             <div>
-              <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Beklenen Ödeme Tarihi</label>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi</label>
               <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)}
                 className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
             </div>
             <div>
-              <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Kaç gün önce uyarılsın?</label>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Kaç gün önce uyarılsın?</label>
               <select value={reminderDays} onChange={e => setReminderDays(e.target.value)}
                 className="w-full rounded-lg px-3 py-2 text-[13px] outline-none">
                 <option value="3">3 gün önce</option>
@@ -674,7 +674,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
               🔔 Hatırlatıcı Kur
             </button>
-            <button onClick={() => setReminderModal(null)} className="w-full text-center text-[12px]" style={{ color: "#64748B" }}>
+            <button onClick={() => setReminderModal(null)} className="w-full text-center text-[12px] text-muted-foreground">
               Şimdi Değil
             </button>
           </div>
@@ -712,7 +712,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
           <div className="rounded-xl p-5 w-full max-w-lg space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="text-[15px] font-semibold text-foreground">📄 PDF Ayarları</h3>
-              <button onClick={() => setShowPdfModal(false)} style={{ color: "#94A3B8" }}><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowPdfModal(false)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
             </div>
 
             {/* Signature fields */}
@@ -753,7 +753,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                 <div className="h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                   <div className="h-full rounded-full transition-all duration-300" style={{ backgroundColor: "#FF6B2B", width: `${pdfProgress}%` }} />
                 </div>
-                <p className="text-[11px] text-center" style={{ color: "#94A3B8" }}>PDF hazırlanıyor... %{pdfProgress}</p>
+                <p className="text-[11px] text-center text-muted-foreground">PDF hazırlanıyor... %{pdfProgress}</p>
               </div>
             )}
 

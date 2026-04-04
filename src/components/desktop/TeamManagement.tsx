@@ -25,10 +25,10 @@ const TeamManagement = () => {
       <div className="text-center py-12">
         <Users className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />
         <h3 className="text-[15px] font-semibold mb-2 text-foreground">Ekip Yönetimi</h3>
-        <p className="text-[12px] mb-4" style={{ color: "#64748B" }}>
+        <p className="text-[12px] mb-4 text-muted-foreground">
           Ekip yönetimi özelliği Ofis planında kullanılabilir.
         </p>
-        <p className="text-[11px]" style={{ color: "#64748B" }}>
+        <p className="text-[11px] text-muted-foreground">
           Ofis planına yükselttiğinizde 4 kişiyi daha ekibinize davet edebilirsiniz.
         </p>
       </div>
@@ -36,7 +36,7 @@ const TeamManagement = () => {
   }
 
   if (loading) {
-    return <div className="text-center py-8"><p className="text-[13px]" style={{ color: "#64748B" }}>Yükleniyor...</p></div>;
+    return <div className="text-center py-8"><p className="text-[13px] text-muted-foreground">Yükleniyor...</p></div>;
   }
 
   // No team yet - create one
@@ -45,7 +45,7 @@ const TeamManagement = () => {
       <div className="space-y-5">
         <div>
           <h3 className="text-[15px] font-semibold mb-1 text-foreground">Ekip Oluştur</h3>
-          <p className="text-[11px]" style={{ color: "#64748B" }}>
+          <p className="text-[11px] text-muted-foreground">
             Ekibinizi oluşturun ve 2 kişiyi davet edin. Tüm projeler ve hakediş kayıtları paylaşılır.
           </p>
         </div>
@@ -92,7 +92,7 @@ const TeamManagement = () => {
           <h3 className="text-[15px] font-semibold mb-1 text-foreground">
             {team.name}
           </h3>
-          <p className="text-[11px]" style={{ color: "#64748B" }}>
+          <p className="text-[11px] text-muted-foreground">
             {members.length}/{team.max_members} üye
           </p>
         </div>
@@ -138,7 +138,7 @@ const TeamManagement = () => {
               Gönder
             </button>
           </div>
-          <p className="text-[10px]" style={{ color: "#64748B" }}>
+          <p className="text-[10px] text-muted-foreground">
             Davet edilen kişi bu e-posta ile kayıt olduğunda otomatik olarak ekibe eklenir.
           </p>
         </div>
@@ -161,7 +161,7 @@ const TeamManagement = () => {
                 <p className="text-[13px] font-medium truncate text-foreground">
                   {member.profile?.full_name || "Bilinmiyor"}
                 </p>
-                <p className="text-[10px] truncate" style={{ color: "#64748B" }}>
+                <p className="text-[10px] truncate text-muted-foreground">
                   {member.profile?.title || "Mühendis"}
                 </p>
               </div>
@@ -175,16 +175,14 @@ const TeamManagement = () => {
                     <select
                       value={member.role}
                       onChange={(e) => updateMemberRole(member.id, e.target.value as "editor" | "viewer")}
-                      className="rounded px-1.5 py-0.5 text-[10px] outline-none"
-                      style={{ color: "#94A3B8" }}
+                      className="rounded px-1.5 py-0.5 text-[10px] outline-none text-muted-foreground"
                     >
                       <option value="editor">Editör</option>
                       <option value="viewer">Görüntüleyici</option>
                     </select>
                     <button
                       onClick={() => removeMember(member.id)}
-                      className="p-1 rounded transition-colors"
-                      style={{ color: "#64748B" }}
+                      className="p-1 rounded transition-colors text-muted-foreground"
                       onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
                     >
@@ -205,17 +203,16 @@ const TeamManagement = () => {
           {invitations.map((inv) => (
             <div key={inv.id} className="flex items-center gap-3 p-3 rounded-lg" style={cardStyle}>
               <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(100,116,139,0.15)" }}>
-                <Mail className="w-4 h-4" style={{ color: "#64748B" }} />
+                <Mail className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium truncate text-foreground">{inv.email}</p>
-                <p className="text-[10px]" style={{ color: "#64748B" }}>Davet bekliyor • {ROLE_LABELS[inv.role]?.label || inv.role}</p>
+                <p className="text-[10px] text-muted-foreground">Davet bekliyor • {ROLE_LABELS[inv.role]?.label || inv.role}</p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => copyInviteLink(inv.token)}
-                  className="p-1.5 rounded transition-colors"
-                  style={{ color: "#64748B" }}
+                  className="p-1.5 rounded transition-colors text-muted-foreground"
                   title="Davet linkini kopyala"
                 >
                   <Copy className="w-3.5 h-3.5" />
@@ -223,8 +220,7 @@ const TeamManagement = () => {
                 {isOwner && (
                   <button
                     onClick={() => cancelInvitation(inv.id)}
-                    className="p-1.5 rounded transition-colors"
-                    style={{ color: "#64748B" }}
+                    className="p-1.5 rounded transition-colors text-muted-foreground"
                     onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
                   >

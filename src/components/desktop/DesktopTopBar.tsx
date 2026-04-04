@@ -48,8 +48,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         {actions}
 
         <button
-          className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150"
-          style={{ color: "#64748B" }}
+          className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 text-muted-foreground"
           onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
         >
@@ -60,8 +59,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         <div className="relative">
           <button
             onClick={() => { setNotifOpen(!notifOpen); }}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 relative"
-            style={{ color: "#64748B" }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-150 relative text-muted-foreground"
             onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
           >
@@ -89,7 +87,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
                   {notifications.length === 0 ? (
                     <div className="p-6 text-center">
                       <Bell className="w-8 h-8 mx-auto mb-2" style={{ color: "#334155" }} />
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>Bildirim yok</p>
+                      <p className="text-[12px] text-muted-foreground">Bildirim yok</p>
                     </div>
                   ) : (
                     notifications.map((n, i) => {

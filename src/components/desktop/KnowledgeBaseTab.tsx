@@ -60,7 +60,7 @@ const KnowledgeBaseTab = () => {
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">
           📚 AI Bilgi Bankası
         </h3>
-        <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">
           Yüklediğiniz belgeler AI'ın cevaplarına kaynaklık eder. AI, soru sorulduğunda önce bu belgelerde arama yapar.
         </p>
       </div>
@@ -84,9 +84,9 @@ const KnowledgeBaseTab = () => {
           </>
         ) : (
           <>
-            <Upload className="w-8 h-8" style={{ color: "#64748B" }} />
+            <Upload className="w-8 h-8 text-muted-foreground" />
             <p className="text-[13px] font-medium text-foreground">PDF belgesi sürükleyin veya tıklayın</p>
-            <p className="text-[11px]" style={{ color: "#64748B" }}>Sadece PDF, maksimum 50MB</p>
+            <p className="text-[11px] text-muted-foreground">Sadece PDF, maksimum 50MB</p>
           </>
         )}
         <input
@@ -101,7 +101,7 @@ const KnowledgeBaseTab = () => {
       {/* Uploaded documents */}
       {documents.length > 0 && (
         <div>
-          <p className="text-[12px] font-semibold uppercase mb-3" style={{ color: "#94A3B8" }}>
+          <p className="text-[12px] font-semibold uppercase mb-3 text-muted-foreground">
             Yüklü Belgeler ({documents.length})
           </p>
           <div className="space-y-2">
@@ -124,11 +124,11 @@ const KnowledgeBaseTab = () => {
                       )}
                     </p>
                     <div className="flex items-center gap-3 mt-0.5">
-                      <span className="text-[11px]" style={{ color: "#64748B" }}>{formatFileSize(doc.file_size)}</span>
+                      <span className="text-[11px] text-muted-foreground">{formatFileSize(doc.file_size)}</span>
                       {doc.page_count > 0 && (
-                        <span className="text-[11px]" style={{ color: "#64748B" }}>{doc.page_count} sayfa</span>
+                        <span className="text-[11px] text-muted-foreground">{doc.page_count} sayfa</span>
                       )}
-                      <span className="text-[11px]" style={{ color: "#64748B" }}>
+                      <span className="text-[11px] text-muted-foreground">
                         {new Date(doc.created_at).toLocaleDateString("tr-TR")}
                       </span>
                     </div>
@@ -144,8 +144,7 @@ const KnowledgeBaseTab = () => {
                     {!(doc as any).is_global && (
                       <button
                         onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
-                        className="p-1.5 rounded-lg transition-colors"
-                        style={{ color: "#64748B" }}
+                        className="p-1.5 rounded-lg transition-colors text-muted-foreground"
                         onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
                       >
@@ -162,7 +161,7 @@ const KnowledgeBaseTab = () => {
 
       {/* Suggested documents */}
       <div>
-        <p className="text-[12px] font-semibold uppercase mb-3" style={{ color: "#94A3B8" }}>
+        <p className="text-[12px] font-semibold uppercase mb-3 text-muted-foreground">
           Önerilen Belgeler
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -183,7 +182,7 @@ const KnowledgeBaseTab = () => {
                   <p className="text-[12px] font-medium truncate" style={{ color: isUploaded ? "#F1F5F9" : "#94A3B8" }}>
                     {isUploaded ? "✅" : "⬜"} {doc.name}
                   </p>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>{doc.desc}</p>
+                  <p className="text-[10px] text-muted-foreground">{doc.desc}</p>
                 </div>
               </div>
             );

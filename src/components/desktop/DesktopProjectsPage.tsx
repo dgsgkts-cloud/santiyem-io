@@ -116,7 +116,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
           <div key={s.label} className="rounded-xl p-3 lg:p-5 bg-card border border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base lg:text-lg">{s.emoji}</span>
-              <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>{s.label}</span>
+              <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
             </div>
             <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: s.alert ? "#EF4444" : "#F1F5F9" }}>
               {s.value}
@@ -168,22 +168,22 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1C242D"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}>
                   <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
-                  <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
-                  <td className="px-5 py-3 font-mono text-[12px]" style={{ color: "#94A3B8" }}>{p.start}</td>
-                  <td className="px-5 py-3 font-mono text-[12px]" style={{ color: "#94A3B8" }}>{p.end}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
+                  <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
+                  <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.end}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                         <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                       </div>
-                      <span className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                      <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
                     </div>
                   </td>
                   <td className="px-5 py-3">
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                   </td>
                   <td className="px-5 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400" style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400 text-muted-foreground">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                   </td>
@@ -199,11 +199,11 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold truncate text-foreground">{p.name}</p>
-                    <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
+                    <p className="text-[11px] text-muted-foreground">{p.client}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                   </div>
@@ -212,7 +212,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
                     <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                   </div>
-                  <span className="text-[11px] font-mono shrink-0" style={{ color: "#94A3B8" }}>{p.progress}%</span>
+                  <span className="text-[11px] font-mono shrink-0 text-muted-foreground">{p.progress}%</span>
                 </div>
               </div>
             ))}
@@ -225,12 +225,12 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} style={{ color: "#64748B" }}>
+                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
               <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-              <p className="text-[11px] lg:text-[12px] mb-3" style={{ color: "#64748B" }}>{p.client}</p>
+              <p className="text-[11px] lg:text-[12px] mb-3 text-muted-foreground">{p.client}</p>
               <div className="flex items-center justify-center mb-3">
                 <div className="relative w-14 h-14">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">

@@ -81,7 +81,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <span className="text-sm font-semibold text-foreground">{title}</span>
           {badge}
         </div>
-        {expandedSections[id] ? <ChevronUp className="w-4 h-4" style={{ color: "#64748B" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "#64748B" }} />}
+        {expandedSections[id] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {expandedSections[id] && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -97,7 +97,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
     <div className="p-6 max-w-4xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: "#94A3B8" }}>
+        <button onClick={onBack} className="text-sm flex items-center gap-1 text-muted-foreground">
           <ArrowLeft className="w-4 h-4" /> Sözleşme Takibi
         </button>
         <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         {requests.length === 0 ? (
           <div className="text-center py-6">
             <Mail className="w-8 h-8 mx-auto mb-2" style={{ color: "#334155" }} />
-            <p className="text-xs" style={{ color: "#64748B" }}>Henüz imzaya gönderilmedi</p>
+            <p className="text-xs text-muted-foreground">Henüz imzaya gönderilmedi</p>
             <Button onClick={() => setShowSendModal(true)} size="sm" className="mt-3 h-8 text-xs text-white" style={{ backgroundColor: "#3B82F6" }}>
               <Send className="w-3 h-3 mr-1" /> İmzaya Gönder
             </Button>
@@ -158,7 +158,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-foreground">{req.recipient_name}</p>
-                      <p className="text-[10px]" style={{ color: "#64748B" }}>{req.recipient_email} • {new Date(req.sent_at).toLocaleDateString("tr-TR")}</p>
+                      <p className="text-[10px] text-muted-foreground">{req.recipient_email} • {new Date(req.sent_at).toLocaleDateString("tr-TR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {isWaiting && daysSince >= 7 && (
@@ -188,7 +188,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                         <p className="text-xs font-medium text-foreground">
                           📎 {u.file_name} — {u.signer_name}{u.signer_title ? ` (${u.signer_title})` : ""}
                         </p>
-                        <p className="text-[10px]" style={{ color: "#64748B" }}>{new Date(u.created_at).toLocaleString("tr-TR")}</p>
+                        <p className="text-[10px] text-muted-foreground">{new Date(u.created_at).toLocaleString("tr-TR")}</p>
                       </div>
                       <a href={u.file_url} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm" className="h-7 text-[10px]" style={{ borderColor: "#1E2732", color: "#3B82F6" }}>
@@ -207,19 +207,19 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       {/* General Info */}
       <Section id="general" title="Genel Bilgiler" icon={<Building2 className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs mb-4">
-          <div><span style={{ color: "#64748B" }}>Karşı Taraf</span><p className="font-medium mt-0.5 text-foreground">{contract.counterparty}</p></div>
-          <div><span style={{ color: "#64748B" }}>Tür</span><p className="font-medium mt-0.5 text-foreground">{CONTRACT_TYPES[contract.contract_type] || contract.contract_type}</p></div>
-          <div><span style={{ color: "#64748B" }}>Tutar</span><p className="font-medium mt-0.5 text-foreground">{formatCurrency(contract.amount)}</p></div>
-          <div><span style={{ color: "#64748B" }}>Başlangıç</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.start_date)}</p></div>
-          <div><span style={{ color: "#64748B" }}>Bitiş</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.end_date)}</p></div>
-          <div><span style={{ color: "#64748B" }}>Kalan</span><p className="font-medium mt-0.5" style={{ color: status.color }}>{daysLeft !== null ? `${daysLeft} gün` : "—"}</p></div>
+          <div><span className="text-muted-foreground">Karşı Taraf</span><p className="font-medium mt-0.5 text-foreground">{contract.counterparty}</p></div>
+          <div><span className="text-muted-foreground">Tür</span><p className="font-medium mt-0.5 text-foreground">{CONTRACT_TYPES[contract.contract_type] || contract.contract_type}</p></div>
+          <div><span className="text-muted-foreground">Tutar</span><p className="font-medium mt-0.5 text-foreground">{formatCurrency(contract.amount)}</p></div>
+          <div><span className="text-muted-foreground">Başlangıç</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.start_date)}</p></div>
+          <div><span className="text-muted-foreground">Bitiş</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.end_date)}</p></div>
+          <div><span className="text-muted-foreground">Kalan</span><p className="font-medium mt-0.5" style={{ color: status.color }}>{daysLeft !== null ? `${daysLeft} gün` : "—"}</p></div>
         </div>
 
         {/* Progress bars */}
         {tp.total > 0 && (
           <div className="space-y-3">
             <div>
-              <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: "#64748B" }}>
+              <div className="flex items-center justify-between text-[10px] mb-1 text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Süre: {tp.elapsed}g geçti, {tp.remaining}g kaldı</span>
                 <span>%{Math.round(tp.pct)}</span>
               </div>
@@ -229,7 +229,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             </div>
             {contract.amount > 0 && (
               <div>
-                <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: "#64748B" }}>
+                <div className="flex items-center justify-between text-[10px] mb-1 text-muted-foreground">
                   <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />Tutar: {formatCurrency(totalHakedisAmount)} hakediş, {formatCurrency(contract.amount - totalHakedisAmount)} kaldı</span>
                   <span>%{Math.round(hakedisUsagePct)}</span>
                 </div>
@@ -257,8 +257,8 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   <div className="flex items-center gap-2 mb-1">
                     <span>{level.icon}</span>
                     <span className="text-[10px] font-semibold" style={{ color: level.color }}>{level.label}</span>
-                    {(m.madde_no || m.madde) && <span className="text-[10px]" style={{ color: "#64748B" }}>Madde {m.madde_no || m.madde}</span>}
-                    {m.konu && <span className="text-[10px] font-medium" style={{ color: "#94A3B8" }}>— {m.konu}</span>}
+                    {(m.madde_no || m.madde) && <span className="text-[10px] text-muted-foreground">Madde {m.madde_no || m.madde}</span>}
+                    {m.konu && <span className="text-[10px] font-medium text-muted-foreground">— {m.konu}</span>}
                   </div>
                   <p className="text-xs text-foreground">{m.icerik || m.aciklama}</p>
                 </div>
@@ -276,15 +276,15 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         <Section id="penalty" title="Cezai Şart Hesaplama" icon={<AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />}>
           <div className="grid grid-cols-3 gap-3 mb-3">
             <div>
-              <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Gecikme Günü</label>
+              <label className="text-[10px] block mb-1 text-muted-foreground">Gecikme Günü</label>
               <input type="number" value={penaltyDays} onChange={e => setPenaltyDays(Number(e.target.value))} min={0} className="w-full rounded px-2 py-2 text-sm outline-none" />
             </div>
             <div>
-              <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Günlük Ceza</label>
+              <label className="text-[10px] block mb-1 text-muted-foreground">Günlük Ceza</label>
               <p className="text-sm font-medium mt-1 text-foreground">{formatCurrency(penaltyRate)}</p>
             </div>
             <div>
-              <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Toplam Cezai Şart</label>
+              <label className="text-[10px] block mb-1 text-muted-foreground">Toplam Cezai Şart</label>
               <p className="text-lg font-bold" style={{ color: penaltyTotal > 0 ? "#EF4444" : "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>
                 {formatCurrency(penaltyTotal)}
               </p>
@@ -296,7 +296,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                 ⚠️ Sözleşme bedelinin %{penaltyPct.toFixed(1)}'ine karşılık geliyor
                 {penaltyLimit > 0 && ` (Üst limit: %${penaltyLimit})`}
               </p>
-              <p className="text-[10px] mt-1" style={{ color: "#64748B" }}>Referans amaçlıdır, sözleşmenizi kontrol ediniz.</p>
+              <p className="text-[10px] mt-1 text-muted-foreground">Referans amaçlıdır, sözleşmenizi kontrol ediniz.</p>
             </div>
           )}
         </Section>
@@ -309,9 +309,9 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
-                  <th className="text-left py-2 font-medium" style={{ color: "#64748B" }}>Hakediş</th>
-                  <th className="text-right py-2 font-medium" style={{ color: "#64748B" }}>Tutar</th>
-                  <th className="text-right py-2 font-medium" style={{ color: "#64748B" }}>Durum</th>
+                  <th className="text-left py-2 font-medium text-muted-foreground">Hakediş</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Tutar</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Durum</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,8 +336,8 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1" style={{ color: "#64748B" }}>Sözleşme Bedeli</td>
-                  <td className="py-1 text-right" style={{ color: "#64748B" }}>{formatCurrency(contract.amount)}</td>
+                  <td className="py-1 text-muted-foreground">Sözleşme Bedeli</td>
+                  <td className="py-1 text-right text-muted-foreground">{formatCurrency(contract.amount)}</td>
                   <td></td>
                 </tr>
                 <tr>
@@ -369,10 +369,10 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                       <span className="font-medium text-foreground">
                         {isPaid ? "✅" : isPast ? "⚠️" : "○"} Hakediş #{o.hakedis_no}
                       </span>
-                      {o.not && <span className="ml-2" style={{ color: "#64748B" }}>— {o.not}</span>}
+                      {o.not && <span className="ml-2 text-muted-foreground">— {o.not}</span>}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span style={{ color: "#94A3B8" }}>{formatDate(o.tarih)}</span>
+                      <span className="text-muted-foreground">{formatDate(o.tarih)}</span>
                       <span className="font-medium text-foreground">{o.tutar ? formatCurrency(o.tutar) : "—"}</span>
                     </div>
                   </div>
@@ -390,17 +390,17 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
-                  <th className="text-left py-2 font-medium" style={{ color: "#64748B" }}>Tarih</th>
-                  <th className="text-left py-2 font-medium" style={{ color: "#64748B" }}>Tür</th>
-                  <th className="text-right py-2 font-medium" style={{ color: "#64748B" }}>Gün</th>
-                  <th className="text-right py-2 font-medium" style={{ color: "#64748B" }}>Durum</th>
+                  <th className="text-left py-2 font-medium text-muted-foreground">Tarih</th>
+                  <th className="text-left py-2 font-medium text-muted-foreground">Tür</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Gün</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Durum</th>
                 </tr>
               </thead>
               <tbody>
                 {forceMajeures.map(fm => (
                   <tr key={fm.id} style={{ borderBottom: "1px solid #1E2732" }}>
                     <td className="py-2 text-foreground">{formatDate(fm.start_date)} — {formatDate(fm.end_date)}</td>
-                    <td className="py-2" style={{ color: "#94A3B8" }}>{fm.type}</td>
+                    <td className="py-2 text-muted-foreground">{fm.type}</td>
                     <td className="py-2 text-right text-foreground">{fm.affected_days}g</td>
                     <td className="py-2 text-right">
                       <select
@@ -435,21 +435,21 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <div className="rounded-lg p-3 space-y-2 bg-background border border-border">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
-                <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Başlangıç</label>
+                <label className="text-[10px] block mb-1 text-muted-foreground">Başlangıç</label>
                 <input type="date" value={fmForm.start_date} onChange={e => setFmForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
               <div>
-                <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Bitiş</label>
+                <label className="text-[10px] block mb-1 text-muted-foreground">Bitiş</label>
                 <input type="date" value={fmForm.end_date} onChange={e => setFmForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
               <div>
-                <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Tür</label>
+                <label className="text-[10px] block mb-1 text-muted-foreground">Tür</label>
                 <select value={fmForm.type} onChange={e => setFmForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none">
                   {["Deprem", "Sel", "Hava Koşulları", "Resmi Tatil", "Pandemi", "Diğer"].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Etkilenen Gün</label>
+                <label className="text-[10px] block mb-1 text-muted-foreground">Etkilenen Gün</label>
                 <input type="number" value={fmForm.affected_days || ""} onChange={e => setFmForm(f => ({ ...f, affected_days: Number(e.target.value) }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
             </div>
@@ -471,7 +471,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         badge={activities.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(148,163,184,0.1)", color: "#94A3B8" }}>{activities.length}</span> : undefined}
       >
         {activities.length === 0 ? (
-          <p className="text-xs text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
+          <p className="text-xs text-center py-4 text-muted-foreground">Henüz aktivite yok</p>
         ) : (
           <div className="space-y-2">
             {activities.map(act => (
@@ -483,7 +483,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                 </div>
                 <div className="flex-1">
                   <p className="text-foreground">{act.description}</p>
-                  <p className="text-[10px]" style={{ color: "#64748B" }}>
+                  <p className="text-[10px] text-muted-foreground">
                     {new Date(act.created_at).toLocaleString("tr-TR")}
                     {act.actor_name && ` — ${act.actor_name}`}
                   </p>
@@ -498,7 +498,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       {contract.notes && (
         <div className="rounded-xl p-4" style={cardStyle}>
           <p className="text-xs font-semibold mb-2 text-foreground">📝 Notlar</p>
-          <p className="text-xs whitespace-pre-wrap" style={{ color: "#94A3B8" }}>{contract.notes}</p>
+          <p className="text-xs whitespace-pre-wrap text-muted-foreground">{contract.notes}</p>
         </div>
       )}
 

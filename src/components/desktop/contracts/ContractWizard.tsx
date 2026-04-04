@@ -147,7 +147,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <button onClick={onCancel} className="text-sm flex items-center gap-1" style={{ color: "#94A3B8" }}>
+      <button onClick={onCancel} className="text-sm flex items-center gap-1 text-muted-foreground">
         <ArrowLeft className="w-4 h-4" /> Sözleşme Takibi
       </button>
       <h1 className="text-lg font-bold text-foreground">
@@ -239,7 +239,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
             </Button>
           </div>
           {clauses.length === 0 && (
-            <p className="text-xs text-center py-6" style={{ color: "#64748B" }}>
+            <p className="text-xs text-center py-6 text-muted-foreground">
               Henüz madde eklenmedi. "Madde Ekle" butonuna tıklayın veya 4. adımda PDF yükleyerek AI'dan otomatik çıkartın.
             </p>
           )}
@@ -272,15 +272,15 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           </div>
 
           {schedule.length === 0 ? (
-            <p className="text-xs text-center py-6" style={{ color: "#64748B" }}>Ödeme takvimi oluşturmak için hakediş ekleyin.</p>
+            <p className="text-xs text-center py-6 text-muted-foreground">Ödeme takvimi oluşturmak için hakediş ekleyin.</p>
           ) : (
             <div className="space-y-2">
-              <div className="grid grid-cols-[50px_1fr_1fr_1fr_32px] gap-2 text-[10px] font-semibold px-1" style={{ color: "#64748B" }}>
+              <div className="grid grid-cols-[50px_1fr_1fr_1fr_32px] gap-2 text-[10px] font-semibold px-1 text-muted-foreground">
                 <span>No</span><span>Tarih</span><span>Tutar (₺)</span><span>Not</span><span></span>
               </div>
               {schedule.map((s, i) => (
                 <div key={i} className="grid grid-cols-[50px_1fr_1fr_1fr_32px] gap-2 items-center">
-                  <span className="text-xs font-mono text-center" style={{ color: "#94A3B8" }}>{s.hakedis_no}</span>
+                  <span className="text-xs font-mono text-center text-muted-foreground">{s.hakedis_no}</span>
                   <input type="date" value={s.tarih} onChange={e => updateScheduleItem(i, "tarih", e.target.value)} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} />
                   <input type="number" value={s.tutar || ""} onChange={e => updateScheduleItem(i, "tutar", Number(e.target.value))} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} />
                   <input value={s.not} onChange={e => updateScheduleItem(i, "not", e.target.value)} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} placeholder="Not" />
@@ -296,7 +296,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               backgroundColor: Math.abs(scheduleDiff) < 1 ? "rgba(34,197,94,0.08)" : "rgba(245,158,11,0.08)",
               border: `1px solid ${Math.abs(scheduleDiff) < 1 ? "rgba(34,197,94,0.2)" : "rgba(245,158,11,0.2)"}`,
             }}>
-              <span style={{ color: "#94A3B8" }}>
+              <span className="text-muted-foreground">
                 Toplam: {scheduleTotal.toLocaleString("tr-TR")} ₺ / Sözleşme: {form.amount.toLocaleString("tr-TR")} ₺
               </span>
               <span style={{ color: Math.abs(scheduleDiff) < 1 ? "#22C55E" : "#F59E0B" }}>
@@ -320,19 +320,19 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               <>
                 <div className="w-10 h-10 mx-auto mb-3 border-2 border-t-[#FF6B2B] border-[#1E2732] rounded-full animate-spin" />
                 <p className="text-sm font-medium text-foreground">AI sözleşmeyi analiz ediyor...</p>
-                <p className="text-xs mt-1" style={{ color: "#64748B" }}>Bu işlem 10-30 saniye sürebilir</p>
+                <p className="text-xs mt-1 text-muted-foreground">Bu işlem 10-30 saniye sürebilir</p>
               </>
             ) : form.file_name ? (
               <>
                 <Bot className="w-10 h-10 mx-auto mb-3" style={{ color: "#22C55E" }} />
                 <p className="text-sm font-medium text-foreground">📄 {form.file_name}</p>
-                <p className="text-xs mt-1" style={{ color: "#64748B" }}>Dosya yüklendi. Farklı bir dosya yüklemek için tıklayın.</p>
+                <p className="text-xs mt-1 text-muted-foreground">Dosya yüklendi. Farklı bir dosya yüklemek için tıklayın.</p>
               </>
             ) : (
               <>
                 <Upload className="w-10 h-10 mx-auto mb-3" style={{ color: "#FF6B2B" }} />
                 <p className="text-sm font-medium text-foreground">Sözleşme PDF'ini yükleyin</p>
-                <p className="text-xs mt-1" style={{ color: "#64748B" }}>AI otomatik analiz edip bilgileri çıkaracak • Max 10MB</p>
+                <p className="text-xs mt-1 text-muted-foreground">AI otomatik analiz edip bilgileri çıkaracak • Max 10MB</p>
                 <p className="text-[10px] mt-2" style={{ color: "#475569" }}>PDF, DOC, DOCX, TXT desteklenir</p>
               </>
             )}
@@ -344,7 +344,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
                 <Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />
                 <span className="text-xs font-semibold" style={{ color: "#FF6B2B" }}>AI Analiz Sonucu</span>
               </div>
-              <p className="text-xs" style={{ color: "#94A3B8" }}>{form.ai_analysis.ozet}</p>
+              <p className="text-xs text-muted-foreground">{form.ai_analysis.ozet}</p>
             </div>
           )}
 

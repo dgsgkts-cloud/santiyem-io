@@ -337,7 +337,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
             {p.recentActivity.map((a, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
-                <span className="text-[12px] lg:text-[13px] flex-1 min-w-0" style={{ color: "#94A3B8" }}>{a.text}</span>
+                <span className="text-[12px] lg:text-[13px] flex-1 min-w-0 text-muted-foreground">{a.text}</span>
                 <span className="text-[10px] lg:text-[11px] shrink-0" style={labelStyle}>{a.time}</span>
               </div>
             ))}
@@ -441,9 +441,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   {hakedisler.map((h, i) => (
                     <tr key={h.id} style={{ borderBottom: "1px solid #1E2732" }}>
                       <td className="px-4 py-3 font-mono" style={textStyle}>{i + 1}</td>
-                      <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{h.period}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{h.period}</td>
                       <td className="px-4 py-3 font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</td>
-                      <td className="px-4 py-3 font-mono" style={{ color: "#94A3B8" }}>₺{h.kdv.toLocaleString("tr-TR")}</td>
+                      <td className="px-4 py-3 font-mono text-muted-foreground">₺{h.kdv.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</td>
                       <td className="px-4 py-3 relative">
                         <button
@@ -471,7 +471,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                        <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -512,7 +512,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <div className="flex items-center justify-between text-[11px]">
                     <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</span></span>
                     <span style={labelStyle}>Net: <span className="font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</span></span>
-                    <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} style={{ color: "#64748B" }}><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               ))}
@@ -567,10 +567,10 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <p className="text-[10px]" style={labelStyle}>{formatBytes(f.file_size)} · {new Date(f.created_at).toLocaleDateString("tr-TR")}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                  <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                     <FileDown className="w-3.5 h-3.5" />
                   </a>
-                  <button onClick={() => setDeleteTarget({ type: "file", id: f.id, name: f.file_name, fileUrl: f.file_url })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                  <button onClick={() => setDeleteTarget({ type: "file", id: f.id, name: f.file_name, fileUrl: f.file_url })} className="w-7 h-7 rounded flex items-center justify-center transition-colors text-muted-foreground">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>

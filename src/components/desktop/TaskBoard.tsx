@@ -58,7 +58,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
 
   const tasksByStatus = { todo: todoTasks, in_progress: inProgressTasks, done: doneTasks };
 
-  if (loading) return <p className="text-[12px]" style={{ color: "#64748B" }}>Yükleniyor...</p>;
+  if (loading) return <p className="text-[12px] text-muted-foreground">Yükleniyor...</p>;
 
   return (
     <div className="space-y-4">
@@ -100,8 +100,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
               <select
                 value={newAssignee}
                 onChange={(e) => setNewAssignee(e.target.value)}
-                className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-                style={{ color: "#94A3B8" }}
+                className="rounded-lg px-2 py-1.5 text-[12px] outline-none text-muted-foreground"
               >
                 <option value="">Atanmamış</option>
                 {members.map(m => (
@@ -114,8 +113,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
             <select
               value={newPriority}
               onChange={(e) => setNewPriority(e.target.value as Task["priority"])}
-              className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-              style={{ color: "#94A3B8" }}
+              className="rounded-lg px-2 py-1.5 text-[12px] outline-none text-muted-foreground"
             >
               <option value="low">Düşük</option>
               <option value="normal">Normal</option>
@@ -126,8 +124,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
               type="date"
               value={newDueDate}
               onChange={(e) => setNewDueDate(e.target.value)}
-              className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-              style={{ color: "#94A3B8" }}
+              className="rounded-lg px-2 py-1.5 text-[12px] outline-none text-muted-foreground"
             />
             <button onClick={handleAdd} className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>
               Ekle
@@ -164,7 +161,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
                     className="rounded-lg p-3 cursor-grab active:cursor-grabbing group bg-card border border-border"
                   >
                     <div className="flex items-start gap-2">
-                      <GripVertical className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-30 group-hover:opacity-60" style={{ color: "#64748B" }} />
+                      <GripVertical className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-30 group-hover:opacity-60 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-medium mb-1 text-foreground">{task.title}</p>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -172,12 +169,12 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
                             <Flag className="w-2.5 h-2.5 inline mr-0.5" />{pri.label}
                           </span>
                           {task.assignee_name && (
-                            <span className="text-[9px] flex items-center gap-0.5" style={{ color: "#64748B" }}>
+                            <span className="text-[9px] flex items-center gap-0.5 text-muted-foreground">
                               <User className="w-2.5 h-2.5" />{task.assignee_name}
                             </span>
                           )}
                           {task.due_date && (
-                            <span className="text-[9px] flex items-center gap-0.5" style={{ color: "#64748B" }}>
+                            <span className="text-[9px] flex items-center gap-0.5 text-muted-foreground">
                               <Calendar className="w-2.5 h-2.5" />
                               {new Date(task.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
                             </span>
@@ -215,7 +212,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
 
       {tasks.length === 0 && !showAddForm && (
         <div className="text-center py-8">
-          <p className="text-[12px]" style={{ color: "#64748B" }}>Henüz görev eklenmemiş. "Yeni Görev" ile başlayın.</p>
+          <p className="text-[12px] text-muted-foreground">Henüz görev eklenmemiş. "Yeni Görev" ile başlayın.</p>
         </div>
       )}
     </div>

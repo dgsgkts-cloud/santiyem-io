@@ -34,7 +34,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Sözleşme Takibi</h1>
-          <p className="text-xs mt-1" style={{ color: "#64748B" }}>Tüm sözleşmelerinizi tek ekrandan yönetin</p>
+          <p className="text-xs mt-1 text-muted-foreground">Tüm sözleşmelerinizi tek ekrandan yönetin</p>
         </div>
         <Button onClick={onAdd} className="h-9 text-sm font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
           <Plus className="w-4 h-4 mr-1.5" /> Yeni Sözleşme Ekle
@@ -52,7 +52,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
           <div key={s.label} className="rounded-xl p-4" style={cardStyle}>
             <div className="flex items-center gap-2 mb-2">
               <s.icon className="w-4 h-4" style={{ color: s.color }} />
-              <span className="text-xs font-medium" style={{ color: "#64748B" }}>{s.label}</span>
+              <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
             </div>
             <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
           </div>
@@ -63,7 +63,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
       {contracts.length === 0 ? (
         <div className="text-center py-16 rounded-xl" style={cardStyle}>
           <FileText className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />
-          <p className="text-sm font-medium" style={{ color: "#64748B" }}>Henüz sözleşme eklenmedi</p>
+          <p className="text-sm font-medium text-muted-foreground">Henüz sözleşme eklenmedi</p>
           <p className="text-xs mt-1" style={{ color: "#475569" }}>Yeni bir sözleşme ekleyerek başlayın</p>
         </div>
       ) : (
@@ -91,7 +91,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold truncate text-foreground">{c.name}</h3>
-                    <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>{c.counterparty} • {formatCurrency(c.amount)}</p>
+                    <p className="text-xs mt-0.5 text-muted-foreground">{c.counterparty} • {formatCurrency(c.amount)}</p>
                   </div>
                   <span className="text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 ml-2" style={{ color: status.color, backgroundColor: status.bg }}>
                     {status.icon} {status.label}
@@ -99,7 +99,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                 </div>
 
                 {/* Date + Type */}
-                <div className="flex items-center gap-4 text-xs mb-3" style={{ color: "#94A3B8" }}>
+                <div className="flex items-center gap-4 text-xs mb-3 text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(c.start_date)} — {formatDate(c.end_date)}</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
                     {CONTRACT_TYPES[c.contract_type] || c.contract_type}
@@ -109,7 +109,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                 {/* Progress bar */}
                 {tp.total > 0 && (
                   <div className="mb-3">
-                    <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: "#64748B" }}>
+                    <div className="flex items-center justify-between text-[10px] mb-1 text-muted-foreground">
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{tp.elapsed}g geçti</span>
                       <span>{tp.remaining}g kaldı — %{Math.round(tp.pct)}</span>
                     </div>
@@ -126,7 +126,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                 )}
 
                 {/* Bottom row */}
-                <div className="flex items-center gap-3 text-[10px]" style={{ color: "#64748B" }}>
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                   {signatureMap[c.id] && (
                     <span className="font-semibold px-1.5 py-0.5 rounded" style={{ color: signatureMap[c.id].color, backgroundColor: `${signatureMap[c.id].color}15` }}>
                       {signatureMap[c.id].label}
