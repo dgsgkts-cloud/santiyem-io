@@ -225,9 +225,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 text-muted-foreground"
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover-icon-btn"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
