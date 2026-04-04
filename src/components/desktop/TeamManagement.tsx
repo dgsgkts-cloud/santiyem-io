@@ -182,9 +182,7 @@ const TeamManagement = () => {
                     </select>
                     <button
                       onClick={() => removeMember(member.id)}
-                      className="p-1 rounded transition-colors text-muted-foreground"
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
+                      className="p-1 rounded hover-danger-text"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
