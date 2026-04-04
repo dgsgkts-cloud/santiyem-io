@@ -123,8 +123,7 @@ const PricingPanel = () => {
       btnStyle: "primary" as const,
       color: "#FF6B2B",
       features: [
-        "5 kullanıcı hesabı",
-"3 proje",
+        "5 kullanıcı hesabı · Sınırsız aktif proje",
         "Profesyonel plandaki her şey",
         "Ekip görevi atama + kişiye özel not",
         "Ortak proje ve hakediş takibi",
