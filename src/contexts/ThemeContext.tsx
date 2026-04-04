@@ -48,6 +48,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
+    if (t === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
     localStorage.setItem("santiyem_theme", t);
     if (user) {
       supabase.from("profiles").update({ theme: t } as any).eq("user_id", user.id).then(() => {});
@@ -55,8 +60,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+    const isLight = document.documentElement.classList.toggle("light");
+    const nextTheme: Theme = isLight ? "light" : "dark";
+    setThemeState(nextTheme);
+    localStorage.setItem("santiyem_theme", nextTheme);
+    if (user) {
+      supabase.from("profiles").update({ theme: nextTheme } as any).eq("user_id", user.id).then(() => {});
+    }
+  }, [user]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
