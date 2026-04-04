@@ -34,6 +34,7 @@ const CashChecksTab = () => {
   const { checks, addCheck, deleteCheck, updateCheck } = useCashChecks();
   const { projects } = useProjects();
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [formType, setFormType] = useState<"verilen" | "alınan">("verilen");
   const [form, setForm] = useState({
     check_no: "", bank_name: "", branch: "", account_no: "", counterparty: "", amount: "", due_date: "", project_id: "",
