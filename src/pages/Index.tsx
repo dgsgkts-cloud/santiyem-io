@@ -84,6 +84,7 @@ const TAB_TITLES: Record<string, string> = {
   "site-diary": "Şantiye Günlüğü",
   contracts: "Sözleşme Takibi",
   profitability: "Karlılık & Nakit Akışı",
+  "cash-tracking": "Kasa & Ödeme Takibi",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
