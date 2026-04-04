@@ -77,7 +77,7 @@ const TAB_TITLES: Record<string, string> = {
   daily: "Günlük Bilgi",
   calc: "Hesap Araçları",
   render: "Proje Analizi",
-  reminders: "Mevzuat Arama",
+  reminders: "Hatırlatıcı",
   pricing: "Planlar",
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",

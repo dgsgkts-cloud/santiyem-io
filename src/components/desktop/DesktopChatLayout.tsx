@@ -267,7 +267,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Konular</p>
           <div className="flex flex-wrap gap-1.5">
-            {["Deprem Yükü", "TBDY 2018", "Betonarme", "Yapısal Analiz"].map((tag) => (
+            {["Hakediş", "Proje Takibi", "Şantiye Günlüğü", "Sözleşme"].map((tag) => (
               <span key={tag} className="text-[11px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
                 {tag}
               </span>
