@@ -71,11 +71,33 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     } finally { setLoadingPlan(null); }
   }, [user, onClose]);
 
-  if (!open) return null;
+  if (!open && !showPaymentDisabled) return null;
 
   const planKey = requiresOffice ? "team" : "pro";
   const planPrice = requiresOffice ? "1.499" : "499";
   const planName = requiresOffice ? "Ekip" : "Profesyonel";
+
+  if (showPaymentDisabled) {
+    return (
+      <>
+        <div className="fixed inset-0 z-[200] bg-black/60" onClick={() => setShowPaymentDisabled(false)} />
+        <div className="fixed inset-0 z-[201] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+            <h3 className="text-lg font-bold text-foreground mb-3">Ödeme Sistemi Güncelleniyor</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Ödeme sistemimiz yakında aktif olacak. Şu an ücretsiz planla kullanmaya devam edebilirsiniz.
+              Bilgilendirilmek için{" "}
+              <a href="mailto:info@santiyem.io" className="text-primary underline">info@santiyem.io</a>{" "}
+              adresine e-posta gönderin.
+            </p>
+            <Button onClick={() => setShowPaymentDisabled(false)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              Tamam
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -130,31 +152,6 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
           </div>
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <>
-      {!showPaymentDisabled && mainModal}
-      {showPaymentDisabled && (
-        <>
-          <div className="fixed inset-0 z-[200] bg-black/60" onClick={() => setShowPaymentDisabled(false)} />
-          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4">
-            <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
-              <h3 className="text-lg font-bold text-foreground mb-3">Ödeme Sistemi Güncelleniyor</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Ödeme sistemimiz yakında aktif olacak. Şu an ücretsiz planla kullanmaya devam edebilirsiniz.
-                Bilgilendirilmek için{" "}
-                <a href="mailto:info@santiyem.io" className="text-primary underline">info@santiyem.io</a>{" "}
-                adresine e-posta gönderin.
-              </p>
-              <Button onClick={() => setShowPaymentDisabled(false)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Tamam
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 };
