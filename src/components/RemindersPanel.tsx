@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, User } from "lucide-react";
 import { useReminders } from "@/hooks/useReminders";
 import { useUser } from "@/contexts/UserContext";
