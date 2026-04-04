@@ -234,6 +234,8 @@ const Index = () => {
                   <SiteDiaryPage />
                 ) : activeTab === "profitability" ? (
                   <ProfitabilityCashFlowPage />
+                ) : activeTab === "cash-tracking" ? (
+                  <CashTrackingPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
