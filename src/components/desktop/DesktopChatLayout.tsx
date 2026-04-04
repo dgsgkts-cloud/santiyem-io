@@ -153,10 +153,8 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div className="p-3">
           <button
             onClick={handleReset}
-            className="w-full flex items-center justify-center gap-2 rounded-lg text-[13px] font-semibold text-white transition-colors duration-150"
-            style={{ height: 36, backgroundColor: "#FF6B2B" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#E55A1F"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FF6B2B"; }}
+            className="w-full flex items-center justify-center gap-2 rounded-lg text-[13px] font-semibold text-white hover-primary-btn"
+            style={{ height: 36 }}
           >
             <Plus className="w-4 h-4" /> Yeni Sohbet
           </button>
