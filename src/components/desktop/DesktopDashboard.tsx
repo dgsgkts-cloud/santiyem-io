@@ -2,11 +2,13 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useUser, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders } from "@/contexts/UserContext";
 import {
   FolderOpen, Clock, TrendingUp, AlertTriangle, Wallet,
-  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock, FileSignature, BarChart3
+  MessageSquare, ChevronRight, Lightbulb, ArrowUp, ArrowDown, CalendarClock, Lock, FileSignature, BarChart3, Banknote, Building2, FileText
 } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
+import { useCashAccounts } from "@/hooks/useCashAccounts";
+import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
@@ -37,6 +39,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const { contracts, stats: contractStats } = useContracts();
+  const { accounts } = useCashAccounts();
+  const { checks } = useCashChecks();
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
   const [monthRevenue, setMonthRevenue] = useState(0);
@@ -333,6 +337,78 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Kasa Durumu Widget */}
+      {(() => {
+        const kasaBalance = accounts.filter(a => a.account_type === "nakit_kasa").reduce((s, a) => s + Number(a.balance), 0);
+        const bankaBalance = accounts.filter(a => a.account_type === "banka").reduce((s, a) => s + Number(a.balance), 0);
+        const toplamBalance = accounts.reduce((s, a) => s + Number(a.balance), 0);
+        const now = new Date();
+        const upcomingChecks = checks.filter(c => {
+          const diff = (new Date(c.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+          return diff >= 0 && diff <= 7 && c.status !== "odendi" && c.status !== "tahsil_edildi";
+        });
+
+        return (
+          <div className="rounded-xl p-5 lg:p-6 relative overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Kasa Durumu", false)} />}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Banknote className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Kasa Durumu</h3>
+              </div>
+              <button onClick={() => onTabChange("cash-tracking")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+                Detay <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Nakit Kasa</p>
+                </div>
+                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
+              </div>
+              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Banka</p>
+                </div>
+                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
+              </div>
+              <div className="rounded-lg p-4" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Banknote className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>Toplam</p>
+                </div>
+                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
+              </div>
+            </div>
+            {upcomingChecks.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {upcomingChecks.slice(0, 3).map(chk => {
+                  const days = Math.ceil((new Date(chk.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div
+                      key={chk.id}
+                      className="rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:opacity-90"
+                      style={{ backgroundColor: days <= 3 ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${days <= 3 ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}` }}
+                      onClick={() => onTabChange("cash-tracking")}
+                    >
+                      <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: days <= 3 ? "#EF4444" : "#F59E0B" }} />
+                      <span className="text-[11px] lg:text-[12px] font-medium" style={{ color: days <= 3 ? "#FCA5A5" : "#FCD34D" }}>
+                        📄 {chk.due_date} tarihinde {formatCurrency(chk.amount)} vadeli çek — {chk.counterparty} ({chk.bank_name})
+                        {days === 0 ? " • Bugün!" : ` • ${days} gün sonra`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-4">
         {/* Left column */}
         <div className="space-y-4 lg:space-y-5 min-w-0">
