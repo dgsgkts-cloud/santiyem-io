@@ -66,9 +66,9 @@ const CashSummaryTab = () => {
       {/* Two columns */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Recent transactions */}
-        <Card className="lg:col-span-3 border-0" style={{ backgroundColor: "#161C23" }}>
+        <Card className="lg:col-span-3 border-0 bg-card">
           <CardContent className="p-5">
-            <h3 className="text-[14px] font-semibold mb-4" style={{ color: "#F1F5F9" }}>Son İşlemler</h3>
+            <h3 className="text-[14px] font-semibold mb-4 text-foreground">Son İşlemler</h3>
             {recentAll.length === 0 ? (
               <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>Henüz işlem yok</p>
             ) : (
@@ -80,7 +80,7 @@ const CashSummaryTab = () => {
                         {tx.type === "income" ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} /> : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />}
                       </div>
                       <div>
-                        <p className="text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{tx.name}</p>
+                        <p className="text-[13px] font-medium text-foreground">{tx.name}</p>
                         <p className="text-[11px]" style={{ color: "#64748B" }}>{tx.category} • {tx.date}</p>
                       </div>
                     </div>
@@ -95,9 +95,9 @@ const CashSummaryTab = () => {
         </Card>
 
         {/* Upcoming checks */}
-        <Card className="lg:col-span-2 border-0" style={{ backgroundColor: "#161C23" }}>
+        <Card className="lg:col-span-2 border-0 bg-card">
           <CardContent className="p-5">
-            <h3 className="text-[14px] font-semibold mb-4" style={{ color: "#F1F5F9" }}>Vadesi Yaklaşan Çekler</h3>
+            <h3 className="text-[14px] font-semibold mb-4 text-foreground">Vadesi Yaklaşan Çekler</h3>
             {upcomingChecks.length === 0 ? (
               <p className="text-[13px] py-8 text-center" style={{ color: "#64748B" }}>7 gün içinde vadesi gelen çek yok</p>
             ) : (
@@ -107,7 +107,7 @@ const CashSummaryTab = () => {
                   return (
                     <div key={chk.id} className="p-3 rounded-lg" style={{ backgroundColor: "#1A2028", border: days <= 3 ? "1px solid rgba(245,158,11,0.3)" : "1px solid transparent" }}>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{chk.counterparty}</p>
+                        <p className="text-[13px] font-medium text-foreground">{chk.counterparty}</p>
                         <span className="text-[11px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: days <= 3 ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)", color: days <= 3 ? "#EF4444" : "#F59E0B" }}>
                           {days === 0 ? "Bugün!" : `${days} gün`}
                         </span>

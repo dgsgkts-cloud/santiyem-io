@@ -251,7 +251,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Finansal Özet — Bu Ay</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Finansal Özet — Bu Ay</h3>
           </div>
           <button onClick={() => onTabChange("profitability")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
             Detay <ChevronRight className="w-3 h-3" />
@@ -311,7 +311,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Son 6 Ay — Ciro & Gider</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Son 6 Ay — Ciro & Gider</h3>
           </div>
         </div>
         <div style={{ width: "100%", height: 220 }}>
@@ -354,7 +354,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Banknote className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Kasa Durumu</h3>
+                <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Kasa Durumu</h3>
               </div>
               <button onClick={() => onTabChange("cash-tracking")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                 Detay <ChevronRight className="w-3 h-3" />
@@ -415,7 +415,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl overflow-hidden relative bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />}
             <div className="flex items-center justify-between p-4 lg:p-5 pb-3">
-              <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Aktif Projeler</h3>
+              <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Aktif Projeler</h3>
               <button onClick={() => onTabChange("projects")} className="flex items-center gap-0.5 text-[12px] font-medium shrink-0" style={{ color: "#FF6B2B" }}>
                 Tümü <ChevronRight className="w-3 h-3" />
               </button>
@@ -438,7 +438,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                     <tbody>
                       {displayProjects.map((p) => (
                         <tr key={p.id} onClick={() => onProjectSelect?.(p.id)} className="transition-colors duration-150 cursor-pointer border-b border-border">
-                          <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
+                          <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                           <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                     <div key={p.id} onClick={() => onProjectSelect?.(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-muted transition-colors border-border">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
+                          <p className="text-[13px] font-semibold truncate text-foreground">{p.name}</p>
                           <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
                         </div>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
@@ -484,7 +484,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           {/* Activities - still static for now, could be event-sourced later */}
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Son Aktiviteler", true)} />}
-            <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4" style={{ color: "#F1F5F9" }}>Son Aktiviteler</h3>
+            <h3 className="text-sm lg:text-[15px] font-semibold mb-3 lg:mb-4 text-foreground">Son Aktiviteler</h3>
             {projects.length === 0 ? (
               <p className="text-[12px] text-center py-4" style={{ color: "#64748B" }}>Henüz aktivite yok</p>
             ) : (
@@ -515,7 +515,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Hatırlatıcılar</h3>
+                <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Hatırlatıcılar</h3>
               </div>
               <button className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                 Tümü <ChevronRight className="w-3 h-3" />
@@ -561,7 +561,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl p-4 lg:p-5 bg-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <MessageSquare className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-              <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>AI Asistan</h3>
+              <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">AI Asistan</h3>
             </div>
             <div
               className="flex items-center gap-2 rounded-lg px-3 mb-3 cursor-pointer bg-background border border-border" style={{ height: 36 }}
@@ -592,7 +592,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <FileSignature className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                  <h3 className="text-[13px] lg:text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Sözleşme Uyarıları</h3>
+                  <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Sözleşme Uyarıları</h3>
                 </div>
                 <button onClick={() => onTabChange("contracts")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                   Tümü <ChevronRight className="w-3 h-3" />
@@ -629,7 +629,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                       <div key={w.id} className="flex items-start gap-2 cursor-pointer" onClick={() => onTabChange("contracts")}>
                         <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: w.color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[12px] lg:text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{w.name}</p>
+                          <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{w.name}</p>
                           <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{w.counterparty}</p>
                         </div>
                         <span className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0" style={{ backgroundColor: w.bgColor, color: w.color }}>
@@ -646,13 +646,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
-            <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Yaklaşan İşler</h3>
+            <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3 text-foreground">Yaklaşan İşler</h3>
             <div className="space-y-2.5">
               {UPCOMING_STATIC.map((u, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: u.urgent ? "#EF4444" : "#F59E0B" }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] lg:text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{u.task}</p>
+                    <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.task}</p>
                     <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{u.project}</p>
                   </div>
                   <span
@@ -684,7 +684,7 @@ const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void
     onClick={(e) => { e.stopPropagation(); onClick?.(); }}
   >
     <Lock className="w-5 h-5 mb-1.5" style={{ color: "#FF6B2B" }} />
-    <span className="text-[11px] font-semibold" style={{ color: "#F1F5F9" }}>🔒 {label}</span>
+    <span className="text-[11px] font-semibold text-foreground">🔒 {label}</span>
     <span className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Bu özellik için planınızı yükseltin</span>
   </div>
 );

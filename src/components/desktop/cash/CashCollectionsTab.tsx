@@ -71,7 +71,7 @@ const CashCollectionsTab = () => {
         </Button>
       </div>
 
-      <Card className="border-0" style={{ backgroundColor: "#161C23" }}>
+      <Card className="border-0 bg-card">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
@@ -90,8 +90,8 @@ const CashCollectionsTab = () => {
                   const proj = projects.find(pr => pr.id === c.project_id);
                   return (
                     <tr key={c.id} style={{ borderBottom: "1px solid #1E2732" }} className="hover:bg-[#1A2028]">
-                      <td className="px-4 py-3" style={{ color: "#F1F5F9" }}>{c.collection_date}</td>
-                      <td className="px-4 py-3 font-medium" style={{ color: "#F1F5F9" }}>{c.sender}</td>
+                      <td className="px-4 py-3 text-foreground">{c.collection_date}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{c.sender}</td>
                       <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{c.collection_type}</td>
                       <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{proj?.name || "-"}</td>
                       <td className="px-4 py-3 font-semibold" style={{ color: "#22C55E" }}>₺{fmt(c.amount)}</td>
@@ -113,7 +113,7 @@ const CashCollectionsTab = () => {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
-          <DialogHeader><DialogTitle style={{ color: "#F1F5F9" }}>Tahsilat Ekle</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-foreground">Tahsilat Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3 max-h-[65vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-3">
               <div>

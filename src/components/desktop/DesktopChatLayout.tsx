@@ -168,8 +168,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Sohbet ara..."
-              className="flex-1 bg-transparent text-[12px] outline-none"
-              style={{ color: "#F1F5F9" }}
+              className="flex-1 bg-transparent text-[12px] outline-none text-foreground"
             />
           </div>
         </div>
@@ -222,9 +221,9 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
       </div>
 
       {/* Middle - Chat area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ backgroundColor: "#0F1419" }}>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">
         <div className="flex items-center justify-between px-5 shrink-0" style={{ height: 48, borderBottom: "1px solid #1E2732" }}>
-          <span className="text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>
+          <span className="text-[14px] font-semibold text-foreground">
             {messages.length > 0 ? "Sohbet" : "Yeni Sohbet"}
           </span>
           <div className="flex items-center gap-1">
@@ -274,7 +273,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
 
       {/* Right - Context panel */}
       <div className="w-[280px] shrink-0 flex flex-col p-4 space-y-4" style={{ backgroundColor: "#0F1419", borderLeft: "1px solid #1E2732" }}>
-        <h3 className="text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>Bu Sohbette</h3>
+        <h3 className="text-[14px] font-semibold text-foreground">Bu Sohbette</h3>
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Konular</p>
           <div className="flex flex-wrap gap-1.5">

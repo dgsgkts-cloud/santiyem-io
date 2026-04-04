@@ -58,7 +58,7 @@ const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+      <div className="relative w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto bg-background border border-border">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[16px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>Yeni Proje Ekle</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#64748B" }}>

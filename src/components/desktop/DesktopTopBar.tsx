@@ -76,9 +76,9 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
           {notifOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-              <div className="absolute right-0 top-11 z-50 w-[320px] rounded-xl shadow-2xl max-h-[400px] flex flex-col" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+              <div className="absolute right-0 top-11 z-50 w-[320px] rounded-xl shadow-2xl max-h-[400px] flex flex-col bg-card border border-border">
                 <div className="p-3 flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #1E2732" }}>
-                  <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Bildirimler</p>
+                  <p className="text-[13px] font-semibold text-foreground">Bildirimler</p>
                   {unreadCount > 0 && (
                     <button onClick={markAllAsRead} className="text-[11px] font-medium flex items-center gap-1" style={{ color: "#FF6B2B" }}>
                       <Check className="w-3 h-3" /> Tümünü Okundu

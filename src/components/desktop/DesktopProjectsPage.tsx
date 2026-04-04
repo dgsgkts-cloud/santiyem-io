@@ -113,7 +113,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl p-3 lg:p-5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div key={s.label} className="rounded-xl p-3 lg:p-5 bg-card border border-border">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base lg:text-lg">{s.emoji}</span>
               <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>{s.label}</span>
@@ -127,7 +127,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
       {/* View toggle + Add button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm lg:text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Projeler</h3>
+        <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
         <div className="flex items-center gap-3">
           {user && (
             <button
@@ -152,11 +152,11 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
       </div>
 
       {viewMode === "list" ? (
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl overflow-hidden bg-card border border-border">
           {/* Desktop table */}
           <table className="w-full text-[13px] hidden lg:table">
             <thead>
-              <tr style={{ backgroundColor: "#0F1419" }}>
+              <tr className="bg-background">
                 {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum", ""].map((h) => (
                   <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
                 ))}
@@ -167,7 +167,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                 <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="transition-colors duration-150 cursor-pointer" style={{ borderBottom: "1px solid #1E2732" }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1C242D"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}>
-                  <td className="px-5 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{p.name}</td>
+                  <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                   <td className="px-5 py-3" style={{ color: "#94A3B8" }}>{p.client}</td>
                   <td className="px-5 py-3 font-mono text-[12px]" style={{ color: "#94A3B8" }}>{p.start}</td>
                   <td className="px-5 py-3 font-mono text-[12px]" style={{ color: "#94A3B8" }}>{p.end}</td>
@@ -198,7 +198,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
+                    <p className="text-[13px] font-semibold truncate text-foreground">{p.name}</p>
                     <p className="text-[11px]" style={{ color: "#64748B" }}>{p.client}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -222,15 +222,14 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
           {allProjects.map((p) => (
             <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
-              className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+              className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                 <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} style={{ color: "#64748B" }}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate" style={{ color: "#F1F5F9" }}>{p.name}</h4>
+              <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
               <p className="text-[11px] lg:text-[12px] mb-3" style={{ color: "#64748B" }}>{p.client}</p>
               <div className="flex items-center justify-center mb-3">
                 <div className="relative w-14 h-14">
@@ -238,7 +237,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${p.progress}, 100`} />
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold font-mono" style={{ color: "#F1F5F9" }}>{p.progress}%</span>
+                  <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold font-mono text-foreground">{p.progress}%</span>
                 </div>
               </div>
               <div className="flex items-center justify-between text-[11px]">

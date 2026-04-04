@@ -184,7 +184,7 @@ const ProfitabilityCashFlowPage = () => {
             { label: "Net Kar", value: totals.kar, color: "#22C55E", icon: DollarSign, sub: `Kar marjı: %${totals.marj.toFixed(0)}` },
             { label: "Bekleyen Tahsilat", value: totals.bekleyenTahsilat, color: "#F1F5F9", icon: Wallet, sub: "Ödenmemiş hakedişler" },
           ].map((c, i) => (
-            <div key={i} className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            <div key={i} className="rounded-xl p-4 bg-card border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <c.icon className="w-4 h-4" style={{ color: c.color }} />
                 <span className="text-xs" style={{ color: "#94A3B8" }}>{c.label}</span>
@@ -207,8 +207,8 @@ const ProfitabilityCashFlowPage = () => {
         </div>
 
         {/* Revenue vs Expense Chart */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "#F1F5F9" }}>Gelir — Gider Grafiği</h3>
+        <div className="rounded-xl p-4 bg-card border border-border">
+          <h3 className="text-sm font-semibold mb-4 text-foreground">Gelir — Gider Grafiği</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={monthlyData}>
               <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} />
@@ -222,9 +222,9 @@ const ProfitabilityCashFlowPage = () => {
         </div>
 
         {/* Project Profitability Table */}
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl overflow-hidden bg-card border border-border">
           <div className="p-4">
-            <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Proje Bazlı Karlılık</h3>
+            <h3 className="text-sm font-semibold text-foreground">Proje Bazlı Karlılık</h3>
           </div>
           {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto">
@@ -241,7 +241,7 @@ const ProfitabilityCashFlowPage = () => {
                   <tr key={p.id} className="cursor-pointer hover:bg-white/5 transition-colors"
                     onClick={() => { setSelectedProjectId(p.id); setPage("project-detail"); }}
                     style={{ borderBottom: "1px solid #1E2732" }}>
-                    <td className="px-4 py-3 font-medium" style={{ color: "#F1F5F9" }}>{p.name}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{fmtFull(p.contract)}</td>
                     <td className="px-4 py-3" style={{ color: "#3B82F6" }}>{fmtFull(p.hakedisTotal)}</td>
                     <td className="px-4 py-3" style={{ color: "#EF4444" }}>{fmtFull(p.expenseTotal)}</td>
@@ -261,7 +261,7 @@ const ProfitabilityCashFlowPage = () => {
               {projectStats.length > 0 && (
                 <tfoot>
                   <tr style={{ borderTop: "2px solid #1E2732" }}>
-                    <td className="px-4 py-3 font-bold" style={{ color: "#F1F5F9" }}>Toplam</td>
+                    <td className="px-4 py-3 font-bold text-foreground">Toplam</td>
                     <td className="px-4 py-3 font-bold" style={{ color: "#94A3B8" }}>{fmtFull(projectStats.reduce((s, p) => s + p.contract, 0))}</td>
                     <td className="px-4 py-3 font-bold" style={{ color: "#3B82F6" }}>{fmtFull(totals.ciro)}</td>
                     <td className="px-4 py-3 font-bold" style={{ color: "#EF4444" }}>{fmtFull(totals.gider)}</td>
@@ -280,10 +280,10 @@ const ProfitabilityCashFlowPage = () => {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2 p-3">
             {projectStats.map(p => (
-              <div key={p.id} className="rounded-lg p-3 cursor-pointer" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}
+              <div key={p.id} className="rounded-lg p-3 cursor-pointer bg-background border border-border"
                 onClick={() => { setSelectedProjectId(p.id); setPage("project-detail"); }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium" style={{ color: "#F1F5F9" }}>{p.name}</span>
+                  <span className="text-sm font-medium text-foreground">{p.name}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
                     {p.karMarji.toFixed(1)}%
                   </span>
@@ -316,7 +316,7 @@ const ProfitabilityCashFlowPage = () => {
         </button>
 
         <div>
-          <h2 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{selectedProject.name}</h2>
+          <h2 className="text-lg font-bold text-foreground">{selectedProject.name}</h2>
           <p className="text-xs" style={{ color: "#64748B" }}>{selectedProject.client} • {selectedProject.start_date} — {selectedProject.end_date}</p>
         </div>
 
@@ -328,7 +328,7 @@ const ProfitabilityCashFlowPage = () => {
             { label: "Toplam Gider", value: selectedProject.expenseTotal, color: "#EF4444" },
             { label: "Net Kar", value: selectedProject.netKar, color: karColor(marj) },
           ].map((c, i) => (
-            <div key={i} className="rounded-xl p-4 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            <div key={i} className="rounded-xl p-4 text-center bg-card border border-border">
               <p className="text-xs mb-1" style={{ color: "#64748B" }}>{c.label}</p>
               <p className="text-lg font-bold" style={{ color: c.color }}>{fmtFull(c.value)}</p>
             </div>
@@ -336,7 +336,7 @@ const ProfitabilityCashFlowPage = () => {
         </div>
 
         {/* Profit gauge */}
-        <div className="rounded-xl p-6 flex flex-col items-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-6 flex flex-col items-center bg-card border border-border">
           <div className="relative w-32 h-32">
             <svg viewBox="0 0 36 36" className="w-32 h-32">
               <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
@@ -352,8 +352,8 @@ const ProfitabilityCashFlowPage = () => {
 
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Revenue detail */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>Gelirler</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold mb-3 text-foreground">Gelirler</h3>
             {selectedProject.hakedisItems.length === 0 ? (
               <p className="text-xs" style={{ color: "#64748B" }}>Hakediş kaydı yok</p>
             ) : (
@@ -361,7 +361,7 @@ const ProfitabilityCashFlowPage = () => {
                 {selectedProject.hakedisItems.map((h: any, i: number) => (
                   <div key={h.id} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
                     <div>
-                      <span className="text-xs font-medium" style={{ color: "#F1F5F9" }}>Hakediş #{i + 1} — {h.period}</span>
+                      <span className="text-xs font-medium text-foreground">Hakediş #{i + 1} — {h.period}</span>
                       <p className="text-[11px]" style={{ color: "#64748B" }}>{h.payment_date || "Tarih belirtilmemiş"}</p>
                     </div>
                     <div className="text-right">
@@ -371,7 +371,7 @@ const ProfitabilityCashFlowPage = () => {
                   </div>
                 ))}
                 <div className="pt-2 flex justify-between">
-                  <span className="text-xs font-bold" style={{ color: "#F1F5F9" }}>Toplam</span>
+                  <span className="text-xs font-bold text-foreground">Toplam</span>
                   <span className="text-sm font-bold" style={{ color: "#3B82F6" }}>{fmtFull(selectedProject.hakedisTotal)}</span>
                 </div>
               </div>
@@ -379,9 +379,9 @@ const ProfitabilityCashFlowPage = () => {
           </div>
 
           {/* Expense detail */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 bg-card border border-border">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Giderler</h3>
+              <h3 className="text-sm font-semibold text-foreground">Giderler</h3>
               <button onClick={() => { setExpForm(f => ({ ...f, project_id: selectedProject.id })); setAddModal(true); }}
                 className="px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1"
                 style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>
@@ -396,7 +396,7 @@ const ProfitabilityCashFlowPage = () => {
                   <div key={e.id} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium" style={{ color: "#F1F5F9" }}>{e.description || e.category}</span>
+                        <span className="text-xs font-medium text-foreground">{e.description || e.category}</span>
                         {e.source === "site_diary" && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(59,130,246,0.15)", color: "#60A5FA" }}>📔 Günlük</span>
                         )}
@@ -417,8 +417,8 @@ const ProfitabilityCashFlowPage = () => {
 
         {/* Pie chart */}
         {categoryBreakdown.length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>Kategori Bazlı Gider Dağılımı</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold mb-3 text-foreground">Kategori Bazlı Gider Dağılımı</h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={categoryBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} %${(percent * 100).toFixed(0)}`}>
@@ -480,14 +480,14 @@ const ProfitabilityCashFlowPage = () => {
         </div>
 
         {/* Current cash */}
-        <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-6 text-center bg-card border border-border">
           <p className="text-xs mb-1" style={{ color: "#64748B" }}>Bugün itibarıyla tahmini nakit</p>
-          <p className="text-3xl font-bold" style={{ color: "#F1F5F9" }}>{fmtFull(nakit)}</p>
+          <p className="text-3xl font-bold text-foreground">{fmtFull(nakit)}</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Pending collections */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 bg-card border border-border">
             <h3 className="text-sm font-semibold mb-3" style={{ color: "#22C55E" }}>Bekleyen Tahsilatlar</h3>
             {bekleyenTahsilatlar.length === 0 ? (
               <p className="text-xs" style={{ color: "#64748B" }}>Bekleyen tahsilat yok</p>
@@ -498,7 +498,7 @@ const ProfitabilityCashFlowPage = () => {
                   return (
                     <div key={h.id} className="flex justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
                       <div>
-                        <span className="text-xs" style={{ color: "#F1F5F9" }}>{proj?.name || "Proje"}</span>
+                        <span className="text-xs text-foreground">{proj?.name || "Proje"}</span>
                         <p className="text-[11px]" style={{ color: "#64748B" }}>{h.period}</p>
                       </div>
                       <span className="text-sm font-bold" style={{ color: "#22C55E" }}>{fmtFull(Number(h.net))}</span>
@@ -506,7 +506,7 @@ const ProfitabilityCashFlowPage = () => {
                   );
                 })}
                 <div className="pt-2 flex justify-between">
-                  <span className="text-xs font-bold" style={{ color: "#F1F5F9" }}>Toplam</span>
+                  <span className="text-xs font-bold text-foreground">Toplam</span>
                   <span className="text-sm font-bold" style={{ color: "#22C55E" }}>{fmtFull(totals.bekleyenTahsilat)}</span>
                 </div>
               </div>
@@ -514,19 +514,19 @@ const ProfitabilityCashFlowPage = () => {
           </div>
 
           {/* Info card */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-xl p-4 bg-card border border-border">
             <h3 className="text-sm font-semibold mb-3" style={{ color: "#EF4444" }}>Planlanan Ödemeler</h3>
             <p className="text-xs" style={{ color: "#64748B" }}>Gider kaydı eklediğinizde, vadesi gelen ödemeler burada görünecektir.</p>
             <div className="pt-3 flex justify-between">
-              <span className="text-xs font-bold" style={{ color: "#F1F5F9" }}>Toplam Gider</span>
+              <span className="text-xs font-bold text-foreground">Toplam Gider</span>
               <span className="text-sm font-bold" style={{ color: "#EF4444" }}>{fmtFull(totals.gider)}</span>
             </div>
           </div>
         </div>
 
         {/* Forecast chart */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "#F1F5F9" }}>3 Aylık Nakit Akışı Tahmini</h3>
+        <div className="rounded-xl p-4 bg-card border border-border">
+          <h3 className="text-sm font-semibold mb-4 text-foreground">3 Aylık Nakit Akışı Tahmini</h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={forecastData}>
               <XAxis dataKey="week" tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} />
@@ -579,7 +579,7 @@ const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, savin
   <Dialog open={open} onOpenChange={onClose}>
     <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}>
       <DialogHeader>
-        <DialogTitle style={{ color: "#F1F5F9" }}>Gider Ekle</DialogTitle>
+        <DialogTitle className="text-foreground">Gider Ekle</DialogTitle>
       </DialogHeader>
       <div className="space-y-3">
         <div>

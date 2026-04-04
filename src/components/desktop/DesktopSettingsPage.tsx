@@ -55,7 +55,7 @@ const DesktopSettingsPage = () => {
           {activeTab === "profile" && (
             <div className="space-y-5 lg:space-y-6">
               <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Profil Bilgileri</h3>
+                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Profil Bilgileri</h3>
                 <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Kişisel bilgilerinizi güncelleyin</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
@@ -166,7 +166,7 @@ const CompanyProfileTab = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>🏢 Firma Profili</h3>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">🏢 Firma Profili</h3>
         <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>PDF çıktılarınızda kullanılacak firma bilgileri</p>
       </div>
 
@@ -303,7 +303,7 @@ const ToggleRow = ({ label, desc, on, onChange, disabled }: { label: string; des
   return (
     <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732", opacity: disabled ? 0.6 : 1 }}>
       <div className="min-w-0">
-        <p className="text-[12px] lg:text-[13px] font-medium" style={{ color: "#F1F5F9" }}>{label}</p>
+        <p className="text-[12px] lg:text-[13px] font-medium text-foreground">{label}</p>
         <p className="text-[10px] lg:text-[11px]" style={{ color: "#64748B" }}>{desc}</p>
       </div>
       <button
@@ -381,7 +381,7 @@ const NotificationsTab = () => {
   return (
     <div className="space-y-5 lg:space-y-6">
       <div>
-        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Bildirim Tercihleri</h3>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Bildirim Tercihleri</h3>
         <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Hangi bildirimleri almak istediğinizi seçin</p>
       </div>
 
@@ -524,7 +524,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Abonelik Yönetimi</h3>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Abonelik Yönetimi</h3>
         <p className="text-[11px] lg:text-[12px]" style={{ color: "#64748B" }}>Mevcut planınız ve faturalama bilgileri</p>
       </div>
 
@@ -534,7 +534,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{info.emoji}</span>
-              <span className="text-[16px] font-bold" style={{ color: "#F1F5F9" }}>{info.name}</span>
+              <span className="text-[16px] font-bold text-foreground">{info.name}</span>
             </div>
             <p className="text-sm font-semibold" style={{ color: isPaid ? "#FF6B2B" : "#64748B" }}>{info.price}</p>
             {isPaid && (
@@ -598,7 +598,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       {/* Upgrade Cards */}
       {visibleUpgrades.length > 0 && !isAdmin && (
         <div>
-          <h4 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>Daha Fazlası İçin</h4>
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Daha Fazlası İçin</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleUpgrades.map(card => (
               <div key={card.plan} className="rounded-xl p-4 flex flex-col" style={{
@@ -607,7 +607,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               }}>
                 <div className="flex items-center gap-2 mb-2">
                   <span>{card.emoji}</span>
-                  <span className="text-sm font-bold" style={{ color: "#F1F5F9" }}>{card.name}</span>
+                  <span className="text-sm font-bold text-foreground">{card.name}</span>
                 </div>
                 <p className="text-xs font-semibold mb-3" style={{ color: "#FF6B2B" }}>{card.price}</p>
                 <div className="space-y-1.5 flex-1 mb-4">
@@ -633,9 +633,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       {/* Invoice History */}
       {isPaid && (
         <div>
-          <h4 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>Fatura Geçmişi</h4>
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Fatura Geçmişi</h4>
           {/* Desktop table */}
-          <div className="hidden sm:block rounded-xl overflow-hidden" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+          <div className="hidden sm:block rounded-xl overflow-hidden bg-background border border-border">
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
@@ -647,9 +647,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <tbody>
                 {MOCK_INVOICES.map((inv, i) => (
                   <tr key={i} style={{ borderBottom: i < MOCK_INVOICES.length - 1 ? "1px solid #1E2732" : undefined }}>
-                    <td className="px-4 py-3" style={{ color: "#F1F5F9" }}>{inv.date}</td>
+                    <td className="px-4 py-3 text-foreground">{inv.date}</td>
                     <td className="px-4 py-3" style={{ color: "#94A3B8" }}>{inv.plan}</td>
-                    <td className="px-4 py-3 font-semibold" style={{ color: "#F1F5F9" }}>{inv.amount}</td>
+                    <td className="px-4 py-3 font-semibold text-foreground">{inv.amount}</td>
                     <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ {inv.status}</span></td>
                     <td className="px-4 py-3"><button className="text-[11px] hover:underline" style={{ color: "#FF6B2B" }}>📄 İndir</button></td>
                   </tr>
@@ -660,9 +660,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           {/* Mobile cards */}
           <div className="sm:hidden space-y-2">
             {MOCK_INVOICES.map((inv, i) => (
-              <div key={i} className="rounded-lg p-3 flex items-center justify-between" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+              <div key={i} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
                 <div>
-                  <p className="text-xs font-medium" style={{ color: "#F1F5F9" }}>{inv.date}</p>
+                  <p className="text-xs font-medium text-foreground">{inv.date}</p>
                   <p className="text-[10px]" style={{ color: "#64748B" }}>{inv.plan} • {inv.amount}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -680,7 +680,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       <Dialog open={cancelModal} onOpenChange={setCancelModal}>
         <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}>
           <DialogHeader>
-            <DialogTitle style={{ color: "#F1F5F9" }}>
+            <DialogTitle className="text-foreground">
               {cancelStep === "done" ? "Abonelik İptal Edildi" : "Aboneliğini İptal Etmek İstediğine Emin Misin?"}
             </DialogTitle>
           </DialogHeader>
@@ -694,7 +694,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                   <input type="radio" name="cancel" value={r.id} checked={cancelReason === r.id}
                     onChange={() => setCancelReason(r.id)}
                     className="accent-[#FF6B2B]" />
-                  <span className="text-xs" style={{ color: "#F1F5F9" }}>{r.label}</span>
+                  <span className="text-xs text-foreground">{r.label}</span>
                 </label>
               ))}
               <button disabled={!cancelReason} onClick={() => setCancelStep("response")}

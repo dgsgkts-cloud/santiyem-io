@@ -109,8 +109,8 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
   if (projects.length === 0) {
     return (
       <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">
-        <h2 className="text-base md:text-lg font-bold mb-4" style={{ color: "#F1F5F9" }}>Hakediş Yönetimi</h2>
-        <div className="rounded-xl p-8 text-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <h2 className="text-base md:text-lg font-bold mb-4 text-foreground">Hakediş Yönetimi</h2>
+        <div className="rounded-xl p-8 text-center bg-card border border-border">
           <p style={{ color: "#64748B" }}>Henüz proje eklenmedi. Önce Proje Yönetimi'nden proje ekleyin.</p>
         </div>
       </div>
@@ -119,10 +119,10 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4">
-      <h2 className="text-base md:text-lg font-bold" style={{ color: "#F1F5F9" }}>Hakediş Yönetimi</h2>
+      <h2 className="text-base md:text-lg font-bold text-foreground">Hakediş Yönetimi</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {projectCards.map(p => (
-          <div key={p.id} className="rounded-xl overflow-hidden relative" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div key={p.id} className="rounded-xl overflow-hidden relative bg-card border border-border">
             {p.maxOverdueDays > 0 && (
               <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
                 <AlertTriangle className="w-3 h-3" /> {p.maxOverdueDays} gündür ödeme bekliyor
@@ -131,7 +131,7 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
             <div className="p-4 space-y-3">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold truncate" style={{ color: "#F1F5F9" }}>{p.name}</p>
+                  <p className="text-[14px] font-semibold truncate text-foreground">{p.name}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>{p.client}</p>
                 </div>
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}>
@@ -145,7 +145,7 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
                 </div>
                 <div className="flex justify-between text-[12px]">
                   <span style={{ color: "#94A3B8" }}>Toplam Hakediş:</span>
-                  <span className="font-semibold" style={{ color: "#F1F5F9" }}>{fmt(p.totalHakedis)}</span>
+                  <span className="font-semibold text-foreground">{fmt(p.totalHakedis)}</span>
                 </div>
                 {p.contract > 0 && (
                   <div className="flex justify-between text-[12px]">
@@ -378,7 +378,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       </div>
 
       <div>
-        <h2 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{project?.name}</h2>
+        <h2 className="text-lg font-bold text-foreground">{project?.name}</h2>
         <p className="text-[13px]" style={{ color: "#64748B" }}>{project?.client}</p>
       </div>
 
@@ -390,7 +390,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
           { label: "Tahsil Edilen", value: fmt(collected), color: "#22C55E" },
           { label: pending > 0 ? "Bekleyen" : "Gecikmiş", value: fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0)), color: overdueItems.length > 0 ? "#EF4444" : "#F59E0B" },
         ].map(s => (
-          <div key={s.label} className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div key={s.label} className="rounded-xl p-4 bg-card border border-border">
             <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>{s.label}</p>
             <p className="text-xl font-bold" style={{ color: s.color, fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
           </div>
@@ -399,8 +399,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
       {/* Progress bar */}
       {contract > 0 && (
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <p className="text-[13px] font-semibold mb-3" style={{ color: "#F1F5F9" }}>Sözleşme Kullanım Durumu</p>
+        <div className="rounded-xl p-4 bg-card border border-border">
+          <p className="text-[13px] font-semibold mb-3 text-foreground">Sözleşme Kullanım Durumu</p>
           <div className="h-3 rounded-full mb-2" style={{ backgroundColor: "#1E2732" }}>
             <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
           </div>
@@ -417,7 +417,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>AI Proje Analizi</p>
+            <p className="text-[13px] font-semibold text-foreground">AI Proje Analizi</p>
           </div>
           <button onClick={generateAIAnalysis} disabled={aiLoading} className="flex items-center gap-1 text-[11px] font-medium" style={{ color: "#FF6B2B" }}>
             <RefreshCw className={`w-3 h-3 ${aiLoading ? "animate-spin" : ""}`} /> Yenile
@@ -436,9 +436,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 bg-card border border-border">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Aylık Nakit Akışı</p>
+            <p className="text-[13px] font-semibold text-foreground">Aylık Nakit Akışı</p>
             <div className="flex gap-1">
               {(["6", "12", "all"] as const).map(r => (
                 <button key={r} onClick={() => setChartRange(r)} className="text-[10px] px-2 py-1 rounded-md font-medium" style={{ backgroundColor: chartRange === r ? "#FF6B2B" : "#1E2732", color: chartRange === r ? "#fff" : "#64748B" }}>
@@ -461,16 +461,16 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-3 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
-            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{fmt(avgMonthly)}</p></div>
-            <div><p className="text-[10px]" style={{ color: "#64748B" }}>En Yüksek Ay</p><p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
+            <div><p className="text-[10px]" style={{ color: "#64748B" }}>Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold text-foreground">{fmt(avgMonthly)}</p></div>
+            <div><p className="text-[10px]" style={{ color: "#64748B" }}>En Yüksek Ay</p><p className="text-[13px] font-semibold text-foreground">{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
             <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tahsilat Oranı</p><p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
           </div>
         </div>
       )}
 
       {/* Hakedis Timeline - sorted with overdue first */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-        <p className="text-[13px] font-semibold mb-4" style={{ color: "#F1F5F9" }}>Hakediş Geçmişi</p>
+      <div className="rounded-xl p-4 bg-card border border-border">
+        <p className="text-[13px] font-semibold mb-4 text-foreground">Hakediş Geçmişi</p>
         {loading ? (
           <div className="py-4 text-center text-[12px]" style={{ color: "#64748B" }}>Yükleniyor...</div>
         ) : hakedisler.length === 0 ? (
@@ -492,7 +492,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Hakediş #{hakedisNum}</p>
+                          <p className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisNum}</p>
                           {h.expected_payment_date && <Bell className="w-3 h-3" style={{ color: "#F59E0B" }} />}
                         </div>
                         <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>
@@ -535,9 +535,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tutar</p><p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.amount)}</p></div>
+                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Tutar</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.amount)}</p></div>
                       <div><p className="text-[10px]" style={{ color: "#64748B" }}>KDV</p><p className="text-[12px] font-mono" style={{ color: "#94A3B8" }}>{fmt(h.kdv)}</p></div>
-                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Net</p><p className="text-[12px] font-mono font-semibold" style={{ color: "#F1F5F9" }}>{fmt(h.net)}</p></div>
+                      <div><p className="text-[10px]" style={{ color: "#64748B" }}>Net</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.net)}</p></div>
                     </div>
 
                     {h.payment_date && (
@@ -596,8 +596,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                   const interest = Math.round(h.net * DAILY_RATE * days);
                   return (
                     <tr key={h.id}>
-                      <td className="px-3 py-2 font-mono" style={{ color: "#F1F5F9" }}>#{hakedisler.indexOf(h) + 1}</td>
-                      <td className="px-3 py-2 font-mono" style={{ color: "#F1F5F9" }}>{fmt(h.net)}</td>
+                      <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
+                      <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
                       <td className="px-3 py-2" style={{ color: "#94A3B8" }}>{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
                       <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
                       <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
@@ -616,9 +616,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {/* Add form modal */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowAddForm(false)}>
-          <div className="rounded-xl p-5 w-full max-w-md space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+          <div className="rounded-xl p-5 w-full max-w-md space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Yeni Hakediş Ekle</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">Yeni Hakediş Ekle</h3>
               <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
             <div>
@@ -649,10 +649,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {/* Payment Reminder Modal */}
       {reminderModal?.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setReminderModal(null)}>
-          <div className="rounded-xl p-5 w-full max-w-sm space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+          <div className="rounded-xl p-5 w-full max-w-sm space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5" style={{ color: "#FF6B2B" }} />
-              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>📅 Ödeme Hatırlatıcısı Kur</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">📅 Ödeme Hatırlatıcısı Kur</h3>
             </div>
             <p className="text-[12px]" style={{ color: "#94A3B8" }}>Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım.</p>
             <div>
@@ -684,10 +684,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {/* Payment Confirmation Modal */}
       {paymentModal?.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPaymentModal(null)}>
-          <div className="rounded-xl p-5 w-full max-w-sm space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+          <div className="rounded-xl p-5 w-full max-w-sm space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" style={{ color: "#22C55E" }} />
-              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>Ödeme Onayı</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">Ödeme Onayı</h3>
             </div>
             <p className="text-[13px]" style={{ color: "#CBD5E1" }}>
               Hakediş #{paymentModal.hakedisNum} — <span className="font-bold" style={{ color: "#22C55E" }}>{fmt(paymentModal.hakedisNet)}</span> ödemesi tahsil edildi olarak işaretlensin mi?
@@ -709,9 +709,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {/* PDF Signature Modal */}
       {showPdfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
-          <div className="rounded-xl p-5 w-full max-w-lg space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }} onClick={e => e.stopPropagation()}>
+          <div className="rounded-xl p-5 w-full max-w-lg space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold" style={{ color: "#F1F5F9" }}>📄 PDF Ayarları</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">📄 PDF Ayarları</h3>
               <button onClick={() => setShowPdfModal(false)} style={{ color: "#94A3B8" }}><X className="w-4 h-4" /></button>
             </div>
 
@@ -720,7 +720,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               const labels = ["Hazırlayan", "Kontrol Eden (opsiyonel)", "İşveren / Onaylayan (opsiyonel)"];
               const colors = ["#FF6B2B", "#3B82F6", "#22C55E"];
               return (
-                <div key={key} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+                <div key={key} className="rounded-lg p-3 space-y-2 bg-background border border-border">
                   <p className="text-[11px] font-semibold" style={{ color: colors[ki] }}>{labels[ki]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <input placeholder="Adı Soyadı" value={pdfSig[key]?.name || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: e.target.value, title: p[key]?.title || "" } }))}
@@ -733,7 +733,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             })}
 
             {/* Checkboxes */}
-            <div className="space-y-2 rounded-lg p-3" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <div className="space-y-2 rounded-lg p-3 bg-background border border-border">
               {[
                 { label: "Firma başlığı ekle", checked: pdfIncludeHeader, set: setPdfIncludeHeader },
                 { label: "İmza alanı ekle", checked: pdfIncludeSignature, set: setPdfIncludeSignature },

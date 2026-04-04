@@ -78,7 +78,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       <button onClick={() => toggle(id)} className="w-full flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           {icon}
-          <span className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>{title}</span>
+          <span className="text-sm font-semibold text-foreground">{title}</span>
           {badge}
         </div>
         {expandedSections[id] ? <ChevronUp className="w-4 h-4" style={{ color: "#64748B" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "#64748B" }} />}
@@ -123,7 +123,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{contract.name}</h1>
+        <h1 className="text-lg font-bold text-foreground">{contract.name}</h1>
         <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: status.color, backgroundColor: status.bg }}>
           {status.icon} {status.label}
         </span>
@@ -157,7 +157,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                 <div key={req.id} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: `1px solid ${isOverdue ? "#EF444440" : "#1E2732"}` }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium" style={{ color: "#F1F5F9" }}>{req.recipient_name}</p>
+                      <p className="text-xs font-medium text-foreground">{req.recipient_name}</p>
                       <p className="text-[10px]" style={{ color: "#64748B" }}>{req.recipient_email} • {new Date(req.sent_at).toLocaleDateString("tr-TR")}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   {reqUploads.map(u => (
                     <div key={u.id} className="flex items-center justify-between rounded p-2" style={{ backgroundColor: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
                       <div>
-                        <p className="text-xs font-medium" style={{ color: "#F1F5F9" }}>
+                        <p className="text-xs font-medium text-foreground">
                           📎 {u.file_name} — {u.signer_name}{u.signer_title ? ` (${u.signer_title})` : ""}
                         </p>
                         <p className="text-[10px]" style={{ color: "#64748B" }}>{new Date(u.created_at).toLocaleString("tr-TR")}</p>
@@ -207,11 +207,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       {/* General Info */}
       <Section id="general" title="Genel Bilgiler" icon={<Building2 className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs mb-4">
-          <div><span style={{ color: "#64748B" }}>Karşı Taraf</span><p className="font-medium mt-0.5" style={{ color: "#F1F5F9" }}>{contract.counterparty}</p></div>
-          <div><span style={{ color: "#64748B" }}>Tür</span><p className="font-medium mt-0.5" style={{ color: "#F1F5F9" }}>{CONTRACT_TYPES[contract.contract_type] || contract.contract_type}</p></div>
-          <div><span style={{ color: "#64748B" }}>Tutar</span><p className="font-medium mt-0.5" style={{ color: "#F1F5F9" }}>{formatCurrency(contract.amount)}</p></div>
-          <div><span style={{ color: "#64748B" }}>Başlangıç</span><p className="font-medium mt-0.5" style={{ color: "#F1F5F9" }}>{formatDate(contract.start_date)}</p></div>
-          <div><span style={{ color: "#64748B" }}>Bitiş</span><p className="font-medium mt-0.5" style={{ color: "#F1F5F9" }}>{formatDate(contract.end_date)}</p></div>
+          <div><span style={{ color: "#64748B" }}>Karşı Taraf</span><p className="font-medium mt-0.5 text-foreground">{contract.counterparty}</p></div>
+          <div><span style={{ color: "#64748B" }}>Tür</span><p className="font-medium mt-0.5 text-foreground">{CONTRACT_TYPES[contract.contract_type] || contract.contract_type}</p></div>
+          <div><span style={{ color: "#64748B" }}>Tutar</span><p className="font-medium mt-0.5 text-foreground">{formatCurrency(contract.amount)}</p></div>
+          <div><span style={{ color: "#64748B" }}>Başlangıç</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.start_date)}</p></div>
+          <div><span style={{ color: "#64748B" }}>Bitiş</span><p className="font-medium mt-0.5 text-foreground">{formatDate(contract.end_date)}</p></div>
           <div><span style={{ color: "#64748B" }}>Kalan</span><p className="font-medium mt-0.5" style={{ color: status.color }}>{daysLeft !== null ? `${daysLeft} gün` : "—"}</p></div>
         </div>
 
@@ -260,7 +260,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                     {(m.madde_no || m.madde) && <span className="text-[10px]" style={{ color: "#64748B" }}>Madde {m.madde_no || m.madde}</span>}
                     {m.konu && <span className="text-[10px] font-medium" style={{ color: "#94A3B8" }}>— {m.konu}</span>}
                   </div>
-                  <p className="text-xs" style={{ color: "#F1F5F9" }}>{m.icerik || m.aciklama}</p>
+                  <p className="text-xs text-foreground">{m.icerik || m.aciklama}</p>
                 </div>
               );
             })}
@@ -281,7 +281,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             </div>
             <div>
               <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Günlük Ceza</label>
-              <p className="text-sm font-medium mt-1" style={{ color: "#F1F5F9" }}>{formatCurrency(penaltyRate)}</p>
+              <p className="text-sm font-medium mt-1 text-foreground">{formatCurrency(penaltyRate)}</p>
             </div>
             <div>
               <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Toplam Cezai Şart</label>
@@ -317,8 +317,8 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               <tbody>
                 {projectHakedis.map((h: any) => (
                   <tr key={h.id} style={{ borderBottom: "1px solid #1E2732" }}>
-                    <td className="py-2" style={{ color: "#F1F5F9" }}>{h.period}</td>
-                    <td className="py-2 text-right" style={{ color: "#F1F5F9" }}>{formatCurrency(Number(h.net || h.amount || 0))}</td>
+                    <td className="py-2 text-foreground">{h.period}</td>
+                    <td className="py-2 text-right text-foreground">{formatCurrency(Number(h.net || h.amount || 0))}</td>
                     <td className="py-2 text-right">
                       <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${h.status_color}15`, color: h.status_color }}>{h.status}</span>
                     </td>
@@ -327,8 +327,8 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: "2px solid #1E2732" }}>
-                  <td className="py-2 font-semibold" style={{ color: "#F1F5F9" }}>Toplam</td>
-                  <td className="py-2 text-right font-semibold" style={{ color: "#F1F5F9" }}>{formatCurrency(totalHakedisAmount)}</td>
+                  <td className="py-2 font-semibold text-foreground">Toplam</td>
+                  <td className="py-2 text-right font-semibold text-foreground">{formatCurrency(totalHakedisAmount)}</td>
                   <td className="py-2 text-right">
                     <span className="text-[10px] font-medium" style={{ color: hakedisUsagePct >= 100 ? "#EF4444" : hakedisUsagePct >= 90 ? "#F59E0B" : "#22C55E" }}>
                       %{Math.round(hakedisUsagePct)} kullanıldı
@@ -366,14 +366,14 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   </div>
                   <div className="flex-1 flex items-center justify-between text-xs">
                     <div>
-                      <span className="font-medium" style={{ color: "#F1F5F9" }}>
+                      <span className="font-medium text-foreground">
                         {isPaid ? "✅" : isPast ? "⚠️" : "○"} Hakediş #{o.hakedis_no}
                       </span>
                       {o.not && <span className="ml-2" style={{ color: "#64748B" }}>— {o.not}</span>}
                     </div>
                     <div className="flex items-center gap-3">
                       <span style={{ color: "#94A3B8" }}>{formatDate(o.tarih)}</span>
-                      <span className="font-medium" style={{ color: "#F1F5F9" }}>{o.tutar ? formatCurrency(o.tutar) : "—"}</span>
+                      <span className="font-medium text-foreground">{o.tutar ? formatCurrency(o.tutar) : "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -399,9 +399,9 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               <tbody>
                 {forceMajeures.map(fm => (
                   <tr key={fm.id} style={{ borderBottom: "1px solid #1E2732" }}>
-                    <td className="py-2" style={{ color: "#F1F5F9" }}>{formatDate(fm.start_date)} — {formatDate(fm.end_date)}</td>
+                    <td className="py-2 text-foreground">{formatDate(fm.start_date)} — {formatDate(fm.end_date)}</td>
                     <td className="py-2" style={{ color: "#94A3B8" }}>{fm.type}</td>
-                    <td className="py-2 text-right" style={{ color: "#F1F5F9" }}>{fm.affected_days}g</td>
+                    <td className="py-2 text-right text-foreground">{fm.affected_days}g</td>
                     <td className="py-2 text-right">
                       <select
                         value={fm.status}
@@ -432,7 +432,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         )}
 
         {showFmForm ? (
-          <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+          <div className="rounded-lg p-3 space-y-2 bg-background border border-border">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
                 <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Başlangıç</label>
@@ -482,7 +482,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   }} />
                 </div>
                 <div className="flex-1">
-                  <p style={{ color: "#F1F5F9" }}>{act.description}</p>
+                  <p className="text-foreground">{act.description}</p>
                   <p className="text-[10px]" style={{ color: "#64748B" }}>
                     {new Date(act.created_at).toLocaleString("tr-TR")}
                     {act.actor_name && ` — ${act.actor_name}`}
@@ -497,7 +497,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       {/* Notes */}
       {contract.notes && (
         <div className="rounded-xl p-4" style={cardStyle}>
-          <p className="text-xs font-semibold mb-2" style={{ color: "#F1F5F9" }}>📝 Notlar</p>
+          <p className="text-xs font-semibold mb-2 text-foreground">📝 Notlar</p>
           <p className="text-xs whitespace-pre-wrap" style={{ color: "#94A3B8" }}>{contract.notes}</p>
         </div>
       )}

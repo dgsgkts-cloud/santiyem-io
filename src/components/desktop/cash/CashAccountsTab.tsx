@@ -79,7 +79,7 @@ const CashAccountsTab = () => {
           const type = ACCOUNT_TYPES.find(t => t.value === acc.account_type) || ACCOUNT_TYPES[0];
           const Icon = type.icon;
           return (
-            <Card key={acc.id} className="border-0" style={{ backgroundColor: "#161C23" }}>
+            <Card key={acc.id} className="border-0 bg-card">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ const CashAccountsTab = () => {
                       <Icon className="w-5 h-5" style={{ color: type.color }} />
                     </div>
                     <div>
-                      <p className="text-[14px] font-semibold" style={{ color: "#F1F5F9" }}>{acc.name}</p>
+                      <p className="text-[14px] font-semibold text-foreground">{acc.name}</p>
                       <p className="text-[11px]" style={{ color: "#64748B" }}>{type.label}</p>
                     </div>
                   </div>
@@ -116,7 +116,7 @@ const CashAccountsTab = () => {
       {/* Add Account Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
-          <DialogHeader><DialogTitle style={{ color: "#F1F5F9" }}>Hesap Ekle</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-foreground">Hesap Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Hesap Adı</label>
@@ -161,7 +161,7 @@ const CashAccountsTab = () => {
       {/* Transfer Dialog */}
       <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
         <DialogContent className="max-w-sm" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
-          <DialogHeader><DialogTitle style={{ color: "#F1F5F9" }}>Hesaplar Arası Transfer</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-foreground">Hesaplar Arası Transfer</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Kaynak Hesap</label>

@@ -82,7 +82,7 @@ const CashChecksTab = () => {
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4" style={{ color: si.color }} />
-              <span className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Çek No: {chk.check_no}</span>
+              <span className="text-[13px] font-semibold text-foreground">Çek No: {chk.check_no}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
@@ -140,7 +140,7 @@ const CashChecksTab = () => {
 
       <Tabs defaultValue="verilen" className="w-full">
         <div className="flex items-center justify-between mb-4">
-          <TabsList style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <TabsList className="bg-card border border-border">
             <TabsTrigger value="verilen" className="text-[13px] data-[state=active]:bg-[#FF6B2B]/15 data-[state=active]:text-[#FF6B2B]">Verdiğim Çekler ({verilenChecks.length})</TabsTrigger>
             <TabsTrigger value="alinan" className="text-[13px] data-[state=active]:bg-[#FF6B2B]/15 data-[state=active]:text-[#FF6B2B]">Aldığım Çekler ({alinanChecks.length})</TabsTrigger>
           </TabsList>
@@ -167,7 +167,7 @@ const CashChecksTab = () => {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
-          <DialogHeader><DialogTitle style={{ color: "#F1F5F9" }}>Çek Ekle</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-foreground">Çek Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek Türü</label>

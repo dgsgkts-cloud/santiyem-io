@@ -383,7 +383,7 @@ const PricingPanel = () => {
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm" style={{ minWidth: 700 }}>
             <thead>
-              <tr style={{ backgroundColor: "#0F1419" }}>
+              <tr className="bg-background">
                 <th className="text-left py-3 px-4 text-muted-foreground font-medium w-[200px]">Özellik</th>
                 {planHeaders.map((h, i) => (
                   <th key={h} className="py-3 px-3 text-center font-semibold text-foreground" style={{ backgroundColor: i === 1 ? "rgba(255,107,43,0.05)" : undefined }}>
@@ -425,7 +425,7 @@ const PricingPanel = () => {
           { icon: "📄", title: "E-Fatura Otomatik" },
           { icon: "💬", title: "WhatsApp Destek" },
         ].map((t) => (
-          <div key={t.title} className="flex items-center gap-3 rounded-xl p-4 border border-border" style={{ backgroundColor: "#161C23" }}>
+          <div key={t.title} className="flex items-center gap-3 rounded-xl p-4 border border-border bg-card">
             <span className="text-2xl">{t.icon}</span>
             <span className="text-sm font-medium text-foreground">{t.title}</span>
           </div>
@@ -475,30 +475,30 @@ const PricingPanel = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-white/60 mb-1 block">Şirket Adı *</label>
-                    <input value={formData.company} onChange={e => setFormData(p => ({ ...p, company: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} required />
+                    <input value={formData.company} onChange={e => setFormData(p => ({ ...p, company: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none bg-background border border-border" required />
                   </div>
                   <div>
                     <label className="text-xs text-white/60 mb-1 block">İsim Soyisim *</label>
-                    <input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} required />
+                    <input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none bg-background border border-border" required />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-white/60 mb-1 block">E-posta *</label>
-                    <input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} required />
+                    <input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none bg-background border border-border" required />
                   </div>
                   <div>
                     <label className="text-xs text-white/60 mb-1 block">Telefon</label>
-                    <input value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} />
+                    <input value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none bg-background border border-border" />
                   </div>
                 </div>
                 <div>
                   <label className="text-xs text-white/60 mb-1 block">Tahmini Ekip Büyüklüğü</label>
-                  <input value={formData.teamSize} onChange={e => setFormData(p => ({ ...p, teamSize: e.target.value }))} placeholder="Örn: 10-20 kişi" className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} />
+                  <input value={formData.teamSize} onChange={e => setFormData(p => ({ ...p, teamSize: e.target.value }))} placeholder="Örn: 10-20 kişi" className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none placeholder:text-white/20 bg-background border border-border" />
                 </div>
                 <div>
                   <label className="text-xs text-white/60 mb-1 block">Mesajınız *</label>
-                  <textarea value={formData.message} onChange={e => setFormData(p => ({ ...p, message: e.target.value }))} rows={3} placeholder="İhtiyaçlarınızı kısaca açıklayın..." className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none placeholder:text-white/20" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }} required />
+                  <textarea value={formData.message} onChange={e => setFormData(p => ({ ...p, message: e.target.value }))} rows={3} placeholder="İhtiyaçlarınızı kısaca açıklayın..." className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none placeholder:text-white/20 bg-background border border-border" required />
                 </div>
                 <Button type="submit" disabled={formLoading} className="w-full h-11 font-semibold text-white gap-2" style={{ backgroundColor: "#FF6B2B" }}>
                   <Send className="w-4 h-4" />

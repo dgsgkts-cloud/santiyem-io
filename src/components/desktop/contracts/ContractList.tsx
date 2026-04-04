@@ -33,7 +33,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: "#F1F5F9" }}>Sözleşme Takibi</h1>
+          <h1 className="text-xl font-bold text-foreground">Sözleşme Takibi</h1>
           <p className="text-xs mt-1" style={{ color: "#64748B" }}>Tüm sözleşmelerinizi tek ekrandan yönetin</p>
         </div>
         <Button onClick={onAdd} className="h-9 text-sm font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
@@ -90,7 +90,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold truncate" style={{ color: "#F1F5F9" }}>{c.name}</h3>
+                    <h3 className="text-sm font-semibold truncate text-foreground">{c.name}</h3>
                     <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>{c.counterparty} • {formatCurrency(c.amount)}</p>
                   </div>
                   <span className="text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 ml-2" style={{ color: status.color, backgroundColor: status.bg }}>

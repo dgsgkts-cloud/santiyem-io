@@ -168,7 +168,7 @@ const SiteDiaryPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "#F1F5F9" }}>📔 Şantiye Günlüğü</h1>
+            <h1 className="text-xl font-bold text-foreground">📔 Şantiye Günlüğü</h1>
             <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>Günlük şantiye kayıtlarınızı yönetin</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap">
@@ -204,9 +204,9 @@ const SiteDiaryPage = () => {
         {/* Period Report Modal */}
         {showPeriodModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-            <div className="w-full max-w-md rounded-2xl p-6 space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-card border border-border">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold" style={{ color: "#F1F5F9" }}>📄 Dönem Raporu İndir</h3>
+                <h3 className="text-base font-bold text-foreground">📄 Dönem Raporu İndir</h3>
                 <button onClick={() => setShowPeriodModal(false)} style={{ color: "#64748B" }}><X className="w-5 h-5" /></button>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -249,13 +249,13 @@ const SiteDiaryPage = () => {
         )}
 
         {!selectedProjectId && (
-          <div className="rounded-2xl p-10 sm:p-16 text-center flex flex-col items-center" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+          <div className="rounded-2xl p-10 sm:p-16 text-center flex flex-col items-center bg-card border border-border">
             {projects.length === 0 ? (
               <>
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ backgroundColor: "rgba(255,107,43,0.12)" }}>
                   <FileText className="w-8 h-8" style={{ color: "#FF6B2B" }} />
                 </div>
-                <h2 className="text-lg font-bold mb-2" style={{ color: "#F1F5F9" }}>Henüz Proje Eklenmemiş</h2>
+                <h2 className="text-lg font-bold mb-2 text-foreground">Henüz Proje Eklenmemiş</h2>
                 <p className="text-sm mb-6 max-w-sm" style={{ color: "#64748B" }}>
                   Şantiye günlüğü tutmak için önce bir proje oluşturun.
                 </p>
@@ -275,7 +275,7 @@ const SiteDiaryPage = () => {
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ backgroundColor: "rgba(255,107,43,0.12)" }}>
                   <Calendar className="w-8 h-8" style={{ color: "#FF6B2B" }} />
                 </div>
-                <h2 className="text-lg font-bold mb-2" style={{ color: "#F1F5F9" }}>Şantiye Günlüğüne Hoş Geldiniz</h2>
+                <h2 className="text-lg font-bold mb-2 text-foreground">Şantiye Günlüğüne Hoş Geldiniz</h2>
                 <p className="text-sm mb-6 max-w-sm" style={{ color: "#64748B" }}>
                   Günlük kayıt tutmak için önce bir proje seçin
                 </p>
@@ -307,10 +307,10 @@ const SiteDiaryPage = () => {
         {selectedProjectId && (
           <>
             {/* Calendar */}
-            <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+            <div className="rounded-xl p-4 bg-card border border-border">
               <div className="flex items-center justify-between mb-4">
                 <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5" style={{ color: "#94A3B8" }}>← Önceki</button>
-                <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
                 <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5" style={{ color: "#94A3B8" }}>Sonraki →</button>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center">
@@ -350,12 +350,11 @@ const SiteDiaryPage = () => {
                 <button
                   key={entry.id}
                   onClick={() => { setSelectedEntry(entry); setView("detail"); }}
-                  className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors hover:bg-white/5"
-                  style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+                  className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors hover:bg-white/5 bg-card border border-border"
                 >
                   <span className="text-xl">{entry.weather_icon}</span>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium" style={{ color: "#F1F5F9" }}>{format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</p>
+                    <p className="text-sm font-medium text-foreground">{format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</p>
                     <p className="text-xs truncate" style={{ color: "#64748B" }}>
                       {totalWorkers(entry.crews)} işçi · {entry.work_done?.slice(0, 60) || "Kayıt yok"}
                     </p>
@@ -430,11 +429,11 @@ const SiteDiaryPage = () => {
         </div>
 
         {/* Header */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 bg-card border border-border">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{selectedEntry.weather_icon}</span>
             <div>
-              <h2 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{format(parseISO(selectedEntry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</h2>
+              <h2 className="text-lg font-bold text-foreground">{format(parseISO(selectedEntry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</h2>
               <div className="flex items-center gap-2 mt-1">
                 {selectedEntry.weather_temp && <span className="text-xs" style={{ color: "#64748B" }}>{selectedEntry.weather_temp}°C</span>}
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ws?.color}20`, color: ws?.color }}>{ws?.icon} {ws?.label}</span>
@@ -450,8 +449,8 @@ const SiteDiaryPage = () => {
 
         {/* Workforce */}
         {selectedEntry.crews.length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3" style={{ color: "#F1F5F9" }}><Users className="w-4 h-4" style={{ color: "#FF6B2B" }} /> İşgücü</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground"><Users className="w-4 h-4" style={{ color: "#FF6B2B" }} /> İşgücü</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead><tr style={{ borderBottom: "1px solid #1E2732" }}>
@@ -463,7 +462,7 @@ const SiteDiaryPage = () => {
                 <tbody>
                   {selectedEntry.crews.map((c, i) => (
                     <tr key={i} style={{ borderBottom: "1px solid #1E2732" }}>
-                      <td className="py-2 pr-3" style={{ color: "#F1F5F9" }}>{c.team}</td>
+                      <td className="py-2 pr-3 text-foreground">{c.team}</td>
                       <td className="text-center py-2 px-3" style={{ color: "#94A3B8" }}>{c.count}</td>
                       <td className="text-center py-2 px-3" style={{ color: "#94A3B8" }}>{c.hours}</td>
                       <td className="py-2 pl-3" style={{ color: "#64748B" }}>{c.note}</td>
@@ -480,16 +479,16 @@ const SiteDiaryPage = () => {
 
         {/* Work done */}
         {selectedEntry.work_done && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2" style={{ color: "#F1F5F9" }}><Wrench className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Yapılan İşler</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-foreground"><Wrench className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Yapılan İşler</h3>
             <p className="text-sm whitespace-pre-wrap" style={{ color: "#94A3B8" }}>{selectedEntry.work_done}</p>
           </div>
         )}
 
         {/* Materials */}
         {selectedEntry.materials.length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3" style={{ color: "#F1F5F9" }}><Package className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Malzemeler</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground"><Package className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Malzemeler</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead><tr style={{ borderBottom: "1px solid #1E2732" }}>
@@ -501,7 +500,7 @@ const SiteDiaryPage = () => {
                 <tbody>
                   {selectedEntry.materials.map((m, i) => (
                     <tr key={i} style={{ borderBottom: "1px solid #1E2732" }}>
-                      <td className="py-2" style={{ color: "#F1F5F9" }}>{m.name}</td>
+                      <td className="py-2 text-foreground">{m.name}</td>
                       <td className="text-center py-2" style={{ color: "#94A3B8" }}>{m.quantity}</td>
                       <td className="text-center py-2" style={{ color: "#94A3B8" }}>{m.unit}</td>
                       <td className="text-center py-2" style={{ color: "#94A3B8" }}>{m.direction}</td>
@@ -515,8 +514,8 @@ const SiteDiaryPage = () => {
 
         {/* Special events */}
         {selectedEntry.special_events.length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2" style={{ color: "#F1F5F9" }}><AlertTriangle className="w-4 h-4" style={{ color: "#F59E0B" }} /> Özel Durumlar</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-foreground"><AlertTriangle className="w-4 h-4" style={{ color: "#F59E0B" }} /> Özel Durumlar</h3>
             <ul className="space-y-1">
               {selectedEntry.special_events.map((e, i) => (
                 <li key={i} className="text-xs flex items-center gap-2" style={{ color: "#94A3B8" }}>
@@ -529,8 +528,8 @@ const SiteDiaryPage = () => {
 
         {/* General note */}
         {selectedEntry.general_note && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2" style={{ color: "#F1F5F9" }}><FileText className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Genel Not</h3>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-foreground"><FileText className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Genel Not</h3>
             <p className="text-sm whitespace-pre-wrap" style={{ color: "#94A3B8" }}>{selectedEntry.general_note}</p>
           </div>
         )}
@@ -553,11 +552,11 @@ const SiteDiaryPage = () => {
         </div>
       </div>
 
-      <h2 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>{editingEntry ? "Kaydı Düzenle" : "Yeni Günlük Kaydı"}</h2>
+      <h2 className="text-lg font-bold text-foreground">{editingEntry ? "Kaydı Düzenle" : "Yeni Günlük Kaydı"}</h2>
 
       {/* Section 1: General */}
-      <div className="rounded-xl p-4 space-y-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-        <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>📋 Genel Bilgiler</h3>
+      <div className="rounded-xl p-4 space-y-4 bg-card border border-border">
+        <h3 className="text-sm font-semibold text-foreground">📋 Genel Bilgiler</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Tarih</label>
@@ -600,9 +599,9 @@ const SiteDiaryPage = () => {
 
       {/* Section 2: Workforce */}
       {!isQuickMode && (
-        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 space-y-3 bg-card border border-border">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>👷 İşgücü</h3>
+            <h3 className="text-sm font-semibold text-foreground">👷 İşgücü</h3>
             <button onClick={() => setFormCrews(c => [...c, { team: "", count: 0, hours: 8, note: "" }])} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>+ Ekip Ekle</button>
           </div>
           {formCrews.map((crew, i) => (
@@ -622,23 +621,23 @@ const SiteDiaryPage = () => {
 
       {/* Quick mode: just worker count */}
       {isQuickMode && (
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>👷 İşçi Sayısı</h3>
+        <div className="rounded-xl p-4 bg-card border border-border">
+          <h3 className="text-sm font-semibold mb-3 text-foreground">👷 İşçi Sayısı</h3>
           <input type="number" value={formCrews[0]?.count || ""} onChange={e => setFormCrews([{ team: "Genel", count: parseInt(e.target.value) || 0, hours: 8, note: "" }])} placeholder="Toplam işçi sayısı" className="w-full h-10 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
         </div>
       )}
 
       {/* Section 3: Work done */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "#F1F5F9" }}>🔨 Yapılan İşler</h3>
+      <div className="rounded-xl p-4 bg-card border border-border">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">🔨 Yapılan İşler</h3>
         <textarea value={formWorkDone} onChange={e => setFormWorkDone(e.target.value)} placeholder="Zemin kat güney cephe kalıpları tamamlandı. Kolon demiri bağlama işlemi başladı..." rows={isQuickMode ? 2 : 4} className="w-full rounded-lg px-3 py-2 text-sm resize-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
       </div>
 
       {/* Section 4: Materials (skip in quick mode) */}
       {!isQuickMode && (
-        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 space-y-3 bg-card border border-border">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>📦 Malzemeler</h3>
+            <h3 className="text-sm font-semibold text-foreground">📦 Malzemeler</h3>
             <button onClick={() => setFormMaterials(m => [...m, { name: "", quantity: 0, unit: "m³", direction: "Giriş" }])} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>+ Malzeme Ekle</button>
           </div>
           {formMaterials.map((mat, i) => (
@@ -660,9 +659,9 @@ const SiteDiaryPage = () => {
 
       {/* Section 5: Machines (skip in quick mode) */}
       {!isQuickMode && (
-        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 space-y-3 bg-card border border-border">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>🚜 Makine ve Ekipman</h3>
+            <h3 className="text-sm font-semibold text-foreground">🚜 Makine ve Ekipman</h3>
             <button onClick={() => setFormMachines(m => [...m, { name: "", hours: 0, note: "" }])} className="text-xs px-2 py-1 rounded-lg" style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>+ Makine Ekle</button>
           </div>
           {formMachines.map((mac, i) => (
@@ -677,8 +676,8 @@ const SiteDiaryPage = () => {
       )}
 
       {/* Section 6: Photos */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "#F1F5F9" }}>📷 Fotoğraflar</h3>
+      <div className="rounded-xl p-4 bg-card border border-border">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">📷 Fotoğraflar</h3>
         <div
           className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50"
           style={{ borderColor: "#1E2732" }}
@@ -707,8 +706,8 @@ const SiteDiaryPage = () => {
 
       {/* Section 7: Special events (skip in quick mode) */}
       {!isQuickMode && (
-        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>⚠️ Özel Durumlar</h3>
+        <div className="rounded-xl p-4 space-y-2 bg-card border border-border">
+          <h3 className="text-sm font-semibold text-foreground">⚠️ Özel Durumlar</h3>
           {SPECIAL_EVENTS_OPTIONS.map(event => (
             <label key={event} className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={formSpecialEvents.includes(event)} onChange={e => setFormSpecialEvents(prev => e.target.checked ? [...prev, event] : prev.filter(x => x !== event))} className="rounded" />
@@ -720,8 +719,8 @@ const SiteDiaryPage = () => {
 
       {/* Section 8: General note */}
       {!isQuickMode && (
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-          <h3 className="text-sm font-semibold mb-2" style={{ color: "#F1F5F9" }}>📝 Genel Not</h3>
+        <div className="rounded-xl p-4 bg-card border border-border">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">📝 Genel Not</h3>
           <textarea value={formGeneralNote} onChange={e => setFormGeneralNote(e.target.value)} placeholder="Yarın yapılacaklar, dikkat edilmesi gerekenler..." rows={3} className="w-full rounded-lg px-3 py-2 text-sm resize-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
         </div>
       )}

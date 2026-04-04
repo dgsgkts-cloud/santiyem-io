@@ -150,7 +150,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
       <button onClick={onCancel} className="text-sm flex items-center gap-1" style={{ color: "#94A3B8" }}>
         <ArrowLeft className="w-4 h-4" /> Sözleşme Takibi
       </button>
-      <h1 className="text-lg font-bold" style={{ color: "#F1F5F9" }}>
+      <h1 className="text-lg font-bold text-foreground">
         {contract ? "Sözleşme Düzenle" : "Yeni Sözleşme Ekle"}
       </h1>
 
@@ -233,7 +233,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
       {step === 2 && (
         <div className="space-y-4 rounded-xl p-5" style={cardStyle}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Kritik Maddeler</p>
+            <p className="text-sm font-semibold text-foreground">Kritik Maddeler</p>
             <Button onClick={addClause} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
               <Plus className="w-3 h-3 mr-1" /> Madde Ekle
             </Button>
@@ -244,7 +244,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
             </p>
           )}
           {clauses.map((c, i) => (
-            <div key={i} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+            <div key={i} className="rounded-lg p-3 space-y-2 bg-background border border-border">
               <div className="flex items-center gap-2">
                 <input value={c.madde_no} onChange={e => updateClause(i, "madde_no", e.target.value)} className="w-20 rounded px-2 py-1 text-xs outline-none" style={inputStyle} placeholder="Madde No" />
                 <input value={c.konu} onChange={e => updateClause(i, "konu", e.target.value)} className="flex-1 rounded px-2 py-1 text-xs outline-none" style={inputStyle} placeholder="Konu" />
@@ -265,7 +265,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
       {step === 3 && (
         <div className="space-y-4 rounded-xl p-5" style={cardStyle}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Ödeme Takvimi</p>
+            <p className="text-sm font-semibold text-foreground">Ödeme Takvimi</p>
             <Button onClick={addScheduleItem} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
               <Plus className="w-3 h-3 mr-1" /> Hakediş Ekle
             </Button>
@@ -319,19 +319,19 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
             {analyzing ? (
               <>
                 <div className="w-10 h-10 mx-auto mb-3 border-2 border-t-[#FF6B2B] border-[#1E2732] rounded-full animate-spin" />
-                <p className="text-sm font-medium" style={{ color: "#F1F5F9" }}>AI sözleşmeyi analiz ediyor...</p>
+                <p className="text-sm font-medium text-foreground">AI sözleşmeyi analiz ediyor...</p>
                 <p className="text-xs mt-1" style={{ color: "#64748B" }}>Bu işlem 10-30 saniye sürebilir</p>
               </>
             ) : form.file_name ? (
               <>
                 <Bot className="w-10 h-10 mx-auto mb-3" style={{ color: "#22C55E" }} />
-                <p className="text-sm font-medium" style={{ color: "#F1F5F9" }}>📄 {form.file_name}</p>
+                <p className="text-sm font-medium text-foreground">📄 {form.file_name}</p>
                 <p className="text-xs mt-1" style={{ color: "#64748B" }}>Dosya yüklendi. Farklı bir dosya yüklemek için tıklayın.</p>
               </>
             ) : (
               <>
                 <Upload className="w-10 h-10 mx-auto mb-3" style={{ color: "#FF6B2B" }} />
-                <p className="text-sm font-medium" style={{ color: "#F1F5F9" }}>Sözleşme PDF'ini yükleyin</p>
+                <p className="text-sm font-medium text-foreground">Sözleşme PDF'ini yükleyin</p>
                 <p className="text-xs mt-1" style={{ color: "#64748B" }}>AI otomatik analiz edip bilgileri çıkaracak • Max 10MB</p>
                 <p className="text-[10px] mt-2" style={{ color: "#475569" }}>PDF, DOC, DOCX, TXT desteklenir</p>
               </>

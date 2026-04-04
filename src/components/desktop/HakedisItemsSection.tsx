@@ -118,10 +118,10 @@ function EditableRow({ item, index, onSave, onDelete, onDragStart, onDragOver, o
         <GripVertical className="w-3 h-3 opacity-50 hover:opacity-100" />
       </td>
       <td className="px-2 py-1.5 font-mono" style={{ color: "#64748B" }}>{index + 1}</td>
-      <td className="px-2 py-1.5" style={{ color: "#F1F5F9" }}>{item.description}</td>
+      <td className="px-2 py-1.5 text-foreground">{item.description}</td>
       <td className="px-2 py-1.5" style={{ color: "#94A3B8" }}>{item.unit}</td>
-      <td className="px-2 py-1.5 font-mono text-right" style={{ color: "#F1F5F9" }}>{fmt(item.quantity)}</td>
-      <td className="px-2 py-1.5 font-mono text-right" style={{ color: "#F1F5F9" }}>₺{fmt(item.unit_price)}</td>
+      <td className="px-2 py-1.5 font-mono text-right text-foreground">{fmt(item.quantity)}</td>
+      <td className="px-2 py-1.5 font-mono text-right text-foreground">₺{fmt(item.unit_price)}</td>
       <td className="px-2 py-1.5 font-mono text-right font-semibold" style={{ color: "#FF6B2B" }}>₺{fmt(item.total_price)}</td>
       <td className="px-2 py-1.5">
         <div className="flex items-center gap-1">
@@ -290,9 +290,9 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
 
       {/* Import Progress */}
       {importing && importProgress && (
-        <div className="mb-2 rounded-lg p-2.5 space-y-1.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mb-2 rounded-lg p-2.5 space-y-1.5 bg-background border border-border">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium" style={{ color: "#F1F5F9" }}>
+            <span className="text-[11px] font-medium text-foreground">
               İçe aktarılıyor... ({importProgress.current}/{importProgress.total})
             </span>
             <span className="text-[11px] font-mono" style={{ color: "#FF6B2B" }}>%{progressPercent}</span>
@@ -309,7 +309,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
 
       {/* Import Result Summary */}
       {!importing && importProgress && importProgress.errors.length > 0 && (
-        <div className="mb-2 rounded-lg p-2.5" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mb-2 rounded-lg p-2.5 bg-background border border-border">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3" style={{ color: "#F59E0B" }} />
@@ -335,7 +335,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
             <div className="mt-1.5 max-h-32 overflow-y-auto rounded" style={{ border: "1px solid #1E2732" }}>
               <table className="w-full text-[10px]">
                 <thead>
-                  <tr style={{ backgroundColor: "#161C23" }}>
+                  <tr className="bg-card">
                     <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Satır</th>
                     <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Hata</th>
                     <th className="px-2 py-1 text-left font-semibold" style={{ color: "#64748B" }}>Veri</th>
@@ -362,7 +362,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
         <div className="overflow-x-auto rounded-lg" style={{ border: "1px solid #1E2732" }}>
           <table className="w-full text-[11px]">
             <thead>
-              <tr style={{ backgroundColor: "#0F1419" }}>
+              <tr className="bg-background">
                 {["", "#", "İş Kalemi", "Birim", "Miktar", "Birim Fiyat", "Toplam", ""].map((h, i) => (
                   <th key={`${h}-${i}`} className="text-left px-2 py-1.5 font-semibold" style={{ color: "#64748B", fontSize: 10, borderBottom: "1px solid #1E2732", width: i === 0 ? 24 : undefined }}>{h}</th>
                 ))}
@@ -390,7 +390,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
       )}
 
       {showForm && (
-        <div className="mt-2 rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="mt-2 rounded-lg p-3 space-y-2 bg-background border border-border">
           <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="İş kalemi açıklaması"
             className="w-full rounded-lg px-2.5 py-1.5 text-[12px] outline-none" style={inputStyle} />
           <div className="grid grid-cols-3 gap-2">

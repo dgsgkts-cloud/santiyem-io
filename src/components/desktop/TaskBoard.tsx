@@ -73,7 +73,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
       />
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: "#F1F5F9" }}>Görevlendirme</h3>
+        <h3 className="text-sm font-semibold text-foreground">Görevlendirme</h3>
         {user && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
@@ -88,7 +88,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
 
       {/* Add Form */}
       {showAddForm && (
-        <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732" }}>
+        <div className="rounded-lg p-3 space-y-2 bg-background border border-border">
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
@@ -162,13 +162,12 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
                     key={task.id}
                     draggable
                     onDragStart={() => setDraggedTask(task.id)}
-                    className="rounded-lg p-3 cursor-grab active:cursor-grabbing group"
-                    style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+                    className="rounded-lg p-3 cursor-grab active:cursor-grabbing group bg-card border border-border"
                   >
                     <div className="flex items-start gap-2">
                       <GripVertical className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-30 group-hover:opacity-60" style={{ color: "#64748B" }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium mb-1" style={{ color: "#F1F5F9" }}>{task.title}</p>
+                        <p className="text-[12px] font-medium mb-1 text-foreground">{task.title}</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-[9px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: `${pri.color}15`, color: pri.color }}>
                             <Flag className="w-2.5 h-2.5 inline mr-0.5" />{pri.label}

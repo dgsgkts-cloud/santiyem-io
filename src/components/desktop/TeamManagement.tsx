@@ -24,7 +24,7 @@ const TeamManagement = () => {
     return (
       <div className="text-center py-12">
         <Users className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />
-        <h3 className="text-[15px] font-semibold mb-2" style={{ color: "#F1F5F9" }}>Ekip Yönetimi</h3>
+        <h3 className="text-[15px] font-semibold mb-2 text-foreground">Ekip Yönetimi</h3>
         <p className="text-[12px] mb-4" style={{ color: "#64748B" }}>
           Ekip yönetimi özelliği Ofis planında kullanılabilir.
         </p>
@@ -44,7 +44,7 @@ const TeamManagement = () => {
     return (
       <div className="space-y-5">
         <div>
-          <h3 className="text-[15px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>Ekip Oluştur</h3>
+          <h3 className="text-[15px] font-semibold mb-1 text-foreground">Ekip Oluştur</h3>
           <p className="text-[11px]" style={{ color: "#64748B" }}>
             Ekibinizi oluşturun ve 2 kişiyi davet edin. Tüm projeler ve hakediş kayıtları paylaşılır.
           </p>
@@ -89,7 +89,7 @@ const TeamManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-[15px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>
+          <h3 className="text-[15px] font-semibold mb-1 text-foreground">
             {team.name}
           </h3>
           <p className="text-[11px]" style={{ color: "#64748B" }}>
@@ -111,7 +111,7 @@ const TeamManagement = () => {
       {/* Invite Form */}
       {showInviteForm && (
         <div className="rounded-lg p-4 space-y-3" style={cardStyle}>
-          <p className="text-[12px] font-medium" style={{ color: "#F1F5F9" }}>Yeni Üye Davet Et</p>
+          <p className="text-[12px] font-medium text-foreground">Yeni Üye Davet Et</p>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               value={inviteEmail}
@@ -158,7 +158,7 @@ const TeamManagement = () => {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>
+                <p className="text-[13px] font-medium truncate text-foreground">
                   {member.profile?.full_name || "Bilinmiyor"}
                 </p>
                 <p className="text-[10px] truncate" style={{ color: "#64748B" }}>
@@ -208,7 +208,7 @@ const TeamManagement = () => {
                 <Mail className="w-4 h-4" style={{ color: "#64748B" }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium truncate" style={{ color: "#F1F5F9" }}>{inv.email}</p>
+                <p className="text-[13px] font-medium truncate text-foreground">{inv.email}</p>
                 <p className="text-[10px]" style={{ color: "#64748B" }}>Davet bekliyor • {ROLE_LABELS[inv.role]?.label || inv.role}</p>
               </div>
               <div className="flex items-center gap-1">
