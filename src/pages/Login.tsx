@@ -141,7 +141,7 @@ const Login = () => {
   // Desktop: two-column layout
   if (isLg) {
     return (
-      <div className="min-h-screen flex" style={{ backgroundColor: "#0F1419" }}>
+      <div className="min-h-screen flex login-dark" style={{ backgroundColor: "#0F1419" }}>
         {/* Left - Form */}
         <div className="w-[45%] flex flex-col items-center justify-center px-8 relative">
           <button onClick={() => navigate("/")}
