@@ -86,7 +86,7 @@ const CashChecksTab = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
-              <button onClick={() => deleteCheck.mutate(chk.id)} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+              <button onClick={() => setDeleteTarget({ id: chk.id, name: `Çek No: ${chk.check_no}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
             </div>
           </div>
           <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>Banka: {chk.bank_name}</p>

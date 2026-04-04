@@ -100,7 +100,7 @@ const CashCollectionsTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => deleteCollection.mutate(c.id)} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+                        <button onClick={() => setDeleteTarget({ id: c.id, name: `${c.sender} - ₺${fmt(c.amount)}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
                       </td>
                     </tr>
                   );
