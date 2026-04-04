@@ -120,7 +120,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             {!collapsed && (
-              <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase" style={{ color: "#334155" }}>
+              <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/60">
                 {section.label}
               </p>
             )}
