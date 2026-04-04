@@ -38,6 +38,7 @@ const ProfitabilityCashFlowPage = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [filter, setFilter] = useState<typeof FILTERS[number]>("Tümü");
   const [addModal, setAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [expForm, setExpForm] = useState({
     project_id: "", category: "İşçilik", description: "", amount: "",
     expense_date: new Date().toISOString().slice(0, 10), has_invoice: false,
