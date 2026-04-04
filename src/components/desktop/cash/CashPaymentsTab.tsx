@@ -28,6 +28,7 @@ const CashPaymentsTab = () => {
   const { payments, isLoading, addPayment, deletePayment } = useCashPayments();
   const { projects } = useProjects();
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
     payment_date: new Date().toISOString().slice(0, 10),
     recipient: "",
