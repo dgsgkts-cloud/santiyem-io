@@ -109,7 +109,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       >
         <img src={logo} alt="Şantiyem" className="w-8 h-8 shrink-0" />
         {!collapsed && (
-          <span className="whitespace-nowrap text-[16px] font-bold" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>
+          <span className="whitespace-nowrap text-[16px] font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Şantiyem
           </span>
         )}
