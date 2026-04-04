@@ -155,14 +155,14 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     style={{
                       height: 36,
                       backgroundColor: isActive ? "rgba(255,107,43,0.12)" : "transparent",
-                      color: isLocked ? "#334155" : isActive ? "#FF6B2B" : "#64748B",
+                      color: isLocked ? "hsl(var(--muted-foreground) / 0.5)" : isActive ? "#FF6B2B" : "hsl(var(--muted-foreground))",
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? "0" : "0 10px",
                       gap: collapsed ? 0 : 10,
                       opacity: isLocked ? 0.7 : 1,
                     }}
-                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "#161C23"; e.currentTarget.style.color = isLocked ? "#475569" : "#F1F5F9"; }}}
-                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "#334155" : "#64748B"; }}}
+                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "hsl(var(--muted))"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))"; }}}
+                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground) / 0.5)" : "hsl(var(--muted-foreground))"; }}}
                   >
                     {isActive && !isLocked && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
                     <Icon className="w-4 h-4 shrink-0" />
