@@ -338,19 +338,33 @@ const PricingPanel = () => {
               </div>
 
               <div className="space-y-2">
-                <Button
-                  onClick={() => plan.id === "free" ? undefined : handlePurchase(plan.id)}
-                  disabled={loadingPlan !== null && loadingPlan !== plan.id}
-                  className={`w-full font-semibold h-11 ${plan.btnStyle === "primary" ? "text-white" : "bg-transparent border border-border text-foreground hover:bg-secondary"}`}
-                  style={plan.btnStyle === "primary" ? { backgroundColor: "#FF6B2B" } : undefined}
-                >
-                  {loadingPlan === plan.id && <Loader2 size={16} className="animate-spin mr-1" />}
-                  {plan.btnText}
-                </Button>
-                {plan.id !== "free" && plan.id !== "enterprise" && (
-                  <p className="text-[11px] text-center text-muted-foreground mt-2 leading-relaxed">
-                    14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
-                  </p>
+                {plan.id === "free" ? (
+                  <Button className="w-full font-semibold h-11 bg-transparent border border-border text-foreground hover:bg-secondary">
+                    Ücretsiz Başla
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => handleTrial(plan.id)}
+                      disabled={loadingPlan !== null}
+                      className="w-full font-semibold h-11 text-white"
+                      style={{ backgroundColor: "#FF6B2B" }}
+                    >
+                      {loadingPlan === `trial-${plan.id}` && <Loader2 size={16} className="animate-spin mr-1" />}
+                      14 Gün Ücretsiz Dene
+                    </Button>
+                    <Button
+                      onClick={() => handleDirectPurchase(plan.id)}
+                      disabled={loadingPlan !== null}
+                      className="w-full font-semibold h-11 bg-transparent border border-border text-foreground hover:bg-secondary"
+                    >
+                      {loadingPlan === `direct-${plan.id}` && <Loader2 size={16} className="animate-spin mr-1" />}
+                      Hemen Başla — {(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")}₺/ay
+                    </Button>
+                    <p className="text-[11px] text-center text-muted-foreground mt-1 leading-relaxed">
+                      14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                    </p>
+                  </>
                 )}
               </div>
             </div>
