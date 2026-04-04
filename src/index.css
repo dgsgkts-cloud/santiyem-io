@@ -16,6 +16,25 @@
   --accent-foreground: 222 20% 10% !important;
 }
 
+/* Force dark theme inside landing & login pages even when .light is active */
+.landing-dark,
+.login-dark {
+  --background: 216 28% 7% !important;
+  --foreground: 220 15% 90% !important;
+  --card: 214 22% 11% !important;
+  --card-foreground: 220 15% 90% !important;
+  --popover: 214 22% 11% !important;
+  --popover-foreground: 220 15% 90% !important;
+  --muted: 213 18% 14% !important;
+  --muted-foreground: 215 10% 50% !important;
+  --border: 213 16% 18% !important;
+  --input: 213 16% 18% !important;
+  --secondary: 213 18% 14% !important;
+  --secondary-foreground: 220 15% 90% !important;
+  --accent: 21 100% 55% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap&text=');
 
 @tailwind base;
