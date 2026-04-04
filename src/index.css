@@ -230,3 +230,99 @@
   0% { transform: scale(1) translate(-2%,0); }
   100% { transform: scale(1.1) translate(1%,-1%); }
 }
+
+/* ─── Light Theme: Override hardcoded inline dark colors ─── */
+.light-theme {
+  /* Force override inline background colors */
+  [style*="background-color: rgb(15, 20, 25)"],
+  [style*="background-color: #0F1419"],
+  [style*="backgroundColor: rgb(15, 20, 25)"] {
+    background-color: #F8F9FA !important;
+  }
+
+  [style*="background-color: rgb(22, 28, 35)"],
+  [style*="background-color: #161C23"],
+  [style*="backgroundColor: rgb(22, 28, 35)"] {
+    background-color: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+  }
+
+  [style*="background-color: rgb(30, 39, 50)"],
+  [style*="background-color: #1E2732"],
+  [style*="backgroundColor: rgb(30, 39, 50)"] {
+    background-color: #F1F5F9 !important;
+    border-color: #E5E7EB !important;
+  }
+
+  /* Force override inline text colors */
+  [style*="color: rgb(241, 245, 249)"],
+  [style*="color: #F1F5F9"] {
+    color: #1A1A1A !important;
+  }
+
+  [style*="color: rgb(148, 163, 184)"],
+  [style*="color: #94A3B8"] {
+    color: #4B5563 !important;
+  }
+
+  [style*="color: rgb(100, 116, 139)"],
+  [style*="color: #64748B"] {
+    color: #6B7280 !important;
+  }
+
+  [style*="color: rgb(71, 85, 105)"],
+  [style*="color: #475569"] {
+    color: #9CA3AF !important;
+  }
+
+  [style*="color: rgb(51, 65, 85)"],
+  [style*="color: #334155"] {
+    color: #D1D5DB !important;
+  }
+
+  /* Force override inline border colors */
+  [style*="border-color: #1E2732"],
+  [style*="border: 1px solid rgb(30, 39, 50)"],
+  [style*="border: 1px solid #1E2732"] {
+    border-color: #E5E7EB !important;
+  }
+
+  [style*="border-color: #334155"],
+  [style*="border: 1px solid #334155"] {
+    border-color: #D1D5DB !important;
+  }
+
+  /* Override rgba backgrounds */
+  [style*="rgba(0, 0, 0, 0.6)"] {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Select and input elements */
+  select, input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], textarea {
+    background-color: #FFFFFF !important;
+    color: #1A1A1A !important;
+    border-color: #E5E7EB !important;
+  }
+
+  /* Preserve orange brand color */
+  [style*="color: #FF6B2B"],
+  [style*="color: rgb(255, 107, 43)"] {
+    color: #FF6B2B !important;
+  }
+
+  [style*="background-color: #FF6B2B"],
+  [style*="background-color: rgb(255, 107, 43)"],
+  [style*="backgroundColor: rgb(255, 107, 43)"] {
+    background-color: #FF6B2B !important;
+  }
+
+  /* Preserve status colors */
+  [style*="color: #22C55E"] { color: #22C55E !important; }
+  [style*="color: #EF4444"] { color: #EF4444 !important; }
+  [style*="color: #F59E0B"] { color: #F59E0B !important; }
+  [style*="color: #3B82F6"] { color: #3B82F6 !important; }
+  [style*="color: #10B981"] { color: #10B981 !important; }
+
+  [style*="background-color: #EF4444"] { background-color: #EF4444 !important; }
+  [style*="background-color: #22C55E"] { background-color: #22C55E !important; }
+}
