@@ -50,6 +50,7 @@ const PricingPanel = () => {
   }, [user, yearly]);
 
   const handleDirectPurchase = useCallback(async (planKey: string) => {
+    if (PAYMENT_DISABLED) { setShowPaymentDisabled(true); return; }
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`direct-${planKey}`);
     try {
