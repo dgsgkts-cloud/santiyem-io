@@ -260,13 +260,16 @@ const Index = () => {
 
   // Mobile/Tablet layout (unchanged)
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* ── MOBILE HEADER ── */}
-      <header className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0">
+      <header
+        className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
+        style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
+      >
         <button
           onClick={() => setDrawerOpen(true)}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-          style={{ backgroundColor: "hsl(var(--accent))", color: "white" }}
+          className="flex items-center justify-center rounded-xl transition-colors relative z-[50]"
+          style={{ backgroundColor: "hsl(var(--accent))", color: "white", minWidth: 44, minHeight: 44 }}
         >
           <Menu className="w-5 h-5" />
         </button>
