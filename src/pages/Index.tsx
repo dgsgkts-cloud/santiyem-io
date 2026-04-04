@@ -260,13 +260,16 @@ const Index = () => {
 
   // Mobile/Tablet layout (unchanged)
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* ── MOBILE HEADER ── */}
-      <header className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0">
+      <header
+        className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
+        style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
+      >
         <button
           onClick={() => setDrawerOpen(true)}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-          style={{ backgroundColor: "hsl(var(--accent))", color: "white" }}
+          className="flex items-center justify-center rounded-xl transition-colors relative z-[50]"
+          style={{ backgroundColor: "hsl(var(--accent))", color: "white", minWidth: 44, minHeight: 44 }}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -382,11 +385,12 @@ const Index = () => {
         className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ backgroundColor: "#0F1419" }}
+        style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <button
           onClick={() => setDrawerOpen(false)}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
         >
           <X className="w-5 h-5" />
         </button>

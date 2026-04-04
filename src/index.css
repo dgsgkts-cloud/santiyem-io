@@ -100,9 +100,14 @@
     @apply border-border;
   }
 
+  html {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
