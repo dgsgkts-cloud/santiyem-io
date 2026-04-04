@@ -429,11 +429,12 @@ const CANCEL_REASONS = [
 ];
 
 const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
-  const { usage, isAdmin } = useUser();
+  const { usage, isAdmin, user } = useUser();
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelStep, setCancelStep] = useState<"reason" | "response" | "done">("reason");
   const [otherText, setOtherText] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const info = PLAN_INFO[plan] || PLAN_INFO.free;
   const isFree = plan === "free";
