@@ -93,9 +93,13 @@ const TAB_TITLES: Record<string, string> = {
 const Index = () => {
   const { user, plan, signOut, incrementUsage, canUse } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (location.pathname === "/settings") return "settings";
+    return "dashboard";
+  });
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
