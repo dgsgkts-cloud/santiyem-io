@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useUser, PlanType } from "@/contexts/UserContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
