@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useContracts, Contract, ContractInput } from "@/hooks/useContracts";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
