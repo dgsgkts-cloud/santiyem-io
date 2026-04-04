@@ -58,6 +58,12 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [newNoteContent, setNewNoteContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "milestone" | "hakedis" | "file" | "note";
+    id: string;
+    name: string;
+    fileUrl?: string;
+  } | null>(null);
   const [showAddHakedis, setShowAddHakedis] = useState(false);
   const [newPeriod, setNewPeriod] = useState("");
   const [newAmount, setNewAmount] = useState("");
@@ -97,9 +103,46 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const cardStyle = { backgroundColor: "#161C23", border: "1px solid #1E2732" };
   const labelStyle = { color: "#64748B" };
   const textStyle = { color: "#F1F5F9" };
+  const getNotePreview = (content: string) => content.length > 60 ? `${content.slice(0, 60)}...` : content;
+
+  const handleConfirmDeleteTarget = async () => {
+    if (!deleteTarget) return;
+
+    switch (deleteTarget.type) {
+      case "milestone":
+        await deleteMilestone(deleteTarget.id);
+        break;
+      case "hakedis":
+        await deleteHakedis(deleteTarget.id);
+        break;
+      case "file":
+        if (deleteTarget.fileUrl) await deleteFile(deleteTarget.id, deleteTarget.fileUrl);
+        break;
+      case "note":
+        await deleteNote(deleteTarget.id);
+        break;
+    }
+  };
+
+  const deleteTargetTitle = deleteTarget?.type === "milestone"
+    ? "Kilometre Taşını Sil"
+    : deleteTarget?.type === "hakedis"
+      ? "Hakedişi Sil"
+      : deleteTarget?.type === "file"
+        ? "Dosyayı Sil"
+        : deleteTarget?.type === "note"
+          ? "Notu Sil"
+          : "Kaydı Sil";
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDeleteTarget}
+        title={deleteTargetTitle}
+        itemName={deleteTarget?.name}
+      />
       {/* Back + Header */}
       <div>
         <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] mb-3 transition-colors" style={labelStyle}>
@@ -268,7 +311,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   </div>
                   <span className="text-[10px] lg:text-[11px] font-mono shrink-0" style={labelStyle}>{m.milestone_date}</span>
                   {user && (
-                    <button onClick={() => deleteMilestone(m.id)} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#EF4444" }}>
+                    <button onClick={() => setDeleteTarget({ type: "milestone", id: m.id, name: m.title })} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#EF4444" }}>
                       <Trash2 className="w-3 h-3" />
                     </button>
                   )}
@@ -431,7 +474,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => deleteHakedis(h.id)} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                        <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -472,7 +515,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <div className="flex items-center justify-between text-[11px]">
                     <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</span></span>
                     <span style={labelStyle}>Net: <span className="font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</span></span>
-                    <button onClick={() => deleteHakedis(h.id)} style={{ color: "#64748B" }}><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} style={{ color: "#64748B" }}><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               ))}
@@ -530,7 +573,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
                     <FileDown className="w-3.5 h-3.5" />
                   </a>
-                  <button onClick={() => deleteFile(f.id, f.file_url)} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
+                  <button onClick={() => setDeleteTarget({ type: "file", id: f.id, name: f.file_name, fileUrl: f.file_url })} className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: "#64748B" }}>
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -699,7 +742,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-[12px] lg:text-[13px] whitespace-pre-wrap flex-1" style={textStyle}>{note.content}</p>
                   {user && (
-                    <button onClick={() => deleteNote(note.id)} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" style={{ color: "#EF4444" }}>
+                    <button onClick={() => setDeleteTarget({ type: "note", id: note.id, name: getNotePreview(note.content) })} className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" style={{ color: "#EF4444" }}>
                       <Trash2 className="w-3 h-3" />
                     </button>
                   )}

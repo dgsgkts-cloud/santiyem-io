@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Building2, Plus, Trash2, Eye, MapPin, Tag, TreePine } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 interface ListingsManagerProps {
   onNewListing: () => void;
@@ -7,6 +9,7 @@ interface ListingsManagerProps {
 
 const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
   const { listings, loading, deleteListing } = useListings();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   if (loading) {
     return (
@@ -37,15 +40,25 @@ const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
   }
 
   return (
-    <div className="space-y-3">
-      {listings.map((listing) => {
-        const isLand = listing.listing_type === "arsa";
-        return (
-          <div
-            key={listing.id}
-            className="rounded-xl p-4 flex items-start gap-4 transition-all"
-            style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
-          >
+    <>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) await deleteListing(deleteTarget.id);
+        }}
+        title="İlanı Sil"
+        itemName={deleteTarget?.name}
+      />
+      <div className="space-y-3">
+        {listings.map((listing) => {
+          const isLand = listing.listing_type === "arsa";
+          return (
+            <div
+              key={listing.id}
+              className="rounded-xl p-4 flex items-start gap-4 transition-all"
+              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}
+            >
             {/* Icon */}
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: isLand ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)" }}>
               {isLand ? <TreePine className="w-5 h-5" style={{ color: "#10B981" }} /> : <Building2 className="w-5 h-5" style={{ color: "#3B82F6" }} />}
@@ -83,7 +96,7 @@ const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
               <button
-                onClick={() => deleteListing(listing.id)}
+                onClick={() => setDeleteTarget({ id: listing.id, name: listing.title || "Başlıksız ilan" })}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                 style={{ color: "#64748B" }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
@@ -92,10 +105,11 @@ const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
-        );
-      })}
-    </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 };
 

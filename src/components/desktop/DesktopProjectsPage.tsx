@@ -6,6 +6,7 @@ import {
 import { PROJECTS, Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
 import AddProjectModal from "./AddProjectModal";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects, UserProject } from "@/hooks/useProjects";
 import { useUser } from "@/contexts/UserContext";
 
@@ -48,6 +49,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [hiddenIds, setHiddenIds] = useState<string[]>(getHiddenProjects);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleBack = () => {
     setSelectedProjectId(null);
@@ -98,6 +100,16 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) handleDeleteProject(deleteTarget.id);
+        }}
+        title="Projeyi Sil"
+        itemName={deleteTarget?.name}
+        extraWarning="Projeye ait tüm iş kalemleri, hakedişler ve şantiye kayıtları da silinecektir."
+      />
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {stats.map((s) => (
@@ -171,7 +183,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                   </td>
                   <td className="px-5 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400" style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400" style={{ color: "#64748B" }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                   </td>
@@ -191,7 +203,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} style={{ color: "#64748B" }}>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} style={{ color: "#64748B" }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                   </div>
@@ -214,7 +226,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} style={{ color: "#64748B" }}>
+                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} style={{ color: "#64748B" }}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

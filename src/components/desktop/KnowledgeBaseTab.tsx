@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Upload, FileText, Trash2, CheckCircle, Loader2, AlertCircle, BookOpen } from "lucide-react";
 import { useDocuments, Document } from "@/hooks/useDocuments";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 const SUGGESTED_DOCS = [
   { name: "TBDY 2018", desc: "Türkiye Bina Deprem Yönetmeliği" },
@@ -27,6 +28,7 @@ const KnowledgeBaseTab = () => {
   const { documents, loading, uploading, uploadDocument, deleteDocument } = useDocuments();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -45,6 +47,15 @@ const KnowledgeBaseTab = () => {
 
   return (
     <div className="space-y-6">
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) await deleteDocument(deleteTarget.id);
+        }}
+        title="Belgeyi Sil"
+        itemName={deleteTarget?.name}
+      />
       <div>
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1" style={{ color: "#F1F5F9" }}>
           📚 AI Bilgi Bankası
@@ -133,7 +144,7 @@ const KnowledgeBaseTab = () => {
                     </span>
                     {!(doc as any).is_global && (
                       <button
-                        onClick={() => deleteDocument(doc.id)}
+                        onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: "#64748B" }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; }}
