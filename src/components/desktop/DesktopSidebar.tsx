@@ -168,7 +168,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   return (
                     <Tooltip key={item.id} delayDuration={0}>
                       <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                      <TooltipContent side="right" className="text-xs" style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #2A3441" }}>
+                      <TooltipContent side="right" className="text-xs" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
                         {item.label}
                       </TooltipContent>
                     </Tooltip>
@@ -240,7 +240,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   </div>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #2A3441" }}>
+              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
                 {displayName}
               </TooltipContent>
             </Tooltip>
@@ -280,7 +280,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   <LogOut className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #2A3441" }}>
+              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
                 {user ? "Çıkış Yap" : "Giriş Yap"}
               </TooltipContent>
             </Tooltip>

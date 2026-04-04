@@ -9,7 +9,7 @@ const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const inputStyle = { backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" };
+const inputStyle = {  };
 
 interface ImportError {
   row: number;
@@ -332,7 +332,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
             <span style={{ color: "#64748B" }}>Toplam: {importProgress.total} satır</span>
           </div>
           {showErrors && (
-            <div className="mt-1.5 max-h-32 overflow-y-auto rounded" style={{ border: "1px solid #1E2732" }}>
+            <div className="mt-1.5 max-h-32 overflow-y-auto rounded">
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="bg-card">
@@ -359,7 +359,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
       {loading && <p className="text-[11px]" style={{ color: "#64748B" }}>Yükleniyor...</p>}
 
       {items.length > 0 && (
-        <div className="overflow-x-auto rounded-lg" style={{ border: "1px solid #1E2732" }}>
+        <div className="overflow-x-auto rounded-lg">
           <table className="w-full text-[11px]">
             <thead>
               <tr className="bg-background">
@@ -379,7 +379,7 @@ export default function HakedisItemsSection({ hakedisId }: { hakedisId: string }
                   isDragOver={dragOverIndex === i && dragIndex !== i}
                 />
               ))}
-              <tr style={{ backgroundColor: "#0F1419", borderTop: "1px solid #1E2732" }}>
+              <tr style={{ borderTop: "1px solid #1E2732" }}>
                 <td colSpan={6} className="px-2 py-1.5 text-right font-semibold" style={{ color: "#94A3B8" }}>TOPLAM</td>
                 <td className="px-2 py-1.5 font-mono text-right font-bold" style={{ color: "#FF6B2B" }}>₺{fmt(total)}</td>
                 <td />

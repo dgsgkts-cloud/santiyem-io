@@ -182,7 +182,7 @@ const ProfitabilityCashFlowPage = () => {
             { label: "Toplam Ciro", value: totals.ciro, color: "#FF6B2B", icon: TrendingUp, sub: `↑ Toplam hakediş geliri` },
             { label: "Toplam Gider", value: totals.gider, color: "#EF4444", icon: TrendingDown, sub: `Tüm proje giderleri` },
             { label: "Net Kar", value: totals.kar, color: "#22C55E", icon: DollarSign, sub: `Kar marjı: %${totals.marj.toFixed(0)}` },
-            { label: "Bekleyen Tahsilat", value: totals.bekleyenTahsilat, color: "#F1F5F9", icon: Wallet, sub: "Ödenmemiş hakedişler" },
+            { label: "Bekleyen Tahsilat", value: totals.bekleyenTahsilat, icon: Wallet, sub: "Ödenmemiş hakedişler" },
           ].map((c, i) => (
             <div key={i} className="rounded-xl p-4 bg-card border border-border">
               <div className="flex items-center gap-2 mb-2">
@@ -213,7 +213,7 @@ const ProfitabilityCashFlowPage = () => {
             <BarChart data={monthlyData}>
               <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} />
               <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickFormatter={v => formatCurrency(v)} />
-              <ReTooltip contentStyle={{ backgroundColor: "#1E2732", border: "none", borderRadius: 8, color: "#F1F5F9" }} formatter={(v: number) => fmtFull(v)} />
+              <ReTooltip contentStyle={{ backgroundColor: "#1E2732", border: "none", borderRadius: 8 }} formatter={(v: number) => fmtFull(v)} />
               <Bar dataKey="gelir" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Hakediş Geliri" />
               <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} name="Gider" />
               <Line type="monotone" dataKey="kar" stroke="#22C55E" strokeWidth={2} name="Net Kar" dot={false} />
@@ -323,7 +323,7 @@ const ProfitabilityCashFlowPage = () => {
         {/* 4 summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Sözleşme", value: selectedProject.contract, color: "#F1F5F9" },
+            { label: "Sözleşme", value: selectedProject.contract },
             { label: "Toplam Hakediş", value: selectedProject.hakedisTotal, color: "#3B82F6" },
             { label: "Toplam Gider", value: selectedProject.expenseTotal, color: "#EF4444" },
             { label: "Net Kar", value: selectedProject.netKar, color: karColor(marj) },
@@ -531,7 +531,7 @@ const ProfitabilityCashFlowPage = () => {
             <AreaChart data={forecastData}>
               <XAxis dataKey="week" tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} />
               <YAxis tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} tickFormatter={v => formatCurrency(v)} />
-              <ReTooltip contentStyle={{ backgroundColor: "#1E2732", border: "none", borderRadius: 8, color: "#F1F5F9" }} formatter={(v: number) => fmtFull(v)} />
+              <ReTooltip contentStyle={{ backgroundColor: "#1E2732", border: "none", borderRadius: 8 }} formatter={(v: number) => fmtFull(v)} />
               <Area type="monotone" dataKey="tahsilat" fill="#22C55E20" stroke="#22C55E" name="Beklenen Tahsilat" />
               <Area type="monotone" dataKey="odeme" fill="#EF444420" stroke="#EF4444" name="Beklenen Ödeme" />
               <Line type="monotone" dataKey="net" stroke="#3B82F6" strokeWidth={2} name="Nakit Pozisyonu" dot={false} />
@@ -577,7 +577,7 @@ interface AddExpenseModalProps {
 
 const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, saving }: AddExpenseModalProps) => (
   <Dialog open={open} onOpenChange={onClose}>
-    <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+    <DialogContent className="max-w-md">
       <DialogHeader>
         <DialogTitle className="text-foreground">Gider Ekle</DialogTitle>
       </DialogHeader>
@@ -585,7 +585,7 @@ const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, savin
         <div>
           <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Proje *</label>
           <select value={form.project_id} onChange={e => setForm((f: any) => ({ ...f, project_id: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+            className="w-full px-3 py-2 rounded-lg text-sm">
             <option value="">Proje seçin...</option>
             {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
@@ -593,27 +593,27 @@ const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, savin
         <div>
           <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Kategori</label>
           <select value={form.category} onChange={e => setForm((f: any) => ({ ...f, category: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+            className="w-full px-3 py-2 rounded-lg text-sm">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Açıklama</label>
           <input value={form.description} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+            className="w-full px-3 py-2 rounded-lg text-sm"
             placeholder="Gider açıklaması" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺) *</label>
             <input type="number" value={form.amount} onChange={e => setForm((f: any) => ({ ...f, amount: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+              className="w-full px-3 py-2 rounded-lg text-sm"
               placeholder="0" />
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Tarih</label>
             <input type="date" value={form.expense_date} onChange={e => setForm((f: any) => ({ ...f, expense_date: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              className="w-full px-3 py-2 rounded-lg text-sm" />
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -624,14 +624,13 @@ const AddExpenseModal = ({ open, onClose, form, setForm, onSave, projects, savin
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Fatura No</label>
             <input value={form.invoice_no} onChange={e => setForm((f: any) => ({ ...f, invoice_no: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              className="w-full px-3 py-2 rounded-lg text-sm" />
           </div>
         )}
         <div>
           <label className="text-xs mb-1 block" style={{ color: "#94A3B8" }}>Not (opsiyonel)</label>
           <textarea value={form.note} onChange={e => setForm((f: any) => ({ ...f, note: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg text-sm resize-none" rows={2}
-            style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+            className="w-full px-3 py-2 rounded-lg text-sm resize-none" rows={2} />
         </div>
         <button onClick={onSave} disabled={saving}
           className="w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"

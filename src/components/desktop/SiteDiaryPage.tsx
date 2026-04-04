@@ -176,7 +176,6 @@ const SiteDiaryPage = () => {
               value={selectedProjectId}
               onChange={e => setSelectedProjectId(e.target.value)}
               className="flex-1 sm:w-[220px] h-9 rounded-lg px-3 text-sm"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
             >
               <option value="">Proje seçin...</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -185,7 +184,7 @@ const SiteDiaryPage = () => {
               <button
                 onClick={() => setShowPeriodModal(true)}
                 className="h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors"
-                style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+                style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
               >
                 <FileDown className="w-4 h-4" /> Dönem Raporu
               </button>
@@ -213,12 +212,12 @@ const SiteDiaryPage = () => {
                 <div>
                   <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Başlangıç</label>
                   <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)}
-                    className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                    className="w-full h-9 rounded-lg px-3 text-sm" />
                 </div>
                 <div>
                   <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Bitiş</label>
                   <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)}
-                    className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                    className="w-full h-9 rounded-lg px-3 text-sm" />
                 </div>
               </div>
               <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#94A3B8" }}>
@@ -283,7 +282,6 @@ const SiteDiaryPage = () => {
                   value={selectedProjectId}
                   onChange={e => setSelectedProjectId(e.target.value)}
                   className="w-full max-w-xs h-11 rounded-xl px-4 text-sm mb-4 cursor-pointer"
-                  style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
                 >
                   <option value="">Proje seçin...</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -401,7 +399,7 @@ const SiteDiaryPage = () => {
                 });
               }}
               className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5"
-              style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+              style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
             >
               <FileDown className="w-3.5 h-3.5" /> PDF İndir
             </button>
@@ -560,11 +558,11 @@ const SiteDiaryPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Tarih</label>
-            <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+            <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full h-9 rounded-lg px-3 text-sm" />
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: "#64748B" }}>Sıcaklık (°C)</label>
-            <input type="number" value={formTemp} onChange={e => setFormTemp(e.target.value)} placeholder="ör: 22" className="w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+            <input type="number" value={formTemp} onChange={e => setFormTemp(e.target.value)} placeholder="ör: 22" className="w-full h-9 rounded-lg px-3 text-sm" />
           </div>
         </div>
 
@@ -592,7 +590,7 @@ const SiteDiaryPage = () => {
             ))}
           </div>
           {formWorkStatus === "stopped" && (
-            <input value={formStopReason} onChange={e => setFormStopReason(e.target.value)} placeholder="Neden?" className="mt-2 w-full h-9 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #EF4444", color: "#F1F5F9" }} />
+            <input value={formStopReason} onChange={e => setFormStopReason(e.target.value)} placeholder="Neden?" className="mt-2 w-full h-9 rounded-lg px-3 text-sm" style={{ border: "1px solid #EF4444" }} />
           )}
         </div>
       </div>
@@ -606,10 +604,10 @@ const SiteDiaryPage = () => {
           </div>
           {formCrews.map((crew, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <input value={crew.team} onChange={e => { const c = [...formCrews]; c[i].team = e.target.value; setFormCrews(c); }} placeholder="Ekip adı" className="col-span-4 h-8 rounded-lg px-2 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input type="number" value={crew.count || ""} onChange={e => { const c = [...formCrews]; c[i].count = parseInt(e.target.value) || 0; setFormCrews(c); }} placeholder="Kişi" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input type="number" value={crew.hours || ""} onChange={e => { const c = [...formCrews]; c[i].hours = parseInt(e.target.value) || 0; setFormCrews(c); }} placeholder="Saat" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input value={crew.note} onChange={e => { const c = [...formCrews]; c[i].note = e.target.value; setFormCrews(c); }} placeholder="Not" className="col-span-3 h-8 rounded-lg px-2 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              <input value={crew.team} onChange={e => { const c = [...formCrews]; c[i].team = e.target.value; setFormCrews(c); }} placeholder="Ekip adı" className="col-span-4 h-8 rounded-lg px-2 text-xs" />
+              <input type="number" value={crew.count || ""} onChange={e => { const c = [...formCrews]; c[i].count = parseInt(e.target.value) || 0; setFormCrews(c); }} placeholder="Kişi" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" />
+              <input type="number" value={crew.hours || ""} onChange={e => { const c = [...formCrews]; c[i].hours = parseInt(e.target.value) || 0; setFormCrews(c); }} placeholder="Saat" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" />
+              <input value={crew.note} onChange={e => { const c = [...formCrews]; c[i].note = e.target.value; setFormCrews(c); }} placeholder="Not" className="col-span-3 h-8 rounded-lg px-2 text-xs" />
               <button onClick={() => setFormCrews(c => c.filter((_, j) => j !== i))} className="col-span-1 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10"><XCircle className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
             </div>
           ))}
@@ -623,14 +621,14 @@ const SiteDiaryPage = () => {
       {isQuickMode && (
         <div className="rounded-xl p-4 bg-card border border-border">
           <h3 className="text-sm font-semibold mb-3 text-foreground">👷 İşçi Sayısı</h3>
-          <input type="number" value={formCrews[0]?.count || ""} onChange={e => setFormCrews([{ team: "Genel", count: parseInt(e.target.value) || 0, hours: 8, note: "" }])} placeholder="Toplam işçi sayısı" className="w-full h-10 rounded-lg px-3 text-sm" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+          <input type="number" value={formCrews[0]?.count || ""} onChange={e => setFormCrews([{ team: "Genel", count: parseInt(e.target.value) || 0, hours: 8, note: "" }])} placeholder="Toplam işçi sayısı" className="w-full h-10 rounded-lg px-3 text-sm" />
         </div>
       )}
 
       {/* Section 3: Work done */}
       <div className="rounded-xl p-4 bg-card border border-border">
         <h3 className="text-sm font-semibold mb-2 text-foreground">🔨 Yapılan İşler</h3>
-        <textarea value={formWorkDone} onChange={e => setFormWorkDone(e.target.value)} placeholder="Zemin kat güney cephe kalıpları tamamlandı. Kolon demiri bağlama işlemi başladı..." rows={isQuickMode ? 2 : 4} className="w-full rounded-lg px-3 py-2 text-sm resize-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+        <textarea value={formWorkDone} onChange={e => setFormWorkDone(e.target.value)} placeholder="Zemin kat güney cephe kalıpları tamamlandı. Kolon demiri bağlama işlemi başladı..." rows={isQuickMode ? 2 : 4} className="w-full rounded-lg px-3 py-2 text-sm resize-none" />
       </div>
 
       {/* Section 4: Materials (skip in quick mode) */}
@@ -642,12 +640,12 @@ const SiteDiaryPage = () => {
           </div>
           {formMaterials.map((mat, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <input value={mat.name} onChange={e => { const m = [...formMaterials]; m[i].name = e.target.value; setFormMaterials(m); }} placeholder="Malzeme" className="col-span-4 h-8 rounded-lg px-2 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input type="number" value={mat.quantity || ""} onChange={e => { const m = [...formMaterials]; m[i].quantity = parseFloat(e.target.value) || 0; setFormMaterials(m); }} placeholder="Miktar" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <select value={mat.unit} onChange={e => { const m = [...formMaterials]; m[i].unit = e.target.value; setFormMaterials(m); }} className="col-span-2 h-8 rounded-lg px-1 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+              <input value={mat.name} onChange={e => { const m = [...formMaterials]; m[i].name = e.target.value; setFormMaterials(m); }} placeholder="Malzeme" className="col-span-4 h-8 rounded-lg px-2 text-xs" />
+              <input type="number" value={mat.quantity || ""} onChange={e => { const m = [...formMaterials]; m[i].quantity = parseFloat(e.target.value) || 0; setFormMaterials(m); }} placeholder="Miktar" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" />
+              <select value={mat.unit} onChange={e => { const m = [...formMaterials]; m[i].unit = e.target.value; setFormMaterials(m); }} className="col-span-2 h-8 rounded-lg px-1 text-xs">
                 {["m³", "ton", "kg", "adet", "m²", "m"].map(u => <option key={u} value={u}>{u}</option>)}
               </select>
-              <select value={mat.direction} onChange={e => { const m = [...formMaterials]; m[i].direction = e.target.value; setFormMaterials(m); }} className="col-span-3 h-8 rounded-lg px-1 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+              <select value={mat.direction} onChange={e => { const m = [...formMaterials]; m[i].direction = e.target.value; setFormMaterials(m); }} className="col-span-3 h-8 rounded-lg px-1 text-xs">
                 <option value="Giriş">Giriş</option>
                 <option value="Çıkış">Çıkış</option>
               </select>
@@ -666,9 +664,9 @@ const SiteDiaryPage = () => {
           </div>
           {formMachines.map((mac, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <input value={mac.name} onChange={e => { const m = [...formMachines]; m[i].name = e.target.value; setFormMachines(m); }} placeholder="Makine" className="col-span-5 h-8 rounded-lg px-2 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input type="number" value={mac.hours || ""} onChange={e => { const m = [...formMachines]; m[i].hours = parseInt(e.target.value) || 0; setFormMachines(m); }} placeholder="Saat" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
-              <input value={mac.note} onChange={e => { const m = [...formMachines]; m[i].note = e.target.value; setFormMachines(m); }} placeholder="Not" className="col-span-4 h-8 rounded-lg px-2 text-xs" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              <input value={mac.name} onChange={e => { const m = [...formMachines]; m[i].name = e.target.value; setFormMachines(m); }} placeholder="Makine" className="col-span-5 h-8 rounded-lg px-2 text-xs" />
+              <input type="number" value={mac.hours || ""} onChange={e => { const m = [...formMachines]; m[i].hours = parseInt(e.target.value) || 0; setFormMachines(m); }} placeholder="Saat" className="col-span-2 h-8 rounded-lg px-2 text-xs text-center" />
+              <input value={mac.note} onChange={e => { const m = [...formMachines]; m[i].note = e.target.value; setFormMachines(m); }} placeholder="Not" className="col-span-4 h-8 rounded-lg px-2 text-xs" />
               <button onClick={() => setFormMachines(m => m.filter((_, j) => j !== i))} className="col-span-1 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10"><XCircle className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
             </div>
           ))}
@@ -721,7 +719,7 @@ const SiteDiaryPage = () => {
       {!isQuickMode && (
         <div className="rounded-xl p-4 bg-card border border-border">
           <h3 className="text-sm font-semibold mb-2 text-foreground">📝 Genel Not</h3>
-          <textarea value={formGeneralNote} onChange={e => setFormGeneralNote(e.target.value)} placeholder="Yarın yapılacaklar, dikkat edilmesi gerekenler..." rows={3} className="w-full rounded-lg px-3 py-2 text-sm resize-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+          <textarea value={formGeneralNote} onChange={e => setFormGeneralNote(e.target.value)} placeholder="Yarın yapılacaklar, dikkat edilmesi gerekenler..." rows={3} className="w-full rounded-lg px-3 py-2 text-sm resize-none" />
         </div>
       )}
 

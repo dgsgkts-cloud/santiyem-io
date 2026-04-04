@@ -149,7 +149,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         itemName={deleteTarget?.title}
       />
       {/* Left - Chat history */}
-      <div className="w-[240px] shrink-0 flex flex-col" style={{ backgroundColor: "#0F1419", borderRight: "1px solid #1E2732" }}>
+      <div className="w-[240px] shrink-0 flex flex-col" style={{ borderRight: "1px solid #1E2732" }}>
         <div className="p-3">
           <button
             onClick={handleReset}
@@ -162,7 +162,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           </button>
         </div>
         <div className="px-3 pb-2">
-          <div className="flex items-center gap-2 rounded-lg px-2.5" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", height: 32 }}>
+          <div className="flex items-center gap-2 rounded-lg px-2.5" style={{ height: 32 }}>
             <Search className="w-3.5 h-3.5" style={{ color: "#475569" }} />
             <input
               value={searchQuery}
@@ -266,13 +266,13 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         </div>
 
         <UsageLimitBanner type="aiQuestions" />
-        <div className="shrink-0" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#161C23" }}>
+        <div className="shrink-0" style={{ borderTop: "1px solid #1E2732" }}>
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </div>
       </div>
 
       {/* Right - Context panel */}
-      <div className="w-[280px] shrink-0 flex flex-col p-4 space-y-4" style={{ backgroundColor: "#0F1419", borderLeft: "1px solid #1E2732" }}>
+      <div className="w-[280px] shrink-0 flex flex-col p-4 space-y-4" style={{ borderLeft: "1px solid #1E2732" }}>
         <h3 className="text-[14px] font-semibold text-foreground">Bu Sohbette</h3>
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Konular</p>
@@ -312,7 +312,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         </div>
         <button
           className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto transition-colors duration-150"
-          style={{ height: 32, border: "1px solid #1E2732", color: "#64748B" }}
+          style={{ height: 32, color: "#64748B" }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
         >

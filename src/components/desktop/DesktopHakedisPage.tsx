@@ -348,7 +348,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         <div className="flex items-center gap-2">
           {hakedisler.length > 0 && (
             <>
-              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}>
+              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732" }}>
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
               <button
@@ -386,7 +386,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Sözleşme Tutarı", value: contract > 0 ? fmt(contract) : "—", color: "#64748B" },
-          { label: "Toplam Hakediş", value: fmt(totalAmount), color: "#F1F5F9" },
+          { label: "Toplam Hakediş", value: fmt(totalAmount) },
           { label: "Tahsil Edilen", value: fmt(collected), color: "#22C55E" },
           { label: pending > 0 ? "Bekleyen" : "Gecikmiş", value: fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0)), color: overdueItems.length > 0 ? "#EF4444" : "#F59E0B" },
         ].map(s => (
@@ -413,7 +413,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       )}
 
       {/* AI Analysis */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#161C23", border: "1px solid rgba(255,107,43,0.3)" }}>
+      <div className="rounded-xl p-4" style={{ border: "1px solid rgba(255,107,43,0.3)" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />
@@ -452,7 +452,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               <ComposedChart data={chartData}>
                 <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 10 }} />
                 <YAxis tick={{ fill: "#64748B", fontSize: 10 }} tickFormatter={v => fmtShort(v)} />
-                <Tooltip contentStyle={{ backgroundColor: "#1C242D", border: "1px solid #2D3748", borderRadius: 8, fontSize: 12 }} labelStyle={{ color: "#F1F5F9" }} formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]} />
+                <Tooltip contentStyle={{ backgroundColor: "#1C242D", border: "1px solid #2D3748", borderRadius: 8, fontSize: 12 }} labelStyle={{  }} formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]} />
                 <Legend formatter={v => v === "hakedis" ? "Hakediş" : v === "tahsil" ? "Tahsilat" : "Gecikmiş"} />
                 <Bar dataKey="hakedis" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="tahsil" fill="#22C55E" radius={[4, 4, 0, 0]} />
@@ -488,7 +488,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                     <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: enriched.color }} />
                     {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1" style={{ backgroundColor: "#1E2732" }} />}
                   </div>
-                  <div className="flex-1 mb-4 rounded-lg p-3" style={{ backgroundColor: "#0F1419", borderLeft: `3px solid ${enriched.color}`, border: "1px solid #1E2732" }}>
+                  <div className="flex-1 mb-4 rounded-lg p-3" style={{ borderLeft: `3px solid ${enriched.color}` }}>
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
@@ -624,18 +624,18 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <div>
               <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Dönem</label>
               <input value={formPeriod} onChange={e => setFormPeriod(e.target.value)} placeholder="ör: Ocak 2026"
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
                 <input type="number" value={formAmount} onChange={e => setFormAmount(e.target.value)} placeholder="850000"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
               </div>
               <div>
                 <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>KDV Oranı (%)</label>
                 <input type="number" value={formKdvRate} onChange={e => setFormKdvRate(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
               </div>
             </div>
             <button onClick={handleAdd} disabled={!formPeriod || !formAmount}
@@ -658,12 +658,12 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <div>
               <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Beklenen Ödeme Tarihi</label>
               <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
             </div>
             <div>
               <label className="text-[11px] font-semibold mb-1 block" style={{ color: "#94A3B8" }}>Kaç gün önce uyarılsın?</label>
               <select value={reminderDays} onChange={e => setReminderDays(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" style={{ backgroundColor: "#0F1419", color: "#F1F5F9", border: "1px solid #1E2732" }}>
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none">
                 <option value="3">3 gün önce</option>
                 <option value="1">1 gün önce</option>
                 <option value="0">Vade günü</option>
@@ -724,9 +724,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                   <p className="text-[11px] font-semibold" style={{ color: colors[ki] }}>{labels[ki]}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <input placeholder="Adı Soyadı" value={pdfSig[key]?.name || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: e.target.value, title: p[key]?.title || "" } }))}
-                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" />
                     <input placeholder="Ünvanı" value={pdfSig[key]?.title || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: p[key]?.name || "", title: e.target.value } }))}
-                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" style={{ backgroundColor: "#161C23", color: "#F1F5F9", border: "1px solid #1E2732" }} />
+                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" />
                   </div>
                 </div>
               );

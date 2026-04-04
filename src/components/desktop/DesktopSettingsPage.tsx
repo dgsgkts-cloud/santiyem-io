@@ -175,7 +175,7 @@ const CompanyProfileTab = () => {
         <label className="text-[12px] font-semibold mb-2 block" style={{ color: "#94A3B8" }}>Firma Logosu</label>
         {cp.logoDataUrl ? (
           <div className="space-y-2">
-            <div className="rounded-xl p-4 flex items-center justify-center" style={{ backgroundColor: "#FFF", border: "1px solid #1E2732", minHeight: 80 }}>
+            <div className="rounded-xl p-4 flex items-center justify-center" style={{ backgroundColor: "#FFF", minHeight: 80 }}>
               <img src={cp.logoDataUrl} alt="Logo" style={{ maxHeight: 60, maxWidth: "100%" }} />
             </div>
             <button
@@ -268,7 +268,6 @@ const CompanyField = ({ label, value, onChange, multiline, placeholder }: { labe
         placeholder={placeholder}
         rows={2}
         className="w-full rounded-lg px-3 py-2 text-[13px] outline-none transition-colors resize-none"
-        style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
         onFocus={e => { e.currentTarget.style.borderColor = "#FF6B2B"; }}
         onBlur={e => { e.currentTarget.style.borderColor = "#1E2732"; }}
       />
@@ -278,7 +277,7 @@ const CompanyField = ({ label, value, onChange, multiline, placeholder }: { labe
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full rounded-lg px-3 text-[13px] outline-none transition-colors"
-        style={{ height: 36, backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+        style={{ height: 36 }}
         onFocus={e => { e.currentTarget.style.borderColor = "#FF6B2B"; }}
         onBlur={e => { e.currentTarget.style.borderColor = "#1E2732"; }}
       />
@@ -292,7 +291,7 @@ const FormField = ({ label, value }: { label: string; value: string }) => (
     <input
       defaultValue={value}
       className="w-full rounded-lg px-3 text-[13px] outline-none transition-colors duration-150"
-      style={{ height: 36, backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+      style={{ height: 36 }}
       onFocus={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(255,107,43,0.15)"; }}
       onBlur={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.boxShadow = "none"; }}
     />
@@ -429,7 +428,7 @@ const NotificationsTab = () => {
               onBlur={() => save({ whatsapp_number: prefs.whatsapp_number })}
               placeholder="+90 5XX XXX XX XX"
               className="w-full rounded-lg px-3 text-[13px] outline-none"
-              style={{ height: 36, backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
+              style={{ height: 36 }}
             />
           </div>
         )}
@@ -529,7 +528,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       </div>
 
       {/* Current Plan Card */}
-      <div className="rounded-xl p-5" style={{ backgroundColor: "#0F1419", border: isPaid ? "1px solid #FF6B2B40" : "1px solid #1E2732" }}>
+      <div className="rounded-xl p-5" style={{ border: isPaid ? "1px solid #FF6B2B40" : "1px solid #1E2732" }}>
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -602,7 +601,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleUpgrades.map(card => (
               <div key={card.plan} className="rounded-xl p-4 flex flex-col" style={{
-                backgroundColor: "#0F1419",
+                ,
                 border: card.highlight ? "1px solid #FF6B2B60" : "1px solid #1E2732",
               }}>
                 <div className="flex items-center gap-2 mb-2">
@@ -678,7 +677,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
 
       {/* Cancel Modal */}
       <Dialog open={cancelModal} onOpenChange={setCancelModal}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground">
               {cancelStep === "done" ? "Abonelik İptal Edildi" : "Aboneliğini İptal Etmek İstediğine Emin Misin?"}
@@ -713,8 +712,7 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 {(resp as any).showInput && (
                   <textarea value={otherText} onChange={e => setOtherText(e.target.value)}
                     placeholder="Platform adını yazın..."
-                    rows={2} className="w-full rounded-lg px-3 py-2 text-xs resize-none"
-                    style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                    rows={2} className="w-full rounded-lg px-3 py-2 text-xs resize-none" />
                 )}
                 <div className="flex gap-2">
                   <button onClick={() => setCancelModal(false)}

@@ -94,7 +94,6 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Görev başlığı"
             className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-            style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
           />
           <div className="flex flex-wrap gap-2">
             {members.length > 0 && (
@@ -102,7 +101,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
                 value={newAssignee}
                 onChange={(e) => setNewAssignee(e.target.value)}
                 className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-                style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#94A3B8" }}
+                style={{ color: "#94A3B8" }}
               >
                 <option value="">Atanmamış</option>
                 {members.map(m => (
@@ -116,7 +115,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
               value={newPriority}
               onChange={(e) => setNewPriority(e.target.value as Task["priority"])}
               className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#94A3B8" }}
+              style={{ color: "#94A3B8" }}
             >
               <option value="low">Düşük</option>
               <option value="normal">Normal</option>
@@ -128,7 +127,7 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
               value={newDueDate}
               onChange={(e) => setNewDueDate(e.target.value)}
               className="rounded-lg px-2 py-1.5 text-[12px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#94A3B8" }}
+              style={{ color: "#94A3B8" }}
             />
             <button onClick={handleAdd} className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>
               Ekle

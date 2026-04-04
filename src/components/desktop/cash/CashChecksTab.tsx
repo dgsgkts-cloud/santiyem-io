@@ -166,13 +166,13 @@ const CashChecksTab = () => {
       </Tabs>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
+        <DialogContent className="max-w-md" style={{ borderColor: "#1E2732" }}>
           <DialogHeader><DialogTitle className="text-foreground">Çek Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek Türü</label>
               <Select value={formType} onValueChange={v => setFormType(v as any)}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="verilen">Verdiğim Çek</SelectItem>
                   <SelectItem value="alınan">Aldığım Çek</SelectItem>
@@ -182,35 +182,35 @@ const CashChecksTab = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek No</label>
-                <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
-                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Banka</label>
-                <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Şube (opsiyonel)</label>
-                <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>{formType === "verilen" ? "Alıcı" : "Veren"}</label>
-              <Input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+              <Input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Vade Tarihi</label>
-              <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+              <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Proje (opsiyonel)</label>
               <Select value={form.project_id || "none"} onValueChange={v => setForm(f => ({ ...f, project_id: v === "none" ? "" : v }))}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Seçilmedi —</SelectItem>
                   {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}

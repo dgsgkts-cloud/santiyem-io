@@ -82,7 +82,7 @@ const CashPaymentsTab = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[150px] h-9 text-[13px]" style={{ backgroundColor: "#161C23", borderColor: "#1E2732", color: "#F1F5F9" }}>
+            <SelectTrigger className="w-[150px] h-9 text-[13px]" style={{ borderColor: "#1E2732" }}>
               <SelectValue placeholder="Kategori" />
             </SelectTrigger>
             <SelectContent>
@@ -91,7 +91,7 @@ const CashPaymentsTab = () => {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[140px] h-9 text-[13px]" style={{ backgroundColor: "#161C23", borderColor: "#1E2732", color: "#F1F5F9" }}>
+            <SelectTrigger className="w-[140px] h-9 text-[13px]" style={{ borderColor: "#1E2732" }}>
               <SelectValue placeholder="Durum" />
             </SelectTrigger>
             <SelectContent>
@@ -147,7 +147,7 @@ const CashPaymentsTab = () => {
 
       {/* Add Payment Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: "#161C23", borderColor: "#1E2732" }}>
+        <DialogContent className="max-w-md" style={{ borderColor: "#1E2732" }}>
           <DialogHeader>
             <DialogTitle className="text-foreground">Ödeme Ekle</DialogTitle>
           </DialogHeader>
@@ -155,29 +155,29 @@ const CashPaymentsTab = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Tarih</label>
-                <Input type="date" value={form.payment_date} onChange={e => setForm(f => ({ ...f, payment_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input type="date" value={form.payment_date} onChange={e => setForm(f => ({ ...f, payment_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Tutar (₺)</label>
-                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0" style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0" style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
               </div>
             </div>
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Alıcı</label>
-              <Input value={form.recipient} onChange={e => setForm(f => ({ ...f, recipient: e.target.value }))} placeholder="Kişi veya firma adı" style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+              <Input value={form.recipient} onChange={e => setForm(f => ({ ...f, recipient: e.target.value }))} placeholder="Kişi veya firma adı" style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Kategori</label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                  <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue /></SelectTrigger>
+                  <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                   <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Ödeme Tipi</label>
                 <Select value={form.payment_type} onValueChange={v => setForm(f => ({ ...f, payment_type: v }))}>
-                  <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue /></SelectTrigger>
+                  <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                   <SelectContent>{PAYMENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -186,11 +186,11 @@ const CashPaymentsTab = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Çek No</label>
-                  <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                  <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                 </div>
                 <div>
                   <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Banka</label>
-                  <Input value={form.check_bank} onChange={e => setForm(f => ({ ...f, check_bank: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                  <Input value={form.check_bank} onChange={e => setForm(f => ({ ...f, check_bank: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                 </div>
               </div>
             )}
@@ -198,18 +198,18 @@ const CashPaymentsTab = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>IBAN</label>
-                  <Input value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                  <Input value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                 </div>
                 <div>
                   <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Banka</label>
-                  <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+                  <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
                 </div>
               </div>
             )}
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Proje (opsiyonel)</label>
               <Select value={form.project_id || "none"} onValueChange={v => setForm(f => ({ ...f, project_id: v === "none" ? "" : v }))}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue placeholder="Seçiniz" /></SelectTrigger>
+                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue placeholder="Seçiniz" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Seçilmedi —</SelectItem>
                   {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -219,13 +219,13 @@ const CashPaymentsTab = () => {
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Durum</label>
               <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
                 <SelectContent>{STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-[12px] mb-1 block" style={{ color: "#94A3B8" }}>Açıklama (opsiyonel)</label>
-              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441", color: "#F1F5F9" }} />
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
             </div>
           </div>
           <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.recipient || !form.amount}>

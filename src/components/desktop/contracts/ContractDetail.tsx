@@ -154,7 +154,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               const isWaiting = !reqUploads.length && req.status !== "imzalandi";
 
               return (
-                <div key={req.id} className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#0F1419", border: `1px solid ${isOverdue ? "#EF444440" : "#1E2732"}` }}>
+                <div key={req.id} className="rounded-lg p-3 space-y-2" style={{ border: `1px solid ${isOverdue ? "#EF444440" : "#1E2732"}` }}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-foreground">{req.recipient_name}</p>
@@ -277,7 +277,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <div className="grid grid-cols-3 gap-3 mb-3">
             <div>
               <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Gecikme Günü</label>
-              <input type="number" value={penaltyDays} onChange={e => setPenaltyDays(Number(e.target.value))} min={0} className="w-full rounded px-2 py-2 text-sm outline-none" style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+              <input type="number" value={penaltyDays} onChange={e => setPenaltyDays(Number(e.target.value))} min={0} className="w-full rounded px-2 py-2 text-sm outline-none" />
             </div>
             <div>
               <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Günlük Ceza</label>
@@ -407,7 +407,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                         value={fm.status}
                         onChange={e => setForceMajeures(p => p.map(f => f.id === fm.id ? { ...f, status: e.target.value as any } : f))}
                         className="rounded px-1 py-0.5 text-[10px] outline-none"
-                        style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: fm.status === "onaylandi" ? "#22C55E" : fm.status === "reddedildi" ? "#EF4444" : "#F59E0B" }}
+                        style={{ color: fm.status === "onaylandi" ? "#22C55E" : fm.status === "reddedildi" ? "#EF4444" : "#F59E0B" }}
                       >
                         <option value="bekliyor">Bekliyor</option>
                         <option value="onaylandi">Onaylandı</option>
@@ -436,24 +436,24 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
                 <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Başlangıç</label>
-                <input type="date" value={fmForm.start_date} onChange={e => setFmForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                <input type="date" value={fmForm.start_date} onChange={e => setFmForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
               <div>
                 <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Bitiş</label>
-                <input type="date" value={fmForm.end_date} onChange={e => setFmForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                <input type="date" value={fmForm.end_date} onChange={e => setFmForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
               <div>
                 <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Tür</label>
-                <select value={fmForm.type} onChange={e => setFmForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}>
+                <select value={fmForm.type} onChange={e => setFmForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none">
                   {["Deprem", "Sel", "Hava Koşulları", "Resmi Tatil", "Pandemi", "Diğer"].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] block mb-1" style={{ color: "#64748B" }}>Etkilenen Gün</label>
-                <input type="number" value={fmForm.affected_days || ""} onChange={e => setFmForm(f => ({ ...f, affected_days: Number(e.target.value) }))} className="w-full rounded px-2 py-1 text-xs outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                <input type="number" value={fmForm.affected_days || ""} onChange={e => setFmForm(f => ({ ...f, affected_days: Number(e.target.value) }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
               </div>
             </div>
-            <input value={fmForm.description} onChange={e => setFmForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} placeholder="Açıklama" />
+            <input value={fmForm.description} onChange={e => setFmForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" placeholder="Açıklama" />
             <div className="flex gap-2">
               <Button onClick={addForceMajeure} size="sm" className="h-7 text-xs text-white" style={{ backgroundColor: "#FF6B2B" }}>Kaydet</Button>
               <Button onClick={() => setShowFmForm(false)} variant="outline" size="sm" className="h-7 text-xs" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>İptal</Button>

@@ -138,7 +138,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               <Plus className="w-3.5 h-3.5" /> Proje Ekle
             </button>
           )}
-          <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #1E2732" }}>
+          <div className="flex rounded-lg overflow-hidden">
             <button onClick={() => setViewMode("list")} className="w-8 h-8 flex items-center justify-center transition-colors"
               style={{ backgroundColor: viewMode === "list" ? "#FF6B2B" : "transparent", color: viewMode === "list" ? "white" : "#64748B" }}>
               <List className="w-4 h-4" />

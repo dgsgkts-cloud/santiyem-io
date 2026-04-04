@@ -198,7 +198,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <div className="rounded-xl p-5 lg:p-6 bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+            <h2 className="text-lg lg:text-xl font-bold mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Günaydın, {name} 👋
             </h2>
             <p className="text-[12px]" style={{ color: "#64748B" }}>{formatDate(new Date())} — Bugün şantiyende ne var?</p>
@@ -234,7 +234,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 </div>
                 <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate" style={{ color: "#64748B" }}>{stat.label}</span>
               </div>
-              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F1F5F9" }}>
+              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 {stat.locked ? "—" : stat.value}
               </p>
               <div className="flex items-center gap-1 mt-1">
@@ -322,7 +322,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
               <Tooltip
                 contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#F1F5F9", fontWeight: 600 }}
+                labelStyle={{ fontWeight: 600 }}
                 itemStyle={{ color: "#94A3B8" }}
                 formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
               />
@@ -692,7 +692,7 @@ const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void
 const MiniStat = ({ label, value }: { label: string; value: string }) => (
   <div className="min-w-0">
     <p className="text-[10px] lg:text-[11px] truncate" style={{ color: "#64748B" }}>{label}</p>
-    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
+    <p className="text-[13px] lg:text-[15px] font-bold truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{value}</p>
   </div>
 );
 

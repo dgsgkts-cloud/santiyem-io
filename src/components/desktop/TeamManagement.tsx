@@ -18,7 +18,7 @@ const TeamManagement = () => {
   const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
   const [showInviteForm, setShowInviteForm] = useState(false);
 
-  const cardStyle = { backgroundColor: "#0F1419", border: "1px solid #1E2732" };
+  const cardStyle = {  };
 
   if (plan !== "office_free" && plan !== "office_pro" && plan !== "office_custom") {
     return (
@@ -55,7 +55,7 @@ const TeamManagement = () => {
             onChange={(e) => setTeamName(e.target.value)}
             placeholder="Ekip adı"
             className="flex-1 rounded-lg px-3 text-[13px] outline-none"
-            style={{ height: 36, ...cardStyle, color: "#F1F5F9" }}
+            style={{ height: 36, ...cardStyle }}
           />
           <button
             onClick={() => createTeam(teamName)}
@@ -119,13 +119,13 @@ const TeamManagement = () => {
               placeholder="E-posta adresi"
               type="email"
               className="flex-1 rounded-lg px-3 text-[13px] outline-none"
-              style={{ height: 36, backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
+              style={{ height: 36 }}
             />
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as "editor" | "viewer")}
               className="rounded-lg px-3 text-[13px] outline-none"
-              style={{ height: 36, backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
+              style={{ height: 36 }}
             >
               <option value="editor">Editör</option>
               <option value="viewer">Görüntüleyici</option>
@@ -176,7 +176,7 @@ const TeamManagement = () => {
                       value={member.role}
                       onChange={(e) => updateMemberRole(member.id, e.target.value as "editor" | "viewer")}
                       className="rounded px-1.5 py-0.5 text-[10px] outline-none"
-                      style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#94A3B8" }}
+                      style={{ color: "#94A3B8" }}
                     >
                       <option value="editor">Editör</option>
                       <option value="viewer">Görüntüleyici</option>

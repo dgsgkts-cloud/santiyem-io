@@ -37,7 +37,7 @@ const CashSummaryTab = () => {
   const recentAll = [...recentPayments, ...recentCollections].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
 
   const summaryCards = [
-    { label: "Nakit Pozisyonu", value: totalBalance, sub: `Kasa: ₺${fmt(kasaBalance)} | Banka: ₺${fmt(bankaBalance)}`, icon: Banknote, color: "#F1F5F9", bg: "rgba(241,245,249,0.08)" },
+    { label: "Nakit Pozisyonu", value: totalBalance, sub: `Kasa: ₺${fmt(kasaBalance)} | Banka: ₺${fmt(bankaBalance)}`, icon: Banknote, bg: "rgba(241,245,249,0.08)" },
     { label: "Bu Ay Gelen", value: monthIncome, sub: "Hakediş + Avans + Diğer", icon: ArrowDownLeft, color: "#22C55E", bg: "rgba(34,197,94,0.08)" },
     { label: "Bu Ay Giden", value: monthExpense, sub: "Malzeme + Taşeron + İşçilik", icon: ArrowUpRight, color: "#EF4444", bg: "rgba(239,68,68,0.08)" },
     { label: "Vadesi Gelen Çekler (7 gün)", value: upcomingTotal, sub: `${upcomingChecks.length} çek vadesi yaklaşıyor`, icon: FileText, color: "#F59E0B", bg: "rgba(245,158,11,0.08)" },

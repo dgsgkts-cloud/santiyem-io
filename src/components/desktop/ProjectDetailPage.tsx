@@ -100,9 +100,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const cardStyle = { backgroundColor: "#161C23", border: "1px solid #1E2732" };
+  const cardStyle = {  };
   const labelStyle = { color: "#64748B" };
-  const textStyle = { color: "#F1F5F9" };
+  const textStyle = {  };
   const getNotePreview = (content: string) => content.length > 60 ? `${content.slice(0, 60)}...` : content;
 
   const handleConfirmDeleteTarget = async () => {
@@ -195,7 +195,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   });
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#1E2732", color: "#F1F5F9", border: "1px solid #334155" }}
+                style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
               >
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
@@ -284,9 +284,9 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
           {showAddMilestone && (
             <div className="flex flex-col sm:flex-row gap-2 mb-4 p-3 rounded-lg bg-background border border-border">
               <input value={newMilestoneTitle} onChange={e => setNewMilestoneTitle(e.target.value)} placeholder="Görev adı"
-                className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none" />
               <input value={newMilestoneDate} onChange={e => setNewMilestoneDate(e.target.value)} placeholder="Tarih (ör: 01.05.2026)"
-                className="w-full sm:w-36 px-3 py-2 rounded-lg text-[13px] outline-none" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }} />
+                className="w-full sm:w-36 px-3 py-2 rounded-lg text-[13px] outline-none" />
               <button onClick={handleAddMilestone} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>Ekle</button>
             </div>
           )}
@@ -367,14 +367,14 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name, { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: {} }, p.client)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                  style={{ backgroundColor: "#1E2732" }}
                 >
                   <FileDown className="w-3 h-3" /> PDF
                 </button>
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732", color: "#F1F5F9" }}
+                  style={{ backgroundColor: "#1E2732" }}
                 >
                   <FileSpreadsheet className="w-3 h-3" /> Excel
                 </button>
@@ -399,7 +399,6 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               onChange={e => setNewPeriod(e.target.value)}
               placeholder="Dönem (ör: Nisan 2026)"
               className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <input
               value={newAmount}
@@ -407,7 +406,6 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               type="number"
               placeholder="Tutar (₺)"
               className="w-full sm:w-40 px-3 py-2 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <button
               onClick={handleAddHakedis}
@@ -717,7 +715,6 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addNote(newNoteContent); setNewNoteContent(""); } }}
               placeholder="Not veya yorum ekleyin..."
               className="flex-1 px-3 py-2.5 rounded-lg text-[13px] outline-none"
-              style={{ backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" }}
             />
             <button
               onClick={() => { addNote(newNoteContent); setNewNoteContent(""); }}
