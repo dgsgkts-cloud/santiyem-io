@@ -115,7 +115,16 @@ const Index = () => {
     return () => mql.removeEventListener("change", handler);
   }, []);
 
-  // Default tab is already dashboard
+  // Listen for navigate-tab custom events from child components
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tab = (e as CustomEvent).detail;
+      if (TABS.some(t => t.id === tab)) setActiveTab(tab as Tab);
+    };
+    window.addEventListener("navigate-tab", handler);
+    return () => window.removeEventListener("navigate-tab", handler);
+  }, []);
+
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
