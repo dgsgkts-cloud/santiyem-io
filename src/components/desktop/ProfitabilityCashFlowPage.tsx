@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectExpenses, ProjectExpense } from "@/hooks/useProjectExpenses";
 import { useUser } from "@/contexts/UserContext";
