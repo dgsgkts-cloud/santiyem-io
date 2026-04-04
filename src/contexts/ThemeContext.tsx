@@ -36,15 +36,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       });
   }, [user]);
 
-  // Apply theme class to document
+  // Apply theme class to document — only when logged in
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "light") {
+    if (theme === "light" && user) {
       root.classList.add("light");
     } else {
       root.classList.remove("light");
     }
-  }, [theme]);
+  }, [theme, user]);
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);

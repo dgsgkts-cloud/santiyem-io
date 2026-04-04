@@ -67,18 +67,16 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
   return (
     <aside
-      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative"
+      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative bg-sidebar border-r border-sidebar-border"
       style={{
         width: collapsed ? 48 : 240,
-        backgroundColor: "#0F1419",
-        borderRight: "1px solid #1E2732",
         transition: "width 250ms ease-in-out",
       }}
     >
       {/* Toggle button */}
       <button
         onClick={() => setCollapsed(c => !c)}
-        className="absolute z-10 flex items-center justify-center"
+        className="absolute z-10 flex items-center justify-center bg-muted border border-border border-l-0 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors duration-200"
         style={{
           right: -10,
           top: "50%",
@@ -86,23 +84,15 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           width: 20,
           height: 48,
           borderRadius: "0 6px 6px 0",
-          backgroundColor: "#1E2732",
-          border: "1px solid #2A3441",
-          borderLeft: "none",
-          color: "#64748B",
-          transition: "background-color 200ms, color 200ms",
         }}
-        onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#2A3441"; e.currentTarget.style.color = "#94A3B8"; }}
-        onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
       {/* Logo */}
       <div
-        className="flex items-center cursor-pointer shrink-0 overflow-hidden"
+        className="flex items-center cursor-pointer shrink-0 overflow-hidden border-b border-sidebar-border"
         style={{
-          borderBottom: "1px solid #1E2732",
           height: 56,
           padding: collapsed ? "0 8px" : "0 16px",
           justifyContent: collapsed ? "center" : "flex-start",
@@ -112,7 +102,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       >
         <img src={logo} alt="Şantiyem" className="w-8 h-8 shrink-0" />
         {!collapsed && (
-          <span className="whitespace-nowrap text-[16px] font-bold" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>
+          <span className="whitespace-nowrap text-[16px] font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Şantiyem
           </span>
         )}
@@ -123,7 +113,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             {!collapsed && (
-              <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase" style={{ color: "#334155" }}>
+              <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/60">
                 {section.label}
               </p>
             )}
@@ -158,14 +148,14 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     style={{
                       height: 36,
                       backgroundColor: isActive ? "rgba(255,107,43,0.12)" : "transparent",
-                      color: isLocked ? "#334155" : isActive ? "#FF6B2B" : "#64748B",
+                      color: isLocked ? "hsl(var(--muted-foreground) / 0.5)" : isActive ? "#FF6B2B" : "hsl(var(--muted-foreground))",
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? "0" : "0 10px",
                       gap: collapsed ? 0 : 10,
                       opacity: isLocked ? 0.7 : 1,
                     }}
-                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "#161C23"; e.currentTarget.style.color = isLocked ? "#475569" : "#F1F5F9"; }}}
-                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "#334155" : "#64748B"; }}}
+                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "hsl(var(--muted))"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))"; }}}
+                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground) / 0.5)" : "hsl(var(--muted-foreground))"; }}}
                   >
                     {isActive && !isLocked && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
                     <Icon className="w-4 h-4 shrink-0" />
@@ -192,7 +182,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       </nav>
 
       {/* Bottom section */}
-      <div className="mt-auto shrink-0 overflow-hidden" style={{ borderTop: "1px solid #1E2732" }}>
+      <div className="mt-auto shrink-0 overflow-hidden border-t border-sidebar-border">
         {/* Plan badge — expanded only */}
         {!collapsed && (
           <div className="px-3 pt-3 pb-2">
@@ -260,8 +250,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 <span className="text-white text-[11px] font-bold">{initials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold truncate" style={{ color: "#F1F5F9" }}>{displayName}</p>
-                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>{profile?.title || "Mühendis"}</p>
+                <p className="text-[13px] font-bold truncate text-foreground">{displayName}</p>
+                <p className="text-[11px] truncate text-muted-foreground">{profile?.title || "Mühendis"}</p>
               </div>
               <button
                 onClick={() => onTabChange("settings")}
