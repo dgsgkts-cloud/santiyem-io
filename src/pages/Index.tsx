@@ -229,7 +229,7 @@ const Index = () => {
 
           {/* Content */}
           {activeTab === "chat" ? (
-            <div className="flex-1 min-h-0 overflow-hidden" style={{ backgroundColor: "#0F1419" }}>
+            <div className="flex-1 min-h-0 overflow-hidden bg-background">
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
