@@ -16,6 +16,7 @@ interface UpgradeModalProps {
 
 const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalProps) => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const { user } = useUser();
 
   const openCheckoutForm = (data: any) => {
