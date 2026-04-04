@@ -97,10 +97,7 @@ const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => setDeleteTarget({ id: listing.id, name: listing.title || "Başlıksız ilan" })}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: "#64748B" }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover-danger"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

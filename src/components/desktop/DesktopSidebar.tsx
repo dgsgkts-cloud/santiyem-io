@@ -199,10 +199,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               {!isAdmin && plan === "free" && (
                 <button
                   onClick={() => onTabChange("pricing")}
-                  className="text-[11px] font-medium transition-all duration-150"
-                  style={{ color: "#FF6B2B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8F5C"; e.currentTarget.style.transform = "translateX(2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#FF6B2B"; e.currentTarget.style.transform = "translateX(0)"; }}
+                  className="text-[11px] font-medium hover-upgrade-link"
                 >
                   Yükselt →
                 </button>
@@ -230,10 +227,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTabChange("settings")}
-                  className="w-full flex items-center justify-center rounded-lg transition-colors duration-150"
+                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn"
                   style={{ height: 40 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#161C23"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
                     <span className="text-white text-[11px] font-bold">{initials}</span>
@@ -255,11 +250,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               </div>
               <button
                 onClick={() => onTabChange("settings")}
-                className="shrink-0 p-1 rounded transition-colors duration-150"
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#1E2732"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                className="shrink-0 p-1 rounded hover-icon-btn"
               >
-                <Settings className="w-3.5 h-3.5" style={{ color: "#475569" }} />
+                <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -272,10 +265,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={user ? signOut : () => navigate("/login")}
-                  className="w-full flex items-center justify-center rounded-lg transition-colors duration-150"
-                  style={{ height: 32, color: "#64748B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+                  className="w-full flex items-center justify-center rounded-lg hover-logout"
+                  style={{ height: 32 }}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -287,10 +278,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           ) : (
             <button
               onClick={user ? signOut : () => navigate("/login")}
-              className="w-full flex items-center gap-2.5 px-2 rounded-lg transition-colors duration-150"
-              style={{ height: 28, color: "#64748B" }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#EF4444"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+              className="w-full flex items-center gap-2.5 px-2 rounded-lg hover-logout"
+              style={{ height: 28 }}
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="text-[12px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>

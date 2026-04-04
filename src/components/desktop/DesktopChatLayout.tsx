@@ -153,10 +153,8 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div className="p-3">
           <button
             onClick={handleReset}
-            className="w-full flex items-center justify-center gap-2 rounded-lg text-[13px] font-semibold text-white transition-colors duration-150"
-            style={{ height: 36, backgroundColor: "#FF6B2B" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#E55A1F"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FF6B2B"; }}
+            className="w-full flex items-center justify-center gap-2 rounded-lg text-[13px] font-semibold text-white hover-primary-btn"
+            style={{ height: 36 }}
           >
             <Plus className="w-4 h-4" /> Yeni Sohbet
           </button>
@@ -186,13 +184,11 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
                       <div key={chat.id} className="relative group">
                         <button
                           onClick={() => handleSelectConversation(chat)}
-                          className="w-full text-left px-2.5 py-2 rounded-lg transition-colors duration-150 pr-8"
+                          className="w-full text-left px-2.5 py-2 rounded-lg hover-row pr-8"
                           style={{
-                            backgroundColor: isActive ? "#161C23" : "transparent",
-                            borderLeft: isActive ? "2px solid #FF6B2B" : "2px solid transparent",
+                            backgroundColor: isActive ? "hsl(var(--muted))" : "transparent",
+                            borderLeft: isActive ? "2px solid hsl(var(--primary))" : "2px solid transparent",
                           }}
-                          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "#161C23"; }}
-                          onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = "transparent"; }}
                         >
                           <p className="text-[13px] truncate" style={{ color: isActive ? "#F1F5F9" : "#94A3B8" }}>{chat.title}</p>
                           <p className="text-[11px] text-muted-foreground">
@@ -229,9 +225,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 text-muted-foreground"
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#F1F5F9"; e.currentTarget.style.backgroundColor = "#161C23"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover-icon-btn"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -286,10 +280,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           <p className="text-[11px] font-semibold uppercase mb-2 text-muted-foreground">İlgili Mevzuat</p>
           <div className="space-y-1.5">
             {["Hakediş Yönetmeliği", "İmar Kanunu", "İş Güvenliği"].map((link) => (
-              <button key={link} className="block text-[12px] transition-colors text-muted-foreground"
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
-              >
+              <button key={link} className="block text-[12px] hover-primary-text">
                 📖 {link}
               </button>
             ))}
@@ -299,20 +290,15 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           <p className="text-[11px] font-semibold uppercase mb-2 text-muted-foreground">Kısayollar</p>
           <div className="space-y-1.5">
             {["Hakediş hazırla", "Proje durumu özetle", "Nakit akışı analizi"].map((shortcut) => (
-              <button key={shortcut} className="block text-[12px] transition-colors text-muted-foreground"
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
-              >
+              <button key={shortcut} className="block text-[12px] hover-primary-text">
                 ⚡ {shortcut}
               </button>
             ))}
           </div>
         </div>
         <button
-          className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto transition-colors duration-150"
-          style={{ height: 32, color: "#64748B" }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF6B2B"; e.currentTarget.style.color = "#FF6B2B"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1E2732"; e.currentTarget.style.color = "#64748B"; }}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto hover-primary-text border border-border"
+          style={{ height: 32 }}
         >
           📄 Sohbeti PDF Kaydet
         </button>

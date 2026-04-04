@@ -37,10 +37,7 @@ const CookieBanner = () => {
         <div className="flex items-center gap-3 shrink-0">
           <Link
             to="/gizlilik-politikasi"
-            className="text-[13px] px-3 py-1.5 rounded-lg transition-colors"
-            style={{ border: "1px solid #1E2732", color: "#64748B" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#94A3B8"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
+            className="text-[13px] px-3 py-1.5 rounded-lg border border-border hover-muted-text"
           >
             Gizlilik Politikası
           </Link>

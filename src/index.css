@@ -192,6 +192,82 @@
   .mobile-table-scroll table {
     min-width: 500px;
   }
+
+  /* ─── Hover utility classes (theme-aware) ─── */
+  .hover-icon-btn {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-icon-btn:hover {
+    @apply text-foreground bg-muted;
+  }
+
+  .hover-row {
+    @apply transition-colors duration-150;
+  }
+  .hover-row:hover {
+    @apply bg-muted/50;
+  }
+
+  .hover-danger {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-danger:hover {
+    color: hsl(0 84% 60%);
+    background-color: hsl(0 84% 60% / 0.1);
+  }
+
+  .hover-danger-text {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-danger-text:hover {
+    color: hsl(0 84% 60%);
+  }
+
+  .hover-logout {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-logout:hover {
+    color: hsl(0 84% 60%);
+    background-color: hsl(0 84% 60% / 0.1);
+  }
+
+  .hover-primary-btn {
+    @apply transition-colors duration-150;
+    background-color: hsl(var(--primary));
+  }
+  .hover-primary-btn:hover {
+    background-color: hsl(21 100% 45%);
+  }
+
+  .hover-upgrade-link {
+    color: hsl(var(--primary));
+    @apply transition-all duration-150;
+  }
+  .hover-upgrade-link:hover {
+    color: hsl(21 85% 60%);
+    transform: translateX(2px);
+  }
+
+  .hover-border-green {
+    @apply transition-all duration-150 border border-border;
+  }
+  .hover-border-green:hover {
+    border-color: #10B981;
+  }
+
+  .hover-muted-text {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-muted-text:hover {
+    @apply text-foreground;
+  }
+
+  .hover-primary-text {
+    @apply text-muted-foreground transition-colors duration-150;
+  }
+  .hover-primary-text:hover {
+    color: hsl(var(--primary));
+  }
 }
 
 @keyframes fadeInOut {

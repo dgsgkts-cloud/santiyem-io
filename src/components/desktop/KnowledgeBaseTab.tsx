@@ -144,9 +144,7 @@ const KnowledgeBaseTab = () => {
                     {!(doc as any).is_global && (
                       <button
                         onClick={() => setDeleteTarget({ id: doc.id, name: doc.name })}
-                        className="p-1.5 rounded-lg transition-colors text-muted-foreground"
-                        onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.backgroundColor = "transparent"; }}
+                        className="p-1.5 rounded-lg hover-danger"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
