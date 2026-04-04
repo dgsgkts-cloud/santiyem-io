@@ -1008,6 +1008,7 @@ export type Database = {
           id: string
           plan: string
           role: string
+          theme: string
           title: string | null
           updated_at: string
           user_id: string
@@ -1019,6 +1020,7 @@ export type Database = {
           id?: string
           plan?: string
           role?: string
+          theme?: string
           title?: string | null
           updated_at?: string
           user_id: string
@@ -1030,6 +1032,7 @@ export type Database = {
           id?: string
           plan?: string
           role?: string
+          theme?: string
           title?: string | null
           updated_at?: string
           user_id?: string

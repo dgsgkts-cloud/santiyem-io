@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useUser, PlanType } from "@/contexts/UserContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
+  { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
@@ -49,7 +51,7 @@ const DesktopSettingsPage = () => {
         </div>
 
         {/* Content */}
-        <div className="rounded-xl p-4 lg:p-6" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <div className="rounded-xl p-4 lg:p-6 bg-card border border-border">
           {activeTab === "profile" && (
             <div className="space-y-5 lg:space-y-6">
               <div>
@@ -69,6 +71,7 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
+          {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
           {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
@@ -80,6 +83,51 @@ const DesktopSettingsPage = () => {
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ─── Appearance Tab ───
+const AppearanceTab = () => {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Görünüm</h3>
+        <p className="text-[11px] lg:text-[12px] text-muted-foreground">Uygulama temasını seçin</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3 max-w-sm">
+        <button
+          onClick={() => setTheme("dark")}
+          className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all"
+          style={{
+            borderColor: theme === "dark" ? "#FF6B2B" : "hsl(var(--border))",
+            backgroundColor: theme === "dark" ? "rgba(255,107,43,0.06)" : "transparent",
+          }}
+        >
+          <Moon className="w-6 h-6" style={{ color: theme === "dark" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
+          <span className="text-[13px] font-medium text-foreground">Koyu Tema</span>
+          {theme === "dark" && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
+          )}
+        </button>
+        <button
+          onClick={() => setTheme("light")}
+          className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all"
+          style={{
+            borderColor: theme === "light" ? "#FF6B2B" : "hsl(var(--border))",
+            backgroundColor: theme === "light" ? "rgba(255,107,43,0.06)" : "transparent",
+          }}
+        >
+          <Sun className="w-6 h-6" style={{ color: theme === "light" ? "#FF6B2B" : "hsl(var(--muted-foreground))" }} />
+          <span className="text-[13px] font-medium text-foreground">Açık Tema</span>
+          {theme === "light" && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FF6B2B", color: "#fff" }}>Aktif</span>
+          )}
+        </button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Tema tercihiniz hesabınıza kaydedilir ve her girişte hatırlanır.</p>
     </div>
   );
 };

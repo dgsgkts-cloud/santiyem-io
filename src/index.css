@@ -55,6 +55,54 @@
     --sidebar-ring: 21 100% 55%;
   }
 
+  .light-theme {
+    --background: 210 20% 98%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 21 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 16% 93%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 210 16% 93%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 21 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 21 100% 55%;
+
+    --engineer-blue: 215 70% 30%;
+    --engineer-blue-light: 215 60% 45%;
+    --engineer-orange: 28 90% 52%;
+    --engineer-orange-light: 28 85% 60%;
+    --engineer-steel: 220 10% 50%;
+    --engineer-dark: 210 20% 96%;
+    --chat-user: 21 100% 55%;
+    --chat-ai: 0 0% 97%;
+
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 21 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 16% 93%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 220 13% 90%;
+    --sidebar-ring: 21 100% 55%;
+  }
+
   .dark {
     --background: 220 25% 8%;
     --foreground: 220 15% 90%;
