@@ -52,7 +52,7 @@ const CashTrackingPage = () => {
       </div>
 
       <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="w-full justify-start mb-6 h-11 p-1 rounded-xl" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
+        <TabsList className="w-full justify-start mb-6 h-11 p-1 rounded-xl bg-card border border-border">
           <TabsTrigger value="summary" className="gap-2 text-[13px] data-[state=active]:bg-[#FF6B2B]/15 data-[state=active]:text-[#FF6B2B] rounded-lg">
             <BarChart3 className="w-4 h-4" /> Özet
           </TabsTrigger>
