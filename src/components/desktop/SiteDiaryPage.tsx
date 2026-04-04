@@ -147,6 +147,16 @@ const SiteDiaryPage = () => {
   const totalWorkers = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count, 0);
   const totalManHours = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count * c.hours, 0);
 
+  const deleteModal = (
+    <DeleteConfirmModal
+      open={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={async () => { if (deleteTarget) { await deleteEntry.mutateAsync(deleteTarget.id); setSelectedEntry(null); setView("list"); } }}
+      title={`${deleteTarget?.type || "Kaydı"} Sil`}
+      itemName={deleteTarget?.name}
+    />
+  );
+
   // Calendar view
   if (view === "list") {
     const recent = [...entries].sort((a, b) => b.entry_date.localeCompare(a.entry_date)).slice(0, 5);
