@@ -199,10 +199,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               {!isAdmin && plan === "free" && (
                 <button
                   onClick={() => onTabChange("pricing")}
-                  className="text-[11px] font-medium transition-all duration-150"
-                  style={{ color: "#FF6B2B" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8F5C"; e.currentTarget.style.transform = "translateX(2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#FF6B2B"; e.currentTarget.style.transform = "translateX(0)"; }}
+                  className="text-[11px] font-medium hover-upgrade-link"
                 >
                   Yükselt →
                 </button>
