@@ -142,10 +142,21 @@ const ProfitabilityCashFlowPage = () => {
     return "#991B1B";
   };
 
+  const expDeleteModal = (
+    <DeleteConfirmModal
+      open={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={async () => { if (deleteTarget) deleteExpense.mutate(deleteTarget.id); }}
+      title="Gideri Sil"
+      itemName={deleteTarget?.name}
+    />
+  );
+
   // ─── OVERVIEW PAGE ───
   if (page === "overview") {
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+        {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           {(["overview", "cashflow"] as Page[]).map(p => (
