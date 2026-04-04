@@ -267,7 +267,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Konular</p>
           <div className="flex flex-wrap gap-1.5">
-            {["Deprem Yükü", "TBDY 2018", "Betonarme", "Yapısal Analiz"].map((tag) => (
+            {["Hakediş", "Proje Takibi", "Şantiye Günlüğü", "Sözleşme"].map((tag) => (
               <span key={tag} className="text-[11px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
                 {tag}
               </span>
@@ -277,7 +277,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>İlgili Mevzuat</p>
           <div className="space-y-1.5">
-            {["TBDY 2018 Madde 7.3", "TS 500", "Deprem Yönetmeliği"].map((link) => (
+            {["Hakediş Yönetmeliği", "İmar Kanunu", "İş Güvenliği"].map((link) => (
               <button key={link} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}
@@ -290,7 +290,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         <div>
           <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: "#334155" }}>Kısayollar</p>
           <div className="space-y-1.5">
-            {["Deprem yükü hesapla", "Kolon boyutlandırma", "Donatı hesabı"].map((shortcut) => (
+            {["Hakediş hazırla", "Proje durumu özetle", "Nakit akışı analizi"].map((shortcut) => (
               <button key={shortcut} className="block text-[12px] transition-colors" style={{ color: "#64748B" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#FF6B2B"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; }}

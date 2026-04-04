@@ -21,7 +21,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import CashTrackingPage from "@/components/desktop/CashTrackingPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
   RotateCcw, MessageSquare,
@@ -77,7 +77,7 @@ const TAB_TITLES: Record<string, string> = {
   daily: "Günlük Bilgi",
   calc: "Hesap Araçları",
   render: "Proje Analizi",
-  reminders: "Mevzuat Arama",
+  reminders: "Hatırlatıcı",
   pricing: "Planlar",
   projects: "Proje Yönetimi",
   hakedis: "Hakediş Yönetimi",
@@ -93,9 +93,13 @@ const TAB_TITLES: Record<string, string> = {
 const Index = () => {
   const { user, plan, signOut, incrementUsage, canUse } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (location.pathname === "/settings") return "settings";
+    return "dashboard";
+  });
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
