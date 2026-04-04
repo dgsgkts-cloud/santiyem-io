@@ -227,10 +227,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTabChange("settings")}
-                  className="w-full flex items-center justify-center rounded-lg transition-colors duration-150"
+                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn"
                   style={{ height: 40 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#161C23"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
                     <span className="text-white text-[11px] font-bold">{initials}</span>
