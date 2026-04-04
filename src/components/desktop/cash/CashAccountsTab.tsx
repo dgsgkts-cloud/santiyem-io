@@ -185,6 +185,13 @@ const CashAccountsTab = () => {
           <Button onClick={handleTransfer} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!transfer.from || !transfer.to || !transfer.amount}>Transfer Et</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteAccount.mutate(deleteTarget.id); }}
+        title="Hesabı Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

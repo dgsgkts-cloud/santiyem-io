@@ -233,6 +233,13 @@ const CashPaymentsTab = () => {
           </Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deletePayment.mutate(deleteTarget.id); }}
+        title="Ödemeyi Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

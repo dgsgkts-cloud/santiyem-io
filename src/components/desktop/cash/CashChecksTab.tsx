@@ -221,6 +221,13 @@ const CashChecksTab = () => {
           <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.check_no || !form.amount || !form.due_date}>Kaydet</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteCheck.mutate(deleteTarget.id); }}
+        title="Çeki Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };

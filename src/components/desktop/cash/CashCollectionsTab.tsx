@@ -182,6 +182,13 @@ const CashCollectionsTab = () => {
           <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.sender || !form.amount}>Kaydet</Button>
         </DialogContent>
       </Dialog>
+      <DeleteConfirmModal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => { if (deleteTarget) deleteCollection.mutate(deleteTarget.id); }}
+        title="Tahsilatı Sil"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 };
