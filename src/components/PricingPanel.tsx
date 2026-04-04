@@ -26,7 +26,7 @@ const PricingPanel = () => {
     }
     setLoadingPlan(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+      const { data, error } = await supabase.functions.invoke("create-trial-payment", {
         body: { planKey, yearly },
       });
       if (error || data?.error) {
