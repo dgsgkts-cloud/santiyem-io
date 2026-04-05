@@ -184,10 +184,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const remindersLocked = !canAccessReminders(plan);
 
   const statCards = [
-    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked },
-    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked },
-    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked },
-    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked },
+    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked, tooltip: "Sistemdeki tüm projelerinizin sayısı" },
+    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked, tooltip: "Şu an aktif olan projeler" },
+    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked, tooltip: "Tüm projelerinizdeki toplam hakediş tutarı" },
+    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked, tooltip: "Vadesi geçmiş hatırlatıcılar" },
   ];
 
   const displayProjects = projects.slice(0, 5).map(p => ({

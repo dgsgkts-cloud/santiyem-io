@@ -31,7 +31,7 @@ const NAV_SECTIONS = [
       { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderKanban },
       { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
       { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
-      { id: "profitability" as Tab, label: "Karlılık & Nakit Akışı", icon: TrendingUp },
+      { id: "profitability" as Tab, label: "Gelir & Gider Takibi", icon: TrendingUp },
       { id: "cash-tracking" as Tab, label: "Kasa & Ödeme Takibi", icon: Wallet },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
     ],
