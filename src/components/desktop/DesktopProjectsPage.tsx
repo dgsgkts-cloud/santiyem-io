@@ -8,6 +8,7 @@ import ProjectDetailPage from "./ProjectDetailPage";
 import AddProjectModal from "./AddProjectModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects, UserProject } from "@/hooks/useProjects";
+import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
 
 interface DesktopProjectsPageProps {
