@@ -258,6 +258,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 {stat.tooltip}
               </TooltipContent>
             </Tooltip>
+          );
         })}
       </div>
 
