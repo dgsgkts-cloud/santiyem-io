@@ -65,7 +65,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         onBack={handleBack}
         isDeletable={true}
         onDelete={(id) => { handleDeleteProject(id); handleBack(); }}
-        onStatusChange={isDbProject(selectedProject.id) ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
+        onStatusChange={(id, status, color) => updateProjectStatus(id, status, color)}
       />
     );
   }
