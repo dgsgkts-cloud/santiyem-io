@@ -49,20 +49,7 @@ const MOCK_INTERESTING: InterestingContent = {
   anahtar_kelimeler: ["prefabrik", "modüler", "hızlı inşaat"],
 };
 
-const PAST_DAYS_MOCK: { date: string; type: "technical" | "interesting"; kategori: string; baslik: string }[] = [
-  { date: "2026-03-26", type: "technical", kategori: "İş Güvenliği", baslik: "İskele Montajında 5 Kritik Kontrol Noktası" },
-  { date: "2026-03-26", type: "interesting", kategori: "TÜRKİYE'DEN", baslik: "Yavuz Sultan Selim Köprüsü'nün Mühendislik Sırları" },
-  { date: "2026-03-25", type: "technical", kategori: "TS Standardı", baslik: "Beton Basınç Dayanım Testi Nasıl Yapılır?" },
-  { date: "2026-03-25", type: "interesting", kategori: "YENİ TEKNOLOJİ", baslik: "Kendi Kendini Onaran Beton Gerçek mi?" },
-  { date: "2026-03-24", type: "technical", kategori: "Zemin & Temel", baslik: "SPT Deneyi ve Taşıma Gücü Hesabı" },
-  { date: "2026-03-24", type: "interesting", kategori: "TARİHTEN", baslik: "Roma Betonu 2000 Yıl Sonra Hâlâ Nasıl Ayakta?" },
-  { date: "2026-03-23", type: "technical", kategori: "Enerji Verimliliği", baslik: "Binalarda U Değeri Hesabı ve Yalıtım Kalınlığı" },
-  { date: "2026-03-23", type: "interesting", kategori: "İLGİNÇ PROJE", baslik: "Dubai'nin Dönen Kulesi: Dynamic Tower" },
-  { date: "2026-03-22", type: "technical", kategori: "İmar Mevzuatı", baslik: "Emsal (KAKS) Hesabında Dahil Olmayan Alanlar" },
-  { date: "2026-03-22", type: "interesting", kategori: "DÜNYA REKORU", baslik: "Dünyanın En Uzun Tüneli: Gotthard Base Tunnel" },
-  { date: "2026-03-21", type: "technical", kategori: "Yapı Malzemesi", baslik: "C30/37 ile C35/45 Beton Farkı ve Kullanım Alanları" },
-  { date: "2026-03-21", type: "interesting", kategori: "TÜRKİYE'DEN", baslik: "Çanakkale 1915 Köprüsü Dünya Rekoru Kırdı" },
-];
+const PAST_DAYS_MOCK: { date: string; type: "technical" | "interesting"; kategori: string; baslik: string }[] = [];
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   "DÜNYA REKORU": "🏆",

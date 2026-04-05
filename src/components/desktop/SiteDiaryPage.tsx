@@ -31,13 +31,6 @@ const SPECIAL_EVENTS_OPTIONS = [
   "Teknik sorun yaşandı",
 ];
 
-const MOCK_ENTRIES: Partial<DiaryEntry>[] = [
-  { entry_date: "2025-04-01", weather_icon: "☀️", weather_temp: 22, work_status: "normal", crews: [{ team: "Kalıpçı", count: 8, hours: 8, note: "" }, { team: "Demirci", count: 6, hours: 8, note: "" }, { team: "Genel İşçi", count: 4, hours: 8, note: "" }], work_done: "Temel kalıp tamamlandı", materials: [], machines: [], special_events: [], general_note: "", status: "published" },
-  { entry_date: "2025-04-02", weather_icon: "☀️", weather_temp: 24, work_status: "normal", crews: [{ team: "Betoncu", count: 10, hours: 10, note: "Fazla mesai" }, { team: "Kalıpçı", count: 8, hours: 8, note: "" }, { team: "Genel İşçi", count: 4, hours: 8, note: "" }], work_done: "Temel betonu dökümü", materials: [{ name: "Beton C30", quantity: 45, unit: "m³", direction: "Giriş" }], machines: [{ name: "Beton Pompası", hours: 6, note: "" }], special_events: ["Numune alındı (beton, demir vb.)"], general_note: "Beton numunesi alındı, 7 ve 28 günlük test yapılacak", status: "published" },
-  { entry_date: "2025-04-03", weather_icon: "🌧️", weather_temp: 14, work_status: "stopped", work_stopped_reason: "Şiddetli yağış", crews: [], work_done: "", materials: [], machines: [], special_events: [], general_note: "Yağmur nedeniyle çalışma yapılamadı", status: "published" },
-  { entry_date: "2025-04-04", weather_icon: "☁️", weather_temp: 16, work_status: "normal", crews: [{ team: "Genel İşçi", count: 10, hours: 8, note: "" }, { team: "Kalıpçı", count: 5, hours: 8, note: "" }], work_done: "Kür sulaması", materials: [], machines: [], special_events: [], general_note: "", status: "published" },
-  { entry_date: "2025-04-05", weather_icon: "☀️", weather_temp: 20, work_status: "normal", crews: [{ team: "Demirci", count: 12, hours: 8, note: "" }, { team: "Kalıpçı", count: 8, hours: 8, note: "" }, { team: "Genel İşçi", count: 4, hours: 8, note: "" }], work_done: "Bodrum kat demir bağlama başladı", materials: [{ name: "Nervürlü Demir Ø12", quantity: 5, unit: "ton", direction: "Giriş" }], machines: [{ name: "Vinç", hours: 4, note: "" }], special_events: ["Yapı denetim ziyareti oldu"], general_note: "Yapı denetim mühendisi geldi, kalıp kontrolü yaptı", status: "published" },
-];
 
 type View = "list" | "form" | "detail";
 
@@ -52,8 +45,7 @@ const SiteDiaryPage = () => {
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
-  // Use mock data if no real entries
-  const entries = dbEntries.length > 0 ? dbEntries : (selectedProjectId ? MOCK_ENTRIES.map((e, i) => ({ ...e, id: `mock-${i}`, project_id: selectedProjectId, user_id: user?.id || "" })) : []) as DiaryEntry[];
+  const entries = dbEntries;
 
   // Form state
   const [formDate, setFormDate] = useState(format(new Date(), "yyyy-MM-dd"));

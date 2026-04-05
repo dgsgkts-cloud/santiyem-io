@@ -3,7 +3,7 @@ import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
   LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
 } from "lucide-react";
-import { PROJECTS, Project } from "@/lib/projectsData";
+import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
 import AddProjectModal from "./AddProjectModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
@@ -34,13 +34,6 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
-const HIDDEN_PROJECTS_KEY = "santiyem_hidden_projects";
-
-const getHiddenProjects = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(HIDDEN_PROJECTS_KEY) || "[]");
-  } catch { return []; }
-};
 
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
@@ -48,7 +41,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [hiddenIds, setHiddenIds] = useState<string[]>(getHiddenProjects);
+  
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleBack = () => {
@@ -56,28 +49,14 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     onProjectIdClear?.();
   };
 
-  const hideStaticProject = (id: string) => {
-    const updated = [...hiddenIds, id];
-    setHiddenIds(updated);
-    localStorage.setItem(HIDDEN_PROJECTS_KEY, JSON.stringify(updated));
-  };
-
   const handleDeleteProject = (id: string) => {
-    if (dbProjects.some(p => p.id === id)) {
-      deleteProject(id);
-    } else {
-      hideStaticProject(id);
-    }
+    deleteProject(id);
   };
 
-  // Merge static + DB projects, filter hidden
-  const allProjects: Project[] = [
-    ...PROJECTS.filter(p => !hiddenIds.includes(p.id)),
-    ...dbProjects.map(dbToProject),
-  ];
+  const allProjects: Project[] = dbProjects.map(dbToProject);
 
   const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
-  const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
+  
 
   if (selectedProject) {
     return (
@@ -86,7 +65,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         onBack={handleBack}
         isDeletable={true}
         onDelete={(id) => { handleDeleteProject(id); handleBack(); }}
-        onStatusChange={isDbProject(selectedProject.id) ? (id, status, color) => updateProjectStatus(id, status, color) : undefined}
+        onStatusChange={(id, status, color) => updateProjectStatus(id, status, color)}
       />
     );
   }
