@@ -67,6 +67,7 @@ const App = () => (
           </Suspense>
           <CookieBanner />
           <WhatsAppButton />
+          <PwaInstallBanner />
         </BrowserRouter>
         </ThemeProvider>
       </UserProvider>
