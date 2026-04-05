@@ -68,8 +68,6 @@ export interface ForceMajeure {
   status: "onaylandi" | "bekliyor" | "reddedildi";
 }
 
-  {
-    id: "mock-1", user_id: "", project_id: null,
     name: "Akdeniz Residence İnşaat Sözleşmesi",
     counterparty: "ABC Yapı A.Ş.", amount: 4500000,
     start_date: "2024-03-01", end_date: "2025-12-01",
