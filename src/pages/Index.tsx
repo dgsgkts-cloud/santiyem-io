@@ -228,7 +228,7 @@ const Index = () => {
         <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
 
-        <div className="flex-1 flex min-h-screen min-w-0 flex-col">
+        <div className="flex-1 flex min-w-0 flex-col overflow-hidden">
           {/* Top bar - not for chat (it has its own header) */}
           {activeTab !== "chat" && (
             <DesktopTopBar
@@ -244,41 +244,39 @@ const Index = () => {
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
-            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background" style={{ display: 'grid', gridTemplateRows: '1fr auto', alignContent: 'start' }}>
-              <div style={{ display: 'grid', gridTemplateRows: '1fr auto', minHeight: '100%' }}>
-                <div className="pb-12">
-                  {activeTab === "dashboard" ? (
-                    <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
-                  ) : activeTab === "projects" ? (
-                    <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
-                  ) : activeTab === "hakedis" ? (
-                    <DesktopHakedisPage />
-                  ) : activeTab === "contracts" ? (
-                    <DesktopContractsPage />
-                  ) : activeTab === "site-diary" ? (
-                    <SiteDiaryPage />
-                  ) : activeTab === "profitability" ? (
-                    <ProfitabilityCashFlowPage />
-                  ) : activeTab === "cash-tracking" ? (
-                    <CashTrackingPage />
-                  ) : activeTab === "settings" ? (
-                    <DesktopSettingsPage />
-                  ) : activeTab === "pricing" ? (
-                    <div className="bg-background"><PricingPanel /></div>
-                  ) : activeTab === "daily" ? (
-                    <DailyKnowledgePanel />
-                  ) : activeTab === "calc" ? (
-                    <CalculatorsPanel />
-                  ) : activeTab === "render" ? (
-                    <RenderPanel />
-                  ) : (
-                    <RemindersPanel />
-                  )}
-                </div>
-                <Footer />
+            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
+              <div className="pb-12">
+                {activeTab === "dashboard" ? (
+                  <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
+                ) : activeTab === "projects" ? (
+                  <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
+                ) : activeTab === "hakedis" ? (
+                  <DesktopHakedisPage />
+                ) : activeTab === "contracts" ? (
+                  <DesktopContractsPage />
+                ) : activeTab === "site-diary" ? (
+                  <SiteDiaryPage />
+                ) : activeTab === "profitability" ? (
+                  <ProfitabilityCashFlowPage />
+                ) : activeTab === "cash-tracking" ? (
+                  <CashTrackingPage />
+                ) : activeTab === "settings" ? (
+                  <DesktopSettingsPage />
+                ) : activeTab === "pricing" ? (
+                  <div className="bg-background"><PricingPanel /></div>
+                ) : activeTab === "daily" ? (
+                  <DailyKnowledgePanel />
+                ) : activeTab === "calc" ? (
+                  <CalculatorsPanel />
+                ) : activeTab === "render" ? (
+                  <RenderPanel />
+                ) : (
+                  <RemindersPanel />
+                )}
               </div>
             </div>
           )}
+          {activeTab !== "chat" && <Footer />}
         </div>
       </div>
     );
