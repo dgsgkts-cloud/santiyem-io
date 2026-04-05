@@ -77,7 +77,7 @@ const CashChecksTab = () => {
     const proj = projects.find(p => p.id === chk.project_id);
 
     return (
-      <Card key={chk.id} className="border-0" style={{ backgroundColor: "#1A2028", borderLeft: `3px solid ${si.color}` }}>
+      <Card key={chk.id} className="border border-border bg-card" style={{ borderLeftWidth: 3, borderLeftColor: si.color }}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ const CashChecksTab = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
-              <button onClick={() => setDeleteTarget({ id: chk.id, name: `Çek No: ${chk.check_no}` })} className="p-1 rounded hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+              <button onClick={() => setDeleteTarget({ id: chk.id, name: `Çek No: ${chk.check_no}` })} className="p-1 rounded hover-danger"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
           </div>
           <p className="text-[11px] mb-1 text-muted-foreground">Banka: {chk.bank_name}</p>
@@ -99,7 +99,6 @@ const CashChecksTab = () => {
           </p>
           {proj && <p className="text-[11px] mt-1 text-muted-foreground">Proje: {proj.name}</p>}
 
-          {/* Quick status update buttons */}
           {effectiveStatus !== "odendi" && effectiveStatus !== "tahsil_edildi" && (
             <div className="flex gap-2 mt-3">
               <button
@@ -121,11 +120,12 @@ const CashChecksTab = () => {
     );
   };
 
-  // Warning banner
   const urgentChecks = checks.filter(c => {
     const s = getCheckStatus(c);
     return s === "yaklasan" || s === "gecti";
   });
+
+  const inputClass = "bg-background border-border";
 
   return (
     <div className="space-y-4">
@@ -141,10 +141,10 @@ const CashChecksTab = () => {
       <Tabs defaultValue="verilen" className="w-full">
         <div className="flex items-center justify-between mb-4">
           <TabsList className="bg-card border border-border">
-            <TabsTrigger value="verilen" className="text-[13px] data-[state=active]:bg-[#FF6B2B]/15 data-[state=active]:text-[#FF6B2B]">Verdiğim Çekler ({verilenChecks.length})</TabsTrigger>
-            <TabsTrigger value="alinan" className="text-[13px] data-[state=active]:bg-[#FF6B2B]/15 data-[state=active]:text-[#FF6B2B]">Aldığım Çekler ({alinanChecks.length})</TabsTrigger>
+            <TabsTrigger value="verilen" className="text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary">Verdiğim Çekler ({verilenChecks.length})</TabsTrigger>
+            <TabsTrigger value="alinan" className="text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary">Aldığım Çekler ({alinanChecks.length})</TabsTrigger>
           </TabsList>
-          <Button onClick={() => setShowForm(true)} className="gap-2" style={{ backgroundColor: "#FF6B2B" }}>
+          <Button onClick={() => setShowForm(true)} className="gap-2 text-primary-foreground bg-primary hover:bg-primary/90">
             <Plus className="w-4 h-4" /> Çek Ekle
           </Button>
         </div>
@@ -166,13 +166,13 @@ const CashChecksTab = () => {
       </Tabs>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md" style={{ borderColor: "#1E2732" }}>
+        <DialogContent className="max-w-md border-border">
           <DialogHeader><DialogTitle className="text-foreground">Çek Ekle</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-[12px] mb-1 block text-muted-foreground">Çek Türü</label>
               <Select value={formType} onValueChange={v => setFormType(v as any)}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="verilen">Verdiğim Çek</SelectItem>
                   <SelectItem value="alınan">Aldığım Çek</SelectItem>
@@ -182,35 +182,35 @@ const CashChecksTab = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block text-muted-foreground">Çek No</label>
-                <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+                <Input value={form.check_no} onChange={e => setForm(f => ({ ...f, check_no: e.target.value }))} placeholder="örn: 456789" className={inputClass} />
               </div>
               <div>
                 <label className="text-[12px] mb-1 block text-muted-foreground">Tutar (₺)</label>
-                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+                <Input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="örn: 85000" className={inputClass} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] mb-1 block text-muted-foreground">Banka</label>
-                <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+                <Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} placeholder="örn: Ziraat Bankası" className={inputClass} />
               </div>
               <div>
                 <label className="text-[12px] mb-1 block text-muted-foreground">Şube (opsiyonel)</label>
-                <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+                <Input value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} placeholder="örn: Kadıköy" className={inputClass} />
               </div>
             </div>
             <div>
               <label className="text-[12px] mb-1 block text-muted-foreground">{formType === "verilen" ? "Alıcı" : "Veren"}</label>
-              <Input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+              <Input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} placeholder="örn: Demir Çelik A.Ş." className={inputClass} />
             </div>
             <div>
               <label className="text-[12px] mb-1 block text-muted-foreground">Vade Tarihi</label>
-              <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }} />
+              <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} className={inputClass} />
             </div>
             <div>
               <label className="text-[12px] mb-1 block text-muted-foreground">Proje (opsiyonel)</label>
               <Select value={form.project_id || "none"} onValueChange={v => setForm(f => ({ ...f, project_id: v === "none" ? "" : v }))}>
-                <SelectTrigger style={{ backgroundColor: "#1A2028", borderColor: "#2A3441" }}><SelectValue /></SelectTrigger>
+                <SelectTrigger className={inputClass}><SelectValue placeholder="Proje seçin..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Seçilmedi —</SelectItem>
                   {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -218,7 +218,7 @@ const CashChecksTab = () => {
               </Select>
             </div>
           </div>
-          <Button onClick={handleSubmit} className="w-full mt-2" style={{ backgroundColor: "#FF6B2B" }} disabled={!form.check_no || !form.amount || !form.due_date}>Kaydet</Button>
+          <Button onClick={handleSubmit} className="w-full mt-2 text-primary-foreground bg-primary hover:bg-primary/90" disabled={!form.check_no || !form.amount || !form.due_date}>Kaydet</Button>
         </DialogContent>
       </Dialog>
       <DeleteConfirmModal

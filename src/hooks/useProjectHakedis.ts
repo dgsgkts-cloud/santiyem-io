@@ -59,6 +59,7 @@ export function useProjectHakedis(projectId: string) {
     const { error } = await supabase.from("project_hakedis").delete().eq("id", id);
     if (error) { toast.error("Silinemedi"); return; }
     setHakedisler(prev => prev.filter(h => h.id !== id));
+    toast.success("🗑️ Hakediş silindi");
   };
 
   const updateHakedisStatus = async (id: string, status: string, statusColor: string, paymentDate?: string) => {
