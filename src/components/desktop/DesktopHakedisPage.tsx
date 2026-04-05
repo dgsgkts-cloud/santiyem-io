@@ -556,7 +556,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
                     <HakedisItemsSection hakedisId={h.id} />
 
-                    <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
                       <button onClick={async () => {
                         const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
                         const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
