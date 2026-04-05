@@ -408,7 +408,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {contract > 0 && (
         <div className="rounded-xl p-4 bg-card border border-border">
           <p className="text-[13px] font-semibold mb-3 text-foreground">Sözleşme Kullanım Durumu</p>
-          <div className="h-3 rounded-full mb-2" style={{ backgroundColor: "#1E2732" }}>
+          <div className="h-3 rounded-full mb-2 bg-muted">
             <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
           </div>
           <div className="flex justify-between text-[12px]">
