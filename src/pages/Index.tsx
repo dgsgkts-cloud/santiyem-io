@@ -423,17 +423,28 @@ const Index = () => {
 
         <div className="px-5 pt-6 pb-4">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E] flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
+            <div className="relative">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isAdmin ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]" : "bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E]"}`}>
+                <User className="w-6 h-6 text-white" />
+              </div>
+              {isAdmin && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#8B5CF6", border: "2px solid #0F1419" }}>
+                  <Zap className="w-3 h-3 text-white" />
+                </div>
+              )}
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
+                {isAdmin && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ backgroundColor: "rgba(139,92,246,0.25)", color: "#A78BFA" }}>ADMIN</span>}
+              </div>
               <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                isAdmin ? "bg-[#8B5CF6]/20 text-[#A78BFA]" :
                 plan === "pro" || plan === "plus" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
                 plan === "office_free" || plan === "office_pro" || plan === "office_custom" ? "bg-blue-500/20 text-blue-400" :
                 "bg-white/10 text-white/50"
               }`}>
-                {plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
+                {isAdmin ? "Tam Erişim ⚡" : plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
               </span>
             </div>
           </div>
