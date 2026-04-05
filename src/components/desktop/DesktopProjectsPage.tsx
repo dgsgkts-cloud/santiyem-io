@@ -56,18 +56,8 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     onProjectIdClear?.();
   };
 
-  const hideStaticProject = (id: string) => {
-    const updated = [...hiddenIds, id];
-    setHiddenIds(updated);
-    localStorage.setItem(HIDDEN_PROJECTS_KEY, JSON.stringify(updated));
-  };
-
   const handleDeleteProject = (id: string) => {
-    if (dbProjects.some(p => p.id === id)) {
-      deleteProject(id);
-    } else {
-      hideStaticProject(id);
-    }
+    deleteProject(id);
   };
 
   // Merge static + DB projects, filter hidden
