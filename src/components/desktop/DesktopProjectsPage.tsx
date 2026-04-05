@@ -60,11 +60,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     deleteProject(id);
   };
 
-  // Merge static + DB projects, filter hidden
-  const allProjects: Project[] = [
-    ...PROJECTS.filter(p => !hiddenIds.includes(p.id)),
-    ...dbProjects.map(dbToProject),
-  ];
+  const allProjects: Project[] = dbProjects.map(dbToProject);
 
   const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
   const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
