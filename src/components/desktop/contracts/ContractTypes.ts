@@ -68,7 +68,6 @@ export interface ForceMajeure {
   status: "onaylandi" | "bekliyor" | "reddedildi";
 }
 
-export const MOCK_CONTRACTS: Contract[] = [
   {
     id: "mock-1", user_id: "", project_id: null,
     name: "Akdeniz Residence İnşaat Sözleşmesi",

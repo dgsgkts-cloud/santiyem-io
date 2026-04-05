@@ -49,7 +49,7 @@ export default function DesktopContractsPage() {
       });
   }, [user]);
 
-  const displayContracts = contracts.length > 0 ? contracts : (user ? [] : MOCK_CONTRACTS);
+  const displayContracts = contracts;
 
   if (loading) {
     return (

@@ -461,11 +461,7 @@ const UPGRADE_CARDS = [
   { plan: "enterprise", emoji: "🏢", name: "Kurumsal", price: "4.999₺/ay", features: ["Sınırsız kullanıcı", "Yetki rolleri", "Öncelikli telefon + WhatsApp desteği", "Özel onboarding"], cta: "Teklif Al →", highlight: false },
 ];
 
-const MOCK_INVOICES = [
-  { date: "15 Nisan 2025", plan: "Profesyonel", amount: "₺399", status: "Ödendi" },
-  { date: "15 Mart 2025", plan: "Profesyonel", amount: "₺399", status: "Ödendi" },
-  { date: "15 Şubat 2025", plan: "Profesyonel", amount: "₺399", status: "Ödendi" },
-];
+const MOCK_INVOICES: { date: string; plan: string; amount: string; status: string }[] = [];
 
 const CANCEL_REASONS = [
   { id: "expensive", label: "Çok pahalı" },

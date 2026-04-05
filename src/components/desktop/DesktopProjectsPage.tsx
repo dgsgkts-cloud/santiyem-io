@@ -41,7 +41,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [hiddenIds, setHiddenIds] = useState<string[]>(getHiddenProjects);
+  
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleBack = () => {
