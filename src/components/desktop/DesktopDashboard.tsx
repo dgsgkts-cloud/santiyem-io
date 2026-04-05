@@ -28,11 +28,8 @@ const formatCurrency = (n: number) => {
   return `₺${Math.round(n)}`;
 };
 
-const UPCOMING_STATIC = [
-  { task: "Temel betonu dökümü", project: "Fabrika", days: 2, urgent: true },
-  { task: "Yapı denetim kontrolü", project: "Villa", days: 4, urgent: false },
-  { task: "Hakediş sunumu", project: "AVM", days: 5, urgent: false },
-];
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import EmptyState from "./EmptyState";
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
   const { profile, user, plan, role } = useUser();
