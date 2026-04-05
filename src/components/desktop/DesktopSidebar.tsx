@@ -223,29 +223,44 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         {/* User row */}
         <div className="px-1 pb-1">
           {collapsed ? (
-            <Tooltip delayDuration={0}>
+          <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTabChange("settings")}
-                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn"
+                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn relative"
                   style={{ height: 40 }}
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: isAdmin ? "#8B5CF6" : "#FF6B2B" }}>
                     <span className="text-white text-[11px] font-bold">{initials}</span>
                   </div>
+                  {isAdmin && (
+                    <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#8B5CF6", border: "2px solid hsl(var(--sidebar-background))" }}>
+                      <Zap className="w-2 h-2 text-white" />
+                    </div>
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {displayName}
+                {displayName} {isAdmin && "⚡ Admin"}
               </TooltipContent>
             </Tooltip>
           ) : (
             <div className="flex items-center gap-2.5 px-2 rounded-lg" style={{ height: 44 }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
-                <span className="text-white text-[11px] font-bold">{initials}</span>
+              <div className="relative shrink-0">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: isAdmin ? "#8B5CF6" : "#FF6B2B" }}>
+                  <span className="text-white text-[11px] font-bold">{initials}</span>
+                </div>
+                {isAdmin && (
+                  <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#8B5CF6", border: "2px solid hsl(var(--sidebar-background))" }}>
+                    <Zap className="w-2 h-2 text-white" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold truncate text-foreground">{displayName}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[13px] font-bold truncate text-foreground">{displayName}</p>
+                  {isAdmin && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(139,92,246,0.2)", color: "#A78BFA" }}>ADMIN</span>}
+                </div>
                 <p className="text-[11px] truncate text-muted-foreground">{profile?.title || "Mühendis"}</p>
               </div>
               <button
