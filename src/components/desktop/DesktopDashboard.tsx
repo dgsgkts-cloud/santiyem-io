@@ -28,6 +28,12 @@ const formatCurrency = (n: number) => {
   return `₺${Math.round(n)}`;
 };
 
+const getDaysDiff = (dateStr: string) => {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const target = new Date(dateStr); target.setHours(0,0,0,0);
+  return Math.ceil((target.getTime() - now.getTime()) / 86400000);
+};
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import EmptyState from "./EmptyState";
 
