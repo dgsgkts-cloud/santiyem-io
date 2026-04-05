@@ -98,8 +98,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         const pym = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
         const prevRev = data.filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(pym)).reduce((s, h) => s + Number(h.net), 0);
         setPrevMonthRevenue(prevRev);
-        const pendingTotal = data.filter(h => h.status === "Bekliyor" || h.status === "Gönderildi").reduce((s, h) => s + Number(h.net), 0);
-        if (pendingTotal > 0) setCashWarning(`⚠️ ${formatCurrency(pendingTotal)} tahsilat bekliyor. Detay →`);
+        // Only show cash warning if there are actually overdue items
+        const nowMs2 = Date.now();
+        const actualOverdue = data.filter(h => {
+          if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+          if (h.expected_payment_date) return nowMs2 > new Date(h.expected_payment_date).getTime();
+          return (nowMs2 - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
+        });
+        const overdueTotal2 = actualOverdue.reduce((s, h) => s + Number(h.net), 0);
+        if (overdueTotal2 > 0) setCashWarning(`⚠️ ${formatCurrency(overdueTotal2)} gecikmiş tahsilat var. Detay →`);
+        else setCashWarning("");
         // Overdue: 30+ days
         const nowMs = Date.now();
         const overdueItems = data.filter(h => {
