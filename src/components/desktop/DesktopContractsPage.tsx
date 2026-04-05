@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import ContractList from "./contracts/ContractList";
 import ContractWizard from "./contracts/ContractWizard";
 import ContractDetail from "./contracts/ContractDetail";
-import { MOCK_CONTRACTS } from "./contracts/ContractTypes";
+
 
 export default function DesktopContractsPage() {
   const { user } = useUser();
