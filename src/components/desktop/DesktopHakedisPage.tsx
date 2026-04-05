@@ -493,7 +493,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                 <div key={h.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: enriched.color }} />
-                    {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1" style={{ backgroundColor: "#1E2732" }} />}
+                    {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1 bg-border" />}
                   </div>
                   <div className="flex-1 mb-4 rounded-lg p-3" style={{ borderLeft: `3px solid ${enriched.color}` }}>
                     <div className="flex items-start justify-between">
