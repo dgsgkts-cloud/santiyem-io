@@ -74,7 +74,7 @@ const CashSummaryTab = () => {
             ) : (
               <div className="space-y-2">
                 {recentAll.map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ backgroundColor: "#1A2028" }}>
+                  <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: tx.type === "income" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)" }}>
                         {tx.type === "income" ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} /> : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />}
