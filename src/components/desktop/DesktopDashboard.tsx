@@ -541,7 +541,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
             {recentReminders.length === 0 ? (
-              <p className="text-[12px] text-center py-4 text-muted-foreground">Henüz hatırlatıcı yok</p>
+              <EmptyState
+                icon="🔔"
+                title="Hatırlatıcı yok"
+                description="Önemli tarihleri kaçırmamak için hatırlatıcı ekleyin."
+                linkText="+ Hatırlatıcı Ekle"
+                onLinkClick={() => onTabChange("reminders")}
+              />
             ) : (
               <div className="space-y-2.5">
                 {recentReminders.map((r) => {
