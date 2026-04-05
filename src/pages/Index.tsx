@@ -276,6 +276,7 @@ const Index = () => {
                 )}
               </div>
               <Footer />
+              </div>
             </div>
           )}
         </div>
