@@ -34,13 +34,6 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
-const HIDDEN_PROJECTS_KEY = "santiyem_hidden_projects";
-
-const getHiddenProjects = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(HIDDEN_PROJECTS_KEY) || "[]");
-  } catch { return []; }
-};
 
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
