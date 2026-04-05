@@ -29,7 +29,7 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
   });
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto space-y-4 md:space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Sözleşme Takibi</h1>
@@ -95,7 +95,8 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                   borderLeftColor: isExpiring ? "#F59E0B" : daysLeft !== null && daysLeft < 0 ? "#EF4444" : undefined,
                 }}
               >
-                <div className="flex items-start justify-between mb-3">
+                {/* Desktop layout */}
+                <div className="hidden sm:flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold truncate text-foreground">{c.name}</h3>
                     <p className="text-xs mt-0.5 text-muted-foreground">{c.counterparty} • {formatCurrency(c.amount)}</p>
@@ -105,9 +106,28 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs mb-3 text-muted-foreground">
+                {/* Mobile layout */}
+                <div className="sm:hidden mb-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-[15px] font-semibold truncate text-foreground flex-1 min-w-0">{c.name}</h3>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ml-2" style={{ color: status.color, backgroundColor: status.bg }}>
+                      {status.icon} {status.label}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground">{c.counterparty}</p>
+                  <p className="text-lg font-bold mt-1 text-foreground">{formatCurrency(c.amount)}</p>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-4 text-xs mb-3 text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(c.start_date)} — {formatDate(c.end_date)}</span>
                   <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
+                    {CONTRACT_TYPES[c.contract_type] || c.contract_type}
+                  </span>
+                </div>
+
+                <div className="sm:hidden flex items-center justify-between text-[12px] mb-3 text-muted-foreground">
+                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatDate(c.start_date)} — {formatDate(c.end_date)}</span>
+                  <span className="px-2 py-0.5 rounded text-[11px]" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
                     {CONTRACT_TYPES[c.contract_type] || c.contract_type}
                   </span>
                 </div>
