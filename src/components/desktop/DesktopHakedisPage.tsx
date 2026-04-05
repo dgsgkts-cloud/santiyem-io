@@ -586,34 +586,56 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />
             <p className="text-[13px] font-semibold" style={{ color: "#EF4444" }}>Gecikmiş Ödeme Tespit Edildi</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[12px]">
-              <thead>
-                <tr>
-                  {["Hakediş", "Tutar", "Düzenleme", "Gecikme", "Yasal Faiz"].map(h => (
-                    <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wide" style={{ color: "#94A3B8", fontSize: 10, borderBottom: "1px solid rgba(239,68,68,0.2)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {overdueItems.map((h) => {
-                  const days = h.expected_payment_date
-                    ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
-                    : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                  const interest = Math.round(h.net * DAILY_RATE * days);
-                  return (
-                    <tr key={h.id}>
-                      <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
-                      <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
-                      <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
-                      <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            {/* Desktop table */}
+            <div className="overflow-x-auto hidden md:block">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr>
+                    {["Hakediş", "Tutar", "Düzenleme", "Gecikme", "Yasal Faiz"].map(h => (
+                      <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wide" style={{ color: "#94A3B8", fontSize: 10, borderBottom: "1px solid rgba(239,68,68,0.2)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {overdueItems.map((h) => {
+                    const days = h.expected_payment_date
+                      ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+                      : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                    const interest = Math.round(h.net * DAILY_RATE * days);
+                    return (
+                      <tr key={h.id}>
+                        <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
+                        <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
+                        <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
+                        <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2">
+              {overdueItems.map((h) => {
+                const days = h.expected_payment_date
+                  ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+                  : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                const interest = Math.round(h.net * DAILY_RATE * days);
+                return (
+                  <div key={h.id} className="rounded-lg p-3 bg-card border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisler.indexOf(h) + 1}</span>
+                      <span className="text-[12px] font-semibold" style={{ color: "#EF4444" }}>{days} gün gecikmiş</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[12px]">
+                      <div><span className="text-muted-foreground">Tutar:</span> <span className="font-mono font-semibold text-foreground">{fmt(h.net)}</span></div>
+                      <div><span className="text-muted-foreground">Faiz:</span> <span className="font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</span></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           <p className="text-[10px] mt-3" style={{ color: "#475569" }}>
             Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir.
           </p>
