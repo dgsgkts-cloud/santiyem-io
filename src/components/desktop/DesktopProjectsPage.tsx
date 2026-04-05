@@ -171,7 +171,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.end}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                      <div className="flex-1 h-1.5 rounded-full bg-muted">
                         <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                       </div>
                       <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
