@@ -314,8 +314,7 @@ const PricingPanel = () => {
               key={plan.id}
               className={`relative rounded-2xl border p-5 flex flex-col ${plan.featured ? "border-[#FF6B2B] shadow-lg shadow-[#FF6B2B]/10 md:scale-[1.02]" : "border-border"}`}
               style={{
-                backgroundColor: isPremium ? "rgba(15,20,25,0.8)" : plan.featured ? "rgba(255,107,43,0.03)" : undefined,
-                borderColor: isPremium ? "#2A3441" : undefined,
+                backgroundColor: plan.featured ? "rgba(255,107,43,0.03)" : undefined,
               }}
             >
               {plan.badge && (

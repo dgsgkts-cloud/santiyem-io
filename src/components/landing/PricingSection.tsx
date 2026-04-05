@@ -112,7 +112,7 @@ const PricingSection = () => {
                 : { display: `${p.monthlyPrice.toLocaleString("tr-TR")}₺`, period: "/ay", sub: null };
             return (
               <div key={p.name} className={`rounded-xl p-6 border relative ${p.popular ? "ring-1 ring-[#FF6B2B]/50" : ""}`}
-                style={{ background: p.isPremium ? "rgba(15,20,25,0.9)" : "#161C23", borderColor: p.popular ? "rgba(255,107,43,0.3)" : "#1E2732" }}>
+                style={{ background: "#161C23", borderColor: p.popular ? "rgba(255,107,43,0.3)" : "#1E2732" }}>
                 {p.popular && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-0.5 rounded-full font-medium text-white" style={{ background: "#FF6B2B" }}>
                     En Popüler
