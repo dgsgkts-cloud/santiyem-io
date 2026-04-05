@@ -292,8 +292,8 @@ const Index = () => {
       >
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center justify-center rounded-xl transition-colors relative z-[50]"
-          style={{ backgroundColor: "hsl(var(--accent))", color: "white", minWidth: 44, minHeight: 44 }}
+          className="flex items-center justify-center transition-colors relative z-[50]"
+          style={{ backgroundColor: "#FF6B2B", color: "#FFFFFF", minWidth: 44, minHeight: 44, borderRadius: 8, padding: 8 }}
         >
           <Menu className="w-5 h-5" />
         </button>
