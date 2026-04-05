@@ -488,7 +488,8 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="min-h-full flex flex-col">
         <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
             <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
