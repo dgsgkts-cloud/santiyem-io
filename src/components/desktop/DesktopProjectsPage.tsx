@@ -190,27 +190,28 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
             </tbody>
           </table>
 
-          {/* Mobile/Tablet list */}
-          <div className="lg:hidden divide-y" style={{ borderColor: "#1E2732" }}>
+          {/* Mobile/Tablet card list */}
+          <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
             {allProjects.map((p) => (
-              <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="px-4 py-3 space-y-2 cursor-pointer active:bg-[#1C242D] transition-colors" style={{ borderColor: "#1E2732" }}>
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold truncate text-foreground">{p.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{p.client}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                  </div>
+              <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                  <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                <h4 className="text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
+                <p className="text-[13px] mb-3 text-muted-foreground">{p.client}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 rounded-full bg-muted">
                     <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
                   </div>
-                  <span className="text-[11px] font-mono shrink-0 text-muted-foreground">{p.progress}%</span>
+                  <span className="text-[13px] font-mono font-semibold shrink-0 text-foreground">{p.progress}%</span>
+                </div>
+                <div className="flex items-center justify-between mt-3 text-[12px] text-muted-foreground">
+                  <span>{p.start}</span>
+                  <span>→</span>
+                  <span>{p.end}</span>
                 </div>
               </div>
             ))}
