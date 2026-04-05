@@ -56,7 +56,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
   const allProjects: Project[] = dbProjects.map(dbToProject);
 
   const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
-  const isDbProject = (id: string) => dbProjects.some(p => p.id === id);
+  
 
   if (selectedProject) {
     return (
