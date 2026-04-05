@@ -643,23 +643,38 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3 text-foreground">Yaklaşan İşler</h3>
-            <div className="space-y-2.5">
-              {UPCOMING_STATIC.map((u, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: u.urgent ? "#EF4444" : "#F59E0B" }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.task}</p>
-                    <p className="text-[10px] lg:text-[11px] text-muted-foreground">{u.project}</p>
-                  </div>
-                  <span
-                    className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
-                    style={{ backgroundColor: u.urgent ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", color: u.urgent ? "#EF4444" : "#F59E0B" }}
-                  >
-                    {u.days}g
-                  </span>
+            {(() => {
+              const upcomingReminders = reminders
+                .filter(r => !r.done && getDaysDiff(r.reminder_date) >= 0 && getDaysDiff(r.reminder_date) <= 14)
+                .sort((a, b) => getDaysDiff(a.reminder_date) - getDaysDiff(b.reminder_date))
+                .slice(0, 5);
+              if (upcomingReminders.length === 0) {
+                return <p className="text-[12px] text-center py-4 text-muted-foreground">Yaklaşan iş yok ✓</p>;
+              }
+              return (
+                <div className="space-y-2.5">
+                  {upcomingReminders.map((u) => {
+                    const days = getDaysDiff(u.reminder_date);
+                    const urgent = days <= 2;
+                    return (
+                      <div key={u.id} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: urgent ? "#EF4444" : "#F59E0B" }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.title}</p>
+                          {u.note && <p className="text-[10px] lg:text-[11px] text-muted-foreground">{u.note}</p>}
+                        </div>
+                        <span
+                          className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
+                          style={{ backgroundColor: urgent ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", color: urgent ? "#EF4444" : "#F59E0B" }}
+                        >
+                          {days === 0 ? "Bugün" : `${days}g`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         </div>
       </div>
