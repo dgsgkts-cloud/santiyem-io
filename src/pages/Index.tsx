@@ -275,8 +275,8 @@ const Index = () => {
                   <RemindersPanel />
                 )}
                 </div>
-                <Footer />
               </div>
+              <Footer />
             </div>
           )}
         </div>
@@ -488,8 +488,9 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col">
-        <div className="flex-1 pb-8 md:pb-10">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex min-h-full flex-col">
+          <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
             <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
           ) : activeTab === "chat" ? (
@@ -523,7 +524,8 @@ const Index = () => {
             <RemindersPanel />
           )}
         </div>
-        {activeTab !== "chat" && <div className="mt-auto"><Footer /></div>}
+        </div>
+        {activeTab !== "chat" && <Footer />}
       </div>
 
       {activeTab === "chat" && (
