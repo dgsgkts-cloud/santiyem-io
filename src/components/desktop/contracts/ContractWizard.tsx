@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Upload, Plus, Trash2, Bot, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cardStyle, inputStyle, labelStyle, CONTRACT_TYPES, CriticalClause } from "./ContractTypes";
+import { cardStyleClass, CONTRACT_TYPES, CriticalClause } from "./ContractTypes";
 
 interface Props {
   contract?: Contract;
@@ -24,7 +24,6 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
-  // Form state
   const [form, setForm] = useState<ContractInput & { contract_no?: string }>({
     name: contract?.name || "",
     project_id: contract?.project_id || "",
@@ -145,6 +144,8 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
 
   const stepLabels = ["Temel Bilgiler", "Kritik Maddeler", "Ödeme Takvimi", "PDF Yükleme"];
 
+  const inputClass = "bg-background border border-border text-foreground";
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <button onClick={onCancel} className="text-sm flex items-center gap-1 text-muted-foreground">
@@ -165,20 +166,20 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               <button
                 onClick={() => setStep(s)}
                 className="flex items-center gap-2 text-xs font-medium"
-                style={{ color: active ? "#FF6B2B" : done ? "#22C55E" : "#64748B" }}
+                style={{ color: active ? "#FF6B2B" : done ? "#22C55E" : undefined }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${!active && !done ? "bg-muted text-muted-foreground" : ""}`}
                   style={{
-                    backgroundColor: active ? "rgba(255,107,43,0.15)" : done ? "rgba(34,197,94,0.15)" : "#1E2732",
-                    color: active ? "#FF6B2B" : done ? "#22C55E" : "#64748B",
+                    backgroundColor: active ? "rgba(255,107,43,0.15)" : done ? "rgba(34,197,94,0.15)" : undefined,
+                    color: active ? "#FF6B2B" : done ? "#22C55E" : undefined,
                   }}
                 >
                   {done ? <Check className="w-3 h-3" /> : s}
                 </div>
-                <span className="hidden md:inline">{label}</span>
+                <span className={`hidden md:inline ${!active && !done ? "text-muted-foreground" : ""}`}>{label}</span>
               </button>
-              {i < stepLabels.length - 1 && <div className="flex-1 h-px" style={{ backgroundColor: "#1E2732" }} />}
+              {i < stepLabels.length - 1 && <div className="flex-1 h-px bg-border" />}
             </div>
           );
         })}
@@ -186,44 +187,44 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
 
       {/* Step 1: Basics */}
       {step === 1 && (
-        <div className="space-y-4 rounded-xl p-5" style={cardStyle}>
+        <div className={`space-y-4 p-5 ${cardStyleClass}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Proje Seçin</label>
-              <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle}>
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Proje Seçin</label>
+              <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`}>
                 <option value="">Proje seçiniz (opsiyonel)</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Sözleşme Adı *</label>
-              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Sözleşme adı" />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Sözleşme Adı *</label>
+              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} placeholder="örn: Akdeniz Residence İnşaat Sözleşmesi" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>İşveren / Karşı Taraf *</label>
-              <input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Firma / kişi adı" />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">İşveren / Karşı Taraf *</label>
+              <input value={form.counterparty} onChange={e => setForm(f => ({ ...f, counterparty: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} placeholder="örn: ABC Yapı A.Ş." />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Sözleşme Türü</label>
-              <select value={form.contract_type} onChange={e => setForm(f => ({ ...f, contract_type: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle}>
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Sözleşme Türü</label>
+              <select value={form.contract_type} onChange={e => setForm(f => ({ ...f, contract_type: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`}>
                 {Object.entries(CONTRACT_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Sözleşme Tutarı (₺)</label>
-              <input type="number" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Sözleşme Tutarı (₺)</label>
+              <input type="number" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} placeholder="örn: 4500000" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Sözleşme No</label>
-              <input value={form.contract_no || ""} onChange={e => setForm(f => ({ ...f, contract_no: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Opsiyonel" />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Sözleşme No</label>
+              <input value={form.contract_no || ""} onChange={e => setForm(f => ({ ...f, contract_no: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} placeholder="Opsiyonel" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Başlangıç Tarihi</label>
-              <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Başlangıç Tarihi</label>
+              <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={labelStyle}>Bitiş Tarihi</label>
-              <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+              <label className="block text-xs font-medium mb-1 text-muted-foreground">Bitiş Tarihi</label>
+              <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none ${inputClass}`} />
             </div>
           </div>
         </div>
@@ -231,10 +232,10 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
 
       {/* Step 2: Critical Clauses */}
       {step === 2 && (
-        <div className="space-y-4 rounded-xl p-5" style={cardStyle}>
+        <div className={`space-y-4 p-5 ${cardStyleClass}`}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Kritik Maddeler</p>
-            <Button onClick={addClause} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
+            <Button onClick={addClause} variant="outline" size="sm" className="h-8 text-xs text-primary">
               <Plus className="w-3 h-3 mr-1" /> Madde Ekle
             </Button>
           </div>
@@ -246,16 +247,16 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           {clauses.map((c, i) => (
             <div key={i} className="rounded-lg p-3 space-y-2 bg-background border border-border">
               <div className="flex items-center gap-2">
-                <input value={c.madde_no} onChange={e => updateClause(i, "madde_no", e.target.value)} className="w-20 rounded px-2 py-1 text-xs outline-none" style={inputStyle} placeholder="Madde No" />
-                <input value={c.konu} onChange={e => updateClause(i, "konu", e.target.value)} className="flex-1 rounded px-2 py-1 text-xs outline-none" style={inputStyle} placeholder="Konu" />
-                <select value={c.onem} onChange={e => updateClause(i, "onem", e.target.value)} className="rounded px-2 py-1 text-xs outline-none" style={inputStyle}>
+                <input value={c.madde_no} onChange={e => updateClause(i, "madde_no", e.target.value)} className={`w-20 rounded px-2 py-1 text-xs outline-none ${inputClass}`} placeholder="Madde No" />
+                <input value={c.konu} onChange={e => updateClause(i, "konu", e.target.value)} className={`flex-1 rounded px-2 py-1 text-xs outline-none ${inputClass}`} placeholder="Konu" />
+                <select value={c.onem} onChange={e => updateClause(i, "onem", e.target.value)} className={`rounded px-2 py-1 text-xs outline-none ${inputClass}`}>
                   <option value="kritik">🔴 Kritik</option>
                   <option value="onemli">🟡 Önemli</option>
                   <option value="bilgi">🟢 Bilgi</option>
                 </select>
-                <button onClick={() => removeClause(i)}><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+                <button onClick={() => removeClause(i)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
               </div>
-              <textarea value={c.icerik} onChange={e => updateClause(i, "icerik", e.target.value)} rows={2} className="w-full rounded px-2 py-1 text-xs outline-none resize-none" style={inputStyle} placeholder="İçerik" />
+              <textarea value={c.icerik} onChange={e => updateClause(i, "icerik", e.target.value)} rows={2} className={`w-full rounded px-2 py-1 text-xs outline-none resize-none ${inputClass}`} placeholder="İçerik" />
             </div>
           ))}
         </div>
@@ -263,10 +264,10 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
 
       {/* Step 3: Payment Schedule */}
       {step === 3 && (
-        <div className="space-y-4 rounded-xl p-5" style={cardStyle}>
+        <div className={`space-y-4 p-5 ${cardStyleClass}`}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Ödeme Takvimi</p>
-            <Button onClick={addScheduleItem} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
+            <Button onClick={addScheduleItem} variant="outline" size="sm" className="h-8 text-xs text-primary">
               <Plus className="w-3 h-3 mr-1" /> Hakediş Ekle
             </Button>
           </div>
@@ -281,16 +282,15 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               {schedule.map((s, i) => (
                 <div key={i} className="grid grid-cols-[50px_1fr_1fr_1fr_32px] gap-2 items-center">
                   <span className="text-xs font-mono text-center text-muted-foreground">{s.hakedis_no}</span>
-                  <input type="date" value={s.tarih} onChange={e => updateScheduleItem(i, "tarih", e.target.value)} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} />
-                  <input type="number" value={s.tutar || ""} onChange={e => updateScheduleItem(i, "tutar", Number(e.target.value))} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} />
-                  <input value={s.not} onChange={e => updateScheduleItem(i, "not", e.target.value)} className="rounded px-2 py-1.5 text-xs outline-none" style={inputStyle} placeholder="Not" />
-                  <button onClick={() => removeScheduleItem(i)}><Trash2 className="w-3.5 h-3.5" style={{ color: "#EF4444" }} /></button>
+                  <input type="date" value={s.tarih} onChange={e => updateScheduleItem(i, "tarih", e.target.value)} className={`rounded px-2 py-1.5 text-xs outline-none ${inputClass}`} />
+                  <input type="number" value={s.tutar || ""} onChange={e => updateScheduleItem(i, "tutar", Number(e.target.value))} className={`rounded px-2 py-1.5 text-xs outline-none ${inputClass}`} />
+                  <input value={s.not} onChange={e => updateScheduleItem(i, "not", e.target.value)} className={`rounded px-2 py-1.5 text-xs outline-none ${inputClass}`} placeholder="Not" />
+                  <button onClick={() => removeScheduleItem(i)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Total check */}
           {schedule.length > 0 && form.amount > 0 && (
             <div className="rounded-lg p-3 flex items-center justify-between text-xs" style={{
               backgroundColor: Math.abs(scheduleDiff) < 1 ? "rgba(34,197,94,0.08)" : "rgba(245,158,11,0.08)",
@@ -311,14 +311,13 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
       {step === 4 && (
         <div className="space-y-4">
           <div
-            className="rounded-xl p-8 text-center cursor-pointer transition-colors"
-            style={{ ...cardStyle, border: "2px dashed #2A3441" }}
+            className={`p-8 text-center cursor-pointer transition-colors border-2 border-dashed border-border ${cardStyleClass}`}
             onClick={() => !analyzing && pdfRef.current?.click()}
           >
             <input ref={pdfRef} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); }} />
             {analyzing ? (
               <>
-                <div className="w-10 h-10 mx-auto mb-3 border-2 border-t-[#FF6B2B] border-[#1E2732] rounded-full animate-spin" />
+                <div className="w-10 h-10 mx-auto mb-3 border-2 border-t-primary border-border rounded-full animate-spin" />
                 <p className="text-sm font-medium text-foreground">AI sözleşmeyi analiz ediyor...</p>
                 <p className="text-xs mt-1 text-muted-foreground">Bu işlem 10-30 saniye sürebilir</p>
               </>
@@ -330,10 +329,10 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               </>
             ) : (
               <>
-                <Upload className="w-10 h-10 mx-auto mb-3" style={{ color: "#FF6B2B" }} />
+                <Upload className="w-10 h-10 mx-auto mb-3 text-primary" />
                 <p className="text-sm font-medium text-foreground">Sözleşme PDF'ini yükleyin</p>
                 <p className="text-xs mt-1 text-muted-foreground">AI otomatik analiz edip bilgileri çıkaracak • Max 10MB</p>
-                <p className="text-[10px] mt-2" style={{ color: "#475569" }}>PDF, DOC, DOCX, TXT desteklenir</p>
+                <p className="text-[10px] mt-2 text-muted-foreground">PDF, DOC, DOCX, TXT desteklenir</p>
               </>
             )}
           </div>
@@ -341,17 +340,16 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           {form.ai_analysis && (
             <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
               <div className="flex items-center gap-2 mb-2">
-                <Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-                <span className="text-xs font-semibold" style={{ color: "#FF6B2B" }}>AI Analiz Sonucu</span>
+                <Bot className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">AI Analiz Sonucu</span>
               </div>
               <p className="text-xs text-muted-foreground">{form.ai_analysis.ozet}</p>
             </div>
           )}
 
-          {/* Notes */}
-          <div className="rounded-xl p-5" style={cardStyle}>
-            <label className="block text-xs font-medium mb-1" style={labelStyle}>Önemli Notlar</label>
-            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none" style={inputStyle} placeholder="Özel notlar..." />
+          <div className={`p-5 ${cardStyleClass}`}>
+            <label className="block text-xs font-medium mb-1 text-muted-foreground">Önemli Notlar</label>
+            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className={`w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none ${inputClass}`} placeholder="Özel notlar..." />
           </div>
         </div>
       )}
@@ -362,7 +360,6 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           onClick={() => step > 1 ? setStep(step - 1) : onCancel()}
           variant="outline"
           className="h-9 text-sm"
-          style={{ borderColor: "#1E2732", color: "#94A3B8" }}
         >
           <ArrowLeft className="w-4 h-4 mr-1" /> {step > 1 ? "Geri" : "İptal"}
         </Button>
@@ -370,8 +367,7 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           <Button
             onClick={() => setStep(step + 1)}
             disabled={!canProceed()}
-            className="h-9 text-sm font-semibold text-white"
-            style={{ backgroundColor: "#FF6B2B" }}
+            className="h-9 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90"
           >
             İleri <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -379,10 +375,9 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
           <Button
             onClick={handleSubmit}
             disabled={saving}
-            className="h-9 text-sm font-semibold text-white"
-            style={{ backgroundColor: "#FF6B2B" }}
+            className="h-9 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90"
           >
-            {saving ? "Kaydediliyor..." : "Sözleşmeyi Kaydet"}
+            {saving ? "Kaydediliyor..." : contract ? "Güncelle" : "Sözleşmeyi Kaydet"}
           </Button>
         )}
       </div>
