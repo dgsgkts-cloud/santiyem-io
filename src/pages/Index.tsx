@@ -60,7 +60,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
-  { id: "profitability", label: "Karlılık & Nakit Akışı", emoji: "📊", icon: FileText },
+  { id: "profitability", label: "Gelir & Gider Takibi", emoji: "📊", icon: FileText },
   { id: "cash-tracking", label: "Kasa & Ödeme Takibi", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
