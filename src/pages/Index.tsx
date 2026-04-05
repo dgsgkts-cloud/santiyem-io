@@ -525,6 +525,7 @@ const Index = () => {
           )}
         </div>
         {activeTab !== "chat" && <Footer />}
+        </div>
       </div>
 
       {activeTab === "chat" && (
