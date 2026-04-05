@@ -233,6 +233,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
+          return (
             <Tooltip key={stat.label} delayDuration={200}>
               <TooltipTrigger asChild>
                 <div
