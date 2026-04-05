@@ -244,9 +244,9 @@ const Index = () => {
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
-            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background">
-              <div className="flex min-h-[calc(100vh-52px)] flex-col">
-                <div className="flex-1 pb-12">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-background" style={{ display: 'grid', gridTemplateRows: '1fr auto', alignContent: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateRows: '1fr auto', minHeight: '100%' }}>
+                <div className="pb-12">
                   {activeTab === "dashboard" ? (
                     <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
                   ) : activeTab === "projects" ? (
