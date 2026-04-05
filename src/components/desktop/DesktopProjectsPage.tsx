@@ -3,7 +3,7 @@ import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
   LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
 } from "lucide-react";
-import { PROJECTS, Project } from "@/lib/projectsData";
+import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
 import AddProjectModal from "./AddProjectModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
