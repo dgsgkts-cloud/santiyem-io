@@ -83,7 +83,7 @@ const TAB_TITLES: Record<string, string> = {
   hakedis: "Hakediş Yönetimi",
   "site-diary": "Şantiye Günlüğü",
   contracts: "Sözleşme Takibi",
-  profitability: "Karlılık & Nakit Akışı",
+  profitability: "Gelir & Gider Takibi",
   "cash-tracking": "Kasa & Ödeme Takibi",
   settings: "Ayarlar",
   
