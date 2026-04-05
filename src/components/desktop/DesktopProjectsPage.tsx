@@ -131,7 +131,15 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         </div>
       </div>
 
-      {viewMode === "list" ? (
+      {allProjects.length === 0 ? (
+        <EmptyState
+          icon="🏗️"
+          title="Henüz proje yok"
+          description="İlk projenizi ekleyerek şantiye takibine başlayın."
+          buttonText="+ Yeni Proje Ekle"
+          onButtonClick={() => setShowAddModal(true)}
+        />
+      ) : viewMode === "list" ? (
         <div className="rounded-xl overflow-hidden bg-card border border-border">
           {/* Desktop table */}
           <table className="w-full text-[13px] hidden lg:table">
