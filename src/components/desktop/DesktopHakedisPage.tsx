@@ -528,7 +528,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                             <ChevronDown className="w-3 h-3" />
                           </button>
                           {statusMenuId === h.id && (
-                            <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px]" style={{ backgroundColor: "#1C242D", border: "1px solid #2D3748" }}>
+                            <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px] bg-card border border-border">
                               {STATUS_OPTIONS.map(opt => (
                                 <button key={opt.label} onClick={() => handleStatusChange(h.id, opt.label, opt.color)}
                                   className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/5 flex items-center gap-2" style={{ color: opt.color }}>
