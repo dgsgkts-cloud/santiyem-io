@@ -11,7 +11,7 @@ import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
