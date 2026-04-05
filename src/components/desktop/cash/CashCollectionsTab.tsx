@@ -72,7 +72,8 @@ const CashCollectionsTab = () => {
         </Button>
       </div>
 
-      <Card className="border border-border bg-card">
+      {/* Desktop table */}
+      <Card className="border border-border bg-card hidden md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
@@ -111,6 +112,37 @@ const CashCollectionsTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {collections.length === 0 ? (
+          <p className="text-center py-12 text-muted-foreground text-[13px]">Henüz tahsilat yok</p>
+        ) : collections.map(c => {
+          const si = statusInfo(c.status);
+          const proj = projects.find(pr => pr.id === c.project_id);
+          return (
+            <Card key={c.id} className="border border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-[15px] font-semibold text-foreground">{c.sender}</p>
+                    <p className="text-[12px] text-muted-foreground">{c.collection_type} • {PAYMENT_TYPES.find(t => t.value === c.payment_type)?.label}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ backgroundColor: si.color + "20", color: si.color }}>{si.label}</span>
+                    <button onClick={() => setDeleteTarget({ id: c.id, name: `${c.sender} - ₺${fmt(c.amount)}` })} className="p-1.5 rounded hover-danger"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                <p className="text-xl font-bold mb-1" style={{ color: "#22C55E" }}>₺{fmt(c.amount)}</p>
+                <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
+                  <span>📅 {c.collection_date}</span>
+                  {proj && <span>📁 {proj.name}</span>}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-md border-border">
