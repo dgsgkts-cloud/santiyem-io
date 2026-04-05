@@ -107,7 +107,16 @@ const Index = () => {
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+
+  // Show onboarding for new users
+  useEffect(() => {
+    if (user?.created_at && shouldShowOnboarding(user.created_at)) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
     const handler = () => setIsLg(mql.matches);
