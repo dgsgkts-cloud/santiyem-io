@@ -11,9 +11,9 @@ export const CONTRACT_TYPES: Record<string, string> = {
   diger: "Diğer",
 };
 
-export const cardStyle = { backgroundColor: "#161C23", border: "1px solid #1E2732", borderRadius: 12 };
-export const inputStyle: React.CSSProperties = { backgroundColor: "#0F1419", border: "1px solid #1E2732", color: "#F1F5F9" };
-export const labelStyle = { color: "#94A3B8" };
+export const cardStyleClass = "bg-card border border-border rounded-xl";
+export const inputStyleClass = "bg-background border border-border text-foreground";
+export const labelStyleClass = "text-muted-foreground";
 
 export function getDaysRemaining(endDate: string | null): number | null {
   if (!endDate) return null;
