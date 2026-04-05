@@ -355,7 +355,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         <div className="flex items-center gap-2">
           {hakedisler.length > 0 && (
             <>
-              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold" style={{ backgroundColor: "#1E2732" }}>
+              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold bg-muted text-foreground">
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
               <button
@@ -408,7 +408,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
       {contract > 0 && (
         <div className="rounded-xl p-4 bg-card border border-border">
           <p className="text-[13px] font-semibold mb-3 text-foreground">Sözleşme Kullanım Durumu</p>
-          <div className="h-3 rounded-full mb-2" style={{ backgroundColor: "#1E2732" }}>
+          <div className="h-3 rounded-full mb-2 bg-muted">
             <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
           </div>
           <div className="flex justify-between text-[12px]">
@@ -493,7 +493,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                 <div key={h.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: enriched.color }} />
-                    {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1" style={{ backgroundColor: "#1E2732" }} />}
+                    {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1 bg-border" />}
                   </div>
                   <div className="flex-1 mb-4 rounded-lg p-3" style={{ borderLeft: `3px solid ${enriched.color}` }}>
                     <div className="flex items-start justify-between">
@@ -528,7 +528,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                             <ChevronDown className="w-3 h-3" />
                           </button>
                           {statusMenuId === h.id && (
-                            <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px]" style={{ backgroundColor: "#1C242D", border: "1px solid #2D3748" }}>
+                            <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px] bg-card border border-border">
                               {STATUS_OPTIONS.map(opt => (
                                 <button key={opt.label} onClick={() => handleStatusChange(h.id, opt.label, opt.color)}
                                   className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/5 flex items-center gap-2" style={{ color: opt.color }}>
@@ -556,7 +556,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
 
                     <HakedisItemsSection hakedisId={h.id} />
 
-                    <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid #1E2732" }}>
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
                       <button onClick={async () => {
                         const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
                         const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
@@ -586,34 +586,56 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />
             <p className="text-[13px] font-semibold" style={{ color: "#EF4444" }}>Gecikmiş Ödeme Tespit Edildi</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[12px]">
-              <thead>
-                <tr>
-                  {["Hakediş", "Tutar", "Düzenleme", "Gecikme", "Yasal Faiz"].map(h => (
-                    <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wide" style={{ color: "#94A3B8", fontSize: 10, borderBottom: "1px solid rgba(239,68,68,0.2)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {overdueItems.map((h) => {
-                  const days = h.expected_payment_date
-                    ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
-                    : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                  const interest = Math.round(h.net * DAILY_RATE * days);
-                  return (
-                    <tr key={h.id}>
-                      <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
-                      <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
-                      <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
-                      <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            {/* Desktop table */}
+            <div className="overflow-x-auto hidden md:block">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr>
+                    {["Hakediş", "Tutar", "Düzenleme", "Gecikme", "Yasal Faiz"].map(h => (
+                      <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wide" style={{ color: "#94A3B8", fontSize: 10, borderBottom: "1px solid rgba(239,68,68,0.2)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {overdueItems.map((h) => {
+                    const days = h.expected_payment_date
+                      ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+                      : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                    const interest = Math.round(h.net * DAILY_RATE * days);
+                    return (
+                      <tr key={h.id}>
+                        <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
+                        <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
+                        <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
+                        <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2">
+              {overdueItems.map((h) => {
+                const days = h.expected_payment_date
+                  ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+                  : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                const interest = Math.round(h.net * DAILY_RATE * days);
+                return (
+                  <div key={h.id} className="rounded-lg p-3 bg-card border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisler.indexOf(h) + 1}</span>
+                      <span className="text-[12px] font-semibold" style={{ color: "#EF4444" }}>{days} gün gecikmiş</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[12px]">
+                      <div><span className="text-muted-foreground">Tutar:</span> <span className="font-mono font-semibold text-foreground">{fmt(h.net)}</span></div>
+                      <div><span className="text-muted-foreground">Faiz:</span> <span className="font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</span></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           <p className="text-[10px] mt-3" style={{ color: "#475569" }}>
             Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir.
           </p>
