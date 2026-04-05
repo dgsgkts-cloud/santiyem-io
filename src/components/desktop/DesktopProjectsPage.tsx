@@ -118,7 +118,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               <span className="text-base lg:text-lg">{s.emoji}</span>
               <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
             </div>
-            <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: s.alert ? "#EF4444" : "#F1F5F9" }}>
+            <p className={`text-xl lg:text-[28px] font-bold ${s.alert ? '' : 'text-foreground'}`} style={{ fontFamily: "'Space Grotesk', sans-serif", ...(s.alert ? { color: "#EF4444" } : {}) }}>
               {s.value}
             </p>
           </div>
