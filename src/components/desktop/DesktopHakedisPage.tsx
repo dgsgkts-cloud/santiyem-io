@@ -630,19 +630,19 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             </div>
             <div>
               <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
-              <input value={formPeriod} onChange={e => setFormPeriod(e.target.value)} placeholder="ör: Ocak 2026"
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
+              <input value={formPeriod} onChange={e => setFormPeriod(e.target.value)} placeholder="örn: Ocak 2026"
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
-                <input type="number" value={formAmount} onChange={e => setFormAmount(e.target.value)} placeholder="850000"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
+                <input type="number" value={formAmount} onChange={e => setFormAmount(e.target.value)} placeholder="örn: 485000"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
               </div>
               <div>
                 <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
-                <input type="number" value={formKdvRate} onChange={e => setFormKdvRate(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
+                <input type="number" value={formKdvRate} onChange={e => setFormKdvRate(e.target.value)} placeholder="20"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
               </div>
             </div>
             <button onClick={handleAdd} disabled={!formPeriod || !formAmount}
