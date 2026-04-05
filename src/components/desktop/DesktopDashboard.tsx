@@ -433,7 +433,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </div>
 
             {displayProjects.length === 0 ? (
-              <p className="text-[12px] text-center py-6 text-muted-foreground">Henüz proje eklenmemiş</p>
+              <div className="py-6 px-4">
+                <EmptyState
+                  icon="🏗️"
+                  title="Henüz proje yok"
+                  description="İlk projenizi ekleyerek şantiye takibine başlayın."
+                  buttonText="+ İlk Projeyi Oluştur"
+                  onButtonClick={() => onTabChange("projects")}
+                />
+              </div>
             ) : (
               <>
                 {/* Desktop table */}
