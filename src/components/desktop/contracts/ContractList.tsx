@@ -61,10 +61,19 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
 
       {/* Contract Cards */}
       {contracts.length === 0 ? (
-        <div className="text-center py-16 rounded-xl" style={cardStyle}>
-          <FileText className="w-12 h-12 mx-auto mb-3" style={{ color: "#334155" }} />
-          <p className="text-sm font-medium text-muted-foreground">Henüz sözleşme eklenmedi</p>
-          <p className="text-xs mt-1" style={{ color: "#475569" }}>Yeni bir sözleşme ekleyerek başlayın</p>
+        <div className="rounded-xl" style={cardStyle}>
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <span className="text-5xl mb-4">📄</span>
+            <h3 className="text-base font-bold text-foreground mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Sözleşmelerinizi takip edin
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm mb-5">
+              Sözleşme ekleyerek vade tarihleri, ödeme takvimleri ve cezai şartları otomatik takip edin.
+            </p>
+            <Button onClick={onAdd} className="text-sm font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
+              <Plus className="w-4 h-4 mr-1.5" /> Yeni Sözleşme Ekle
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

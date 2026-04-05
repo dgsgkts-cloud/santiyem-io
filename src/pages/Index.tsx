@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
@@ -60,7 +61,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
-  { id: "profitability", label: "Karlılık & Nakit Akışı", emoji: "📊", icon: FileText },
+  { id: "profitability", label: "Gelir & Gider Takibi", emoji: "📊", icon: FileText },
   { id: "cash-tracking", label: "Kasa & Ödeme Takibi", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
@@ -83,7 +84,7 @@ const TAB_TITLES: Record<string, string> = {
   hakedis: "Hakediş Yönetimi",
   "site-diary": "Şantiye Günlüğü",
   contracts: "Sözleşme Takibi",
-  profitability: "Karlılık & Nakit Akışı",
+  profitability: "Gelir & Gider Takibi",
   "cash-tracking": "Kasa & Ödeme Takibi",
   settings: "Ayarlar",
   
@@ -106,7 +107,16 @@ const Index = () => {
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+
+  // Show onboarding for new users
+  useEffect(() => {
+    if (user?.created_at && shouldShowOnboarding(user.created_at)) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
     const handler = () => setIsLg(mql.matches);
@@ -215,6 +225,7 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
+        <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
 
         <div className="flex-1 flex flex-col min-w-0">

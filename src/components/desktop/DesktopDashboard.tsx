@@ -11,7 +11,7 @@ import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -28,11 +28,14 @@ const formatCurrency = (n: number) => {
   return `₺${Math.round(n)}`;
 };
 
-const UPCOMING_STATIC = [
-  { task: "Temel betonu dökümü", project: "Fabrika", days: 2, urgent: true },
-  { task: "Yapı denetim kontrolü", project: "Villa", days: 4, urgent: false },
-  { task: "Hakediş sunumu", project: "AVM", days: 5, urgent: false },
-];
+const getDaysDiff = (dateStr: string) => {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const target = new Date(dateStr); target.setHours(0,0,0,0);
+  return Math.ceil((target.getTime() - now.getTime()) / 86400000);
+};
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import EmptyState from "./EmptyState";
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
   const { profile, user, plan, role } = useUser();
@@ -95,8 +98,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         const pym = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
         const prevRev = data.filter(h => h.status === "Ödendi" && h.payment_date && (h.payment_date as string).startsWith(pym)).reduce((s, h) => s + Number(h.net), 0);
         setPrevMonthRevenue(prevRev);
-        const pendingTotal = data.filter(h => h.status === "Bekliyor" || h.status === "Gönderildi").reduce((s, h) => s + Number(h.net), 0);
-        if (pendingTotal > 0) setCashWarning(`⚠️ ${formatCurrency(pendingTotal)} tahsilat bekliyor. Detay →`);
+        // Only show cash warning if there are actually overdue items
+        const nowMs2 = Date.now();
+        const actualOverdue = data.filter(h => {
+          if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+          if (h.expected_payment_date) return nowMs2 > new Date(h.expected_payment_date).getTime();
+          return (nowMs2 - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
+        });
+        const overdueTotal2 = actualOverdue.reduce((s, h) => s + Number(h.net), 0);
+        if (overdueTotal2 > 0) setCashWarning(`⚠️ ${formatCurrency(overdueTotal2)} gecikmiş tahsilat var. Detay →`);
+        else setCashWarning("");
         // Overdue: 30+ days
         const nowMs = Date.now();
         const overdueItems = data.filter(h => {
@@ -173,10 +184,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const remindersLocked = !canAccessReminders(plan);
 
   const statCards = [
-    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked },
-    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked },
-    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked },
-    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked },
+    { label: "Toplam Proje", value: String(totalProjects), icon: FolderOpen, desc: "Kayıtlı", locked: projectsLocked, tooltip: "Sistemdeki tüm projelerinizin sayısı" },
+    { label: "Devam Eden", value: String(activeProjects), icon: Clock, desc: "Aktif", locked: projectsLocked, tooltip: "Şu an aktif olan projeler" },
+    { label: "Hakediş", value: formatCurrency(totalHakedis), icon: TrendingUp, desc: "Toplam", locked: hakedisLocked, tooltip: "Tüm projelerinizdeki toplam hakediş tutarı" },
+    { label: "Geciken", value: String(delayedReminders), icon: AlertTriangle, desc: "Dikkat!", isAlert: delayedReminders > 0, locked: remindersLocked, tooltip: "Vadesi geçmiş hatırlatıcılar" },
   ];
 
   const displayProjects = projects.slice(0, 5).map(p => ({
@@ -223,24 +234,30 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div
-              key={stat.label}
-              className="rounded-xl transition-all duration-150 relative overflow-hidden bg-card border border-border" style={{ padding: "20px 24px" }}
-            >
-              {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
-              <div className="flex items-center gap-2 mb-2 lg:mb-3">
-                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
-                  <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
+            <Tooltip key={stat.label} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div
+                  className="rounded-xl transition-all duration-150 relative overflow-hidden bg-card border border-border" style={{ padding: "20px 24px" }}
+                >
+                  {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
+                  <div className="flex items-center gap-2 mb-2 lg:mb-3">
+                    <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
+                      <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
+                    </div>
+                    <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">{stat.label}</span>
+                  </div>
+                  <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {stat.locked ? "—" : stat.value}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
+                  </div>
                 </div>
-                <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">{stat.label}</span>
-              </div>
-              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {stat.locked ? "—" : stat.value}
-              </p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
-              </div>
-            </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {stat.tooltip}
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </div>
@@ -320,7 +337,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v/1_000)}K` : String(v)} width={50} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
                 labelStyle={{ fontWeight: 600 }}
                 itemStyle={{ color: "#94A3B8" }}
@@ -422,7 +439,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </div>
 
             {displayProjects.length === 0 ? (
-              <p className="text-[12px] text-center py-6 text-muted-foreground">Henüz proje eklenmemiş</p>
+              <div className="py-6 px-4">
+                <EmptyState
+                  icon="🏗️"
+                  title="Henüz proje yok"
+                  description="İlk projenizi ekleyerek şantiye takibine başlayın."
+                  buttonText="+ İlk Projeyi Oluştur"
+                  onButtonClick={() => onTabChange("projects")}
+                />
+              </div>
             ) : (
               <>
                 {/* Desktop table */}
@@ -522,7 +547,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
             {recentReminders.length === 0 ? (
-              <p className="text-[12px] text-center py-4 text-muted-foreground">Henüz hatırlatıcı yok</p>
+              <EmptyState
+                icon="🔔"
+                title="Hatırlatıcı yok"
+                description="Önemli tarihleri kaçırmamak için hatırlatıcı ekleyin."
+                linkText="+ Hatırlatıcı Ekle"
+                onLinkClick={() => onTabChange("reminders")}
+              />
             ) : (
               <div className="space-y-2.5">
                 {recentReminders.map((r) => {
@@ -646,23 +677,38 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div className="rounded-xl p-4 lg:p-5 relative overflow-hidden bg-card border border-border">
             {projectsLocked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />}
             <h3 className="text-[13px] lg:text-[14px] font-semibold mb-3 text-foreground">Yaklaşan İşler</h3>
-            <div className="space-y-2.5">
-              {UPCOMING_STATIC.map((u, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: u.urgent ? "#EF4444" : "#F59E0B" }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.task}</p>
-                    <p className="text-[10px] lg:text-[11px] text-muted-foreground">{u.project}</p>
-                  </div>
-                  <span
-                    className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
-                    style={{ backgroundColor: u.urgent ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", color: u.urgent ? "#EF4444" : "#F59E0B" }}
-                  >
-                    {u.days}g
-                  </span>
+            {(() => {
+              const upcomingReminders = reminders
+                .filter(r => !r.done && getDaysDiff(r.reminder_date) >= 0 && getDaysDiff(r.reminder_date) <= 14)
+                .sort((a, b) => getDaysDiff(a.reminder_date) - getDaysDiff(b.reminder_date))
+                .slice(0, 5);
+              if (upcomingReminders.length === 0) {
+                return <p className="text-[12px] text-center py-4 text-muted-foreground">Yaklaşan iş yok ✓</p>;
+              }
+              return (
+                <div className="space-y-2.5">
+                  {upcomingReminders.map((u) => {
+                    const days = getDaysDiff(u.reminder_date);
+                    const urgent = days <= 2;
+                    return (
+                      <div key={u.id} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: urgent ? "#EF4444" : "#F59E0B" }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] lg:text-[13px] font-medium truncate text-foreground">{u.title}</p>
+                          {u.note && <p className="text-[10px] lg:text-[11px] text-muted-foreground">{u.note}</p>}
+                        </div>
+                        <span
+                          className="text-[10px] lg:text-[11px] font-medium px-1.5 py-0.5 rounded-md shrink-0"
+                          style={{ backgroundColor: urgent ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", color: urgent ? "#EF4444" : "#F59E0B" }}
+                        >
+                          {days === 0 ? "Bugün" : `${days}g`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         </div>
       </div>

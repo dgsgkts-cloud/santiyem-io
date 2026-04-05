@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import EmptyState from "./EmptyState";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
@@ -110,8 +111,14 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
     return (
       <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">
         <h2 className="text-base md:text-lg font-bold mb-4 text-foreground">Hakediş Yönetimi</h2>
-        <div className="rounded-xl p-8 text-center bg-card border border-border">
-          <p className="text-muted-foreground">Henüz proje eklenmedi. Önce Proje Yönetimi'nden proje ekleyin.</p>
+        <div className="rounded-xl bg-card border border-border">
+          <EmptyState
+            icon="🧾"
+            title="Henüz hakediş yok"
+            description="Önce bir proje ekleyin, ardından hakediş oluşturabilirsiniz."
+            buttonText="Proje Ekle"
+            onButtonClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "projects" }))}
+          />
         </div>
       </div>
     );
