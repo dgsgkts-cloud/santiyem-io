@@ -233,26 +233,30 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="rounded-xl transition-all duration-150 relative overflow-hidden bg-card border border-border" style={{ padding: "20px 24px" }}
-            >
-              {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
-              <div className="flex items-center gap-2 mb-2 lg:mb-3">
-                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
-                  <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
+            <Tooltip key={stat.label} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div
+                  className="rounded-xl transition-all duration-150 relative overflow-hidden bg-card border border-border" style={{ padding: "20px 24px" }}
+                >
+                  {stat.locked && <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade(stat.label, true)} />}
+                  <div className="flex items-center gap-2 mb-2 lg:mb-3">
+                    <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
+                      <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" style={{ color: "#FF6B2B" }} />
+                    </div>
+                    <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">{stat.label}</span>
+                  </div>
+                  <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {stat.locked ? "—" : stat.value}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
+                  </div>
                 </div>
-                <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide truncate text-muted-foreground">{stat.label}</span>
-              </div>
-              <p className="text-xl lg:text-[28px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {stat.locked ? "—" : stat.value}
-              </p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[11px] lg:text-[12px] truncate" style={{ color: stat.isAlert ? "#EF4444" : "#64748B" }}>{stat.desc}</span>
-              </div>
-            </div>
-          );
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {stat.tooltip}
+              </TooltipContent>
+            </Tooltip>
         })}
       </div>
 
