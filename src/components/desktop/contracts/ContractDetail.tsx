@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  cardStyle, CONTRACT_TYPES, getDaysRemaining, getStatusInfo,
+  cardStyleClass, CONTRACT_TYPES, getDaysRemaining, getStatusInfo,
   formatCurrency, formatDate, getTimeProgress, ForceMajeure
 } from "./ContractTypes";
 import SendForSignatureModal from "./SendForSignatureModal";
@@ -35,14 +35,12 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   const sigStatus = getSignatureStatus();
   const [showSendModal, setShowSendModal] = useState(false);
 
-  // Hakediş comparison
   const projectHakedis = contract.project_id
     ? allHakedisler.filter(h => h.project_id === contract.project_id)
     : [];
   const totalHakedisAmount = projectHakedis.reduce((s: number, h: any) => s + Number(h.net || h.amount || 0), 0);
   const hakedisUsagePct = contract.amount > 0 ? (totalHakedisAmount / contract.amount) * 100 : 0;
 
-  // Penalty calculator
   const penaltyRate = analysis?.gecikme_cezasi?.gunluk || 0;
   const penaltyLimit = analysis?.gecikme_cezasi?.limit_yuzde || 0;
   const [penaltyDays, setPenaltyDays] = useState(() => {
@@ -52,7 +50,6 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   const penaltyTotal = penaltyDays * penaltyRate;
   const penaltyPct = contract.amount > 0 ? (penaltyTotal / contract.amount) * 100 : 0;
 
-  // Force majeure
   const [forceMajeures, setForceMajeures] = useState<ForceMajeure[]>([]);
   const [showFmForm, setShowFmForm] = useState(false);
   const [fmForm, setFmForm] = useState({ start_date: "", end_date: "", type: "Deprem", description: "", affected_days: 0 });
@@ -74,7 +71,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   const toggle = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }));
 
   const Section = ({ id, title, icon, badge, children }: { id: string; title: string; icon: React.ReactNode; badge?: React.ReactNode; children: React.ReactNode }) => (
-    <div className="rounded-xl overflow-hidden" style={cardStyle}>
+    <div className={`overflow-hidden ${cardStyleClass}`}>
       <button onClick={() => toggle(id)} className="w-full flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           {icon}
@@ -101,22 +98,20 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <ArrowLeft className="w-4 h-4" /> Sözleşme Takibi
         </button>
         <div className="flex items-center gap-2">
-          {/* Send for Signature Button */}
-          <Button onClick={() => setShowSendModal(true)} size="sm" className="h-8 text-xs text-white"
-            style={{ backgroundColor: "#3B82F6" }}>
+          <Button onClick={() => setShowSendModal(true)} size="sm" className="h-8 text-xs text-white bg-blue-500 hover:bg-blue-600">
             <Mail className="w-3 h-3 mr-1" /> İmzaya Gönder
           </Button>
-          <Button onClick={onEdit} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>
+          <Button onClick={onEdit} variant="outline" size="sm" className="h-8 text-xs">
             <Edit2 className="w-3 h-3 mr-1" /> Düzenle
           </Button>
           {contract.file_url && (
             <a href={contract.file_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
                 <Download className="w-3 h-3 mr-1" /> PDF
               </Button>
             </a>
           )}
-          <Button onClick={onDelete} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#EF4444" }}>
+          <Button onClick={onDelete} variant="outline" size="sm" className="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-3 h-3 mr-1" /> Sil
           </Button>
         </div>
@@ -127,21 +122,20 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: status.color, backgroundColor: status.bg }}>
           {status.icon} {status.label}
         </span>
-        {/* Signature status badge */}
         <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ color: sigStatus.color, backgroundColor: `${sigStatus.color}15` }}>
           {sigStatus.label}
         </span>
       </div>
 
       {/* Signature Tracking Section */}
-      <Section id="signature" title="İmza Takibi" icon={<FileCheck className="w-4 h-4" style={{ color: "#3B82F6" }} />}
+      <Section id="signature" title="İmza Takibi" icon={<FileCheck className="w-4 h-4 text-blue-500" />}
         badge={requests.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: `${sigStatus.color}15`, color: sigStatus.color }}>{requests.length}</span> : undefined}
       >
         {requests.length === 0 ? (
           <div className="text-center py-6">
-            <Mail className="w-8 h-8 mx-auto mb-2" style={{ color: "#334155" }} />
+            <Mail className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">Henüz imzaya gönderilmedi</p>
-            <Button onClick={() => setShowSendModal(true)} size="sm" className="mt-3 h-8 text-xs text-white" style={{ backgroundColor: "#3B82F6" }}>
+            <Button onClick={() => setShowSendModal(true)} size="sm" className="mt-3 h-8 text-xs text-white bg-blue-500 hover:bg-blue-600">
               <Send className="w-3 h-3 mr-1" /> İmzaya Gönder
             </Button>
           </div>
@@ -154,7 +148,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               const isWaiting = !reqUploads.length && req.status !== "imzalandi";
 
               return (
-                <div key={req.id} className="rounded-lg p-3 space-y-2" style={{ border: `1px solid ${isOverdue ? "#EF444440" : "#1E2732"}` }}>
+                <div key={req.id} className="rounded-lg p-3 space-y-2 border" style={{ borderColor: isOverdue ? "rgba(239,68,68,0.25)" : undefined }}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-foreground">{req.recipient_name}</p>
@@ -181,7 +175,6 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                     </p>
                   )}
 
-                  {/* Show uploaded files */}
                   {reqUploads.map(u => (
                     <div key={u.id} className="flex items-center justify-between rounded p-2" style={{ backgroundColor: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
                       <div>
@@ -191,7 +184,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                         <p className="text-[10px] text-muted-foreground">{new Date(u.created_at).toLocaleString("tr-TR")}</p>
                       </div>
                       <a href={u.file_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="h-7 text-[10px]" style={{ borderColor: "#1E2732", color: "#3B82F6" }}>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] text-blue-500">
                           <Download className="w-3 h-3 mr-1" /> İndir
                         </Button>
                       </a>
@@ -205,7 +198,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       </Section>
 
       {/* General Info */}
-      <Section id="general" title="Genel Bilgiler" icon={<Building2 className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
+      <Section id="general" title="Genel Bilgiler" icon={<Building2 className="w-4 h-4 text-primary" />}>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs mb-4">
           <div><span className="text-muted-foreground">Karşı Taraf</span><p className="font-medium mt-0.5 text-foreground">{contract.counterparty}</p></div>
           <div><span className="text-muted-foreground">Tür</span><p className="font-medium mt-0.5 text-foreground">{CONTRACT_TYPES[contract.contract_type] || contract.contract_type}</p></div>
@@ -215,7 +208,6 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           <div><span className="text-muted-foreground">Kalan</span><p className="font-medium mt-0.5" style={{ color: status.color }}>{daysLeft !== null ? `${daysLeft} gün` : "—"}</p></div>
         </div>
 
-        {/* Progress bars */}
         {tp.total > 0 && (
           <div className="space-y-3">
             <div>
@@ -223,7 +215,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Süre: {tp.elapsed}g geçti, {tp.remaining}g kaldı</span>
                 <span>%{Math.round(tp.pct)}</span>
               </div>
-              <div className="w-full h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+              <div className="w-full h-2 rounded-full bg-muted">
                 <div className="h-full rounded-full" style={{ width: `${tp.pct}%`, backgroundColor: tp.pct >= 90 ? "#EF4444" : tp.pct >= 70 ? "#F59E0B" : "#22C55E" }} />
               </div>
             </div>
@@ -233,7 +225,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                   <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />Tutar: {formatCurrency(totalHakedisAmount)} hakediş, {formatCurrency(contract.amount - totalHakedisAmount)} kaldı</span>
                   <span>%{Math.round(hakedisUsagePct)}</span>
                 </div>
-                <div className="w-full h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                <div className="w-full h-2 rounded-full bg-muted">
                   <div className="h-full rounded-full" style={{ width: `${Math.min(100, hakedisUsagePct)}%`, backgroundColor: hakedisUsagePct >= 100 ? "#EF4444" : hakedisUsagePct >= 90 ? "#F59E0B" : "#3B82F6" }} />
                 </div>
               </div>
@@ -244,7 +236,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
 
       {/* AI Critical Clauses */}
       {analysis?.kritik_maddeler?.length > 0 && (
-        <Section id="ai" title="AI Kritik Madde Analizi" icon={<Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />}
+        <Section id="ai" title="AI Kritik Madde Analizi" icon={<Bot className="w-4 h-4 text-primary" />}
           badge={<span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(59,130,246,0.1)", color: "#60A5FA" }}>🤖</span>}
         >
           <div className="space-y-2 mb-3">
@@ -265,7 +257,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               );
             })}
           </div>
-          <Button onClick={onReanalyze} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
+          <Button onClick={onReanalyze} variant="outline" size="sm" className="h-8 text-xs text-primary">
             <RefreshCw className="w-3 h-3 mr-1" /> Yeniden Analiz Et
           </Button>
         </Section>
@@ -273,11 +265,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
 
       {/* Penalty Calculator */}
       {penaltyRate > 0 && (
-        <Section id="penalty" title="Cezai Şart Hesaplama" icon={<AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />}>
+        <Section id="penalty" title="Cezai Şart Hesaplama" icon={<AlertTriangle className="w-4 h-4 text-destructive" />}>
           <div className="grid grid-cols-3 gap-3 mb-3">
             <div>
               <label className="text-[10px] block mb-1 text-muted-foreground">Gecikme Günü</label>
-              <input type="number" value={penaltyDays} onChange={e => setPenaltyDays(Number(e.target.value))} min={0} className="w-full rounded px-2 py-2 text-sm outline-none" />
+              <input type="number" value={penaltyDays} onChange={e => setPenaltyDays(Number(e.target.value))} min={0} className="w-full rounded px-2 py-2 text-sm outline-none bg-background border border-border text-foreground" />
             </div>
             <div>
               <label className="text-[10px] block mb-1 text-muted-foreground">Günlük Ceza</label>
@@ -292,7 +284,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
           </div>
           {penaltyTotal > 0 && (
             <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-              <p className="text-xs font-medium" style={{ color: "#FCA5A5" }}>
+              <p className="text-xs font-medium text-destructive">
                 ⚠️ Sözleşme bedelinin %{penaltyPct.toFixed(1)}'ine karşılık geliyor
                 {penaltyLimit > 0 && ` (Üst limit: %${penaltyLimit})`}
               </p>
@@ -304,11 +296,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
 
       {/* Contract vs Hakediş Comparison */}
       {projectHakedis.length > 0 && (
-        <Section id="comparison" title="Sözleşme vs Hakediş Karşılaştırması" icon={<DollarSign className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
+        <Section id="comparison" title="Sözleşme vs Hakediş Karşılaştırması" icon={<DollarSign className="w-4 h-4 text-primary" />}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ borderBottom: "1px solid #1E2732" }}>
+                <tr className="border-b border-border">
                   <th className="text-left py-2 font-medium text-muted-foreground">Hakediş</th>
                   <th className="text-right py-2 font-medium text-muted-foreground">Tutar</th>
                   <th className="text-right py-2 font-medium text-muted-foreground">Durum</th>
@@ -316,7 +308,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               </thead>
               <tbody>
                 {projectHakedis.map((h: any) => (
-                  <tr key={h.id} style={{ borderBottom: "1px solid #1E2732" }}>
+                  <tr key={h.id} className="border-b border-border">
                     <td className="py-2 text-foreground">{h.period}</td>
                     <td className="py-2 text-right text-foreground">{formatCurrency(Number(h.net || h.amount || 0))}</td>
                     <td className="py-2 text-right">
@@ -326,7 +318,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                 ))}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: "2px solid #1E2732" }}>
+                <tr className="border-t-2 border-border">
                   <td className="py-2 font-semibold text-foreground">Toplam</td>
                   <td className="py-2 text-right font-semibold text-foreground">{formatCurrency(totalHakedisAmount)}</td>
                   <td className="py-2 text-right">
@@ -353,7 +345,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
 
       {/* Payment Schedule Timeline */}
       {analysis?.odeme_takvimi?.length > 0 && (
-        <Section id="schedule" title="Ödeme Takvimi" icon={<Calendar className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
+        <Section id="schedule" title="Ödeme Takvimi" icon={<Calendar className="w-4 h-4 text-primary" />}>
           <div className="space-y-3">
             {analysis.odeme_takvimi.map((o: any, i: number) => {
               const isPast = o.tarih && new Date(o.tarih) < new Date();
@@ -361,8 +353,8 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               return (
                 <div key={i} className="flex items-center gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isPaid ? "#22C55E" : isPast ? "#F59E0B" : "#334155" }} />
-                    {i < analysis.odeme_takvimi.length - 1 && <div className="w-px h-6" style={{ backgroundColor: "#1E2732" }} />}
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isPaid ? "#22C55E" : isPast ? "#F59E0B" : "hsl(var(--muted-foreground) / 0.3)" }} />
+                    {i < analysis.odeme_takvimi.length - 1 && <div className="w-px h-6 bg-border" />}
                   </div>
                   <div className="flex-1 flex items-center justify-between text-xs">
                     <div>
@@ -384,12 +376,12 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
       )}
 
       {/* Force Majeure */}
-      <Section id="fm" title="Mücbir Sebep ve Süre Uzatımı" icon={<Shield className="w-4 h-4" style={{ color: "#FF6B2B" }} />}>
+      <Section id="fm" title="Mücbir Sebep ve Süre Uzatımı" icon={<Shield className="w-4 h-4 text-primary" />}>
         {forceMajeures.length > 0 && (
           <div className="overflow-x-auto mb-3">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ borderBottom: "1px solid #1E2732" }}>
+                <tr className="border-b border-border">
                   <th className="text-left py-2 font-medium text-muted-foreground">Tarih</th>
                   <th className="text-left py-2 font-medium text-muted-foreground">Tür</th>
                   <th className="text-right py-2 font-medium text-muted-foreground">Gün</th>
@@ -398,7 +390,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               </thead>
               <tbody>
                 {forceMajeures.map(fm => (
-                  <tr key={fm.id} style={{ borderBottom: "1px solid #1E2732" }}>
+                  <tr key={fm.id} className="border-b border-border">
                     <td className="py-2 text-foreground">{formatDate(fm.start_date)} — {formatDate(fm.end_date)}</td>
                     <td className="py-2 text-muted-foreground">{fm.type}</td>
                     <td className="py-2 text-right text-foreground">{fm.affected_days}g</td>
@@ -406,7 +398,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                       <select
                         value={fm.status}
                         onChange={e => setForceMajeures(p => p.map(f => f.id === fm.id ? { ...f, status: e.target.value as any } : f))}
-                        className="rounded px-1 py-0.5 text-[10px] outline-none"
+                        className="rounded px-1 py-0.5 text-[10px] outline-none bg-background border border-border"
                         style={{ color: fm.status === "onaylandi" ? "#22C55E" : fm.status === "reddedildi" ? "#EF4444" : "#F59E0B" }}
                       >
                         <option value="bekliyor">Bekliyor</option>
@@ -436,39 +428,39 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
                 <label className="text-[10px] block mb-1 text-muted-foreground">Başlangıç</label>
-                <input type="date" value={fmForm.start_date} onChange={e => setFmForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
+                <input type="date" value={fmForm.start_date} onChange={e => setFmForm(f => ({ ...f, start_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none bg-background border border-border text-foreground" />
               </div>
               <div>
                 <label className="text-[10px] block mb-1 text-muted-foreground">Bitiş</label>
-                <input type="date" value={fmForm.end_date} onChange={e => setFmForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
+                <input type="date" value={fmForm.end_date} onChange={e => setFmForm(f => ({ ...f, end_date: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none bg-background border border-border text-foreground" />
               </div>
               <div>
                 <label className="text-[10px] block mb-1 text-muted-foreground">Tür</label>
-                <select value={fmForm.type} onChange={e => setFmForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none">
+                <select value={fmForm.type} onChange={e => setFmForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none bg-background border border-border text-foreground">
                   {["Deprem", "Sel", "Hava Koşulları", "Resmi Tatil", "Pandemi", "Diğer"].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] block mb-1 text-muted-foreground">Etkilenen Gün</label>
-                <input type="number" value={fmForm.affected_days || ""} onChange={e => setFmForm(f => ({ ...f, affected_days: Number(e.target.value) }))} className="w-full rounded px-2 py-1 text-xs outline-none" />
+                <input type="number" value={fmForm.affected_days || ""} onChange={e => setFmForm(f => ({ ...f, affected_days: Number(e.target.value) }))} className="w-full rounded px-2 py-1 text-xs outline-none bg-background border border-border text-foreground" />
               </div>
             </div>
-            <input value={fmForm.description} onChange={e => setFmForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none" placeholder="Açıklama" />
+            <input value={fmForm.description} onChange={e => setFmForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded px-2 py-1 text-xs outline-none bg-background border border-border text-foreground" placeholder="Açıklama" />
             <div className="flex gap-2">
-              <Button onClick={addForceMajeure} size="sm" className="h-7 text-xs text-white" style={{ backgroundColor: "#FF6B2B" }}>Kaydet</Button>
-              <Button onClick={() => setShowFmForm(false)} variant="outline" size="sm" className="h-7 text-xs" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>İptal</Button>
+              <Button onClick={addForceMajeure} size="sm" className="h-7 text-xs text-primary-foreground bg-primary hover:bg-primary/90">Kaydet</Button>
+              <Button onClick={() => setShowFmForm(false)} variant="outline" size="sm" className="h-7 text-xs">İptal</Button>
             </div>
           </div>
         ) : (
-          <Button onClick={() => setShowFmForm(true)} variant="outline" size="sm" className="h-8 text-xs" style={{ borderColor: "#1E2732", color: "#FF6B2B" }}>
+          <Button onClick={() => setShowFmForm(true)} variant="outline" size="sm" className="h-8 text-xs text-primary">
             <Plus className="w-3 h-3 mr-1" /> Mücbir Sebep Ekle
           </Button>
         )}
       </Section>
 
       {/* Activity Log */}
-      <Section id="activity" title="Aktivite Geçmişi" icon={<History className="w-4 h-4" style={{ color: "#FF6B2B" }} />}
-        badge={activities.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(148,163,184,0.1)", color: "#94A3B8" }}>{activities.length}</span> : undefined}
+      <Section id="activity" title="Aktivite Geçmişi" icon={<History className="w-4 h-4 text-primary" />}
+        badge={activities.length > 0 ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{activities.length}</span> : undefined}
       >
         {activities.length === 0 ? (
           <p className="text-xs text-center py-4 text-muted-foreground">Henüz aktivite yok</p>
@@ -478,7 +470,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
               <div key={act.id} className="flex items-start gap-3 text-xs">
                 <div className="flex flex-col items-center mt-1">
                   <div className="w-2 h-2 rounded-full" style={{
-                    backgroundColor: act.action === "imzali_yuklendi" ? "#22C55E" : act.action === "imzaya_gonderildi" ? "#3B82F6" : "#64748B"
+                    backgroundColor: act.action === "imzali_yuklendi" ? "#22C55E" : act.action === "imzaya_gonderildi" ? "#3B82F6" : "hsl(var(--muted-foreground))"
                   }} />
                 </div>
                 <div className="flex-1">
@@ -496,7 +488,7 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
 
       {/* Notes */}
       {contract.notes && (
-        <div className="rounded-xl p-4" style={cardStyle}>
+        <div className={`p-4 ${cardStyleClass}`}>
           <p className="text-xs font-semibold mb-2 text-foreground">📝 Notlar</p>
           <p className="text-xs whitespace-pre-wrap text-muted-foreground">{contract.notes}</p>
         </div>

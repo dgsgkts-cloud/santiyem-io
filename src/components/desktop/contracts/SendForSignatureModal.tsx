@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Mail, X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Contract } from "@/hooks/useContracts";
-import { cardStyle, inputStyle, labelStyle } from "./ContractTypes";
 
 interface Props {
   contract: Contract;
@@ -50,38 +49,35 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-      <div className="w-full max-w-lg rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" style={cardStyle}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="w-full max-w-lg rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-card border border-border">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold flex items-center gap-2 text-foreground">
-            <Mail className="w-4 h-4" style={{ color: "#3B82F6" }} /> Sözleşmeyi İmzaya Gönder
+            <Mail className="w-4 h-4 text-blue-500" /> Sözleşmeyi İmzaya Gönder
           </h2>
           <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
         </div>
 
         <div className="space-y-3">
-          {/* Recipient Name */}
           <div>
-            <label className="text-[10px] block mb-1" style={labelStyle}>Alıcı Adı *</label>
+            <label className="text-[10px] block mb-1 text-muted-foreground">Alıcı Adı *</label>
             <input value={recipientName} onChange={e => setRecipientName(e.target.value)}
-              className="w-full rounded px-3 py-2 text-sm outline-none" style={inputStyle} placeholder="Ahmet Kaya" />
+              className="w-full rounded px-3 py-2 text-sm outline-none bg-background border border-border text-foreground" placeholder="Ahmet Kaya" />
           </div>
 
-          {/* Recipient Email */}
           <div>
-            <label className="text-[10px] block mb-1" style={labelStyle}>Alıcı E-posta *</label>
+            <label className="text-[10px] block mb-1 text-muted-foreground">Alıcı E-posta *</label>
             <input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} type="email"
-              className="w-full rounded px-3 py-2 text-sm outline-none" style={inputStyle} placeholder="ahmet@abcyapi.com" />
+              className="w-full rounded px-3 py-2 text-sm outline-none bg-background border border-border text-foreground" placeholder="ahmet@abcyapi.com" />
           </div>
 
-          {/* CC */}
           <div>
-            <label className="text-[10px] block mb-1" style={labelStyle}>CC E-posta (opsiyonel)</label>
+            <label className="text-[10px] block mb-1 text-muted-foreground">CC E-posta (opsiyonel)</label>
             <div className="flex gap-2">
               <input value={ccInput} onChange={e => setCcInput(e.target.value)} type="email"
-                className="flex-1 rounded px-3 py-2 text-sm outline-none" style={inputStyle}
+                className="flex-1 rounded px-3 py-2 text-sm outline-none bg-background border border-border text-foreground"
                 placeholder="cc@firma.com" onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCc())} />
-              <Button onClick={addCc} variant="outline" size="sm" className="h-9" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>
+              <Button onClick={addCc} variant="outline" size="sm" className="h-9">
                 <Plus className="w-3 h-3" />
               </Button>
             </div>
@@ -100,21 +96,18 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
             )}
           </div>
 
-          {/* Message */}
           <div>
-            <label className="text-[10px] block mb-1" style={labelStyle}>Mesaj</label>
+            <label className="text-[10px] block mb-1 text-muted-foreground">Mesaj</label>
             <textarea value={message} onChange={e => setMessage(e.target.value)} rows={6}
-              className="w-full rounded px-3 py-2 text-sm outline-none resize-none" style={inputStyle} />
+              className="w-full rounded px-3 py-2 text-sm outline-none resize-none bg-background border border-border text-foreground" />
           </div>
 
-          {/* Deadline */}
           <div>
-            <label className="text-[10px] block mb-1" style={labelStyle}>İmza için Son Tarih (opsiyonel)</label>
+            <label className="text-[10px] block mb-1 text-muted-foreground">İmza için Son Tarih (opsiyonel)</label>
             <input value={deadline} onChange={e => setDeadline(e.target.value)} type="date"
-              className="w-full rounded px-3 py-2 text-sm outline-none" style={inputStyle} />
+              className="w-full rounded px-3 py-2 text-sm outline-none bg-background border border-border text-foreground" />
           </div>
 
-          {/* PDF Preview */}
           {contract.file_url && (
             <div className="rounded-lg p-3 bg-background border border-border">
               <p className="text-[10px] font-medium mb-1 text-muted-foreground">📎 Ekli Dosya</p>
@@ -122,7 +115,6 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
             </div>
           )}
 
-          {/* Info */}
           <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
             <p className="text-[10px]" style={{ color: "#60A5FA" }}>
               ℹ️ Bu sistem sözleşme takibi amaçlıdır. Hukuki geçerlilik için ıslak imzalı orijinal belgeyi muhafaza ediniz.
@@ -132,10 +124,10 @@ export default function SendForSignatureModal({ contract, senderName, onSend, on
 
         <div className="flex gap-2 pt-2">
           <Button onClick={handleSend} disabled={sending || !recipientName.trim() || !recipientEmail.trim()}
-            className="flex-1 h-9 text-sm font-semibold text-white" style={{ backgroundColor: "#3B82F6" }}>
+            className="flex-1 h-9 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600">
             {sending ? "Gönderiliyor..." : "📧 Gönder"}
           </Button>
-          <Button onClick={onClose} variant="outline" className="h-9 text-sm" style={{ borderColor: "#1E2732", color: "#94A3B8" }}>
+          <Button onClick={onClose} variant="outline" className="h-9 text-sm">
             İptal
           </Button>
         </div>
