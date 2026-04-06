@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
+import ThemeSelectionModal, { shouldShowThemeModal, markThemeModalDone } from "@/components/desktop/ThemeSelectionModal";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
