@@ -1581,6 +1581,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_cards: {
+        Row: {
+          bin_number: string | null
+          card_alias: string
+          card_association: string
+          card_bank_name: string | null
+          card_token: string
+          card_type: string
+          card_user_key: string
+          created_at: string
+          id: string
+          is_default: boolean
+          last_four_digits: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bin_number?: string | null
+          card_alias?: string
+          card_association?: string
+          card_bank_name?: string | null
+          card_token: string
+          card_type?: string
+          card_user_key: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          last_four_digits?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bin_number?: string | null
+          card_alias?: string
+          card_association?: string
+          card_bank_name?: string | null
+          card_token?: string
+          card_type?: string
+          card_user_key?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          last_four_digits?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_renders: {
         Row: {
           created_at: string

@@ -91,6 +91,34 @@ Deno.serve(async (req) => {
           const { data: upsertedSub } = await supabaseAdmin.from('user_subscriptions')
             .upsert(subData, { onConflict: 'user_id,plan_name' }).select('id').single()
 
+          // Save card to user_cards table
+          const cardAssociation = iyzicoData.cardAssociation || 'UNKNOWN'
+          const cardType = iyzicoData.cardType || 'UNKNOWN'
+          const binNumber = iyzicoData.binNumber || ''
+          const lastFour = iyzicoData.lastFourDigits || binNumber?.slice(-4) || '****'
+
+          // Check if card already exists
+          const { data: existingCard } = await supabaseAdmin.from('user_cards')
+            .select('id').eq('user_id', txn.user_id).eq('card_token', cardToken).maybeSingle()
+
+          if (!existingCard) {
+            // Check if user has any cards — if not, make this default
+            const { count: cardCount } = await supabaseAdmin.from('user_cards')
+              .select('id', { count: 'exact', head: true }).eq('user_id', txn.user_id)
+
+            await supabaseAdmin.from('user_cards').insert({
+              user_id: txn.user_id,
+              card_user_key: cardUserKey,
+              card_token: cardToken,
+              card_alias: `**** **** **** ${lastFour}`,
+              card_type: cardType,
+              card_association: cardAssociation,
+              bin_number: binNumber,
+              last_four_digits: lastFour,
+              is_default: (cardCount || 0) === 0,
+            })
+          }
+
           // Create invoice
           await supabaseAdmin.from('invoices').insert({
             user_id: txn.user_id,
