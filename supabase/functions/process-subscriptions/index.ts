@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
                 idempotency_key: `renewal-reminder-${sub.id}-${sub.next_payment_date}`,
                 template_name: 'payment_due_reminder',
                 to: authUser.user.email,
-                subject: 'Abonelik Yenileme Hatırlatması',
+                subject: `Abonelik Yenileme — ₺${amount} 3 gün içinde tahsil edilecek`,
                 template_data: {
                   recipientName: authUser.user.user_metadata?.full_name || 'Değerli Kullanıcı',
                   paymentAmount: `₺${amount.toLocaleString('tr-TR')}`,
