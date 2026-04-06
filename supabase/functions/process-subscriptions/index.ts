@@ -26,45 +26,50 @@ async function generateAuthV2(uri: string, bodyJson: string): Promise<{ authoriz
 const PLAN_PRICES: Record<string, number> = { pro: 499, team: 1499, enterprise: 4999 }
 const PLAN_NAMES: Record<string, string> = { pro: 'Profesyonel', team: 'Ekip', enterprise: 'Kurumsal' }
 
+function getNextPaymentDate(subType: string): Date {
+  const next = new Date()
+  if (subType === 'yearly') {
+    next.setFullYear(next.getFullYear() + 1)
+  } else {
+    next.setDate(next.getDate() + 30)
+  }
+  return next
+}
+
+function getChargeAmount(sub: any): number {
+  if (sub.subscription_type === 'yearly') {
+    const monthlyPrice = sub.amount || PLAN_PRICES[sub.plan_name] || 499
+    return Math.round(monthlyPrice * 0.8 * 12)
+  }
+  return sub.amount || PLAN_PRICES[sub.plan_name] || 499
+}
+
 async function chargeStoredCard(sub: any, supabaseAdmin: any): Promise<boolean> {
   if (!sub.card_user_key || !sub.card_token) {
     console.log(`No card info for subscription ${sub.id}`)
     return false
   }
 
-  const price = (sub.amount || PLAN_PRICES[sub.plan_name] || 499).toFixed(2)
+  const chargeAmount = getChargeAmount(sub)
+  const price = chargeAmount.toFixed(2)
   const conversationId = crypto.randomUUID().replace(/-/g, '').substring(0, 20)
 
   const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('full_name')
-    .eq('user_id', sub.user_id)
-    .single()
+    .from('profiles').select('full_name').eq('user_id', sub.user_id).single()
 
   const fullName = (profile?.full_name || 'User').replace(/[^\x00-\x7F]/g, 'x')
   const firstName = fullName.split(' ')[0] || 'User'
   const lastName = fullName.split(' ').slice(1).join(' ') || 'App'
   const buyerId = sub.user_id.replace(/-/g, '').substring(0, 20)
 
-  // Get user email
   const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(sub.user_id)
   const userEmail = authUser?.user?.email || 'user@santiyem.io'
   const userName = authUser?.user?.user_metadata?.full_name || 'Değerli Kullanıcı'
 
   const requestBody = {
-    locale: 'tr',
-    conversationId,
-    price,
-    paidPrice: price,
-    currency: 'TRY',
-    installment: 1,
-    basketId: sub.id,
-    paymentChannel: 'WEB',
-    paymentGroup: 'PRODUCT',
-    paymentCard: {
-      cardUserKey: sub.card_user_key,
-      cardToken: sub.card_token,
-    },
+    locale: 'tr', conversationId, price, paidPrice: price, currency: 'TRY',
+    installment: 1, basketId: sub.id, paymentChannel: 'WEB', paymentGroup: 'PRODUCT',
+    paymentCard: { cardUserKey: sub.card_user_key, cardToken: sub.card_token },
     buyer: {
       id: buyerId, name: firstName, surname: lastName,
       gsmNumber: '+905000000000', email: userEmail,
@@ -90,22 +95,46 @@ async function chargeStoredCard(sub: any, supabaseAdmin: any): Promise<boolean> 
     console.log(`Payment for sub ${sub.id}:`, data.status, data.errorMessage)
 
     if (data.status === 'success') {
+      // Record payment transaction
       await supabaseAdmin.from('payment_transactions').insert({
-        user_id: sub.user_id,
-        plan_name: sub.plan_name,
-        amount: parseFloat(price),
-        status: 'success',
-        iyzico_payment_id: data.paymentId,
+        user_id: sub.user_id, plan_name: sub.plan_name,
+        amount: parseFloat(price), status: 'success', iyzico_payment_id: data.paymentId,
       })
 
-      const nextPayment = new Date()
-      nextPayment.setMonth(nextPayment.getMonth() + 1)
+      // Create invoice record
+      await supabaseAdmin.from('invoices').insert({
+        user_id: sub.user_id, subscription_id: sub.id, plan_name: sub.plan_name,
+        amount: parseFloat(price), iyzico_payment_id: data.paymentId, status: 'paid',
+      })
+
+      const nextPayment = getNextPaymentDate(sub.subscription_type || 'monthly')
       await supabaseAdmin.from('user_subscriptions').update({
         status: 'active',
         last_payment_date: new Date().toISOString(),
         next_payment_date: nextPayment.toISOString(),
         reminder_sent: false,
       }).eq('id', sub.id)
+
+      // Send success email
+      const planName = PLAN_NAMES[sub.plan_name] || sub.plan_name
+      const nextDateStr = nextPayment.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+      try {
+        await supabaseAdmin.functions.invoke('send-transactional-email', {
+          body: {
+            purpose: 'transactional',
+            idempotency_key: `payment-success-${sub.id}-${Date.now()}`,
+            template_name: 'payment_due_reminder',
+            to: userEmail,
+            subject: 'Ödemeniz Alındı — Şantiyem Üyeliğiniz Uzatıldı',
+            template_data: {
+              recipientName: userName,
+              paymentAmount: `₺${parseFloat(price).toLocaleString('tr-TR')}`,
+              dueDate: nextDateStr,
+              projectName: `${planName} Plan — Bir sonraki ödeme tarihiniz: ${nextDateStr}`,
+            },
+          },
+        })
+      } catch (e) { console.error('Success email error:', e) }
 
       return true
     } else {
@@ -119,20 +148,18 @@ async function chargeStoredCard(sub: any, supabaseAdmin: any): Promise<boolean> 
             idempotency_key: `payment-failed-${sub.id}-${Date.now()}`,
             template_name: 'payment_overdue_reminder',
             to: userEmail,
-            subject: 'Ödemeniz Alınamadı — Kartınızı Güncelleyin',
+            subject: 'Ödemeniz Alınamadı — Şantiyem',
             template_data: {
               recipientName: userName,
               paymentAmount: `₺${parseFloat(price).toLocaleString('tr-TR')}`,
               dueDate: new Date().toLocaleDateString('tr-TR'),
-              projectName: `${PLAN_NAMES[sub.plan_name] || sub.plan_name} Plan`,
+              projectName: `${PLAN_NAMES[sub.plan_name] || sub.plan_name} Plan — Lütfen Ayarlar → Abonelik sayfasından kartınızı güncelleyin.`,
             },
           },
         })
-      } catch (emailErr) {
-        console.error(`Failed payment email error:`, emailErr)
-      }
+      } catch (e) { console.error('Failed payment email error:', e) }
 
-      // Downgrade user
+      // Downgrade
       await supabaseAdmin.from('user_subscriptions').update({ status: 'expired' }).eq('id', sub.id)
       await supabaseAdmin.from('profiles').update({ plan: 'free' }).eq('user_id', sub.user_id)
       return false
@@ -152,14 +179,11 @@ Deno.serve(async (req) => {
 
     // 1. Send reminder emails for trials ending tomorrow (13th day)
     const { data: trialEndingSoon } = await supabaseAdmin
-      .from('user_subscriptions')
-      .select('*')
-      .eq('status', 'trial')
-      .eq('reminder_sent', false)
-      .lte('trial_end', tomorrow.toISOString())
-      .gt('trial_end', now.toISOString())
+      .from('user_subscriptions').select('*')
+      .eq('status', 'trial').eq('reminder_sent', false)
+      .lte('trial_end', tomorrow.toISOString()).gt('trial_end', now.toISOString())
 
-    if (trialEndingSoon && trialEndingSoon.length > 0) {
+    if (trialEndingSoon?.length) {
       for (const sub of trialEndingSoon) {
         try {
           const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(sub.user_id)
@@ -182,21 +206,17 @@ Deno.serve(async (req) => {
               },
             })
           }
-        } catch (emailErr) {
-          console.error(`Reminder email error for sub ${sub.id}:`, emailErr)
-        }
+        } catch (e) { console.error(`Trial reminder error for sub ${sub.id}:`, e) }
         await supabaseAdmin.from('user_subscriptions').update({ reminder_sent: true }).eq('id', sub.id)
       }
     }
 
     // 2. Process expired trials — charge the card (14th day)
     const { data: expiredTrials } = await supabaseAdmin
-      .from('user_subscriptions')
-      .select('*')
-      .eq('status', 'trial')
-      .lte('trial_end', now.toISOString())
+      .from('user_subscriptions').select('*')
+      .eq('status', 'trial').lte('trial_end', now.toISOString())
 
-    if (expiredTrials && expiredTrials.length > 0) {
+    if (expiredTrials?.length) {
       for (const sub of expiredTrials) {
         await chargeStoredCard(sub, supabaseAdmin)
       }
@@ -204,12 +224,10 @@ Deno.serve(async (req) => {
 
     // 3. Process active subscriptions due for renewal
     const { data: dueSubscriptions } = await supabaseAdmin
-      .from('user_subscriptions')
-      .select('*')
-      .eq('status', 'active')
-      .lte('next_payment_date', now.toISOString())
+      .from('user_subscriptions').select('*')
+      .eq('status', 'active').lte('next_payment_date', now.toISOString())
 
-    if (dueSubscriptions && dueSubscriptions.length > 0) {
+    if (dueSubscriptions?.length) {
       for (const sub of dueSubscriptions) {
         await chargeStoredCard(sub, supabaseAdmin)
       }
@@ -219,58 +237,54 @@ Deno.serve(async (req) => {
     const threeDaysLater = new Date(now)
     threeDaysLater.setDate(threeDaysLater.getDate() + 3)
     const { data: activeDueSoon } = await supabaseAdmin
-      .from('user_subscriptions')
-      .select('*')
-      .eq('status', 'active')
-      .eq('reminder_sent', false)
-      .lte('next_payment_date', threeDaysLater.toISOString())
-      .gt('next_payment_date', now.toISOString())
+      .from('user_subscriptions').select('*')
+      .eq('status', 'active').eq('reminder_sent', false)
+      .lte('next_payment_date', threeDaysLater.toISOString()).gt('next_payment_date', now.toISOString())
 
-    if (activeDueSoon && activeDueSoon.length > 0) {
+    if (activeDueSoon?.length) {
       for (const sub of activeDueSoon) {
         try {
           const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(sub.user_id)
           if (authUser?.user?.email) {
-            const amount = sub.amount || PLAN_PRICES[sub.plan_name] || 499
+            const chargeAmount = getChargeAmount(sub)
+            const planName = PLAN_NAMES[sub.plan_name] || sub.plan_name
+            const nextDate = new Date(sub.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+            const subTypeLabel = sub.subscription_type === 'yearly' ? 'yıllık' : 'aylık'
             await supabaseAdmin.functions.invoke('send-transactional-email', {
               body: {
                 purpose: 'transactional',
                 idempotency_key: `renewal-reminder-${sub.id}-${sub.next_payment_date}`,
                 template_name: 'payment_due_reminder',
                 to: authUser.user.email,
-                subject: `Abonelik Yenileme — ₺${amount} 3 gün içinde tahsil edilecek`,
+                subject: `Şantiyem Aboneliğiniz 3 Gün Sonra Yenileniyor`,
                 template_data: {
                   recipientName: authUser.user.user_metadata?.full_name || 'Değerli Kullanıcı',
-                  paymentAmount: `₺${amount.toLocaleString('tr-TR')}`,
-                  dueDate: new Date(sub.next_payment_date).toLocaleDateString('tr-TR'),
-                  projectName: `${PLAN_NAMES[sub.plan_name] || sub.plan_name} Plan`,
+                  paymentAmount: `₺${chargeAmount.toLocaleString('tr-TR')}`,
+                  dueDate: nextDate,
+                  projectName: `${planName} Plan (${subTypeLabel}) — ${nextDate} tarihinde ₺${chargeAmount.toLocaleString('tr-TR')} otomatik yenilenecektir. İptal etmek istiyorsanız Ayarlar → Abonelik sayfasını ziyaret edin.`,
                 },
               },
             })
           }
-        } catch (emailErr) {
-          console.error(`Renewal reminder error for sub ${sub.id}:`, emailErr)
-        }
+        } catch (e) { console.error(`Renewal reminder error for sub ${sub.id}:`, e) }
         await supabaseAdmin.from('user_subscriptions').update({ reminder_sent: true }).eq('id', sub.id)
       }
     }
 
     // 5. Downgrade cancelled subscriptions whose period has ended
     const { data: expiredCancelled } = await supabaseAdmin
-      .from('user_subscriptions')
-      .select('*')
-      .eq('status', 'cancelled')
+      .from('user_subscriptions').select('*').eq('status', 'cancelled')
 
-    if (expiredCancelled && expiredCancelled.length > 0) {
+    let cancelledDowngraded = 0
+    if (expiredCancelled?.length) {
       for (const sub of expiredCancelled) {
         const accessEnd = sub.trial_end && new Date(sub.trial_end) > new Date(sub.next_payment_date || '2000-01-01')
-          ? new Date(sub.trial_end)
-          : new Date(sub.next_payment_date || sub.trial_end)
-
+          ? new Date(sub.trial_end) : new Date(sub.next_payment_date || sub.trial_end)
         if (accessEnd <= now) {
-          console.log(`Downgrading cancelled sub ${sub.id} — access period ended`)
+          console.log(`Downgrading cancelled sub ${sub.id}`)
           await supabaseAdmin.from('user_subscriptions').update({ status: 'expired' }).eq('id', sub.id)
           await supabaseAdmin.from('profiles').update({ plan: 'free' }).eq('user_id', sub.user_id)
+          cancelledDowngraded++
         }
       }
     }
@@ -280,11 +294,7 @@ Deno.serve(async (req) => {
       trials_charged: expiredTrials?.length || 0,
       renewals_charged: dueSubscriptions?.length || 0,
       renewal_reminders: activeDueSoon?.length || 0,
-      cancelled_downgraded: expiredCancelled?.filter(s => {
-        const end = s.trial_end && new Date(s.trial_end) > new Date(s.next_payment_date || '2000-01-01')
-          ? new Date(s.trial_end) : new Date(s.next_payment_date || s.trial_end)
-        return end <= now
-      }).length || 0,
+      cancelled_downgraded: cancelledDowngraded,
     }
     console.log('Process subscriptions summary:', summary)
 
