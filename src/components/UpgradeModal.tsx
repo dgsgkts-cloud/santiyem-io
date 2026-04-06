@@ -153,8 +153,8 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
             </Button>
             <div className="mt-3 p-3 rounded-lg border border-white/10" style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
               <p className="text-xs text-white/70 text-center leading-relaxed">
-                🔒 <strong className="text-white">14 gün boyunca ücret alınmaz.</strong><br />
-                15. günden itibaren aylık ₺{planPrice} otomatik tahsil edilir.<br />
+                🔒 <strong className="text-white">Bugün ücret alınmaz.</strong> Kartınız güvenle kaydedilir.<br />
+                14 gün sonra aylık ₺{planPrice} otomatik tahsil edilir.<br />
                 İstediğiniz zaman iptal edebilirsiniz.
               </p>
             </div>

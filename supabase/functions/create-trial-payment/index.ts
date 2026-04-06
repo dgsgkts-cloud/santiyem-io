@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     const planInfo = PLAN_PRICES[planKey]
     const monthlyPrice = yearly ? Math.round(planInfo.price * 0.8) : planInfo.price
 
-    // Use 1 TRY for card validation (will be refunded immediately after)
+    // iyzico checkout form requires minimum 1₺ — we refund immediately after card registration
     const validationAmount = '1.00'
     const conversationId = crypto.randomUUID().replace(/-/g, '').substring(0, 20)
 
@@ -140,8 +140,10 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}`,
       enabledInstallments: [1],
+      // Enable card storage so iyzico returns cardUserKey & cardToken
+      enabledCardStorage: 1,
       buyer: {
         id: buyerId, name: firstName, surname: lastName,
         gsmNumber: '+905000000000', email: user.email,
@@ -150,7 +152,13 @@ Deno.serve(async (req) => {
       },
       billingAddress: { contactName: `${firstName} ${lastName}`, city: 'Istanbul', country: 'Turkey', address: 'Turkey' },
       shippingAddress: { contactName: `${firstName} ${lastName}`, city: 'Istanbul', country: 'Turkey', address: 'Turkey' },
-      basketItems: [{ id: 'trial-validation', name: `${planInfo.name} - Kart Dogrulama`, category1: 'Subscription', itemType: 'VIRTUAL', price: validationAmount }],
+      basketItems: [{
+        id: 'trial-card-register',
+        name: `${planInfo.name} - Kart Kaydi (iade edilecek)`,
+        category1: 'Subscription',
+        itemType: 'VIRTUAL',
+        price: validationAmount,
+      }],
     }
 
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
