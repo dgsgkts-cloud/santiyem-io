@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
 
 const PAYMENT_DISABLED = false;
 
