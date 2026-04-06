@@ -109,14 +109,25 @@ const Index = () => {
   const [isLg, setIsLg] = useState(isDesktop);
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
 
   // Show onboarding for new users
   useEffect(() => {
     if (user?.created_at && shouldShowOnboarding(user.created_at)) {
       setShowOnboarding(true);
+    } else if (user && shouldShowThemeModal()) {
+      setShowThemeModal(true);
     }
   }, [user]);
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    // After onboarding, show theme modal if not yet shown
+    if (shouldShowThemeModal()) {
+      setTimeout(() => setShowThemeModal(true), 300);
+    }
+  };
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
