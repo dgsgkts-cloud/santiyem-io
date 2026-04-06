@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
 import { useUser } from "@/contexts/UserContext";
 
-const PAYMENT_DISABLED = true; // Toggle this to re-enable iyzico payments
+const PAYMENT_DISABLED = false;
 
 const PricingPanel = () => {
   const [yearly, setYearly] = useState(false);
