@@ -173,7 +173,7 @@ const PricingSection = () => {
                             Hemen Başla — {(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")}₺/ay
                           </button>
                           <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: "#64748B" }}>
-                            14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir.
+                            🔒 Bugün ücret alınmaz. Kartınız güvenle kaydedilir. 14 gün sonra aylık ₺{(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
                           </p>
                         </>
                       );
