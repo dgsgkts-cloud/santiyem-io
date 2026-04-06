@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
         plan_name: planKey,
         status: 'pending',
         amount: monthlyPrice,
+        subscription_type: subType,
         trial_start: new Date().toISOString(),
         trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         next_payment_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
