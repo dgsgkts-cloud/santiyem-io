@@ -527,6 +527,54 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
   const isFree = plan === "free";
   const isPaid = ["pro", "plus", "team", "enterprise", "office_pro", "office_custom"].includes(plan);
 
+  const downloadInvoicePDF = (inv: any) => {
+    import('jspdf').then(({ default: jsPDF }) => {
+      const doc = new jsPDF();
+      const planName = PLAN_INFO[inv.plan_name]?.name || inv.plan_name;
+      const dateStr = new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      
+      doc.setFontSize(20);
+      doc.setTextColor(255, 107, 43);
+      doc.text('Şantiyem', 20, 25);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Şantiyenizi Tek Panelden Yönetin', 20, 32);
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0);
+      doc.text('FATURA', 150, 25);
+      
+      doc.setDrawColor(200);
+      doc.line(20, 38, 190, 38);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(60);
+      doc.text(`Fatura Tarihi: ${dateStr}`, 20, 50);
+      doc.text(`Fatura No: INV-${inv.id?.substring(0, 8)?.toUpperCase() || '000'}`, 20, 58);
+      if (inv.iyzico_payment_id) doc.text(`Odeme ID: ${inv.iyzico_payment_id}`, 20, 66);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text('Plan:', 20, 82);
+      doc.text(planName, 80, 82);
+      doc.text('Tutar:', 20, 92);
+      doc.setTextColor(255, 107, 43);
+      const amountStr = `${inv.amount?.toLocaleString('tr-TR')} TL`;
+      doc.text(amountStr, 80, 92);
+      doc.setTextColor(0);
+      doc.text('Durum:', 20, 102);
+      doc.setTextColor(34, 197, 94);
+      doc.text('Odendi', 80, 102);
+      
+      doc.setTextColor(150);
+      doc.setFontSize(9);
+      doc.text('Bu fatura Santiyem platformu tarafindan otomatik olusturulmustur.', 20, 270);
+      doc.text('www.santiyem.io', 20, 278);
+      
+      doc.save(`santiyem-fatura-${dateStr.replace(/\s/g, '-')}.pdf`);
+    });
+  };
+
   const visibleUpgrades = UPGRADE_CARDS.filter(c => {
     if (plan === "free" || plan === "plus") return true;
     if (plan === "pro") return c.plan !== "pro";
