@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
+import ThemeSelectionModal, { shouldShowThemeModal, markThemeModalDone } from "@/components/desktop/ThemeSelectionModal";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
@@ -108,14 +109,25 @@ const Index = () => {
   const [isLg, setIsLg] = useState(isDesktop);
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
 
   // Show onboarding for new users
   useEffect(() => {
     if (user?.created_at && shouldShowOnboarding(user.created_at)) {
       setShowOnboarding(true);
+    } else if (user && shouldShowThemeModal()) {
+      setShowThemeModal(true);
     }
   }, [user]);
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    // After onboarding, show theme modal if not yet shown
+    if (shouldShowThemeModal()) {
+      setTimeout(() => setShowThemeModal(true), 300);
+    }
+  };
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -225,7 +237,8 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
-        <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
+        <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
+        <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
 
         <div className="flex-1 flex min-w-0 flex-col overflow-hidden">
