@@ -497,15 +497,27 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
         .maybeSingle();
       setSubscription(sub);
 
-      // Fetch payment history
-      const { data: payments } = await supabase
-        .from('payment_transactions')
+      // Fetch invoices from invoices table
+      const { data: invoiceData } = await supabase
+        .from('invoices')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'success')
         .order('created_at', { ascending: false })
-        .limit(10);
-      setInvoices(payments || []);
+        .limit(20);
+      
+      // Fallback to payment_transactions if no invoices yet
+      if (invoiceData && invoiceData.length > 0) {
+        setInvoices(invoiceData);
+      } else {
+        const { data: payments } = await supabase
+          .from('payment_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'success')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        setInvoices(payments || []);
+      }
 
       setLoadingSub(false);
     })();
@@ -514,6 +526,54 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
   const info = PLAN_INFO[plan] || PLAN_INFO.free;
   const isFree = plan === "free";
   const isPaid = ["pro", "plus", "team", "enterprise", "office_pro", "office_custom"].includes(plan);
+
+  const downloadInvoicePDF = (inv: any) => {
+    import('jspdf').then(({ default: jsPDF }) => {
+      const doc = new jsPDF();
+      const planName = PLAN_INFO[inv.plan_name]?.name || inv.plan_name;
+      const dateStr = new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      
+      doc.setFontSize(20);
+      doc.setTextColor(255, 107, 43);
+      doc.text('Şantiyem', 20, 25);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Şantiyenizi Tek Panelden Yönetin', 20, 32);
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0);
+      doc.text('FATURA', 150, 25);
+      
+      doc.setDrawColor(200);
+      doc.line(20, 38, 190, 38);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(60);
+      doc.text(`Fatura Tarihi: ${dateStr}`, 20, 50);
+      doc.text(`Fatura No: INV-${inv.id?.substring(0, 8)?.toUpperCase() || '000'}`, 20, 58);
+      if (inv.iyzico_payment_id) doc.text(`Odeme ID: ${inv.iyzico_payment_id}`, 20, 66);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text('Plan:', 20, 82);
+      doc.text(planName, 80, 82);
+      doc.text('Tutar:', 20, 92);
+      doc.setTextColor(255, 107, 43);
+      const amountStr = `${inv.amount?.toLocaleString('tr-TR')} TL`;
+      doc.text(amountStr, 80, 92);
+      doc.setTextColor(0);
+      doc.text('Durum:', 20, 102);
+      doc.setTextColor(34, 197, 94);
+      doc.text('Odendi', 80, 102);
+      
+      doc.setTextColor(150);
+      doc.setFontSize(9);
+      doc.text('Bu fatura Santiyem platformu tarafindan otomatik olusturulmustur.', 20, 270);
+      doc.text('www.santiyem.io', 20, 278);
+      
+      doc.save(`santiyem-fatura-${dateStr.replace(/\s/g, '-')}.pdf`);
+    });
+  };
 
   const visibleUpgrades = UPGRADE_CARDS.filter(c => {
     if (plan === "free" || plan === "plus") return true;
@@ -644,7 +704,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Plan</p>
-                <p className="text-[13px] font-semibold text-foreground">{subscription.plan_name || info.name}</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {PLAN_INFO[subscription.plan_name]?.name || subscription.plan_name}
+                </p>
               </div>
               <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Durum</p>
@@ -653,16 +715,22 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 </p>
               </div>
               <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Abonelik Türü</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {subscription.subscription_type === 'yearly' ? '📅 Yıllık' : '📅 Aylık'}
+                </p>
+              </div>
+              <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Başlangıç Tarihi</p>
                 <p className="text-[13px] font-semibold text-foreground">
                   {new Date(subscription.trial_start || subscription.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
-              <div className="rounded-lg p-2.5 bg-muted/30">
+              <div className="rounded-lg p-2.5 bg-muted/30 col-span-2">
                 <p className="text-[10px] text-muted-foreground">Sonraki Ödeme</p>
                 <p className="text-[13px] font-semibold text-foreground">
                   {subscription.next_payment_date
-                    ? `${new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} — ₺${subscription.amount}`
+                    ? `${new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} — ₺${subscription.amount?.toLocaleString('tr-TR')}`
                     : '—'}
                 </p>
               </div>
@@ -736,12 +804,12 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       {/* Invoice History */}
       {invoices.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground">Ödeme Geçmişi</h4>
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Faturalar / Ödeme Geçmişi</h4>
           <div className="hidden sm:block rounded-xl overflow-hidden bg-background border border-border">
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
-                  {["Tarih", "Plan", "Tutar", "Durum"].map(h => (
+                  {["Tarih", "Plan", "Tutar", "Durum", ""].map(h => (
                     <th key={h} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
@@ -749,10 +817,17 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <tbody>
                 {invoices.map((inv, i) => (
                   <tr key={inv.id} style={{ borderBottom: i < invoices.length - 1 ? "1px solid #1E2732" : undefined }}>
-                    <td className="px-4 py-3 text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</td>
+                    <td className="px-4 py-3 text-foreground">{new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR')}</td>
                     <td className="px-4 py-3 text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name}</td>
                     <td className="px-4 py-3 font-semibold text-foreground">₺{inv.amount?.toLocaleString('tr-TR')}</td>
-                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ Başarılı</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ Ödendi</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => downloadInvoicePDF(inv)} className="text-[10px] px-2 py-1 rounded transition-colors hover:opacity-80" style={{ color: "#FF6B2B", border: "1px solid #FF6B2B40" }}>
+                        📄 PDF İndir
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -762,10 +837,13 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             {invoices.map((inv) => (
               <div key={inv.id} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
                 <div>
-                  <p className="text-xs font-medium text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-xs font-medium text-foreground">{new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR')}</p>
                   <p className="text-[10px] text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name} • ₺{inv.amount?.toLocaleString('tr-TR')}</p>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
+                  <button onClick={() => downloadInvoicePDF(inv)} className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: "#FF6B2B" }}>📄</button>
+                </div>
               </div>
             ))}
           </div>

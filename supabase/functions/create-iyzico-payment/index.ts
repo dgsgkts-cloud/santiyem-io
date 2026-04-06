@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     }
 
     const planInfo = PLAN_PRICES[planKey]
+    const subType = yearly ? 'yearly' : 'monthly'
     const finalPrice = yearly ? Math.round(planInfo.price * 0.8 * 12) : planInfo.price
     const priceStr = finalPrice.toFixed(2)
     const conversationId = crypto.randomUUID().replace(/-/g, '').substring(0, 20)
@@ -98,7 +99,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}&subType=${subType}`,
       enabledInstallments: [1],
       enabledCardStorage: 1,
       buyer: {

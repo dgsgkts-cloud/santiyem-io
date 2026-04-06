@@ -62,26 +62,44 @@ Deno.serve(async (req) => {
         status: 'success', iyzico_payment_id: iyzicoData.paymentId, iyzico_token: token, updated_at: new Date().toISOString(),
       }).eq('id', txnId)
 
-      const { data: txn } = await supabaseAdmin.from('payment_transactions').select('user_id, plan_name').eq('id', txnId).single()
+      const { data: txn } = await supabaseAdmin.from('payment_transactions').select('user_id, plan_name, amount').eq('id', txnId).single()
       if (txn) {
         await supabaseAdmin.from('profiles').update({ plan: PLAN_MAP[txn.plan_name] || txn.plan_name, updated_at: new Date().toISOString() }).eq('user_id', txn.user_id)
-        
+
+        // Determine subscription type from URL params
+        const subType = url.searchParams.get('subType') || 'monthly'
+        const nextPayment = subType === 'yearly'
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
         // Save card info and create/update subscription for recurring billing
         if (cardUserKey && cardToken) {
-          const nextPayment = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          await supabaseAdmin.from('user_subscriptions').upsert({
+          const subData: any = {
             user_id: txn.user_id,
             plan_name: txn.plan_name,
             status: 'active',
+            subscription_type: subType,
             card_user_key: cardUserKey,
             card_token: cardToken,
             iyzico_payment_id: iyzicoData.paymentId,
-            amount: iyzicoData.paidPrice ? parseFloat(iyzicoData.paidPrice) : 0,
+            amount: iyzicoData.paidPrice ? parseFloat(iyzicoData.paidPrice) : (txn.amount || 0),
             trial_start: new Date().toISOString(),
             trial_end: new Date().toISOString(),
             next_payment_date: nextPayment.toISOString(),
             last_payment_date: new Date().toISOString(),
-          }, { onConflict: 'user_id,plan_name' })
+          }
+          const { data: upsertedSub } = await supabaseAdmin.from('user_subscriptions')
+            .upsert(subData, { onConflict: 'user_id,plan_name' }).select('id').single()
+
+          // Create invoice
+          await supabaseAdmin.from('invoices').insert({
+            user_id: txn.user_id,
+            subscription_id: upsertedSub?.id || null,
+            plan_name: txn.plan_name,
+            amount: iyzicoData.paidPrice ? parseFloat(iyzicoData.paidPrice) : (txn.amount || 0),
+            iyzico_payment_id: iyzicoData.paymentId,
+            status: 'paid',
+          })
         }
       }
       return redirectWithStatus('success')
