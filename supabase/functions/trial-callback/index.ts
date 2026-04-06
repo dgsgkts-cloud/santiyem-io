@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const txnId = url.searchParams.get('txnId')
     const subId = url.searchParams.get('subId')
+    const planAmount = url.searchParams.get('planAmount')
     if (!txnId || !subId) return new Response('Missing params', { status: 400 })
 
     let token = ''
@@ -81,6 +82,7 @@ Deno.serve(async (req) => {
     })
     const iyzicoData = await iyzicoResponse.json()
     console.log('Trial callback result:', iyzicoData.status, iyzicoData.paymentStatus)
+    console.log('Card storage info — cardUserKey:', iyzicoData.cardUserKey, 'cardToken:', iyzicoData.cardToken)
 
     if (iyzicoData.status === 'success' && iyzicoData.paymentStatus === 'SUCCESS') {
       // Extract card info for future charges
@@ -88,6 +90,10 @@ Deno.serve(async (req) => {
       const cardToken = iyzicoData.cardToken || null
       const paymentId = iyzicoData.paymentId
       const paymentTransactionId = iyzicoData.itemTransactions?.[0]?.paymentTransactionId
+
+      if (!cardUserKey || !cardToken) {
+        console.warn('WARNING: Card storage info missing! cardUserKey:', cardUserKey, 'cardToken:', cardToken)
+      }
 
       // Update payment transaction
       await supabaseAdmin.from('payment_transactions').update({
@@ -97,15 +103,17 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq('id', txnId)
 
-      // Immediately refund the 1 TRY validation charge
+      // Immediately refund the 1 TRY validation charge — user pays nothing today
       if (paymentTransactionId) {
         const refunded = await refundPayment(paymentId, paymentTransactionId, '1.00')
         console.log('Validation refund:', refunded ? 'success' : 'failed')
       }
 
-      // Activate trial subscription
+      // Activate trial subscription with saved card info
       const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-      await supabaseAdmin.from('user_subscriptions').update({
+      const amount = planAmount ? parseInt(planAmount) : null
+      
+      const updateData: Record<string, any> = {
         status: 'trial',
         card_user_key: cardUserKey,
         card_token: cardToken,
@@ -113,7 +121,11 @@ Deno.serve(async (req) => {
         trial_start: new Date().toISOString(),
         trial_end: trialEnd.toISOString(),
         next_payment_date: trialEnd.toISOString(),
-      }).eq('id', subId)
+        reminder_sent: false,
+      }
+      if (amount) updateData.amount = amount
+
+      await supabaseAdmin.from('user_subscriptions').update(updateData).eq('id', subId)
 
       // Get subscription to find plan
       const { data: sub } = await supabaseAdmin.from('user_subscriptions')
@@ -122,14 +134,14 @@ Deno.serve(async (req) => {
         .single()
 
       if (sub) {
-        // Upgrade user plan immediately
+        // Upgrade user plan immediately — full access for 14 days
         await supabaseAdmin.from('profiles').update({
           plan: PLAN_MAP[sub.plan_name] || sub.plan_name,
           updated_at: new Date().toISOString(),
         }).eq('user_id', sub.user_id)
       }
 
-      return redirectWithStatus('success', '14 gunluk deneme suresi baslatildi! Kartinizdan hicbir ucret alinmadi.')
+      return redirectWithStatus('success', 'Deneme süreniz başlatıldı! Kartınızdan herhangi bir ücret alınmadı. 14 gün boyunca tüm özellikleri ücretsiz kullanabilirsiniz.')
     } else {
       const errorMsg = iyzicoData.errorMessage || 'Kart dogrulama basarisiz'
       await supabaseAdmin.from('payment_transactions').update({
