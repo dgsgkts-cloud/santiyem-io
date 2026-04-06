@@ -1,5 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import { corsHeaders } from '@supabase/supabase-js/cors'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
