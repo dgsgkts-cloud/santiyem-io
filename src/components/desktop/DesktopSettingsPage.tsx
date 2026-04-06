@@ -756,12 +756,12 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       {/* Invoice History */}
       {invoices.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground">Ödeme Geçmişi</h4>
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Faturalar / Ödeme Geçmişi</h4>
           <div className="hidden sm:block rounded-xl overflow-hidden bg-background border border-border">
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
-                  {["Tarih", "Plan", "Tutar", "Durum"].map(h => (
+                  {["Tarih", "Plan", "Tutar", "Durum", ""].map(h => (
                     <th key={h} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
@@ -769,10 +769,17 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <tbody>
                 {invoices.map((inv, i) => (
                   <tr key={inv.id} style={{ borderBottom: i < invoices.length - 1 ? "1px solid #1E2732" : undefined }}>
-                    <td className="px-4 py-3 text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</td>
+                    <td className="px-4 py-3 text-foreground">{new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR')}</td>
                     <td className="px-4 py-3 text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name}</td>
                     <td className="px-4 py-3 font-semibold text-foreground">₺{inv.amount?.toLocaleString('tr-TR')}</td>
-                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ Başarılı</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ Ödendi</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => downloadInvoicePDF(inv)} className="text-[10px] px-2 py-1 rounded transition-colors hover:opacity-80" style={{ color: "#FF6B2B", border: "1px solid #FF6B2B40" }}>
+                        📄 PDF İndir
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -782,10 +789,13 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             {invoices.map((inv) => (
               <div key={inv.id} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
                 <div>
-                  <p className="text-xs font-medium text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-xs font-medium text-foreground">{new Date(inv.created_at || inv.invoice_date).toLocaleDateString('tr-TR')}</p>
                   <p className="text-[10px] text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name} • ₺{inv.amount?.toLocaleString('tr-TR')}</p>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
+                  <button onClick={() => downloadInvoicePDF(inv)} className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: "#FF6B2B" }}>📄</button>
+                </div>
               </div>
             ))}
           </div>
