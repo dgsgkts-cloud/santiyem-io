@@ -656,7 +656,9 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Plan</p>
-                <p className="text-[13px] font-semibold text-foreground">{subscription.plan_name || info.name}</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {PLAN_INFO[subscription.plan_name]?.name || subscription.plan_name}
+                </p>
               </div>
               <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Durum</p>
@@ -665,16 +667,22 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                 </p>
               </div>
               <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Abonelik Türü</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {subscription.subscription_type === 'yearly' ? '📅 Yıllık' : '📅 Aylık'}
+                </p>
+              </div>
+              <div className="rounded-lg p-2.5 bg-muted/30">
                 <p className="text-[10px] text-muted-foreground">Başlangıç Tarihi</p>
                 <p className="text-[13px] font-semibold text-foreground">
                   {new Date(subscription.trial_start || subscription.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
-              <div className="rounded-lg p-2.5 bg-muted/30">
+              <div className="rounded-lg p-2.5 bg-muted/30 col-span-2">
                 <p className="text-[10px] text-muted-foreground">Sonraki Ödeme</p>
                 <p className="text-[13px] font-semibold text-foreground">
                   {subscription.next_payment_date
-                    ? `${new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} — ₺${subscription.amount}`
+                    ? `${new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} — ₺${subscription.amount?.toLocaleString('tr-TR')}`
                     : '—'}
                 </p>
               </div>
