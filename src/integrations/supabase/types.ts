@@ -741,6 +741,53 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_date: string
+          iyzico_payment_id: string | null
+          plan_name: string
+          status: string
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_date?: string
+          iyzico_payment_id?: string | null
+          plan_name: string
+          status?: string
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_date?: string
+          iyzico_payment_id?: string | null
+          plan_name?: string
+          status?: string
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           contact: string
@@ -1575,6 +1622,7 @@ export type Database = {
           plan_name: string
           reminder_sent: boolean
           status: string
+          subscription_type: string
           trial_end: string
           trial_start: string
           updated_at: string
@@ -1593,6 +1641,7 @@ export type Database = {
           plan_name: string
           reminder_sent?: boolean
           status?: string
+          subscription_type?: string
           trial_end?: string
           trial_start?: string
           updated_at?: string
@@ -1611,6 +1660,7 @@ export type Database = {
           plan_name?: string
           reminder_sent?: boolean
           status?: string
+          subscription_type?: string
           trial_end?: string
           trial_start?: string
           updated_at?: string
