@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     }
 
     const planInfo = PLAN_PRICES[planKey]
+    const subType = yearly ? 'yearly' : 'monthly'
     const finalPrice = yearly ? Math.round(planInfo.price * 0.8 * 12) : planInfo.price
     const priceStr = finalPrice.toFixed(2)
     const conversationId = crypto.randomUUID().replace(/-/g, '').substring(0, 20)
