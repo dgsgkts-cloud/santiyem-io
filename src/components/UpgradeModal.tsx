@@ -20,6 +20,11 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const { user } = useUser();
 
+  useEffect(() => {
+    const cleanup = listenForIyzicoClose();
+    return cleanup;
+  }, []);
+
   const openCheckoutForm = (data: any) => {
     onClose();
     let checkoutDiv = document.getElementById("iyzico-checkout-container-modal");

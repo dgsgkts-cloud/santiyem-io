@@ -38,6 +38,11 @@ const PricingSection = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const cleanup = listenForIyzicoClose();
+    return cleanup;
+  }, []);
+
   const openCheckoutForm = (data: any) => {
     const checkoutDiv = document.getElementById("iyzico-checkout-container");
     if (checkoutDiv) {
