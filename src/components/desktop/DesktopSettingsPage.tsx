@@ -483,6 +483,26 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loadingSub, setLoadingSub] = useState(true);
 
+  // Saved cards state
+  const [cards, setCards] = useState<any[]>([]);
+  const [loadingCards, setLoadingCards] = useState(true);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [deleteConfirmCard, setDeleteConfirmCard] = useState<any>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+
+  const fetchCards = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-cards', {
+        body: { action: 'list' },
+      });
+      if (!error && data?.cards) setCards(data.cards);
+    } catch (e) {
+      console.error('Failed to fetch cards:', e);
+    }
+    setLoadingCards(false);
+  };
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -521,7 +541,59 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
 
       setLoadingSub(false);
     })();
+    fetchCards();
   }, [user]);
+
+  const handleDeleteCard = async (card: any) => {
+    setDeleteConfirmCard(card);
+  };
+
+  const confirmDeleteCard = async () => {
+    if (!deleteConfirmCard) return;
+    setDeletingCardId(deleteConfirmCard.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-cards', {
+        body: { action: 'delete', cardId: deleteConfirmCard.id },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || 'Kart silinemedi');
+      } else {
+        toast.success('Kart silindi');
+        setCards(prev => prev.filter(c => c.id !== deleteConfirmCard.id));
+      }
+    } catch (e) {
+      toast.error('Kart silinirken hata oluştu');
+    }
+    setDeletingCardId(null);
+    setDeleteConfirmCard(null);
+  };
+
+  const handleSetDefault = async (cardId: string) => {
+    setSettingDefaultId(cardId);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-cards', {
+        body: { action: 'setDefault', cardId },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || 'Varsayılan kart değiştirilemedi');
+      } else {
+        toast.success('Varsayılan kart güncellendi');
+        setCards(prev => prev.map(c => ({ ...c, is_default: c.id === cardId })));
+      }
+    } catch (e) {
+      toast.error('Hata oluştu');
+    }
+    setSettingDefaultId(null);
+  };
+
+  const getCardIcon = (association: string) => {
+    const a = (association || '').toUpperCase();
+    if (a.includes('VISA')) return '💳 Visa';
+    if (a.includes('MASTER')) return '💳 Mastercard';
+    if (a.includes('TROY')) return '💳 Troy';
+    if (a.includes('AMEX')) return '💳 Amex';
+    return '💳';
+  };
 
   const info = PLAN_INFO[plan] || PLAN_INFO.free;
   const isFree = plan === "free";
