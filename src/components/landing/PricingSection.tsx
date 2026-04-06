@@ -174,6 +174,7 @@ const PricingSection = () => {
                           </button>
                           <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: "#64748B" }}>
                             🔒 Bugün ücret alınmaz. Kartınız güvenle kaydedilir. 14 gün sonra aylık ₺{(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                            <br /><strong style={{ color: "#FF6B2B" }}>⚠️ Ödeme formunda "Kartımı Kaydet" kutucuğunu işaretlemeyi unutmayın.</strong>
                           </p>
                         </>
                       );
