@@ -58,8 +58,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    const body = await req.json()
     const { planKey, yearly } = body
+    const subType = yearly ? 'yearly' : 'monthly'
     if (!planKey || !PLAN_PRICES[planKey]) {
       return new Response(JSON.stringify({ error: 'Gecersiz plan' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
