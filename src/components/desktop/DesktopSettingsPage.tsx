@@ -637,12 +637,46 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           </div>
         )}
 
+        {/* Subscription Details */}
+        {subscription && (
+          <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid #1E2732" }}>
+            <p className="text-[11px] font-semibold text-muted-foreground">Abonelik Detayları</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Plan</p>
+                <p className="text-[13px] font-semibold text-foreground">{subscription.plan_name || info.name}</p>
+              </div>
+              <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Durum</p>
+                <p className="text-[13px] font-semibold" style={{ color: subStatus?.color || '#64748B' }}>
+                  {subscription.status === 'trial' ? 'Deneme' : subscription.status === 'active' ? 'Aktif' : subscription.status === 'cancelled' ? 'İptal Edildi' : subscription.status}
+                </p>
+              </div>
+              <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Başlangıç Tarihi</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {new Date(subscription.trial_start || subscription.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="rounded-lg p-2.5 bg-muted/30">
+                <p className="text-[10px] text-muted-foreground">Sonraki Ödeme</p>
+                <p className="text-[13px] font-semibold text-foreground">
+                  {subscription.next_payment_date
+                    ? `${new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} — ₺${subscription.amount}`
+                    : '—'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="mt-4 space-y-2">
           {isFree && !isAdmin && (
             <>
               <button className="w-full py-3 rounded-xl text-sm font-bold text-white transition-colors hover:opacity-90"
-                style={{ backgroundColor: "#FF6B2B" }}>
+                style={{ backgroundColor: "#FF6B2B" }}
+                onClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "pricing" }))}>
                 🚀 Planını Yükselt
               </button>
               <p className="text-center text-[11px] text-muted-foreground">14 gün ücretsiz dene</p>
@@ -650,13 +684,15 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           )}
           {plan === "pro" && (
             <button className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors hover:opacity-90"
-              style={{ backgroundColor: "#FF6B2B" }}>
+              style={{ backgroundColor: "#FF6B2B" }}
+              onClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "pricing" }))}>
               📈 Ekip Planına Geç
             </button>
           )}
           {plan === "team" && (
             <button className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors hover:opacity-90"
-              style={{ backgroundColor: "#FF6B2B" }}>
+              style={{ backgroundColor: "#FF6B2B" }}
+              onClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "pricing" }))}>
               🏢 Kurumsal Plana Geç
             </button>
           )}
