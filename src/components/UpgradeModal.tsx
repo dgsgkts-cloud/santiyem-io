@@ -27,15 +27,15 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
 
   const openCheckoutForm = (data: any) => {
     onClose();
-    let checkoutDiv = document.getElementById("iyzico-checkout-container-modal");
-    if (!checkoutDiv) {
-      checkoutDiv = document.createElement("div");
-      checkoutDiv.id = "iyzico-checkout-container-modal";
-      checkoutDiv.className = "fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4";
-      document.body.appendChild(checkoutDiv);
-    }
+    // Clean any previous iyzico elements first
+    cleanupIyzicoOverlay();
+
+    const checkoutDiv = document.createElement("div");
+    checkoutDiv.id = "iyzico-checkout-container-modal";
+    checkoutDiv.style.cssText = "position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;padding:16px;";
+    document.body.appendChild(checkoutDiv);
+
     checkoutDiv.innerHTML = data.checkoutFormContent;
-    checkoutDiv.style.display = "flex";
     checkoutDiv.onclick = (e) => {
       if (e.target === checkoutDiv) cleanupIyzicoOverlay();
     };
