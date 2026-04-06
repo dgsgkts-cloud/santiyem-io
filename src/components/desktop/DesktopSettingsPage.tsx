@@ -461,8 +461,6 @@ const UPGRADE_CARDS = [
   { plan: "enterprise", emoji: "🏢", name: "Kurumsal", price: "4.999₺/ay", features: ["Sınırsız kullanıcı", "Yetki rolleri", "Öncelikli telefon + WhatsApp desteği", "Özel onboarding"], cta: "Teklif Al →", highlight: false },
 ];
 
-const MOCK_INVOICES: { date: string; plan: string; amount: string; status: string }[] = [];
-
 const CANCEL_REASONS = [
   { id: "expensive", label: "Çok pahalı" },
   { id: "no-feature", label: "İhtiyacım olan özellik yok" },
@@ -478,6 +476,40 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
   const [cancelStep, setCancelStep] = useState<"reason" | "response" | "done">("reason");
   const [otherText, setOtherText] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [accessEndDate, setAccessEndDate] = useState<string | null>(null);
+
+  // Fetch real subscription and invoice data
+  const [subscription, setSubscription] = useState<any>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loadingSub, setLoadingSub] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      // Fetch active subscription
+      const { data: sub } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['trial', 'active', 'cancelled'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setSubscription(sub);
+
+      // Fetch payment history
+      const { data: payments } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'success')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      setInvoices(payments || []);
+
+      setLoadingSub(false);
+    })();
+  }, [user]);
 
   const info = PLAN_INFO[plan] || PLAN_INFO.free;
   const isFree = plan === "free";
@@ -497,9 +529,34 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
     setOtherText("");
   };
 
+  const handleConfirmCancel = async () => {
+    setCancelling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { reason: cancelReason || "other" },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "İptal işlemi başarısız");
+        setCancelling(false);
+        return;
+      }
+      setAccessEndDate(data.accessEndDate);
+      // Update local subscription state
+      if (subscription) {
+        setSubscription({ ...subscription, status: 'cancelled', cancelled_at: new Date().toISOString() });
+      }
+      setCancelStep("done");
+      toast.success("Aboneliğiniz iptal edildi");
+    } catch (err) {
+      console.error("Cancel error:", err);
+      toast.error("İptal işlemi sırasında bir hata oluştu");
+    }
+    setCancelling(false);
+  };
+
   const getSmartResponse = () => {
     if (cancelReason === "expensive") return {
-      msg: "Anladık. Yıllık plana geçersen %20 tasarruf edersin — aylık 319₺'ye düşer. Devam etmek ister misin?",
+      msg: "Anladık. Yıllık plana geçersen %20 tasarruf edersin — aylık fiyatın düşer. Devam etmek ister misin?",
       primary: "Yıllık Plana Geç", secondary: "Yine de İptal Et"
     };
     if (cancelReason === "other-platform") return {
@@ -511,10 +568,32 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       primary: "1 Ay Beklet", secondary: "Yine de İptal Et"
     };
     return {
-      msg: "Aboneliğinizi iptal etmek istediğinize emin misiniz?",
+      msg: "Aboneliğinizi iptal etmek istediğinize emin misiniz? Dönem sonuna kadar erişiminiz devam eder.",
       primary: "Vazgeç", secondary: "Onayla ve İptal Et"
     };
   };
+
+  // Calculate subscription status display
+  const getSubStatusDisplay = () => {
+    if (!subscription) return null;
+    if (subscription.status === 'trial') {
+      const endDate = new Date(subscription.trial_end).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return { label: '🧪 Deneme Süresi', color: '#F59E0B', detail: `Deneme bitiş: ${endDate}` };
+    }
+    if (subscription.status === 'active') {
+      const nextDate = new Date(subscription.next_payment_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return { label: '✅ Aktif', color: '#22C55E', detail: `Sonraki ödeme: ${nextDate}` };
+    }
+    if (subscription.status === 'cancelled') {
+      const endDate = subscription.trial_end && new Date(subscription.trial_end) > new Date(subscription.next_payment_date || '2000-01-01')
+        ? new Date(subscription.trial_end) : new Date(subscription.next_payment_date || subscription.trial_end);
+      return { label: '❌ İptal Edildi', color: '#EF4444', detail: `Erişim bitiş: ${endDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}` };
+    }
+    return null;
+  };
+
+  const subStatus = getSubStatusDisplay();
+  const canCancel = subscription && ['trial', 'active'].includes(subscription.status);
 
   return (
     <div className="space-y-6">
@@ -532,14 +611,13 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <span className="text-[16px] font-bold text-foreground">{info.name}</span>
             </div>
             <p className="text-sm font-semibold" style={{ color: isPaid ? "#FF6B2B" : "#64748B" }}>{info.price}</p>
-            {isPaid && (
+            {subStatus && (
               <>
-                <p className="text-[11px] mt-1 text-muted-foreground">Sonraki fatura: 15 Mayıs 2025</p>
-                <p className="text-[11px] mt-0.5" style={{ color: "#22C55E" }}>✅ Aktif</p>
-                {plan === "team" && <p className="text-[11px] mt-0.5 text-muted-foreground">Kullanıcılar: 3/5</p>}
+                <p className="text-[11px] mt-1" style={{ color: subStatus.color }}>{subStatus.label}</p>
+                <p className="text-[11px] mt-0.5 text-muted-foreground">{subStatus.detail}</p>
               </>
             )}
-            {isFree && <p className="text-[11px] mt-1 text-muted-foreground">{info.sub}</p>}
+            {isFree && !subscription && <p className="text-[11px] mt-1 text-muted-foreground">{info.sub}</p>}
           </div>
           {isAdmin && (
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ backgroundColor: "rgba(139,92,246,0.2)", color: "#A78BFA" }}>
@@ -582,11 +660,6 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               🏢 Kurumsal Plana Geç
             </button>
           )}
-          {isPaid && (
-            <button onClick={handleCancelClick} className="text-[11px] hover:underline" style={{ color: "#475569" }}>
-              ❌ Aboneliği İptal Et
-            </button>
-          )}
         </div>
       </div>
 
@@ -625,48 +698,57 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
       )}
 
       {/* Invoice History */}
-      {isPaid && (
+      {invoices.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground">Fatura Geçmişi</h4>
-          {/* Desktop table */}
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Ödeme Geçmişi</h4>
           <div className="hidden sm:block rounded-xl overflow-hidden bg-background border border-border">
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: "1px solid #1E2732" }}>
-                  {["Tarih", "Plan", "Tutar", "Durum", ""].map(h => (
+                  {["Tarih", "Plan", "Tutar", "Durum"].map(h => (
                     <th key={h} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INVOICES.map((inv, i) => (
-                  <tr key={i} style={{ borderBottom: i < MOCK_INVOICES.length - 1 ? "1px solid #1E2732" : undefined }}>
-                    <td className="px-4 py-3 text-foreground">{inv.date}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{inv.plan}</td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{inv.amount}</td>
-                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ {inv.status}</span></td>
-                    <td className="px-4 py-3"><button className="text-[11px] hover:underline" style={{ color: "#FF6B2B" }}>📄 İndir</button></td>
+                {invoices.map((inv, i) => (
+                  <tr key={inv.id} style={{ borderBottom: i < invoices.length - 1 ? "1px solid #1E2732" : undefined }}>
+                    <td className="px-4 py-3 text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name}</td>
+                    <td className="px-4 py-3 font-semibold text-foreground">₺{inv.amount?.toLocaleString('tr-TR')}</td>
+                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅ Başarılı</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {/* Mobile cards */}
           <div className="sm:hidden space-y-2">
-            {MOCK_INVOICES.map((inv, i) => (
-              <div key={i} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
+            {invoices.map((inv) => (
+              <div key={inv.id} className="rounded-lg p-3 flex items-center justify-between bg-background border border-border">
                 <div>
-                  <p className="text-xs font-medium text-foreground">{inv.date}</p>
-                  <p className="text-[10px] text-muted-foreground">{inv.plan} • {inv.amount}</p>
+                  <p className="text-xs font-medium text-foreground">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-[10px] text-muted-foreground">{PLAN_INFO[inv.plan_name]?.name || inv.plan_name} • ₺{inv.amount?.toLocaleString('tr-TR')}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
-                  <button className="text-[11px]" style={{ color: "#FF6B2B" }}>📄</button>
-                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>✅</span>
               </div>
             ))}
           </div>
-          <button className="mt-2 text-[11px] hover:underline" style={{ color: "#FF6B2B" }}>Tüm Faturaları Gör →</button>
+        </div>
+      )}
+
+      {/* Cancel Subscription Button */}
+      {canCancel && (
+        <div className="pt-4" style={{ borderTop: "1px solid #1E2732" }}>
+          <button
+            onClick={handleCancelClick}
+            className="w-full py-3 rounded-xl text-sm font-semibold transition-colors hover:opacity-90"
+            style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.3)" }}
+          >
+            ❌ Aboneliği İptal Et
+          </button>
+          <p className="text-center text-[10px] mt-1.5 text-muted-foreground">
+            İptal sonrası dönem sonuna kadar erişiminiz devam eder.
+          </p>
         </div>
       )}
 
@@ -715,27 +797,11 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
                     style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>
                     {resp.primary}
                   </button>
-                  <button onClick={async () => {
-                    setCancelling(true);
-                    try {
-                      if (user) {
-                        // Cancel active subscriptions
-                        await supabase.from('user_subscriptions' as any).update({
-                          status: 'cancelled',
-                          cancelled_at: new Date().toISOString(),
-                        } as any).eq('user_id', user.id).in('status', ['trial', 'active']);
-                        // Downgrade plan at end of period (keep access until trial_end/next_payment_date)
-                      }
-                    } catch (err) {
-                      console.error('Cancel error:', err);
-                    }
-                    setCancelling(false);
-                    setCancelStep("done");
-                  }}
+                  <button onClick={handleConfirmCancel}
                     disabled={cancelling}
-                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors"
+                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
                     style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
-                    {resp.secondary}
+                    {cancelling ? "İptal ediliyor..." : resp.secondary}
                   </button>
                 </div>
               </div>
@@ -747,10 +813,16 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
               <div className="rounded-lg p-4 text-center" style={{ backgroundColor: "#22C55E10", border: "1px solid #22C55E30" }}>
                 <p className="text-sm font-semibold" style={{ color: "#22C55E" }}>✅ Aboneliğin iptal edildi.</p>
                 <p className="text-xs mt-1 text-muted-foreground">
-                  15 Mayıs 2025'e kadar {info.name} özelliklerine erişmeye devam edebilirsin.
+                  {accessEndDate
+                    ? `${new Date(accessEndDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar ${info.name} özelliklerine erişmeye devam edebilirsin.`
+                    : `Dönem sonuna kadar ${info.name} özelliklerine erişmeye devam edebilirsin.`
+                  }
                 </p>
               </div>
-              <button onClick={() => setCancelModal(false)}
+              <p className="text-[11px] text-center text-muted-foreground">
+                Tekrar abone olmak istersen dilediğin zaman Planlar sayfasından yeniden başlayabilirsin.
+              </p>
+              <button onClick={() => { setCancelModal(false); window.location.reload(); }}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold"
                 style={{ backgroundColor: "#FF6B2B", color: "#FFF" }}>
                 Tamam
