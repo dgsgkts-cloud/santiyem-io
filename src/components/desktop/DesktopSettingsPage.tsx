@@ -769,6 +769,55 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           </div>
         )}
 
+        {/* Saved Cards Section */}
+        <div className="mt-4 pt-4" style={{ borderTop: "1px solid #1E2732" }}>
+          <p className="text-[11px] font-semibold text-muted-foreground mb-3">💳 Kayıtlı Kartlar</p>
+          {loadingCards ? (
+            <p className="text-xs text-muted-foreground">Yükleniyor...</p>
+          ) : cards.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Kayıtlı kart bulunmuyor.</p>
+          ) : (
+            <div className="space-y-2">
+              {cards.map(card => (
+                <div key={card.id} className="flex items-center justify-between rounded-lg p-3 bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm">{getCardIcon(card.card_association)}</span>
+                    <div>
+                      <p className="text-xs font-medium text-foreground">
+                        **** **** **** {card.last_four_digits}
+                        {card.is_default && (
+                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#22C55E20", color: "#22C55E" }}>Varsayılan</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {card.card_bank_name || card.card_association}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!card.is_default && cards.length > 1 && (
+                      <button
+                        onClick={() => handleSetDefault(card.id)}
+                        disabled={settingDefaultId === card.id}
+                        className="text-[10px] px-2 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
+                        style={{ color: "#FF6B2B", border: "1px solid #FF6B2B40" }}
+                      >
+                        {settingDefaultId === card.id ? '...' : 'Varsayılan Yap'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteCard(card)}
+                      className="text-[10px] px-2 py-1 rounded transition-colors hover:opacity-80"
+                      style={{ color: "#EF4444", border: "1px solid rgba(239,68,68,0.3)" }}
+                    >
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         {/* Subscription Details */}
         {subscription && (
           <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid #1E2732" }}>
