@@ -497,15 +497,27 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
         .maybeSingle();
       setSubscription(sub);
 
-      // Fetch payment history
-      const { data: payments } = await supabase
-        .from('payment_transactions')
+      // Fetch invoices from invoices table
+      const { data: invoiceData } = await supabase
+        .from('invoices')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'success')
         .order('created_at', { ascending: false })
-        .limit(10);
-      setInvoices(payments || []);
+        .limit(20);
+      
+      // Fallback to payment_transactions if no invoices yet
+      if (invoiceData && invoiceData.length > 0) {
+        setInvoices(invoiceData);
+      } else {
+        const { data: payments } = await supabase
+          .from('payment_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'success')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        setInvoices(payments || []);
+      }
 
       setLoadingSub(false);
     })();
