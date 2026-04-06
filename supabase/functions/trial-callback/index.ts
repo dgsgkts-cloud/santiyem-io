@@ -91,8 +91,20 @@ Deno.serve(async (req) => {
       const paymentId = iyzicoData.paymentId
       const paymentTransactionId = iyzicoData.itemTransactions?.[0]?.paymentTransactionId
 
+      console.log('Card storage result — cardUserKey:', cardUserKey ? 'EXISTS' : 'MISSING', 'cardToken:', cardToken ? 'EXISTS' : 'MISSING')
+
+      // If card info is missing, user didn't check "save my card" — reject trial
       if (!cardUserKey || !cardToken) {
-        console.warn('WARNING: Card storage info missing! cardUserKey:', cardUserKey, 'cardToken:', cardToken)
+        console.warn('Card storage FAILED — user did not check save card checkbox')
+        // Refund the 1 TRY immediately
+        if (paymentTransactionId) {
+          await refundPayment(paymentId, paymentTransactionId, '1.00')
+        }
+        await supabaseAdmin.from('payment_transactions').update({
+          status: 'failed', error_message: 'Kart kaydedilmedi', iyzico_payment_id: paymentId, iyzico_token: token, updated_at: new Date().toISOString(),
+        }).eq('id', txnId)
+        await supabaseAdmin.from('user_subscriptions').update({ status: 'failed' }).eq('id', subId)
+        return redirectWithStatus('failed', 'Deneme süresini başlatmak için ödeme formunda "Kartımı Kaydet" kutucuğunu işaretlemeniz gerekir. Lütfen tekrar deneyin.')
       }
 
       // Update payment transaction

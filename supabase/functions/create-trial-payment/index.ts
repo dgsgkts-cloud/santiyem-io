@@ -159,6 +159,8 @@ Deno.serve(async (req) => {
         itemType: 'VIRTUAL',
         price: validationAmount,
       }],
+      // Force card storage checkbox to be pre-checked
+      forceThreeDS: 0,
     }
 
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
