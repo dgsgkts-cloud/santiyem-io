@@ -93,14 +93,15 @@ Deno.serve(async (req) => {
     // Create subscription record
     const { data: sub, error: subError } = await supabaseAdmin
       .from('user_subscriptions')
-      .insert({
+      .upsert({
         user_id: user.id,
         plan_name: planKey,
         status: 'pending',
         amount: monthlyPrice,
+        trial_start: new Date().toISOString(),
         trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         next_payment_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      })
+      }, { onConflict: 'user_id,plan_name' })
       .select('id')
       .single()
 
