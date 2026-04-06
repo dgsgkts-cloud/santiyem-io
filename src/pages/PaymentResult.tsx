@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, XCircle } from "lucide-react";
+import { cleanupIyzicoOverlay } from "@/lib/iyzicoCleanup";
 
 const PaymentResult = () => {
   const [params] = useSearchParams();
@@ -8,7 +9,9 @@ const PaymentResult = () => {
   const message = params.get("message");
   const isSuccess = status === "success";
 
-  // No auto-reload; user navigates back manually
+  useEffect(() => {
+    cleanupIyzicoOverlay();
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0F1419" }}>

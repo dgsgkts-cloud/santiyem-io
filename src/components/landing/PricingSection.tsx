@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Check, Loader2 } from "lucide-react";
@@ -6,6 +6,7 @@ import { PaymentLogos } from "@/components/PaymentLogos";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
 
 const PLANS = [
   {
@@ -37,11 +38,19 @@ const PricingSection = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const cleanup = listenForIyzicoClose();
+    return cleanup;
+  }, []);
+
   const openCheckoutForm = (data: any) => {
     const checkoutDiv = document.getElementById("iyzico-checkout-container");
     if (checkoutDiv) {
       checkoutDiv.innerHTML = data.checkoutFormContent;
       checkoutDiv.style.display = "block";
+      checkoutDiv.onclick = (e) => {
+        if (e.target === checkoutDiv) cleanupIyzicoOverlay();
+      };
       const scripts = checkoutDiv.querySelectorAll("script");
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");

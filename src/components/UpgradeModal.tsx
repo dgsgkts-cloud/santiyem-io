@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
 
 const PAYMENT_DISABLED = false;
 
@@ -19,6 +20,11 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const { user } = useUser();
 
+  useEffect(() => {
+    const cleanup = listenForIyzicoClose();
+    return cleanup;
+  }, []);
+
   const openCheckoutForm = (data: any) => {
     onClose();
     let checkoutDiv = document.getElementById("iyzico-checkout-container-modal");
@@ -30,6 +36,9 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     }
     checkoutDiv.innerHTML = data.checkoutFormContent;
     checkoutDiv.style.display = "flex";
+    checkoutDiv.onclick = (e) => {
+      if (e.target === checkoutDiv) cleanupIyzicoOverlay();
+    };
     const scripts = checkoutDiv.querySelectorAll("script");
     scripts.forEach((oldScript) => {
       const newScript = document.createElement("script");
