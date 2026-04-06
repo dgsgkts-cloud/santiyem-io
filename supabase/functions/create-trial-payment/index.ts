@@ -154,13 +154,11 @@ Deno.serve(async (req) => {
       shippingAddress: { contactName: `${firstName} ${lastName}`, city: 'Istanbul', country: 'Turkey', address: 'Turkey' },
       basketItems: [{
         id: 'trial-card-register',
-        name: `${planInfo.name} - Kart Kaydi (iade edilecek)`,
+        name: `${planInfo.name} — 1 TL kart dogrulama (hemen iade edilir)`,
         category1: 'Subscription',
         itemType: 'VIRTUAL',
         price: validationAmount,
       }],
-      // Force card storage checkbox to be pre-checked
-      forceThreeDS: 0,
     }
 
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
