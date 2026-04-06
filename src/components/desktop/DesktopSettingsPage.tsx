@@ -1066,6 +1066,38 @@ const SubscriptionTab = ({ plan }: { plan: PlanType }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Card Confirm Modal */}
+      <Dialog open={!!deleteConfirmCard} onOpenChange={(open) => !open && setDeleteConfirmCard(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Kartı Sil</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-xs text-muted-foreground">
+              Bu kartı silmek istediğinize emin misiniz?{' '}
+              <span className="font-semibold text-foreground">**** {deleteConfirmCard?.last_four_digits}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirmCard(null)}
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}
+              >
+                Vazgeç
+              </button>
+              <button
+                onClick={confirmDeleteCard}
+                disabled={deletingCardId === deleteConfirmCard?.id}
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                style={{ backgroundColor: "#EF4444", color: "#FFF" }}
+              >
+                {deletingCardId === deleteConfirmCard?.id ? 'Siliniyor...' : 'Evet, Sil'}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
