@@ -1,58 +1,94 @@
 /**
- * Cleans up iyzico checkout overlays/modals from the DOM
+ * Aggressively cleans up iyzico checkout overlays/modals from the DOM
  * and restores body scrolling + pointer events.
  */
 export function cleanupIyzicoOverlay() {
-  // Remove iyzico containers
-  document.querySelectorAll(
-    '[id*="iyzico-checkout-container"], [class*="iyzico"], [id*="iyzico"]'
-  ).forEach((el) => {
-    (el as HTMLElement).style.display = "none";
-    (el as HTMLElement).style.pointerEvents = "none";
-  });
+  // Restore body & html scrolling and interaction
+  document.body.style.overflow = '';
+  document.body.style.pointerEvents = '';
+  document.documentElement.style.overflow = '';
 
-  // Remove any leftover overlay/backdrop elements injected by iyzico
+  // Remove iyzico iframes
+  document.querySelectorAll('iframe[src*="iyzico"], iframe[src*="iyzipay"]').forEach(el => el.remove());
+
+  // Remove iyzico containers and overlays
   document.querySelectorAll(
-    '[class*="overlay"], [class*="backdrop"], [class*="modal-backdrop"]'
-  ).forEach((el) => {
-    // Only remove elements that look like full-screen overlays
-    const style = window.getComputedStyle(el);
-    if (style.position === "fixed" || style.position === "absolute") {
-      (el as HTMLElement).style.display = "none";
-      (el as HTMLElement).style.pointerEvents = "none";
+    '[class*="iyzico"], [id*="iyzico"], [class*="iyzi"], [id*="iyzi"]'
+  ).forEach(el => el.remove());
+
+  // Remove any leftover fixed overlay/backdrop elements
+  document.querySelectorAll('div[style*="position: fixed"]').forEach(el => {
+    const htmlEl = el as HTMLElement;
+    const bg = htmlEl.style.backgroundColor;
+    if (
+      bg === 'rgba(0, 0, 0, 0.5)' ||
+      bg === 'rgba(0,0,0,0.5)' ||
+      bg === 'rgba(0, 0, 0, 0.8)' ||
+      bg === 'rgba(0,0,0,0.8)' ||
+      bg.includes('rgba(0') ||
+      htmlEl.classList.contains('bg-black/80') ||
+      htmlEl.classList.contains('bg-black/60')
+    ) {
+      // Check if it's likely an iyzico overlay (high z-index)
+      const zIndex = parseInt(htmlEl.style.zIndex || '0');
+      if (zIndex >= 200) {
+        htmlEl.remove();
+      }
     }
   });
 
-  // Restore body & html scrolling and interaction
-  document.body.style.overflow = "auto";
-  document.body.style.pointerEvents = "auto";
-  document.documentElement.style.overflow = "auto";
+  // Remove modal backdrop classes
+  document.querySelectorAll('[class*="overlay"], [class*="backdrop"], [class*="modal-backdrop"]').forEach(el => {
+    const style = window.getComputedStyle(el);
+    if (style.position === 'fixed' || style.position === 'absolute') {
+      const zIndex = parseInt(style.zIndex || '0');
+      if (zIndex >= 200) {
+        (el as HTMLElement).remove();
+      }
+    }
+  });
 }
 
 /**
- * Listens for iyzico postMessage events and cleans up when the modal closes.
- * Returns a cleanup function to remove the listener.
+ * Listens for iyzico postMessage events, Escape key, and cleans up when the modal closes.
+ * Returns a cleanup function to remove the listeners.
  */
 export function listenForIyzicoClose(): () => void {
-  const handler = (event: MessageEvent) => {
-    // iyzico sends messages when checkout completes or closes
-    if (
-      typeof event.data === "string" &&
-      (event.data.includes("iyzico") ||
-        event.data.includes("iyzico") ||
-        event.data.includes("checkout"))
-    ) {
-      cleanupIyzicoOverlay();
+  const messageHandler = (event: MessageEvent) => {
+    if (typeof event.data === 'string') {
+      if (
+        event.data.includes('iyzico') ||
+        event.data.includes('checkout') ||
+        event.data === 'modal-closed'
+      ) {
+        cleanupIyzicoOverlay();
+      }
     }
-    // iyzico also sends object messages
-    if (typeof event.data === "object" && event.data !== null) {
+    if (typeof event.data === 'object' && event.data !== null) {
       const d = event.data as Record<string, unknown>;
-      if (d.type === "iyzicoCheckoutFormResult" || d.status || d.token) {
+      if (
+        d.type === 'iyzicoCheckoutFormResult' ||
+        d.type === 'iyzico:closed' ||
+        d.status === 'closed' ||
+        d.status ||
+        d.token
+      ) {
         cleanupIyzicoOverlay();
       }
     }
   };
 
-  window.addEventListener("message", handler);
-  return () => window.removeEventListener("message", handler);
+  const keyHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      cleanupIyzicoOverlay();
+    }
+  };
+
+  window.addEventListener('message', messageHandler);
+  document.addEventListener('keydown', keyHandler);
+
+  return () => {
+    window.removeEventListener('message', messageHandler);
+    document.removeEventListener('keydown', keyHandler);
+  };
 }
