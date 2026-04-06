@@ -36,6 +36,9 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     }
     checkoutDiv.innerHTML = data.checkoutFormContent;
     checkoutDiv.style.display = "flex";
+    checkoutDiv.onclick = (e) => {
+      if (e.target === checkoutDiv) cleanupIyzicoOverlay();
+    };
     const scripts = checkoutDiv.querySelectorAll("script");
     scripts.forEach((oldScript) => {
       const newScript = document.createElement("script");

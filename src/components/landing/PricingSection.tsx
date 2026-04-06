@@ -48,6 +48,9 @@ const PricingSection = () => {
     if (checkoutDiv) {
       checkoutDiv.innerHTML = data.checkoutFormContent;
       checkoutDiv.style.display = "block";
+      checkoutDiv.onclick = (e) => {
+        if (e.target === checkoutDiv) cleanupIyzicoOverlay();
+      };
       const scripts = checkoutDiv.querySelectorAll("script");
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
