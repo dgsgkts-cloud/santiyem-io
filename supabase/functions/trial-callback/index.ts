@@ -151,6 +151,32 @@ Deno.serve(async (req) => {
           plan: PLAN_MAP[sub.plan_name] || sub.plan_name,
           updated_at: new Date().toISOString(),
         }).eq('user_id', sub.user_id)
+
+        // Save card to user_cards table
+        const cardAssociation = iyzicoData.cardAssociation || 'UNKNOWN'
+        const cardTypeInfo = iyzicoData.cardType || 'UNKNOWN'
+        const binNumber = iyzicoData.binNumber || ''
+        const lastFour = iyzicoData.lastFourDigits || binNumber?.slice(-4) || '****'
+
+        const { data: existingCard } = await supabaseAdmin.from('user_cards')
+          .select('id').eq('user_id', sub.user_id).eq('card_token', cardToken).maybeSingle()
+
+        if (!existingCard) {
+          const { count: cardCount } = await supabaseAdmin.from('user_cards')
+            .select('id', { count: 'exact', head: true }).eq('user_id', sub.user_id)
+
+          await supabaseAdmin.from('user_cards').insert({
+            user_id: sub.user_id,
+            card_user_key: cardUserKey,
+            card_token: cardToken,
+            card_alias: `**** **** **** ${lastFour}`,
+            card_type: cardTypeInfo,
+            card_association: cardAssociation,
+            bin_number: binNumber,
+            last_four_digits: lastFour,
+            is_default: (cardCount || 0) === 0,
+          })
+        }
       }
 
       return redirectWithStatus('success', 'Deneme süreniz başlatıldı! Kartınızdan herhangi bir ücret alınmadı. 14 gün boyunca tüm özellikleri ücretsiz kullanabilirsiniz.')
