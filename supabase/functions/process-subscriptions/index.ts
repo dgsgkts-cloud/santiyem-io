@@ -215,13 +215,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Send reminders for active subscriptions due tomorrow
+    // 4. Send reminders for active subscriptions due in 3 days
+    const threeDaysLater = new Date(now)
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3)
     const { data: activeDueSoon } = await supabaseAdmin
       .from('user_subscriptions')
       .select('*')
       .eq('status', 'active')
       .eq('reminder_sent', false)
-      .lte('next_payment_date', tomorrow.toISOString())
+      .lte('next_payment_date', threeDaysLater.toISOString())
       .gt('next_payment_date', now.toISOString())
 
     if (activeDueSoon && activeDueSoon.length > 0) {
@@ -236,7 +238,7 @@ Deno.serve(async (req) => {
                 idempotency_key: `renewal-reminder-${sub.id}-${sub.next_payment_date}`,
                 template_name: 'payment_due_reminder',
                 to: authUser.user.email,
-                subject: 'Abonelik Yenileme Hatırlatması',
+                subject: `Abonelik Yenileme — ₺${amount} 3 gün içinde tahsil edilecek`,
                 template_data: {
                   recipientName: authUser.user.user_metadata?.full_name || 'Değerli Kullanıcı',
                   paymentAmount: `₺${amount.toLocaleString('tr-TR')}`,
