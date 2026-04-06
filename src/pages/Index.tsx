@@ -237,7 +237,8 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
-        <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
+        <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
+        <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
 
         <div className="flex-1 flex min-w-0 flex-col overflow-hidden">
