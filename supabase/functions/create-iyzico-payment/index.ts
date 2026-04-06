@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
       paymentGroup: 'PRODUCT',
       callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}`,
       enabledInstallments: [1],
+      enabledCardStorage: 1,
       buyer: {
         id: buyerId, name: firstName, surname: lastName,
         gsmNumber: '+905000000000', email: user.email,
