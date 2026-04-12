@@ -112,12 +112,17 @@ const SiteDiaryPage = () => {
 
       if (editingEntry) {
         await updateEntry.mutateAsync({ id: editingEntry.id, ...payload } as any);
+        // Upload new photos even when editing
+        if (formPhotos.length > 0) {
+          for (let i = 0; i < formPhotos.length; i++) {
+            await uploadPhoto(formPhotos[i], editingEntry.id, formPhotoDescs[i] || "");
+          }
+        }
       } else {
         const result = await createEntry.mutateAsync(payload as any);
-        // Upload photos
         if (formPhotos.length > 0 && result?.id) {
-          for (const file of formPhotos) {
-            await uploadPhoto(file, result.id);
+          for (let i = 0; i < formPhotos.length; i++) {
+            await uploadPhoto(formPhotos[i], result.id, formPhotoDescs[i] || "");
           }
         }
       }
