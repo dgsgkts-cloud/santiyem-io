@@ -705,30 +705,86 @@ const SiteDiaryPage = () => {
 
       {/* Section 6: Photos */}
       <div className="rounded-xl p-4 bg-card border border-border">
-        <h3 className="text-sm font-semibold mb-2 text-foreground">📷 Fotoğraflar</h3>
-        <div
-          className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50"
-          style={{ borderColor: "#1E2732" }}
-          onClick={() => document.getElementById("photo-input")?.click()}
-        >
-          <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: "#475569" }} />
-          <p className="text-xs text-muted-foreground">Tıklayın veya sürükleyin · Kameradan çekim desteklenir</p>
-          <input id="photo-input" type="file" accept="image/*" multiple capture="environment" className="hidden" onChange={e => { if (e.target.files) setFormPhotos(prev => [...prev, ...Array.from(e.target.files!)]); }} />
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-foreground">📷 Fotoğraflar ({formPhotos.length}/10)</h3>
+          {/* Show existing photos count when editing */}
+          {editingEntry && entryPhotos(editingEntry.id).length > 0 && (
+            <span className="text-xs text-muted-foreground">Mevcut: {entryPhotos(editingEntry.id).length} fotoğraf</span>
+          )}
         </div>
-        {formPhotos.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            {formPhotos.map((f, i) => (
-              <div key={i} className="relative rounded-lg overflow-hidden aspect-square">
-                <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
-                <button onClick={() => setFormPhotos(p => p.filter((_, j) => j !== i))} className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
+
+        {/* Existing photos when editing */}
+        {editingEntry && entryPhotos(editingEntry.id).length > 0 && (
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {entryPhotos(editingEntry.id).map(photo => (
+              <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-square">
+                <img src={photo.photo_url} alt={photo.description || ""} className="w-full h-full object-cover" />
+                <button
+                  onClick={async () => {
+                    if (confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) {
+                      await deletePhoto(photo.id);
+                      toast.success("Fotoğraf silindi");
+                    }
+                  }}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+                >
                   <XCircle className="w-3 h-3" style={{ color: "#EF4444" }} />
                 </button>
               </div>
             ))}
           </div>
         )}
+
+        {formPhotos.length < 10 && (
+          <div
+            className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50"
+            style={{ borderColor: "#1E2732" }}
+            onClick={() => document.getElementById("photo-input")?.click()}
+          >
+            <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: "#475569" }} />
+            <p className="text-xs text-muted-foreground">Tıklayın veya sürükleyin · Kameradan çekim desteklenir (max 10)</p>
+            <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple capture="environment" className="hidden"
+              onChange={e => {
+                if (e.target.files) {
+                  const newFiles = Array.from(e.target.files).slice(0, 10 - formPhotos.length);
+                  setFormPhotos(prev => [...prev, ...newFiles]);
+                  setFormPhotoDescs(prev => [...prev, ...newFiles.map(() => "")]);
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {formPhotos.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+            {formPhotos.map((f, i) => (
+              <div key={i} className="rounded-lg overflow-hidden border border-border">
+                <div className="relative aspect-square">
+                  <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+                  <button onClick={() => {
+                    setFormPhotos(p => p.filter((_, j) => j !== i));
+                    setFormPhotoDescs(d => d.filter((_, j) => j !== i));
+                  }} className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
+                    <XCircle className="w-3 h-3" style={{ color: "#EF4444" }} />
+                  </button>
+                </div>
+                <input
+                  value={formPhotoDescs[i] || ""}
+                  onChange={e => {
+                    const d = [...formPhotoDescs];
+                    d[i] = e.target.value;
+                    setFormPhotoDescs(d);
+                  }}
+                  placeholder="Açıklama (opsiyonel)"
+                  className="w-full px-2 py-1.5 text-[11px] bg-card border-t border-border outline-none text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <p className="text-[10px] mt-2 px-2 py-1 rounded-lg" style={{ backgroundColor: "rgba(245,158,11,0.1)", color: "#F59E0B" }}>
-          💡 Bugün en az 1 fotoğraf eklemeniz önerilir
+          💡 Bugün en az 1 fotoğraf eklemeniz önerilir · JPG, PNG, WebP
         </p>
       </div>
 
