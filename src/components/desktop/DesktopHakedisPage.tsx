@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
+import HakedisWizard from "./HakedisWizard";
 
 const STATUS_OPTIONS = [
   { label: "Taslak", color: "#64748B", emoji: "📝" },
