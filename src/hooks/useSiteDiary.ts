@@ -117,11 +117,34 @@ export function useSiteDiary(projectId?: string) {
     onError: (e: any) => toast.error(e.message || "Silme hatası"),
   });
 
+  const sanitizeFileName = (name: string): string => {
+    const tr: Record<string, string> = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u", Ç: "c", Ğ: "g", İ: "i", Ö: "o", Ş: "s", Ü: "u" };
+    return name
+      .replace(/[çğıöşüÇĞİÖŞÜ]/g, (c) => tr[c] || c)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9.\-_]/g, "")
+      .replace(/-{2,}/g, "-");
+  };
+
   const uploadPhoto = async (file: File, entryId: string, description: string = "") => {
-    const ext = file.name.split(".").pop();
-    const path = `${user!.id}/${entryId}/${Date.now()}.${ext}`;
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Sadece JPG, PNG veya WebP dosya yükleyebilirsiniz.");
+      return null;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Fotoğraf boyutu max 20MB olabilir.");
+      return null;
+    }
+    const safeName = sanitizeFileName(file.name);
+    const path = `${user!.id}/${entryId}/${Date.now()}_${safeName}`;
     const { error: uploadError } = await supabase.storage.from("site-diary-photos").upload(path, file);
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("Photo upload error:", uploadError);
+      toast.error("Fotoğraf yüklenirken hata oluştu.");
+      return null;
+    }
     const { data: urlData } = supabase.storage.from("site-diary-photos").getPublicUrl(path);
     const { error: dbError } = await supabase.from("site_diary_photos").insert({
       user_id: user!.id,
