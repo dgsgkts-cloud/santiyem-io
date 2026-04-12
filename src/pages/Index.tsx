@@ -40,7 +40,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking";
 
-// Desktop tab bar items (kept for mobile)
+// Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
   { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
@@ -49,10 +49,27 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
   { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
-  
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
   { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
+];
+
+const NAVIGABLE_TABS: Tab[] = [
+  "dashboard",
+  "chat",
+  "calc",
+  "render",
+  "reminders",
+  "pricing",
+  "daily",
+  "dashboard",
+  "projects",
+  "hakedis",
+  "settings",
+  "site-diary",
+  "profitability",
+  "contracts",
+  "cash-tracking",
 ];
 
 // Mobile drawer menu items
@@ -141,7 +158,7 @@ const Index = () => {
   useEffect(() => {
     const handler = (e: Event) => {
       const tab = (e as CustomEvent).detail;
-      if (TABS.some(t => t.id === tab)) setActiveTab(tab as Tab);
+      if (NAVIGABLE_TABS.includes(tab as Tab)) setActiveTab(tab as Tab);
     };
     window.addEventListener("navigate-tab", handler);
     return () => window.removeEventListener("navigate-tab", handler);
@@ -223,7 +240,7 @@ const Index = () => {
   };
 
   const handleDrawerNav = (id: string) => {
-    if (TABS.some(t => t.id === id)) {
+    if (NAVIGABLE_TABS.includes(id as Tab)) {
       setActiveTab(id as Tab);
     }
     setDrawerOpen(false);
