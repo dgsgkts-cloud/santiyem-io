@@ -353,7 +353,7 @@ const SiteDiaryPage = () => {
                   <div className="flex-1 text-left min-w-0">
                     <p className="text-sm font-medium text-foreground">{format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</p>
                     <p className="text-xs truncate text-muted-foreground">
-                      {totalWorkers(entry.crews)} işçi · {entry.work_done?.slice(0, 60) || "Kayıt yok"}
+                      {totalWorkers(entry.crews)} işçi · {entryPhotos(entry.id).length > 0 ? `📷 ${entryPhotos(entry.id).length} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Kayıt yok"}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -528,6 +528,37 @@ const SiteDiaryPage = () => {
           <div className="rounded-xl p-4 bg-card border border-border">
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-foreground"><FileText className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Genel Not</h3>
             <p className="text-sm whitespace-pre-wrap text-muted-foreground">{selectedEntry.general_note}</p>
+          </div>
+        )}
+
+        {/* Photos */}
+        {ep.length > 0 && (
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground"><Camera className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Fotoğraflar ({ep.length})</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {ep.map(photo => (
+                <div key={photo.id} className="relative group rounded-lg overflow-hidden">
+                  <img src={photo.photo_url} alt={photo.description || ""} className="w-full aspect-square object-cover cursor-pointer" onClick={() => window.open(photo.photo_url, "_blank")} />
+                  {photo.description && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                      <p className="text-[10px] text-white truncate">{photo.description}</p>
+                    </div>
+                  )}
+                  <button
+                    onClick={async () => {
+                      if (confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) {
+                        await deletePhoto(photo.id);
+                        toast.success("Fotoğraf silindi");
+                      }
+                    }}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+                  >
+                    <Trash2 className="w-3 h-3" style={{ color: "#EF4444" }} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
