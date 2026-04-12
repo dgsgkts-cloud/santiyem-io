@@ -62,6 +62,7 @@ const SiteDiaryPage = () => {
   const [formGeneralNote, setFormGeneralNote] = useState("");
   const [formStatus, setFormStatus] = useState("published");
   const [formPhotos, setFormPhotos] = useState<File[]>([]);
+  const [formPhotoDescs, setFormPhotoDescs] = useState<string[]>([]);
   const [isQuickMode, setIsQuickMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPeriodModal, setShowPeriodModal] = useState(false);
@@ -84,6 +85,7 @@ const SiteDiaryPage = () => {
     setFormGeneralNote("");
     setFormStatus("published");
     setFormPhotos([]);
+    setFormPhotoDescs([]);
     setIsQuickMode(false);
     setEditingEntry(null);
   };
