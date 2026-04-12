@@ -5,8 +5,9 @@ import { useUser } from "@/contexts/UserContext";
 import {
   ArrowLeft, Edit2, Trash2, Download, RefreshCw, Bot, Building2, Calendar,
   ChevronUp, ChevronDown, AlertTriangle, Plus, Clock, DollarSign, CheckCircle2, Shield,
-  Mail, Send, History, FileCheck
+  Mail, Send, History, FileCheck, ListChecks
 } from "lucide-react";
+import ContractItemsSection from "./ContractItemsSection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
