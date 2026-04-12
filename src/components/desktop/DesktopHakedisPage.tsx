@@ -189,8 +189,9 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 // ─── LEVEL 2: Project Detail ─────────────────────────────────
 const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate } = useProjectHakedis(projectId);
+  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, refetch: refetchHakedis } = useProjectHakedis(projectId);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [formPeriod, setFormPeriod] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formKdvRate, setFormKdvRate] = useState("20");
