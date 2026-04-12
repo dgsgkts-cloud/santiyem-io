@@ -240,6 +240,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
         )}
       </Section>
 
+      {/* İş Kalemleri / BOQ */}
+      <Section id="items" title="İş Kalemleri" icon={<ListChecks className="w-4 h-4 text-primary" />}>
+        <ContractItemsSection contractId={contract.id} onTotalChange={handleItemsTotalChange} />
+      </Section>
+
       {/* AI Critical Clauses */}
       {analysis?.kritik_maddeler?.length > 0 && (
         <Section id="ai" title="AI Kritik Madde Analizi" icon={<Bot className="w-4 h-4 text-primary" />}
