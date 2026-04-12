@@ -392,7 +392,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               </button>
             </>
           )}
-          <button onClick={() => setShowAddForm(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
+          <button onClick={() => setShowWizard(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
             <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
           </button>
         </div>
