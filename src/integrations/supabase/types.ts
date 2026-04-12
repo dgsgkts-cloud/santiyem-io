@@ -340,6 +340,59 @@ export type Database = {
           },
         ]
       }
+      contract_items: {
+        Row: {
+          contract_id: string
+          created_at: string
+          description: string
+          id: string
+          poz_no: string
+          quantity: number
+          sort_order: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          description?: string
+          id?: string
+          poz_no?: string
+          quantity?: number
+          sort_order?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          poz_no?: string
+          quantity?: number
+          sort_order?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_items_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_signature_requests: {
         Row: {
           cc_emails: string[] | null

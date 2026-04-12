@@ -5,8 +5,9 @@ import { useUser } from "@/contexts/UserContext";
 import {
   ArrowLeft, Edit2, Trash2, Download, RefreshCw, Bot, Building2, Calendar,
   ChevronUp, ChevronDown, AlertTriangle, Plus, Clock, DollarSign, CheckCircle2, Shield,
-  Mail, Send, History, FileCheck
+  Mail, Send, History, FileCheck, ListChecks
 } from "lucide-react";
+import ContractItemsSection from "./ContractItemsSection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -66,9 +67,14 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   };
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    general: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false, signature: true, activity: false
+    general: true, items: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false, signature: true, activity: false
   });
   const toggle = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }));
+
+  const handleItemsTotalChange = async (total: number) => {
+    // Sync contract amount with items total if items exist
+    // This is informational - parent can handle actual update
+  };
 
   const Section = ({ id, title, icon, badge, children }: { id: string; title: string; icon: React.ReactNode; badge?: React.ReactNode; children: React.ReactNode }) => (
     <div className={`overflow-hidden ${cardStyleClass}`}>
@@ -232,6 +238,11 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             )}
           </div>
         )}
+      </Section>
+
+      {/* İş Kalemleri / BOQ */}
+      <Section id="items" title="İş Kalemleri" icon={<ListChecks className="w-4 h-4 text-primary" />}>
+        <ContractItemsSection contractId={contract.id} onTotalChange={handleItemsTotalChange} />
       </Section>
 
       {/* AI Critical Clauses */}
