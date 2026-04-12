@@ -747,12 +747,61 @@ export type Database = {
         }
         Relationships: []
       }
+      hakedis_deductions: {
+        Row: {
+          amount: number
+          created_at: string
+          deduction_type: string
+          hakedis_id: string
+          id: string
+          label: string
+          rate: number
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          deduction_type?: string
+          hakedis_id: string
+          id?: string
+          label?: string
+          rate?: number
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          deduction_type?: string
+          hakedis_id?: string
+          id?: string
+          label?: string
+          rate?: number
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hakedis_deductions_hakedis_id_fkey"
+            columns: ["hakedis_id"]
+            isOneToOne: false
+            referencedRelation: "project_hakedis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hakedis_items: {
         Row: {
+          contract_item_id: string | null
           created_at: string
+          cumulative_qty: number
+          current_qty: number
           description: string
           hakedis_id: string
           id: string
+          poz_no: string
+          previous_cumulative_qty: number
           quantity: number
           sort_order: number
           total_price: number
@@ -761,10 +810,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          contract_item_id?: string | null
           created_at?: string
+          cumulative_qty?: number
+          current_qty?: number
           description?: string
           hakedis_id: string
           id?: string
+          poz_no?: string
+          previous_cumulative_qty?: number
           quantity?: number
           sort_order?: number
           total_price?: number
@@ -773,10 +827,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          contract_item_id?: string | null
           created_at?: string
+          cumulative_qty?: number
+          current_qty?: number
           description?: string
           hakedis_id?: string
           id?: string
+          poz_no?: string
+          previous_cumulative_qty?: number
           quantity?: number
           sort_order?: number
           total_price?: number
@@ -785,6 +844,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "hakedis_items_contract_item_id_fkey"
+            columns: ["contract_item_id"]
+            isOneToOne: false
+            referencedRelation: "contract_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hakedis_items_hakedis_id_fkey"
             columns: ["hakedis_id"]
@@ -1226,11 +1292,15 @@ export type Database = {
       project_hakedis: {
         Row: {
           amount: number
+          contract_id: string | null
           created_at: string
+          deductions_total: number
           expected_payment_date: string | null
+          gross_total: number
           id: string
           kdv: number
           net: number
+          net_total: number
           payment_date: string | null
           period: string
           project_id: string
@@ -1241,11 +1311,15 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          contract_id?: string | null
           created_at?: string
+          deductions_total?: number
           expected_payment_date?: string | null
+          gross_total?: number
           id?: string
           kdv?: number
           net?: number
+          net_total?: number
           payment_date?: string | null
           period: string
           project_id: string
@@ -1256,11 +1330,15 @@ export type Database = {
         }
         Update: {
           amount?: number
+          contract_id?: string | null
           created_at?: string
+          deductions_total?: number
           expected_payment_date?: string | null
+          gross_total?: number
           id?: string
           kdv?: number
           net?: number
+          net_total?: number
           payment_date?: string | null
           period?: string
           project_id?: string
@@ -1269,7 +1347,15 @@ export type Database = {
           status_color?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "project_hakedis_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_milestones: {
         Row: {
