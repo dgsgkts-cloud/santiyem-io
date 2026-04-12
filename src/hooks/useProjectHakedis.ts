@@ -16,6 +16,17 @@ export interface ProjectHakedis {
   payment_date: string | null;
   expected_payment_date: string | null;
   reminder_days_before: number | null;
+  gross_total: number;
+  deductions_total: number;
+  net_total: number;
+  contract_id: string | null;
+  approval_status: string;
+  approval_token: string | null;
+  approval_sent_at: string | null;
+  approved_at: string | null;
+  client_email: string | null;
+  client_note: string | null;
+  revision_count: number;
 }
 
 export function useProjectHakedis(projectId: string) {
@@ -82,7 +93,116 @@ export function useProjectHakedis(projectId: string) {
     toast.success("Ödeme hatırlatıcısı kuruldu 🔔");
   };
 
-  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, refetch: fetchHakedisler };
+  const sendForApproval = async (hakedisId: string, clientEmail: string, projectName: string) => {
+    if (!user) return false;
+    const h = hakedisler.find(x => x.id === hakedisId);
+    if (!h) return false;
+    
+    // Update hakedis with approval info
+    const { error } = await supabase.from("project_hakedis").update({
+      approval_status: "onay_bekliyor",
+      approval_sent_at: new Date().toISOString(),
+      client_email: clientEmail,
+      status: "Gönderildi",
+      status_color: "#3B82F6",
+    }).eq("id", hakedisId);
+    if (error) { toast.error("Gönderim hatası"); return false; }
+
+    // Save revision snapshot
+    await supabase.from("hakedis_revisions" as any).insert({
+      hakedis_id: hakedisId,
+      user_id: user.id,
+      revision_number: (h.revision_count || 0) + 1,
+      snapshot: { amount: h.amount, net: h.net, net_total: h.net_total, gross_total: h.gross_total, deductions_total: h.deductions_total, period: h.period },
+      note: "Müşteriye onay için gönderildi",
+    } as any);
+
+    // Get the base URL
+    const baseUrl = window.location.origin;
+    const approvalUrl = `${baseUrl}/hakedis-onay/${h.approval_token}`;
+
+    // Get company profile for sender name
+    const { getCompanyProfile } = await import("@/lib/companyProfile");
+    const company = getCompanyProfile();
+    const senderName = company.companyName || user.email || "Şantiyem";
+
+    // Send email
+    const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+    await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "hakedis-approval-request",
+        recipientEmail: clientEmail,
+        idempotencyKey: `hakedis-approval-${hakedisId}-${Date.now()}`,
+        templateData: {
+          projectName,
+          period: h.period,
+          netAmount: fmt(h.net_total || h.net),
+          approvalUrl,
+          senderName,
+        },
+      },
+    });
+
+    toast.success("Hakediş onay talebi gönderildi! 📧");
+    fetchHakedisler();
+    return true;
+  };
+
+  const resendForApproval = async (hakedisId: string) => {
+    if (!user) return false;
+    const h = hakedisler.find(x => x.id === hakedisId);
+    if (!h || !h.client_email) return false;
+
+    // Increment revision count and reset approval status
+    await supabase.from("project_hakedis").update({
+      approval_status: "onay_bekliyor",
+      approval_sent_at: new Date().toISOString(),
+      approved_at: null,
+      client_note: null,
+      revision_count: (h.revision_count || 0) + 1,
+      status: "Gönderildi",
+      status_color: "#3B82F6",
+    }).eq("id", hakedisId);
+
+    // Save revision snapshot
+    await supabase.from("hakedis_revisions" as any).insert({
+      hakedis_id: hakedisId,
+      user_id: user.id,
+      revision_number: (h.revision_count || 0) + 1,
+      snapshot: { amount: h.amount, net: h.net, net_total: h.net_total, gross_total: h.gross_total },
+      note: "Revize edilip tekrar gönderildi",
+    } as any);
+
+    const baseUrl = window.location.origin;
+    const approvalUrl = `${baseUrl}/hakedis-onay/${h.approval_token}`;
+    const { getCompanyProfile } = await import("@/lib/companyProfile");
+    const company = getCompanyProfile();
+    const senderName = company.companyName || "Şantiyem";
+    const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+
+    const project = (await supabase.from("projects").select("name").eq("id", h.project_id).maybeSingle()).data;
+
+    await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "hakedis-approval-request",
+        recipientEmail: h.client_email,
+        idempotencyKey: `hakedis-resend-${hakedisId}-${Date.now()}`,
+        templateData: {
+          projectName: project?.name || "Proje",
+          period: h.period,
+          netAmount: fmt(h.net_total || h.net),
+          approvalUrl,
+          senderName,
+        },
+      },
+    });
+
+    toast.success("Hakediş tekrar onaya gönderildi! 📧");
+    fetchHakedisler();
+    return true;
+  };
+
+  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: fetchHakedisler };
 }
 
 // Hook to fetch all hakedis across all projects
