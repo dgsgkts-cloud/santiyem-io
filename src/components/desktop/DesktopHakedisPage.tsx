@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
+import HakedisWizard from "./HakedisWizard";
 
 const STATUS_OPTIONS = [
   { label: "Taslak", color: "#64748B", emoji: "📝" },
@@ -188,8 +189,9 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 // ─── LEVEL 2: Project Detail ─────────────────────────────────
 const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate } = useProjectHakedis(projectId);
+  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, refetch: refetchHakedis } = useProjectHakedis(projectId);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [formPeriod, setFormPeriod] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formKdvRate, setFormKdvRate] = useState("20");
@@ -338,6 +340,18 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     if (hakedisler.length > 0 && !aiAnalysis && !aiLoading) generateAIAnalysis();
   }, [hakedisler.length]);
 
+  // Show wizard if active
+  if (showWizard) {
+    return (
+      <HakedisWizard
+        projectId={projectId}
+        projectName={project?.name || "Proje"}
+        onClose={() => setShowWizard(false)}
+        onCreated={() => { setShowWizard(false); refetchHakedis(); }}
+      />
+    );
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
       <DeleteConfirmModal
@@ -378,7 +392,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               </button>
             </>
           )}
-          <button onClick={() => setShowAddForm(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
+          <button onClick={() => setShowWizard(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
             <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
           </button>
         </div>
@@ -574,7 +588,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
             })}
           </div>
         )}
-        <button onClick={() => setShowAddForm(true)} className="w-full py-2.5 rounded-lg text-[12px] font-semibold text-white mt-2" style={{ backgroundColor: "#FF6B2B" }}>
+        <button onClick={() => setShowWizard(true)} className="w-full py-2.5 rounded-lg text-[12px] font-semibold text-white mt-2" style={{ backgroundColor: "#FF6B2B" }}>
           + Yeni Hakediş Hazırla
         </button>
       </div>
