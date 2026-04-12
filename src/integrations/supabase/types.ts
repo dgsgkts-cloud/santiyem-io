@@ -860,6 +860,44 @@ export type Database = {
           },
         ]
       }
+      hakedis_revisions: {
+        Row: {
+          created_at: string
+          hakedis_id: string
+          id: string
+          note: string | null
+          revision_number: number
+          snapshot: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hakedis_id: string
+          id?: string
+          note?: string | null
+          revision_number?: number
+          snapshot?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hakedis_id?: string
+          id?: string
+          note?: string | null
+          revision_number?: number
+          snapshot?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hakedis_revisions_hakedis_id_fkey"
+            columns: ["hakedis_id"]
+            isOneToOne: false
+            referencedRelation: "project_hakedis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -1292,6 +1330,12 @@ export type Database = {
       project_hakedis: {
         Row: {
           amount: number
+          approval_sent_at: string | null
+          approval_status: string
+          approval_token: string | null
+          approved_at: string | null
+          client_email: string | null
+          client_note: string | null
           contract_id: string | null
           created_at: string
           deductions_total: number
@@ -1305,12 +1349,19 @@ export type Database = {
           period: string
           project_id: string
           reminder_days_before: number | null
+          revision_count: number
           status: string
           status_color: string
           user_id: string
         }
         Insert: {
           amount?: number
+          approval_sent_at?: string | null
+          approval_status?: string
+          approval_token?: string | null
+          approved_at?: string | null
+          client_email?: string | null
+          client_note?: string | null
           contract_id?: string | null
           created_at?: string
           deductions_total?: number
@@ -1324,12 +1375,19 @@ export type Database = {
           period: string
           project_id: string
           reminder_days_before?: number | null
+          revision_count?: number
           status?: string
           status_color?: string
           user_id: string
         }
         Update: {
           amount?: number
+          approval_sent_at?: string | null
+          approval_status?: string
+          approval_token?: string | null
+          approved_at?: string | null
+          client_email?: string | null
+          client_note?: string | null
           contract_id?: string | null
           created_at?: string
           deductions_total?: number
@@ -1343,6 +1401,7 @@ export type Database = {
           period?: string
           project_id?: string
           reminder_days_before?: number | null
+          revision_count?: number
           status?: string
           status_color?: string
           user_id?: string
