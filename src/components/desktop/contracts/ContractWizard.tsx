@@ -65,14 +65,35 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
   const scheduleTotal = schedule.reduce((s, item) => s + (Number(item.tutar) || 0), 0);
   const scheduleDiff = form.amount - scheduleTotal;
 
+  const sanitizeFileName = (name: string): string => {
+    const tr: Record<string, string> = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u", Ç: "c", Ğ: "g", İ: "i", Ö: "o", Ş: "s", Ü: "u" };
+    return name
+      .replace(/[çğıöşüÇĞİÖŞÜ]/g, (c) => tr[c] || c)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9.\-_]/g, "")
+      .replace(/-{2,}/g, "-");
+  };
+
   const handlePdfUpload = async (file: File) => {
     if (!user) return;
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Sadece PDF, JPG veya PNG dosya yükleyebilirsiniz.");
+      return;
+    }
     if (file.size > 10 * 1024 * 1024) { toast.error("Dosya boyutu max 10MB olabilir."); return; }
     setAnalyzing(true);
     try {
-      const path = `${user.id}/${Date.now()}_${file.name}`;
+      const safeName = sanitizeFileName(file.name);
+      const path = `${user.id}/${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage.from("project-files").upload(path, file);
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        toast.error("Dosya yüklenirken hata oluştu. Lütfen tekrar deneyin.");
+        setAnalyzing(false);
+        return;
+      }
       const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(path);
       setForm(f => ({ ...f, file_url: urlData.publicUrl, file_name: file.name }));
 
