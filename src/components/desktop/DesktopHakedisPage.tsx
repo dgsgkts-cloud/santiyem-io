@@ -340,6 +340,18 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     if (hakedisler.length > 0 && !aiAnalysis && !aiLoading) generateAIAnalysis();
   }, [hakedisler.length]);
 
+  // Show wizard if active
+  if (showWizard) {
+    return (
+      <HakedisWizard
+        projectId={projectId}
+        projectName={project?.name || "Proje"}
+        onClose={() => setShowWizard(false)}
+        onCreated={() => { setShowWizard(false); refetchHakedis(); }}
+      />
+    );
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
       <DeleteConfirmModal
