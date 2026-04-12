@@ -67,9 +67,14 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
   };
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    general: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false, signature: true, activity: false
+    general: true, items: true, ai: true, penalty: true, comparison: true, schedule: true, fm: false, docs: false, signature: true, activity: false
   });
   const toggle = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }));
+
+  const handleItemsTotalChange = async (total: number) => {
+    // Sync contract amount with items total if items exist
+    // This is informational - parent can handle actual update
+  };
 
   const Section = ({ id, title, icon, badge, children }: { id: string; title: string; icon: React.ReactNode; badge?: React.ReactNode; children: React.ReactNode }) => (
     <div className={`overflow-hidden ${cardStyleClass}`}>
