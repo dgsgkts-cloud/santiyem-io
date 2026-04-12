@@ -532,8 +532,14 @@ const Index = () => {
             <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
           ) : activeTab === "hakedis" ? (
             <DesktopHakedisPage />
+          ) : activeTab === "contracts" ? (
+            <DesktopContractsPage />
           ) : activeTab === "profitability" ? (
             <ProfitabilityCashFlowPage />
+          ) : activeTab === "cash-tracking" ? (
+            <CashTrackingPage />
+          ) : activeTab === "site-diary" ? (
+            <SiteDiaryPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "calc" ? (
