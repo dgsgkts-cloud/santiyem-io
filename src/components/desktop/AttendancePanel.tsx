@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import { useWorkerAttendance } from "@/hooks/useWorkerAttendance";
-import { Users, Clock, RefreshCw, Calendar, HardHat, FileDown } from "lucide-react";
-import { format, startOfDay, isToday, parseISO } from "date-fns";
+import { useWorkerAttendance, WorkerAttendance } from "@/hooks/useWorkerAttendance";
+import { Users, User, Clock, RefreshCw, Calendar, HardHat, FileDown } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 
 interface AttendancePanelProps {
@@ -14,30 +14,38 @@ const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const filtered = useMemo(() => {
-    return attendance.filter(a => {
-      const aDate = format(parseISO(a.check_in), "yyyy-MM-dd");
-      return aDate === filterDate;
-    });
+    return attendance.filter(a => format(parseISO(a.check_in), "yyyy-MM-dd") === filterDate);
   }, [attendance, filterDate]);
 
+  const individuals = filtered.filter(a => a.entry_type === "individual");
+  const teams = filtered.filter(a => a.entry_type === "team");
   const activeNow = filtered.filter(a => !a.check_out);
-  const completed = filtered.filter(a => a.check_out);
+  const totalOnSite = activeNow.reduce((s, w) => s + (w.team_size || 1), 0);
 
   const occupationSummary = useMemo(() => {
     const map: Record<string, number> = {};
-    filtered.forEach(a => { map[a.occupation] = (map[a.occupation] || 0) + 1; });
+    filtered.forEach(a => {
+      const label = a.entry_type === "team" ? a.occupation : (a.title || a.occupation);
+      map[label] = (map[label] || 0) + (a.team_size || 1);
+    });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [filtered]);
 
-  const totalHours = useMemo(() => {
-    return completed.reduce((s, a) => s + (a.duration_minutes || 0), 0);
-  }, [completed]);
+  const totalPersonHours = useMemo(() => {
+    return filtered.reduce((s, a) => {
+      const mins = a.duration_minutes || 0;
+      return s + mins * (a.team_size || 1);
+    }, 0);
+  }, [filtered]);
 
   const exportCsv = () => {
-    const rows = [["Ad Soyad", "Meslek", "Giriş", "Çıkış", "Süre (dk)"]];
+    const rows = [["Tip", "Ad/Ustabaşı", "Unvan/Meslek", "Kişi", "Giriş", "Çıkış", "Süre (dk)"]];
     filtered.forEach(a => {
       rows.push([
-        a.full_name, a.occupation,
+        a.entry_type === "team" ? "Ekip" : "Bireysel",
+        a.entry_type === "team" ? (a.foreman_name || a.full_name) : a.full_name,
+        a.entry_type === "team" ? a.occupation : (a.title || a.occupation),
+        (a.team_size || 1).toString(),
         format(parseISO(a.check_in), "HH:mm"),
         a.check_out ? format(parseISO(a.check_out), "HH:mm") : "-",
         a.duration_minutes?.toString() || "-"
@@ -79,20 +87,20 @@ const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-          <div className="text-2xl font-bold text-green-500">{activeNow.length}</div>
+          <div className="text-2xl font-bold text-green-500">{totalOnSite}</div>
           <div className="text-xs text-muted-foreground">Şu an sahada</div>
         </div>
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center">
-          <div className="text-2xl font-bold text-blue-500">{filtered.length}</div>
-          <div className="text-xs text-muted-foreground">Toplam giriş</div>
+          <div className="text-2xl font-bold text-blue-500">{individuals.length}</div>
+          <div className="text-xs text-muted-foreground">Bireysel giriş</div>
         </div>
         <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 text-center">
-          <div className="text-2xl font-bold text-purple-500">{occupationSummary.length}</div>
-          <div className="text-xs text-muted-foreground">Farklı meslek</div>
+          <div className="text-2xl font-bold text-purple-500">{teams.length}</div>
+          <div className="text-xs text-muted-foreground">Ekip girişi</div>
         </div>
         <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3 text-center">
-          <div className="text-2xl font-bold text-orange-500">{Math.round(totalHours / 60)}</div>
-          <div className="text-xs text-muted-foreground">Toplam saat</div>
+          <div className="text-2xl font-bold text-orange-500">{Math.round(totalPersonHours / 60)}</div>
+          <div className="text-xs text-muted-foreground">Adam·saat</div>
         </div>
       </div>
 
@@ -100,7 +108,7 @@ const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
       {occupationSummary.length > 0 && (
         <div className="bg-muted/50 rounded-xl p-3">
           <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-            <HardHat className="w-4 h-4 text-primary" /> Meslek Dağılımı
+            <HardHat className="w-4 h-4 text-primary" /> Unvan / Meslek Dağılımı
           </h4>
           <div className="flex flex-wrap gap-2">
             {occupationSummary.map(([occ, count]) => (
@@ -108,51 +116,61 @@ const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
                 {occ}: <strong>{count}</strong>
               </span>
             ))}
+            <span className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-1 text-sm font-semibold text-primary">
+              Toplam: {occupationSummary.reduce((s, [, c]) => s + c, 0)}
+            </span>
           </div>
         </div>
       )}
 
-      {/* Active workers */}
-      {activeNow.length > 0 && (
+      {/* Individual entries */}
+      {individuals.length > 0 && (
         <div>
           <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-            <Users className="w-4 h-4 text-green-500" /> Sahada ({activeNow.length})
+            <User className="w-4 h-4 text-blue-500" /> Bireysel Girişler ({individuals.length})
           </h4>
           <div className="space-y-1">
-            {activeNow.map(w => (
-              <div key={w.id} className="flex justify-between items-center bg-green-500/5 border border-green-500/10 rounded-lg px-3 py-2 text-sm">
+            {individuals.map(w => (
+              <div key={w.id} className={`flex justify-between items-center rounded-lg px-3 py-2 text-sm ${w.check_out ? "bg-muted/30" : "bg-blue-500/5 border border-blue-500/10"}`}>
                 <div>
                   <span className="font-medium text-foreground">{w.full_name}</span>
-                  <span className="text-muted-foreground ml-2 text-xs">{w.occupation}</span>
+                  <span className="text-muted-foreground ml-2 text-xs">{w.title || w.occupation}</span>
                 </div>
-                <span className="text-green-500 text-xs flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
+                <div className="text-right text-xs text-muted-foreground">
                   {format(parseISO(w.check_in), "HH:mm")}
-                </span>
+                  {w.check_out && <> — {format(parseISO(w.check_out), "HH:mm")}</>}
+                  {w.duration_minutes != null && (
+                    <span className="ml-1.5 text-foreground font-medium">
+                      ({Math.floor(w.duration_minutes / 60)}s {w.duration_minutes % 60}dk)
+                    </span>
+                  )}
+                  {!w.check_out && <span className="ml-1.5 text-green-500">● sahada</span>}
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Completed */}
-      {completed.length > 0 && (
+      {/* Team entries */}
+      {teams.length > 0 && (
         <div>
           <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" /> Çıkış yapanlar ({completed.length})
+            <Users className="w-4 h-4 text-green-500" /> Ekip Girişleri ({teams.length})
           </h4>
           <div className="space-y-1">
-            {completed.map(w => (
-              <div key={w.id} className="flex justify-between items-center bg-muted/30 rounded-lg px-3 py-2 text-sm">
+            {teams.map(w => (
+              <div key={w.id} className={`flex justify-between items-center rounded-lg px-3 py-2 text-sm ${w.check_out ? "bg-muted/30" : "bg-green-500/5 border border-green-500/10"}`}>
                 <div>
-                  <span className="font-medium text-foreground">{w.full_name}</span>
-                  <span className="text-muted-foreground ml-2 text-xs">{w.occupation}</span>
+                  <span className="font-medium text-foreground">{w.foreman_name || w.full_name}</span>
+                  <span className="bg-green-500/10 text-green-600 rounded px-1.5 py-0.5 text-xs ml-2">
+                    {w.team_size} {w.occupation}
+                  </span>
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
-                  {format(parseISO(w.check_in), "HH:mm")} - {format(parseISO(w.check_out!), "HH:mm")}
-                  <span className="ml-2 text-foreground font-medium">
-                    {w.duration_minutes ? `${Math.floor(w.duration_minutes / 60)}s ${w.duration_minutes % 60}dk` : ""}
-                  </span>
+                  {format(parseISO(w.check_in), "HH:mm")}
+                  {w.check_out && <> — {format(parseISO(w.check_out), "HH:mm")}</>}
+                  {!w.check_out && <span className="ml-1.5 text-green-500">● sahada</span>}
                 </div>
               </div>
             ))}
