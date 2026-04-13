@@ -23,6 +23,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import CashTrackingPage from "@/components/desktop/CashTrackingPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
+import EKBBasvurulariPanel from "@/components/desktop/EKBBasvurulariPanel";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
