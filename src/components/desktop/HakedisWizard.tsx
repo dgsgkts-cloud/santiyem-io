@@ -4,7 +4,18 @@ import { useUser } from "@/contexts/UserContext";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractItems, ContractItem } from "@/hooks/useContractItems";
 import { toast } from "sonner";
-import { ArrowLeft, AlertTriangle, Plus, Trash2, FileText, Calculator } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Plus, Trash2, FileText, Calculator, Bot, Loader2, CheckCircle2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface AIKalem {
+  sozlesme_kalemi_id: string;
+  poz_no: string;
+  tarif: string;
+  tespit_edilen_miktar: number;
+  guven_skoru: "yuksek" | "orta" | "dusuk";
+  aciklama: string;
+  approved?: boolean;
+}
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCurrency = (n: number) => `₺${fmt(n)}`;
@@ -54,6 +65,13 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previousHakedisData, setPreviousHakedisData] = useState<Record<string, number>>({});
+  // AI state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiDescription, setAiDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResults, setAiResults] = useState<AIKalem[] | null>(null);
+  const [aiNotes, setAiNotes] = useState("");
+  const [aiRetryCount, setAiRetryCount] = useState(0);
 
   // Find contracts for this project
   const projectContracts = useMemo(() =>
