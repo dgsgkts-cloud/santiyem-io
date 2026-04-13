@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import QrCodeModal from "./QrCodeModal";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -14,6 +14,7 @@ import { useCashCollections } from "@/hooks/useCashCollections";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
+import AttendancePanel from "./AttendancePanel";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
