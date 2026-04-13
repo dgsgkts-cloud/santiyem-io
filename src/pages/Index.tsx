@@ -563,6 +563,8 @@ const Index = () => {
             <CashTrackingPage />
           ) : activeTab === "site-diary" ? (
             <SiteDiaryPage />
+          ) : activeTab === "materials" ? (
+            <MaterialsPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "calc" ? (
