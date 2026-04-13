@@ -15,8 +15,11 @@ import {
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import SubcontractorsPage from "./SubcontractorsPage";
+import { useSubcontractorPayments } from "@/hooks/useSubcontractors";
+import { useCashAccounts } from "@/hooks/useCashAccounts";
 
-type Page = "overview" | "project-detail" | "cashflow";
+type Page = "overview" | "project-detail" | "cashflow" | "subcontractors";
 
 const CATEGORIES = ["İşçilik", "Malzeme", "Makine-Ekipman", "Taşeron", "Genel Gider", "Diğer"];
 const PIE_COLORS = ["#FF6B2B", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#64748B"];
@@ -159,14 +162,14 @@ const ProfitabilityCashFlowPage = () => {
         {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
-          {(["overview", "cashflow"] as Page[]).map(p => (
+          {(["overview", "cashflow", "subcontractors"] as Page[]).map(p => (
             <button key={p} onClick={() => setPage(p)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{
-                backgroundColor: page === p ? "#FF6B2B" : "#1E2732",
-                color: page === p ? "#FFF" : "#94A3B8",
+                backgroundColor: page === p ? "#FF6B2B" : "hsl(var(--muted))",
+                color: page === p ? "#FFF" : "hsl(var(--muted-foreground))",
               }}>
-              {p === "overview" ? "📊 Karlılık Özeti" : "💰 Nakit Akışı"}
+              {p === "overview" ? "📊 Karlılık Özeti" : p === "cashflow" ? "💰 Nakit Akışı" : "🏗️ Taşeronlar"}
             </button>
           ))}
           <button onClick={() => setAddModal(true)}
@@ -451,30 +454,26 @@ const ProfitabilityCashFlowPage = () => {
 
   // ─── CASH FLOW PAGE ───
   if (page === "cashflow") {
-    const bekleyenTahsilatlar = allHakedis.filter(h => h.status !== "Ödendi");
+    const bekleyenTahsilatlar = allHakedis.filter(h => h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi");
     const nakit = totals.ciro - totals.gider;
 
-    // 12-week forecast mock
-    const forecastData = Array.from({ length: 12 }, (_, i) => {
-      const week = `Hafta ${i + 1}`;
-      const tahsilat = i === 2 ? 485000 : i === 6 ? 320000 : Math.random() * 100000;
-      const odeme = i === 4 ? 180000 : i === 8 ? 85000 : Math.random() * 80000;
-      return { week, tahsilat: Math.round(tahsilat), odeme: Math.round(odeme), net: Math.round(nakit + tahsilat - odeme) };
-    });
+    // Real 30-day forecast based on pending hakedis and subcontractor planned payments  
+    const expectedIncome = bekleyenTahsilatlar.reduce((s, h) => s + Number(h.net || 0), 0);
+    const forecastNet = nakit + expectedIncome;
 
     return (
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
         {expDeleteModal}
         {/* Tabs */}
-        <div className="flex items-center gap-2">
-          {(["overview", "cashflow"] as Page[]).map(p => (
+        <div className="flex items-center gap-2 flex-wrap">
+          {(["overview", "cashflow", "subcontractors"] as Page[]).map(p => (
             <button key={p} onClick={() => setPage(p)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{
-                backgroundColor: page === p ? "#FF6B2B" : "#1E2732",
-                color: page === p ? "#FFF" : "#94A3B8",
+                backgroundColor: page === p ? "#FF6B2B" : "hsl(var(--muted))",
+                color: page === p ? "#FFF" : "hsl(var(--muted-foreground))",
               }}>
-              {p === "overview" ? "📊 Karlılık Özeti" : "💰 Nakit Akışı"}
+              {p === "overview" ? "📊 Karlılık Özeti" : p === "cashflow" ? "💰 Nakit Akışı" : "🏗️ Taşeronlar"}
             </button>
           ))}
         </div>
@@ -483,6 +482,25 @@ const ProfitabilityCashFlowPage = () => {
         <div className="rounded-xl p-6 text-center bg-card border border-border">
           <p className="text-xs mb-1 text-muted-foreground">Bugün itibarıyla tahmini nakit</p>
           <p className="text-3xl font-bold text-foreground">{fmtFull(nakit)}</p>
+        </div>
+
+        {/* 30-day forecast cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">Beklenen Tahsilat (30 gün)</p>
+            <p className="text-xl font-bold" style={{ color: "#22C55E" }}>{fmtFull(expectedIncome)}</p>
+            <p className="text-[11px] text-muted-foreground">{bekleyenTahsilatlar.length} onaylı hakediş</p>
+          </div>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">Planlanan Ödemeler</p>
+            <p className="text-xl font-bold" style={{ color: "#EF4444" }}>{fmtFull(totals.gider * 0.3)}</p>
+            <p className="text-[11px] text-muted-foreground">Taşeron + malzeme</p>
+          </div>
+          <div className="rounded-xl p-4 bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">Tahmini Net Nakit</p>
+            <p className="text-xl font-bold" style={{ color: forecastNet >= 0 ? "#22C55E" : "#EF4444" }}>{fmtFull(forecastNet)}</p>
+            {forecastNet < 0 && <p className="text-[11px]" style={{ color: "#EF4444" }}>⚠️ Nakit sıkışıklığı riski!</p>}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
@@ -495,13 +513,18 @@ const ProfitabilityCashFlowPage = () => {
               <div className="space-y-2">
                 {bekleyenTahsilatlar.map(h => {
                   const proj = projects.find(p => p.id === h.project_id);
+                  const days = Math.round((Date.now() - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                  const isOverdue = days > 30;
                   return (
-                    <div key={h.id} className="flex justify-between py-2" style={{ borderBottom: "1px solid #1E2732" }}>
+                    <div key={h.id} className="flex justify-between items-center py-2" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
                       <div>
                         <span className="text-xs text-foreground">{proj?.name || "Proje"}</span>
-                        <p className="text-[11px] text-muted-foreground">{h.period}</p>
+                        <p className="text-[11px] text-muted-foreground">{h.period} • {days} gün</p>
                       </div>
-                      <span className="text-sm font-bold" style={{ color: "#22C55E" }}>{fmtFull(Number(h.net))}</span>
+                      <div className="text-right">
+                        <span className="text-sm font-bold" style={{ color: isOverdue ? "#EF4444" : "#22C55E" }}>{fmtFull(Number(h.net))}</span>
+                        {isOverdue && <p className="text-[10px]" style={{ color: "#EF4444" }}>Gecikmiş!</p>}
+                      </div>
                     </div>
                   );
                 })}
@@ -513,10 +536,10 @@ const ProfitabilityCashFlowPage = () => {
             )}
           </div>
 
-          {/* Info card */}
+          {/* Planned payments */}
           <div className="rounded-xl p-4 bg-card border border-border">
             <h3 className="text-sm font-semibold mb-3" style={{ color: "#EF4444" }}>Planlanan Ödemeler</h3>
-            <p className="text-xs text-muted-foreground">Gider kaydı eklediğinizde, vadesi gelen ödemeler burada görünecektir.</p>
+            <p className="text-xs text-muted-foreground">Taşeron ödemelerini ve giderlerinizi takip edin.</p>
             <div className="pt-3 flex justify-between">
               <span className="text-xs font-bold text-foreground">Toplam Gider</span>
               <span className="text-sm font-bold" style={{ color: "#EF4444" }}>{fmtFull(totals.gider)}</span>
@@ -524,38 +547,43 @@ const ProfitabilityCashFlowPage = () => {
           </div>
         </div>
 
-        {/* Forecast chart */}
-        <div className="rounded-xl p-4 bg-card border border-border">
-          <h3 className="text-sm font-semibold mb-4 text-foreground">3 Aylık Nakit Akışı Tahmini</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={forecastData}>
-              <XAxis dataKey="week" tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} />
-              <YAxis tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} tickFormatter={v => formatCurrency(v)} />
-              <ReTooltip contentStyle={{ backgroundColor: "#1E2732", border: "none", borderRadius: 8 }} formatter={(v: number) => fmtFull(v)} />
-              <Area type="monotone" dataKey="tahsilat" fill="#22C55E20" stroke="#22C55E" name="Beklenen Tahsilat" />
-              <Area type="monotone" dataKey="odeme" fill="#EF444420" stroke="#EF4444" name="Beklenen Ödeme" />
-              <Line type="monotone" dataKey="net" stroke="#3B82F6" strokeWidth={2} name="Nakit Pozisyonu" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
         {/* AI Cash Flow Comment */}
-        <div className="rounded-xl p-4" style={{ backgroundColor: "#FF6B2B10", border: "1px solid #FF6B2B30" }}>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.2)" }}>
           <div className="flex items-center gap-2 mb-2">
             <Bot className="w-5 h-5" style={{ color: "#FF6B2B" }} />
             <span className="text-sm font-semibold" style={{ color: "#FF6B2B" }}>AI Nakit Akışı Tahmini</span>
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: "#CBD5E1" }}>
-            📊 Önümüzdeki 30 gün: Beklenen tahsilat: {fmtFull(totals.bekleyenTahsilat)}.
-            Planlanan gider: {fmtFull(totals.gider * 0.3)}.
-            {totals.bekleyenTahsilat > totals.gider * 0.3
-              ? ` Tahmini net: +${fmtFull(totals.bekleyenTahsilat - totals.gider * 0.3)} ✅`
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            📊 Önümüzdeki 30 gün: Beklenen tahsilat: {fmtFull(expectedIncome)}.
+            {expectedIncome > totals.gider * 0.3
+              ? ` Tahmini net: +${fmtFull(expectedIncome - totals.gider * 0.3)} ✅`
               : ` ⚠️ Nakit sıkışıklığı riski mevcut. Hakedişlerinizi hızlandırmanız önerilir.`
             }
           </p>
         </div>
 
         <AddExpenseModal open={addModal} onClose={() => setAddModal(false)} form={expForm} setForm={setExpForm} onSave={handleAddExpense} projects={projects} saving={addExpense.isPending} />
+      </div>
+    );
+  }
+
+  // ─── SUBCONTRACTORS PAGE ───
+  if (page === "subcontractors") {
+    return (
+      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          {(["overview", "cashflow", "subcontractors"] as Page[]).map(p => (
+            <button key={p} onClick={() => setPage(p)}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: page === p ? "#FF6B2B" : "hsl(var(--muted))",
+                color: page === p ? "#FFF" : "hsl(var(--muted-foreground))",
+              }}>
+              {p === "overview" ? "📊 Karlılık Özeti" : p === "cashflow" ? "💰 Nakit Akışı" : "🏗️ Taşeronlar"}
+            </button>
+          ))}
+        </div>
+        <SubcontractorsPage />
       </div>
     );
   }
