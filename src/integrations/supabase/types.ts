@@ -1214,12 +1214,56 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_history: {
+        Row: {
+          body: string
+          click_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          metadata: Json | null
+          notification_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          click_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          notification_type?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          click_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          notification_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
           id: string
+          notify_hakedis_approval: boolean
+          notify_hakedis_pending: boolean
+          notify_qr_entry: boolean
+          notify_stock_alert: boolean
+          notify_subcontractor_payment: boolean
           payment_due_reminder: boolean
           payment_overdue_reminder: boolean
+          push_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
           updated_at: string
           user_id: string
           weekly_summary: boolean
@@ -1229,8 +1273,16 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          notify_hakedis_approval?: boolean
+          notify_hakedis_pending?: boolean
+          notify_qr_entry?: boolean
+          notify_stock_alert?: boolean
+          notify_subcontractor_payment?: boolean
           payment_due_reminder?: boolean
           payment_overdue_reminder?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           updated_at?: string
           user_id: string
           weekly_summary?: boolean
@@ -1240,8 +1292,16 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          notify_hakedis_approval?: boolean
+          notify_hakedis_pending?: boolean
+          notify_qr_entry?: boolean
+          notify_stock_alert?: boolean
+          notify_subcontractor_payment?: boolean
           payment_due_reminder?: boolean
           payment_overdue_reminder?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           updated_at?: string
           user_id?: string
           weekly_summary?: boolean
@@ -1746,6 +1806,42 @@ export type Database = {
           start_date?: string
           status?: string
           status_color?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device_name: string | null
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device_name?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device_name?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
