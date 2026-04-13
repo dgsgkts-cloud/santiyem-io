@@ -413,9 +413,18 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
       {/* Work Items Table */}
       {contractItems.length > 0 && (
         <div className="rounded-xl p-4 bg-card border border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-semibold text-foreground">İş Kalemleri</h3>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <h3 className="text-[13px] font-semibold text-foreground">İş Kalemleri</h3>
+            </div>
+            <button
+              onClick={() => setAiModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
+              style={{ background: "linear-gradient(135deg, #FF6B2B, #FF8F5E)", color: "#FFF" }}
+            >
+              <Bot className="w-3.5 h-3.5" /> AI ile Doldur
+            </button>
           </div>
 
           {hasOverage && (
