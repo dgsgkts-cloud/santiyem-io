@@ -2463,6 +2463,14 @@ export type Database = {
           read_ct: number
         }[]
       }
+      update_hakedis_approval: {
+        Args: {
+          _approval_status: string
+          _client_note?: string
+          _token: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
