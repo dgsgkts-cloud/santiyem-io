@@ -1029,6 +1029,191 @@ export type Database = {
         }
         Relationships: []
       }
+      material_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          material_id: string
+          note: string | null
+          quantity: number
+          supplier: string
+          total_amount: number
+          unit_price: number
+          user_id: string
+          waybill_no: string | null
+          waybill_photo_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          material_id: string
+          note?: string | null
+          quantity?: number
+          supplier?: string
+          total_amount?: number
+          unit_price?: number
+          user_id: string
+          waybill_no?: string | null
+          waybill_photo_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          material_id?: string
+          note?: string | null
+          quantity?: number
+          supplier?: string
+          total_amount?: number
+          unit_price?: number
+          user_id?: string
+          waybill_no?: string | null
+          waybill_photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_entries_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_exits: {
+        Row: {
+          contract_item_id: string | null
+          created_at: string
+          exit_date: string
+          id: string
+          location: string | null
+          material_id: string
+          note: string | null
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          contract_item_id?: string | null
+          created_at?: string
+          exit_date?: string
+          id?: string
+          location?: string | null
+          material_id: string
+          note?: string | null
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          contract_item_id?: string | null
+          created_at?: string
+          exit_date?: string
+          id?: string
+          location?: string | null
+          material_id?: string
+          note?: string | null
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_exits_contract_item_id_fkey"
+            columns: ["contract_item_id"]
+            isOneToOne: false
+            referencedRelation: "contract_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_exits_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_norms: {
+        Row: {
+          contract_item_id: string
+          created_at: string
+          id: string
+          material_id: string
+          norm_quantity: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_item_id: string
+          created_at?: string
+          id?: string
+          material_id: string
+          norm_quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_item_id?: string
+          created_at?: string
+          id?: string
+          material_id?: string
+          norm_quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_norms_contract_item_id_fkey"
+            columns: ["contract_item_id"]
+            isOneToOne: false
+            referencedRelation: "contract_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_norms_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          created_at: string
+          id: string
+          min_stock: number
+          name: string
+          project_id: string
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name?: string
+          project_id: string
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name?: string
+          project_id?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string

@@ -5,12 +5,12 @@ import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
   Bell, Crown, FileSignature, Wallet,
-  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -34,6 +34,7 @@ const NAV_SECTIONS = [
       { id: "profitability" as Tab, label: "Gelir & Gider Takibi", icon: TrendingUp },
       { id: "cash-tracking" as Tab, label: "Kasa & Ödeme Takibi", icon: Wallet },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
+      { id: "materials" as Tab, label: "Malzeme Takibi", icon: Package },
     ],
   },
   {
@@ -129,7 +130,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
                   (item.id === "profitability" && !canAccessProfitability(plan, role)) ||
                   (item.id === "cash-tracking" && !isProOrAbove(plan) && role !== "admin") ||
-                  (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
+                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
+                  (item.id === "materials" && !canAccessProjects(plan, role)) ||
                   (item.id === "reminders" && !canAccessReminders(plan));
 
                 const handleClick = () => {
