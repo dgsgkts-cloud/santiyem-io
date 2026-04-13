@@ -571,9 +571,40 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                       </p>
                     )}
 
+                    {/* Approval status badge */}
+                    {h.approval_status && h.approval_status !== "taslak" && (
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{
+                          backgroundColor: h.approval_status === "onaylandi" ? "rgba(34,197,94,0.15)" :
+                            h.approval_status === "itiraz_edildi" ? "rgba(239,68,68,0.15)" :
+                            h.approval_status === "revize_edildi" ? "rgba(59,130,246,0.15)" :
+                            "rgba(245,158,11,0.15)",
+                          color: h.approval_status === "onaylandi" ? "#22C55E" :
+                            h.approval_status === "itiraz_edildi" ? "#EF4444" :
+                            h.approval_status === "revize_edildi" ? "#3B82F6" :
+                            "#F59E0B"
+                        }}>
+                          {h.approval_status === "onaylandi" ? "✅ Müşteri Onayladı" :
+                           h.approval_status === "itiraz_edildi" ? "❌ İtiraz Edildi" :
+                           h.approval_status === "revize_edildi" ? "🔄 Revize Edildi" :
+                           "⏳ Onay Bekliyor"}
+                          {h.revision_count > 0 && ` (R${h.revision_count})`}
+                        </span>
+                        {h.client_email && <span className="text-[10px] text-muted-foreground">{h.client_email}</span>}
+                      </div>
+                    )}
+
+                    {/* Client rejection note */}
+                    {h.approval_status === "itiraz_edildi" && h.client_note && (
+                      <div className="mt-1.5 p-2 rounded-lg text-[11px]" style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                        <span className="font-semibold" style={{ color: "#EF4444" }}>İtiraz Notu:</span>
+                        <span className="ml-1 text-muted-foreground">{h.client_note}</span>
+                      </div>
+                    )}
+
                     <HakedisItemsSection hakedisId={h.id} />
 
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border flex-wrap">
                       <button onClick={async () => {
                         const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
                         const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
@@ -581,6 +612,32 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                       }} className="text-[10px] font-medium flex items-center gap-1 text-muted-foreground">
                         <FileDown className="w-3 h-3" /> PDF
                       </button>
+
+                      {/* Send for approval button */}
+                      {h.approval_status === "taslak" && h.status !== "Ödendi" && (
+                        <button
+                          onClick={() => {
+                            setApprovalEmail(project?.client || "");
+                            setApprovalModal({ open: true, hakedisId: h.id, hakedisNet: h.net_total || h.net, hakedisNum });
+                          }}
+                          className="text-[10px] font-medium flex items-center gap-1 px-2 py-1 rounded-md"
+                          style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}
+                        >
+                          <Send className="w-3 h-3" /> Onaya Gönder
+                        </button>
+                      )}
+
+                      {/* Resend for approval (after rejection) */}
+                      {h.approval_status === "itiraz_edildi" && (
+                        <button
+                          onClick={() => resendForApproval(h.id)}
+                          className="text-[10px] font-medium flex items-center gap-1 px-2 py-1 rounded-md"
+                          style={{ backgroundColor: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
+                        >
+                          <RefreshCw className="w-3 h-3" /> Tekrar Gönder
+                        </button>
+                      )}
+
                       <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
                         <Trash2 className="w-3 h-3" /> Sil
                       </button>
