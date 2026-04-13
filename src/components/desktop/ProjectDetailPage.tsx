@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
+import QrCodeModal from "./QrCodeModal";
+import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -73,6 +74,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(p.status);
   const [currentStatusColor, setCurrentStatusColor] = useState(p.statusColor);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle) return;
@@ -186,6 +188,13 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
+              >
+                <QrCode className="w-3.5 h-3.5" /> QR Giriş
+              </button>
               <button
                 onClick={() => {
                   import("@/lib/projectExport").then(m => {
