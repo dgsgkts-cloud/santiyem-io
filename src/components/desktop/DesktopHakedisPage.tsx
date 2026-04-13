@@ -653,6 +653,46 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         </button>
       </div>
 
+      {/* Approval Send Modal */}
+      {approvalModal?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-card border border-border">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">📧 Hakediş Onaya Gönder</h3>
+              <button onClick={() => setApprovalModal(null)} className="text-muted-foreground"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-xs text-muted-foreground">Hakediş #{approvalModal.hakedisNum} — {fmt(approvalModal.hakedisNet)}</p>
+            <div>
+              <label className="text-xs mb-1 block text-muted-foreground">Müşteri E-posta Adresi *</label>
+              <input
+                type="email"
+                value={approvalEmail}
+                onChange={e => setApprovalEmail(e.target.value)}
+                placeholder="musteri@firma.com"
+                className="w-full h-10 rounded-lg px-3 text-sm bg-background border border-border text-foreground"
+              />
+            </div>
+            <div className="p-3 rounded-lg text-xs" style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", color: "#60A5FA" }}>
+              Müşteriye email ile hakediş detayları ve onay/itiraz linkleri gönderilecektir. Link 30 gün geçerlidir.
+            </div>
+            <button
+              onClick={async () => {
+                if (!approvalEmail.trim() || !approvalEmail.includes("@")) { toast.error("Geçerli bir email adresi girin"); return; }
+                setApprovalSending(true);
+                await sendForApproval(approvalModal.hakedisId, approvalEmail.trim(), project?.name || "Proje");
+                setApprovalSending(false);
+                setApprovalModal(null);
+              }}
+              disabled={approvalSending}
+              className="w-full h-10 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+              style={{ backgroundColor: "#FF6B2B" }}
+            >
+              {approvalSending ? "Gönderiliyor..." : "📧 Onay Talebi Gönder"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Overdue Section */}
       {overdueItems.length > 0 && (
         <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)" }}>
