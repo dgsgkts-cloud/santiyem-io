@@ -188,6 +188,7 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 
 // ─── LEVEL 2: Project Detail ─────────────────────────────────
 const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
+  const { user } = useUser();
   const project = projects.find((p: any) => p.id === projectId);
   const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
   const [approvalModal, setApprovalModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
