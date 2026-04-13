@@ -2047,6 +2047,8 @@ export type Database = {
           check_out: string | null
           created_at: string
           duration_minutes: number | null
+          entry_type: string
+          foreman_name: string | null
           full_name: string
           id: string
           occupation: string
@@ -2054,6 +2056,8 @@ export type Database = {
           project_id: string
           qr_token: string
           tc_no: string | null
+          team_size: number | null
+          title: string | null
           user_id: string
         }
         Insert: {
@@ -2061,6 +2065,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           duration_minutes?: number | null
+          entry_type?: string
+          foreman_name?: string | null
           full_name: string
           id?: string
           occupation?: string
@@ -2068,6 +2074,8 @@ export type Database = {
           project_id: string
           qr_token: string
           tc_no?: string | null
+          team_size?: number | null
+          title?: string | null
           user_id: string
         }
         Update: {
@@ -2075,6 +2083,8 @@ export type Database = {
           check_out?: string | null
           created_at?: string
           duration_minutes?: number | null
+          entry_type?: string
+          foreman_name?: string | null
           full_name?: string
           id?: string
           occupation?: string
@@ -2082,6 +2092,8 @@ export type Database = {
           project_id?: string
           qr_token?: string
           tc_no?: string | null
+          team_size?: number | null
+          title?: string | null
           user_id?: string
         }
         Relationships: [

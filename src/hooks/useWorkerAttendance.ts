@@ -16,6 +16,10 @@ export interface WorkerAttendance {
   check_out: string | null;
   duration_minutes: number | null;
   created_at: string;
+  entry_type: string;
+  team_size: number;
+  title: string | null;
+  foreman_name: string | null;
 }
 
 export interface ProjectQrCode {
@@ -43,9 +47,7 @@ export const useWorkerAttendance = (projectId?: string) => {
       .limit(1);
     if (data && data.length > 0) {
       const qr = data[0] as unknown as ProjectQrCode;
-      // Check if expired
       if (new Date(qr.expires_at) < new Date()) {
-        // Auto-renew
         await createQrCode();
       } else {
         setQrCode(qr);
@@ -90,10 +92,26 @@ export const useWorkerAttendance = (projectId?: string) => {
 
 // Public hook - no auth needed
 export const usePublicAttendance = (token: string) => {
-  const [projectInfo, setProjectInfo] = useState<{ project_id: string; user_id: string } | null>(null);
+  const [projectInfo, setProjectInfo] = useState<{ project_id: string; user_id: string; project_name?: string } | null>(null);
   const [todayWorkers, setTodayWorkers] = useState<WorkerAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const todayStart = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  };
+
+  const refreshWorkers = async (projectId: string) => {
+    const { data: workers } = await supabase
+      .from("worker_attendance")
+      .select("*")
+      .eq("project_id", projectId)
+      .gte("check_in", todayStart())
+      .order("check_in", { ascending: false });
+    if (workers) setTodayWorkers(workers as unknown as WorkerAttendance[]);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -116,35 +134,26 @@ export const usePublicAttendance = (token: string) => {
         return;
       }
       setProjectInfo({ project_id: qr.project_id, user_id: qr.user_id });
-
-      // fetch today's workers
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const { data: workers } = await supabase
-        .from("worker_attendance")
-        .select("*")
-        .eq("project_id", qr.project_id)
-        .gte("check_in", todayStart.toISOString())
-        .order("check_in", { ascending: false });
-      if (workers) setTodayWorkers(workers as unknown as WorkerAttendance[]);
+      await refreshWorkers(qr.project_id);
       setLoading(false);
     };
     validate();
   }, [token]);
 
-  const checkIn = async (data: { full_name: string; tc_no?: string; phone?: string; occupation: string }) => {
+  const checkInIndividual = async (data: { full_name: string; title: string }) => {
     if (!projectInfo) return false;
-
-    // Rate limiting: check if same person checked in within last minute
-    const oneMinAgo = new Date(Date.now() - 60000).toISOString();
+    // Rate limiting: 5 min
+    const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
     const { data: recent } = await supabase
       .from("worker_attendance")
       .select("id")
       .eq("project_id", projectInfo.project_id)
       .eq("full_name", data.full_name)
-      .gte("check_in", oneMinAgo);
+      .eq("entry_type", "individual")
+      .is("check_out", null)
+      .gte("check_in", fiveMinAgo);
     if (recent && recent.length > 0) {
-      toast.error("Çok kısa sürede tekrar giriş yapamazsınız. 1 dakika bekleyin.");
+      toast.error("5 dakika içinde tekrar giriş yapamazsınız.");
       return false;
     }
 
@@ -153,33 +162,55 @@ export const usePublicAttendance = (token: string) => {
       user_id: projectInfo.user_id,
       qr_token: token,
       full_name: data.full_name,
-      tc_no: data.tc_no || null,
-      phone: data.phone || null,
-      occupation: data.occupation,
+      title: data.title,
+      occupation: data.title,
+      entry_type: "individual",
+      team_size: 1,
     });
     if (error) { toast.error("Giriş kaydedilemedi"); return false; }
-    toast.success("Giriş başarıyla kaydedildi ✅");
-    // Refresh
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const { data: workers } = await supabase
-      .from("worker_attendance").select("*")
+    await refreshWorkers(projectInfo.project_id);
+    return true;
+  };
+
+  const checkInTeam = async (data: { foreman_name: string; occupation: string; team_size: number }) => {
+    if (!projectInfo) return false;
+    const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
+    const { data: recent } = await supabase
+      .from("worker_attendance")
+      .select("id")
       .eq("project_id", projectInfo.project_id)
-      .gte("check_in", todayStart.toISOString())
-      .order("check_in", { ascending: false });
-    if (workers) setTodayWorkers(workers as unknown as WorkerAttendance[]);
+      .eq("foreman_name", data.foreman_name)
+      .eq("entry_type", "team")
+      .is("check_out", null)
+      .gte("check_in", fiveMinAgo);
+    if (recent && recent.length > 0) {
+      toast.error("5 dakika içinde tekrar ekip girişi yapamazsınız.");
+      return false;
+    }
+
+    const { error } = await supabase.from("worker_attendance").insert({
+      project_id: projectInfo.project_id,
+      user_id: projectInfo.user_id,
+      qr_token: token,
+      full_name: data.foreman_name,
+      foreman_name: data.foreman_name,
+      occupation: data.occupation,
+      entry_type: "team",
+      team_size: data.team_size,
+    });
+    if (error) { toast.error("Ekip girişi kaydedilemedi"); return false; }
+    await refreshWorkers(projectInfo.project_id);
     return true;
   };
 
   const checkOut = async (attendanceId: string) => {
     const now = new Date();
-    // Get check_in to compute duration
     const { data: record } = await supabase
       .from("worker_attendance")
       .select("check_in")
       .eq("id", attendanceId)
       .single();
     if (!record) { toast.error("Kayıt bulunamadı"); return false; }
-
     const checkInTime = new Date((record as any).check_in);
     const durationMin = Math.round((now.getTime() - checkInTime.getTime()) / 60000);
 
@@ -188,12 +219,11 @@ export const usePublicAttendance = (token: string) => {
       .update({ check_out: now.toISOString(), duration_minutes: durationMin })
       .eq("id", attendanceId);
     if (error) { toast.error("Çıkış kaydedilemedi"); return false; }
-    toast.success("Çıkış başarıyla kaydedildi 👋");
 
     setTodayWorkers(prev => prev.map(w => w.id === attendanceId
       ? { ...w, check_out: now.toISOString(), duration_minutes: durationMin } : w));
     return true;
   };
 
-  return { projectInfo, todayWorkers, loading, error, checkIn, checkOut };
+  return { projectInfo, todayWorkers, loading, error, checkInIndividual, checkInTeam, checkOut };
 };
