@@ -767,6 +767,17 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
         </div>
       )}
 
+      {/* İşçi Devam Takibi */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4" style={{ color: "#7C3AED" }} />
+            <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>İşçi Devam Takibi</h3>
+          </div>
+          <AttendancePanel projectId={p.id} projectName={p.name} />
+        </div>
+      )}
+
       {isDeletable && onDelete && user && (
         <>
           <DeleteConfirmModal
