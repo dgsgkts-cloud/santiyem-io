@@ -123,15 +123,11 @@ export default function HakedisApproval() {
     }
     setSubmitting(true);
     try {
-      await supabase
-        .from("project_hakedis")
-        .update({
-          approval_status: "itiraz_edildi",
-          client_note: rejectNote.trim(),
-          status: "Reddedildi",
-          status_color: "#EF4444",
-        })
-        .eq("id", hakedis.id);
+      await supabase.rpc("update_hakedis_approval", {
+        _token: token!,
+        _approval_status: "itiraz_edildi",
+        _client_note: rejectNote.trim(),
+      });
 
       await supabase.functions.invoke("send-transactional-email", {
         body: {
