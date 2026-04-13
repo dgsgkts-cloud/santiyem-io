@@ -1473,6 +1473,41 @@ export type Database = {
         }
         Relationships: []
       }
+      project_qr_codes: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          project_id: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          project_id: string
+          token?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          project_id?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_qr_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget: string
@@ -2005,6 +2040,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      worker_attendance: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          duration_minutes: number | null
+          full_name: string
+          id: string
+          occupation: string
+          phone: string | null
+          project_id: string
+          qr_token: string
+          tc_no: string | null
+          user_id: string
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          full_name: string
+          id?: string
+          occupation?: string
+          phone?: string | null
+          project_id: string
+          qr_token: string
+          tc_no?: string | null
+          user_id: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          full_name?: string
+          id?: string
+          occupation?: string
+          phone?: string | null
+          project_id?: string
+          qr_token?: string
+          tc_no?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_attendance_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

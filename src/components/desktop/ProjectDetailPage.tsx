@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { ArrowLeft, MapPin, User, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
+import QrCodeModal from "./QrCodeModal";
+import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -13,6 +14,7 @@ import { useCashCollections } from "@/hooks/useCashCollections";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
+import AttendancePanel from "./AttendancePanel";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
@@ -73,6 +75,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(p.status);
   const [currentStatusColor, setCurrentStatusColor] = useState(p.statusColor);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle) return;
@@ -136,6 +139,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+      {showQrModal && <QrCodeModal projectId={p.id} projectName={p.name} onClose={() => setShowQrModal(false)} />}
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -186,6 +190,13 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
+              >
+                <QrCode className="w-3.5 h-3.5" /> QR Giriş
+              </button>
               <button
                 onClick={() => {
                   import("@/lib/projectExport").then(m => {
@@ -754,6 +765,17 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
       {user && (
         <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
           <TaskBoard projectId={p.id} />
+        </div>
+      )}
+
+      {/* İşçi Devam Takibi */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4" style={{ color: "#7C3AED" }} />
+            <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>İşçi Devam Takibi</h3>
+          </div>
+          <AttendancePanel projectId={p.id} projectName={p.name} />
         </div>
       )}
 
