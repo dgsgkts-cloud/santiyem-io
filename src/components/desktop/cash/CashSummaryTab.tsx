@@ -5,7 +5,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { Card, CardContent } from "@/components/ui/card";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
-import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText } from "lucide-react";
+import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
 
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
 
@@ -31,6 +31,13 @@ const CashSummaryTab = () => {
   });
   const upcomingTotal = upcomingChecks.reduce((s, c) => s + Number(c.amount), 0);
 
+  // Hakedis-linked pending collections
+  const hakedisCollections = collections.filter(c => c.collection_type === "hakedis" && c.status === "bekleniyor");
+  const overdueCollections = hakedisCollections.filter(c => {
+    const days = differenceInDays(now, parseISO(c.collection_date));
+    return days > 30;
+  });
+
   // Recent transactions (last 10)
   const recentPayments = payments.slice(0, 5).map(p => ({ type: "expense" as const, date: p.payment_date, name: p.recipient, amount: p.amount, category: p.category }));
   const recentCollections = collections.slice(0, 5).map(c => ({ type: "income" as const, date: c.collection_date, name: c.sender, amount: c.amount, category: c.collection_type }));
@@ -45,7 +52,13 @@ const CashSummaryTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary cards */}
+      {/* Overdue hakedis collections warning */}
+      {overdueCollections.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-medium" style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{overdueCollections.length} hakediş tahsilatı 30 günü aştı — toplam {fmt(overdueCollections.reduce((s, c) => s + Number(c.amount), 0))} ₺ gecikmiş</span>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
           <Card key={card.label} className="border-0" style={{ backgroundColor: card.bg }}>
