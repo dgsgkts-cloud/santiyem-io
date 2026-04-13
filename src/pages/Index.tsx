@@ -21,6 +21,7 @@ import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import ProfitabilityCashFlowPage from "@/components/desktop/ProfitabilityCashFlowPage";
 import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import CashTrackingPage from "@/components/desktop/CashTrackingPage";
+import MaterialsPage from "@/components/desktop/MaterialsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -38,7 +39,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -70,6 +71,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "profitability",
   "contracts",
   "cash-tracking",
+  "materials",
 ];
 
 // Mobile drawer menu items
@@ -82,6 +84,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "profitability", label: "Gelir & Gider Takibi", emoji: "📊", icon: FileText },
   { id: "cash-tracking", label: "Kasa & Ödeme Takibi", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
+  { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
   { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
@@ -104,6 +107,7 @@ const TAB_TITLES: Record<string, string> = {
   contracts: "Sözleşme Takibi",
   profitability: "Gelir & Gider Takibi",
   "cash-tracking": "Kasa & Ödeme Takibi",
+  materials: "Malzeme Takibi",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
