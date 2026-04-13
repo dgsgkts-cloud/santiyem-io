@@ -298,6 +298,8 @@ const Index = () => {
                   <CashTrackingPage />
                 ) : activeTab === "materials" ? (
                   <MaterialsPage />
+                ) : activeTab === "ekb-basvuru" ? (
+                  <EKBBasvurulariPanel />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
@@ -566,6 +568,8 @@ const Index = () => {
             <SiteDiaryPage />
           ) : activeTab === "materials" ? (
             <MaterialsPage />
+          ) : activeTab === "ekb-basvuru" ? (
+            <EKBBasvurulariPanel />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "calc" ? (
