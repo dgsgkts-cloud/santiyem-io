@@ -5,12 +5,12 @@ import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
   Bell, Crown, FileSignature, Wallet,
-  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, ClipboardList
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials" | "ekb-basvuru";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
