@@ -1669,6 +1669,98 @@ export type Database = {
           },
         ]
       }
+      subcontractor_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          payment_date: string
+          planned_date: string | null
+          receipt_url: string | null
+          status: string
+          subcontractor_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_date?: string
+          planned_date?: string | null
+          receipt_url?: string | null
+          status?: string
+          subcontractor_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_date?: string
+          planned_date?: string | null
+          receipt_url?: string | null
+          status?: string
+          subcontractor_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_payments_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractors: {
+        Row: {
+          contract_amount: number
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          payment_schedule: Json | null
+          phone: string | null
+          project_id: string | null
+          specialty: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          phone?: string | null
+          project_id?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          phone?: string | null
+          project_id?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
