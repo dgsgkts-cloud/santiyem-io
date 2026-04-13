@@ -111,7 +111,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4" style={{ padding: collapsed ? "12px 4px" : "12px 8px" }}>
-        {NAV_SECTIONS.map((section) => (
+        {[...NAV_SECTIONS, ...(isAdmin ? [{ label: "YÖNETİM", items: [{ id: "ekb-basvuru" as Tab, label: "EKB Başvuruları", icon: ClipboardList }] }] : [])].map((section) => (
           <div key={section.label}>
             {!collapsed && (
               <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/60">
