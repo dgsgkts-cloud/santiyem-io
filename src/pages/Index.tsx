@@ -295,6 +295,8 @@ const Index = () => {
                   <ProfitabilityCashFlowPage />
                 ) : activeTab === "cash-tracking" ? (
                   <CashTrackingPage />
+                ) : activeTab === "materials" ? (
+                  <MaterialsPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
