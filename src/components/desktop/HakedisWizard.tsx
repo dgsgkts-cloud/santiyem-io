@@ -4,7 +4,18 @@ import { useUser } from "@/contexts/UserContext";
 import { useContracts } from "@/hooks/useContracts";
 import { useContractItems, ContractItem } from "@/hooks/useContractItems";
 import { toast } from "sonner";
-import { ArrowLeft, AlertTriangle, Plus, Trash2, FileText, Calculator } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Plus, Trash2, FileText, Calculator, Bot, Loader2, CheckCircle2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface AIKalem {
+  sozlesme_kalemi_id: string;
+  poz_no: string;
+  tarif: string;
+  tespit_edilen_miktar: number;
+  guven_skoru: "yuksek" | "orta" | "dusuk";
+  aciklama: string;
+  approved?: boolean;
+}
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCurrency = (n: number) => `₺${fmt(n)}`;
@@ -54,6 +65,13 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previousHakedisData, setPreviousHakedisData] = useState<Record<string, number>>({});
+  // AI state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiDescription, setAiDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResults, setAiResults] = useState<AIKalem[] | null>(null);
+  const [aiNotes, setAiNotes] = useState("");
+  const [aiRetryCount, setAiRetryCount] = useState(0);
 
   // Find contracts for this project
   const projectContracts = useMemo(() =>
@@ -268,6 +286,84 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
     setNewCustomAmount("");
   };
 
+  // AI: Call hakedis-ai edge function
+  const handleAiGenerate = async () => {
+    if (!aiDescription.trim()) { toast.error("Lütfen yapılan işleri açıklayın"); return; }
+    if (contractItems.length === 0) { toast.error("Sözleşme kalemleri yüklenmemiş"); return; }
+    
+    setAiLoading(true);
+    setAiResults(null);
+    
+    const doRequest = async (attempt: number): Promise<any> => {
+      try {
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hakedis-ai`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            description: aiDescription,
+            contractItems: contractItems.map(ci => ({
+              id: ci.id, poz_no: ci.poz_no, description: ci.description,
+              unit: ci.unit, quantity: ci.quantity, unit_price: ci.unit_price,
+            })),
+          }),
+        });
+        
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({ error: "Bağlantı hatası" }));
+          if (resp.status === 429 || resp.status >= 500) {
+            if (attempt < 2) {
+              await new Promise(r => setTimeout(r, 2000));
+              return doRequest(attempt + 1);
+            }
+          }
+          throw new Error(errData.error || "AI servisi hatası");
+        }
+        return resp.json();
+      } catch (err) {
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 2000));
+          return doRequest(attempt + 1);
+        }
+        throw err;
+      }
+    };
+    
+    try {
+      const data = await doRequest(0);
+      if (data.kalemler && data.kalemler.length > 0) {
+        setAiResults(data.kalemler.map((k: AIKalem) => ({ ...k, approved: true })));
+        setAiNotes(data.notlar || "");
+        toast.success(`AI ${data.kalemler.length} kalem tespit etti, kontrol edin`);
+      } else {
+        toast.info("AI eşleşme bulamadı, manuel giriş yapın");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "AI servisi yanıt veremedi");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAiResults = () => {
+    if (!aiResults) return;
+    const approved = aiResults.filter(k => k.approved);
+    if (approved.length === 0) { toast.error("En az bir kalemi onaylayın"); return; }
+    
+    setLineItems(prev => prev.map(li => {
+      const match = approved.find(k => k.sozlesme_kalemi_id === li.contract_item_id);
+      if (match) return { ...li, current_qty: match.tespit_edilen_miktar };
+      return li;
+    }));
+    
+    setAiModalOpen(false);
+    setAiResults(null);
+    setAiDescription("");
+    toast.success(`✅ ${approved.length} kalem hakediş formuna aktarıldı`);
+  };
+
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
       {/* Header */}
@@ -317,9 +413,18 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
       {/* Work Items Table */}
       {contractItems.length > 0 && (
         <div className="rounded-xl p-4 bg-card border border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-semibold text-foreground">İş Kalemleri</h3>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <h3 className="text-[13px] font-semibold text-foreground">İş Kalemleri</h3>
+            </div>
+            <button
+              onClick={() => setAiModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
+              style={{ background: "linear-gradient(135deg, #FF6B2B, #FF8F5E)", color: "#FFF" }}
+            >
+              <Bot className="w-3.5 h-3.5" /> AI ile Doldur
+            </button>
           </div>
 
           {hasOverage && (
@@ -555,6 +660,145 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
           {saving ? "Kaydediliyor..." : "✅ Hakediş Oluştur"}
         </button>
       </div>
+
+      {/* AI Modal */}
+      <Dialog open={aiModalOpen} onOpenChange={setAiModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="w-5 h-5" style={{ color: "#FF6B2B" }} />
+              AI ile Hakediş Oluştur
+            </DialogTitle>
+          </DialogHeader>
+
+          {!aiResults ? (
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                  Bu dönem yapılan işleri serbest metin olarak anlatın
+                </label>
+                <textarea
+                  value={aiDescription}
+                  onChange={e => setAiDescription(e.target.value)}
+                  placeholder="Örnek: Bu ay bodrum kata 450 m³ beton döküldü, kalıp sökümü yapıldı, demir montajı %60 tamamlandı, 2. kat kolon betonu 35 m³ atıldı..."
+                  rows={6}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground resize-none"
+                />
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] bg-muted/50 text-muted-foreground">
+                <Bot className="w-3.5 h-3.5 shrink-0" style={{ color: "#FF6B2B" }} />
+                AI, sözleşme kalemlerinizi analiz edecek ve her kalem için yapılan miktarı tespit edecek.
+              </div>
+              <button
+                onClick={handleAiGenerate}
+                disabled={aiLoading || !aiDescription.trim()}
+                className="w-full py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg, #FF6B2B, #FF8F5E)" }}
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    AI analiz ediyor...
+                  </>
+                ) : (
+                  <>
+                    <Bot className="w-4 h-4" />
+                    Analiz Et
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* AI Notes */}
+              {aiNotes && (
+                <div className="flex items-start gap-2 px-3 py-2 rounded-lg text-[11px]" style={{ backgroundColor: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)" }}>
+                  <Bot className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#FF6B2B" }} />
+                  <span className="text-muted-foreground">{aiNotes}</span>
+                </div>
+              )}
+
+              {/* Results */}
+              <div className="space-y-2">
+                {aiResults.map((k, i) => {
+                  const conf = k.guven_skoru;
+                  const confColor = conf === "yuksek" ? "#22C55E" : conf === "orta" ? "#F59E0B" : "#EF4444";
+                  const confLabel = conf === "yuksek" ? "Yüksek" : conf === "orta" ? "Orta" : "Düşük";
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-lg p-3 border transition-colors"
+                      style={{
+                        borderColor: !k.approved ? "hsl(var(--border))" : confColor + "40",
+                        backgroundColor: !k.approved ? "hsl(var(--muted) / 0.3)" : conf === "dusuk" ? "rgba(245,158,11,0.05)" : "transparent",
+                        opacity: k.approved ? 1 : 0.5,
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-mono text-muted-foreground">{k.poz_no}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: confColor + "20", color: confColor }}>
+                              {confLabel}
+                            </span>
+                          </div>
+                          <p className="text-xs text-foreground font-medium">{k.tarif}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{k.aciklama}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <input
+                            type="number"
+                            value={k.tespit_edilen_miktar}
+                            onChange={e => {
+                              setAiResults(prev => prev!.map((x, j) => j === i ? { ...x, tespit_edilen_miktar: parseFloat(e.target.value) || 0 } : x));
+                            }}
+                            className="w-20 px-2 py-1 rounded text-xs text-right font-mono bg-background border border-border text-foreground"
+                          />
+                          <button
+                            onClick={() => setAiResults(prev => prev!.map((x, j) => j === i ? { ...x, approved: !x.approved } : x))}
+                            className="p-1 rounded"
+                          >
+                            {k.approved ? (
+                              <CheckCircle2 className="w-5 h-5" style={{ color: "#22C55E" }} />
+                            ) : (
+                              <X className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  onClick={() => setAiResults(prev => prev!.map(k => ({ ...k, approved: true })))}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-foreground"
+                >
+                  Tümünü Onayla
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setAiResults(null); setAiDescription(""); }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground"
+                  >
+                    Tekrar Dene
+                  </button>
+                  <button
+                    onClick={applyAiResults}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold text-white"
+                    style={{ backgroundColor: "#FF6B2B" }}
+                  >
+                    ✅ Forma Aktar ({aiResults.filter(k => k.approved).length} kalem)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
