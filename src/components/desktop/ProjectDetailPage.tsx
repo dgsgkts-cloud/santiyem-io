@@ -138,6 +138,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+      {showQrModal && <QrCodeModal projectId={p.id} projectName={p.name} onClose={() => setShowQrModal(false)} />}
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
