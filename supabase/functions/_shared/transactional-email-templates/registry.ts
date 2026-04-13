@@ -15,6 +15,8 @@ import { template as weeklySummary } from './weekly-summary.tsx'
 import { template as signatureRequest } from './signature-request.tsx'
 import { template as signatureReminder } from './signature-reminder.tsx'
 import { template as signatureUploaded } from './signature-uploaded.tsx'
+import { template as hakedisApprovalRequest } from './hakedis-approval-request.tsx'
+import { template as hakedisApprovalResult } from './hakedis-approval-result.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-due-reminder': paymentDueReminder,
@@ -23,4 +25,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'signature-request': signatureRequest,
   'signature-reminder': signatureReminder,
   'signature-uploaded': signatureUploaded,
+  'hakedis-approval-request': hakedisApprovalRequest,
+  'hakedis-approval-result': hakedisApprovalResult,
 }

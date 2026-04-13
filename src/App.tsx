@@ -23,6 +23,7 @@ const TeslimatIade = lazy(() => import("./pages/TeslimatIade"));
 const MesafeliSatisSozlesmesi = lazy(() => import("./pages/MesafeliSatisSozlesmesi"));
 const Iletisim = lazy(() => import("./pages/Iletisim"));
 const ContractSignUpload = lazy(() => import("./pages/ContractSignUpload"));
+const HakedisApproval = lazy(() => import("./pages/HakedisApproval"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
               <Route path="/iletisim" element={<Iletisim />} />
               <Route path="/sozlesme-imza/:token" element={<ContractSignUpload />} />
+              <Route path="/hakedis-onay/:token" element={<HakedisApproval />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/odeme-sonucu" element={<PaymentResult />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
