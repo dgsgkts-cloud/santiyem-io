@@ -520,7 +520,8 @@ const MaterialsPage = () => {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="Silme Onayı"
-        description={`"${deleteTarget?.name}" silinecek. Bu işlem geri alınamaz.`}
+        itemName={deleteTarget?.name}
+        extraWarning="Bu işlem geri alınamaz."
       />
     </div>
   );
