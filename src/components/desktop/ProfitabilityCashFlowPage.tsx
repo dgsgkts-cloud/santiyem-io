@@ -15,8 +15,11 @@ import {
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import SubcontractorsPage from "./SubcontractorsPage";
+import { useSubcontractorPayments } from "@/hooks/useSubcontractors";
+import { useCashAccounts } from "@/hooks/useCashAccounts";
 
-type Page = "overview" | "project-detail" | "cashflow";
+type Page = "overview" | "project-detail" | "cashflow" | "subcontractors";
 
 const CATEGORIES = ["İşçilik", "Malzeme", "Makine-Ekipman", "Taşeron", "Genel Gider", "Diğer"];
 const PIE_COLORS = ["#FF6B2B", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#64748B"];
@@ -159,14 +162,14 @@ const ProfitabilityCashFlowPage = () => {
         {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
-          {(["overview", "cashflow"] as Page[]).map(p => (
+          {(["overview", "cashflow", "subcontractors"] as Page[]).map(p => (
             <button key={p} onClick={() => setPage(p)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{
-                backgroundColor: page === p ? "#FF6B2B" : "#1E2732",
-                color: page === p ? "#FFF" : "#94A3B8",
+                backgroundColor: page === p ? "#FF6B2B" : "hsl(var(--muted))",
+                color: page === p ? "#FFF" : "hsl(var(--muted-foreground))",
               }}>
-              {p === "overview" ? "📊 Karlılık Özeti" : "💰 Nakit Akışı"}
+              {p === "overview" ? "📊 Karlılık Özeti" : p === "cashflow" ? "💰 Nakit Akışı" : "🏗️ Taşeronlar"}
             </button>
           ))}
           <button onClick={() => setAddModal(true)}
