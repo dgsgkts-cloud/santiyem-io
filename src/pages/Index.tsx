@@ -40,7 +40,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials" | "ekb-basvuru";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
