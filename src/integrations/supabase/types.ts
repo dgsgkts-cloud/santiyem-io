@@ -660,6 +660,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ekb_basvurulari: {
+        Row: {
+          ad_soyad: string
+          bina_tipi: string
+          created_at: string
+          durum: string
+          id: string
+          il_ilce: string
+          mesaj: string | null
+          telefon: string
+        }
+        Insert: {
+          ad_soyad: string
+          bina_tipi?: string
+          created_at?: string
+          durum?: string
+          id?: string
+          il_ilce: string
+          mesaj?: string | null
+          telefon: string
+        }
+        Update: {
+          ad_soyad?: string
+          bina_tipi?: string
+          created_at?: string
+          durum?: string
+          id?: string
+          il_ilce?: string
+          mesaj?: string | null
+          telefon?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string

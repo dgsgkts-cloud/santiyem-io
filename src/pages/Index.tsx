@@ -23,6 +23,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import CashTrackingPage from "@/components/desktop/CashTrackingPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
+import EKBBasvurulariPanel from "@/components/desktop/EKBBasvurulariPanel";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
@@ -39,7 +40,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials" | "ekb-basvuru";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -297,6 +298,8 @@ const Index = () => {
                   <CashTrackingPage />
                 ) : activeTab === "materials" ? (
                   <MaterialsPage />
+                ) : activeTab === "ekb-basvuru" ? (
+                  <EKBBasvurulariPanel />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
@@ -565,6 +568,8 @@ const Index = () => {
             <SiteDiaryPage />
           ) : activeTab === "materials" ? (
             <MaterialsPage />
+          ) : activeTab === "ekb-basvuru" ? (
+            <EKBBasvurulariPanel />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "calc" ? (
