@@ -286,6 +286,84 @@ export default function HakedisWizard({ projectId, projectName, onClose, onCreat
     setNewCustomAmount("");
   };
 
+  // AI: Call hakedis-ai edge function
+  const handleAiGenerate = async () => {
+    if (!aiDescription.trim()) { toast.error("Lütfen yapılan işleri açıklayın"); return; }
+    if (contractItems.length === 0) { toast.error("Sözleşme kalemleri yüklenmemiş"); return; }
+    
+    setAiLoading(true);
+    setAiResults(null);
+    
+    const doRequest = async (attempt: number): Promise<any> => {
+      try {
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hakedis-ai`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            description: aiDescription,
+            contractItems: contractItems.map(ci => ({
+              id: ci.id, poz_no: ci.poz_no, description: ci.description,
+              unit: ci.unit, quantity: ci.quantity, unit_price: ci.unit_price,
+            })),
+          }),
+        });
+        
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({ error: "Bağlantı hatası" }));
+          if (resp.status === 429 || resp.status >= 500) {
+            if (attempt < 2) {
+              await new Promise(r => setTimeout(r, 2000));
+              return doRequest(attempt + 1);
+            }
+          }
+          throw new Error(errData.error || "AI servisi hatası");
+        }
+        return resp.json();
+      } catch (err) {
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 2000));
+          return doRequest(attempt + 1);
+        }
+        throw err;
+      }
+    };
+    
+    try {
+      const data = await doRequest(0);
+      if (data.kalemler && data.kalemler.length > 0) {
+        setAiResults(data.kalemler.map((k: AIKalem) => ({ ...k, approved: true })));
+        setAiNotes(data.notlar || "");
+        toast.success(`AI ${data.kalemler.length} kalem tespit etti, kontrol edin`);
+      } else {
+        toast.info("AI eşleşme bulamadı, manuel giriş yapın");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "AI servisi yanıt veremedi");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAiResults = () => {
+    if (!aiResults) return;
+    const approved = aiResults.filter(k => k.approved);
+    if (approved.length === 0) { toast.error("En az bir kalemi onaylayın"); return; }
+    
+    setLineItems(prev => prev.map(li => {
+      const match = approved.find(k => k.sozlesme_kalemi_id === li.contract_item_id);
+      if (match) return { ...li, current_qty: match.tespit_edilen_miktar };
+      return li;
+    }));
+    
+    setAiModalOpen(false);
+    setAiResults(null);
+    setAiDescription("");
+    toast.success(`✅ ${approved.length} kalem hakediş formuna aktarıldı`);
+  };
+
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
       {/* Header */}
