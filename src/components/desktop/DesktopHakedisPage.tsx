@@ -289,12 +289,31 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     }
   };
 
-  const handlePaymentConfirm = (id: string) => {
+  const handlePaymentConfirm = async (id: string) => {
+    const h = hakedisler.find(x => x.id === id);
     updateHakedisStatus(id, "Ödendi", "#10B981");
     setPaymentModal(null);
     fireConfetti();
-    const h = hakedisler.find(x => x.id === id);
     toast.success(`${h ? fmt(h.net) : ""} tahsil edildi! Tebrikler! 🎉`);
+
+    // Auto-create collection record in cash_collections
+    if (h && user) {
+      try {
+        const projectName = project?.name || "Proje";
+        await supabase.from("cash_collections").insert({
+          user_id: user.id,
+          collection_date: new Date().toISOString().slice(0, 10),
+          sender: project?.client || projectName,
+          collection_type: "hakedis",
+          project_id: h.project_id,
+          amount: h.net_total || h.net,
+          payment_type: "havale",
+          status: "tahsil_edildi",
+          description: `Hakediş #${hakedisler.indexOf(h) + 1} — ${h.period} (${projectName})`,
+          hakedis_id: h.id,
+        });
+      } catch {}
+    }
   };
 
   const handleReminderSave = () => {
