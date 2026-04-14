@@ -288,10 +288,8 @@ const Index = () => {
                   <DesktopContractsPage />
                 ) : activeTab === "site-diary" ? (
                   <SiteDiaryPage />
-                ) : activeTab === "profitability" ? (
-                  <ProfitabilityCashFlowPage />
-                ) : activeTab === "cash-tracking" ? (
-                  <CashTrackingPage />
+                ) : activeTab === "payments-kasa" ? (
+                  <PaymentsKasaPage />
                 ) : activeTab === "materials" ? (
                   <MaterialsPage />
                 ) : activeTab === "ekb-basvuru" ? (
@@ -556,10 +554,8 @@ const Index = () => {
             <DesktopHakedisPage />
           ) : activeTab === "contracts" ? (
             <DesktopContractsPage />
-          ) : activeTab === "profitability" ? (
-            <ProfitabilityCashFlowPage />
-          ) : activeTab === "cash-tracking" ? (
-            <CashTrackingPage />
+          ) : activeTab === "payments-kasa" ? (
+            <PaymentsKasaPage />
           ) : activeTab === "site-diary" ? (
             <SiteDiaryPage />
           ) : activeTab === "materials" ? (
