@@ -308,6 +308,30 @@ const SiteDiaryPage = () => {
 
         {selectedProjectId && (
           <>
+            {/* Worker Attendance Section */}
+            <div className="rounded-xl p-4 bg-card border border-border">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <HardHat className="w-4 h-4 text-primary" /> İşçi Devam Takibi
+                </h3>
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <QrCode className="w-3.5 h-3.5" /> QR Kod
+                </button>
+              </div>
+              <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
+            </div>
+
+            {showQrModal && selectedProject && (
+              <QrCodeModal
+                projectId={selectedProjectId}
+                projectName={selectedProject.name}
+                onClose={() => setShowQrModal(false)}
+              />
+            )}
+
             {/* Calendar */}
             <div className="rounded-xl p-4 bg-card border border-border">
               <div className="flex items-center justify-between mb-4">
