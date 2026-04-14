@@ -20,7 +20,7 @@ import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
 import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import ProfitabilityCashFlowPage from "@/components/desktop/ProfitabilityCashFlowPage";
 import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
-import CashTrackingPage from "@/components/desktop/CashTrackingPage";
+import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import EKBBasvurulariPanel from "@/components/desktop/EKBBasvurulariPanel";
@@ -40,7 +40,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "profitability" | "contracts" | "cash-tracking" | "materials" | "ekb-basvuru";
+type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -60,7 +60,6 @@ const NAVIGABLE_TABS: Tab[] = [
   "dashboard",
   "chat",
   "calc",
-  
   "reminders",
   "pricing",
   "daily",
@@ -69,9 +68,8 @@ const NAVIGABLE_TABS: Tab[] = [
   "hakedis",
   "settings",
   "site-diary",
-  "profitability",
+  "payments-kasa",
   "contracts",
-  "cash-tracking",
   "materials",
 ];
 
@@ -82,8 +80,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
   { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
-  { id: "profitability", label: "Gelir & Gider Takibi", emoji: "📊", icon: FileText },
-  { id: "cash-tracking", label: "Kasa & Ödeme Takibi", emoji: "💰", icon: FileText },
+  { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
@@ -106,8 +103,7 @@ const TAB_TITLES: Record<string, string> = {
   hakedis: "Hakediş Yönetimi",
   "site-diary": "Şantiye Günlüğü",
   contracts: "Sözleşme Takibi",
-  profitability: "Gelir & Gider Takibi",
-  "cash-tracking": "Kasa & Ödeme Takibi",
+  "payments-kasa": "Ödemeler & Kasa",
   materials: "Malzeme Takibi",
   settings: "Ayarlar",
   
