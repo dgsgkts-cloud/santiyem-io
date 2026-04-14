@@ -47,6 +47,8 @@ const SiteDiaryPage = () => {
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
 
   const entries = dbEntries;
 
