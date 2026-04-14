@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   BarChart3, CreditCard, Wallet, FileDown, FileSpreadsheet,
-  TrendingUp, TrendingDown, DollarSign, Plus, Trash2,
+  TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Pencil,
   ArrowDownLeft, ArrowUpRight, AlertTriangle, ChevronRight, Banknote, FileText, Receipt
 } from "lucide-react";
 import {
@@ -44,7 +44,7 @@ const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigit
 const PaymentsKasaPage = () => {
   const { user } = useUser();
   const { projects } = useProjects();
-  const { expenses, addExpense, deleteExpense } = useProjectExpenses();
+  const { expenses, addExpense, updateExpense, deleteExpense } = useProjectExpenses();
   const { accounts } = useCashAccounts();
   const { payments: cashPayments } = useCashPayments();
   const { collections: cashCollections } = useCashCollections();
@@ -53,6 +53,7 @@ const PaymentsKasaPage = () => {
   const { payments: subPayments } = useSubcontractorPayments();
 
   const [addModal, setAddModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
   const [reportDateFrom, setReportDateFrom] = useState(() => {
@@ -62,11 +63,12 @@ const PaymentsKasaPage = () => {
   const [reportDateTo, setReportDateTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [reportProjectFilter, setReportProjectFilter] = useState<string>("all");
 
-  const [expForm, setExpForm] = useState({
+  const defaultForm = {
     project_id: "", category: "Malzeme", description: "", amount: "",
     expense_date: new Date().toISOString().slice(0, 10), has_invoice: false,
     invoice_no: "", note: "", is_income: false
-  });
+  };
+  const [expForm, setExpForm] = useState(defaultForm);
 
   // Fetch all hakedis
   const { data: allHakedis = [] } = useQuery({
