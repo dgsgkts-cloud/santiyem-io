@@ -270,7 +270,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <Wallet className="w-4 h-4" style={{ color: "#FF6B2B" }} />
             <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Finansal Özet — Bu Ay</h3>
           </div>
-          <button onClick={() => onTabChange("profitability")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+          <button onClick={() => onTabChange("payments-kasa")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
             Detay <ChevronRight className="w-3 h-3" />
           </button>
         </div>
@@ -314,7 +314,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           <div
             className="mt-3 rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:opacity-90"
             style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
-            onClick={() => onTabChange("profitability")}
+            onClick={() => onTabChange("payments-kasa")}
           >
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#EF4444" }} />
             <span className="text-[11px] lg:text-[12px] font-medium" style={{ color: "#FCA5A5" }}>{cashWarning}</span>
@@ -373,7 +373,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 <Banknote className="w-4 h-4" style={{ color: "#FF6B2B" }} />
                 <h3 className="text-[13px] lg:text-[14px] font-semibold text-foreground">Kasa Durumu</h3>
               </div>
-              <button onClick={() => onTabChange("cash-tracking")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
+              <button onClick={() => onTabChange("payments-kasa")} className="flex items-center gap-0.5 text-[11px] lg:text-[12px] font-medium" style={{ color: "#FF6B2B" }}>
                 Detay <ChevronRight className="w-3 h-3" />
               </button>
             </div>
