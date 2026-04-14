@@ -50,7 +50,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
   { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
-  { id: "render", label: "Render", shortLabel: "Render", icon: Paintbrush },
+  
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
   { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
@@ -60,7 +60,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "dashboard",
   "chat",
   "calc",
-  "render",
+  
   "reminders",
   "pricing",
   "daily",
@@ -88,7 +88,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
-  { id: "render", label: "Render / Görselleştirme", emoji: "📸", icon: Camera },
+  
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
   { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
