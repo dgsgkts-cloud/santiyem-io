@@ -360,7 +360,7 @@ const PaymentsKasaPage = () => {
                 <option value="all">Tüm Projeler</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-              <button onClick={() => setAddModal(true)}
+              <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
                 className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
                 <Plus className="w-4 h-4" /> Kayıt Ekle
               </button>
@@ -385,9 +385,13 @@ const PaymentsKasaPage = () => {
                             <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <span className="text-sm font-semibold" style={{ color: "#EF4444" }}>-{fmtFull(Number(e.amount))}</span>
-                          <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description} - ${fmtFull(Number(e.amount))}` })}
+                          <button onClick={() => openEditModal(e)}
+                            className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                          <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
                             className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                             <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
@@ -587,11 +591,11 @@ const PaymentsKasaPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Expense Modal */}
-      <Dialog open={addModal} onOpenChange={() => setAddModal(false)}>
+      {/* Add/Edit Expense Modal */}
+      <Dialog open={addModal} onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Kayıt Ekle</DialogTitle>
+            <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -642,10 +646,18 @@ const PaymentsKasaPage = () => {
               <textarea value={expForm.note} onChange={e => setExpForm(f => ({ ...f, note: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg text-sm resize-none bg-background border border-border text-foreground" rows={2} />
             </div>
-            <button onClick={handleAddExpense} disabled={addExpense.isPending}
-              className="w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-primary text-primary-foreground">
-              {addExpense.isPending ? "Kaydediliyor..." : "Kaydet"}
-            </button>
+            <div className="flex gap-2">
+              {editTarget && (
+                <button onClick={() => { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); }}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-muted-foreground">
+                  İptal
+                </button>
+              )}
+              <button onClick={handleSaveExpense} disabled={addExpense.isPending || updateExpense.isPending}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-primary text-primary-foreground">
+                {(addExpense.isPending || updateExpense.isPending) ? "Kaydediliyor..." : "Kaydet"}
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
