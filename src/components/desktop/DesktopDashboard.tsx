@@ -409,7 +409,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                       key={chk.id}
                       className="rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:opacity-90"
                       style={{ backgroundColor: days <= 3 ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${days <= 3 ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)"}` }}
-                      onClick={() => onTabChange("cash-tracking")}
+                      onClick={() => onTabChange("payments-kasa")}
                     >
                       <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: days <= 3 ? "#EF4444" : "#F59E0B" }} />
                       <span className="text-[11px] lg:text-[12px] font-medium" style={{ color: days <= 3 ? "#FCA5A5" : "#FCD34D" }}>
