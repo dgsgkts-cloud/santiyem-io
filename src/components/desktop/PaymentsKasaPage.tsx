@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   BarChart3, CreditCard, Wallet, FileDown, FileSpreadsheet,
-  TrendingUp, TrendingDown, DollarSign, Plus, Trash2,
+  TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Pencil,
   ArrowDownLeft, ArrowUpRight, AlertTriangle, ChevronRight, Banknote, FileText, Receipt
 } from "lucide-react";
 import {
@@ -44,7 +44,7 @@ const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigit
 const PaymentsKasaPage = () => {
   const { user } = useUser();
   const { projects } = useProjects();
-  const { expenses, addExpense, deleteExpense } = useProjectExpenses();
+  const { expenses, addExpense, updateExpense, deleteExpense } = useProjectExpenses();
   const { accounts } = useCashAccounts();
   const { payments: cashPayments } = useCashPayments();
   const { collections: cashCollections } = useCashCollections();
@@ -53,6 +53,7 @@ const PaymentsKasaPage = () => {
   const { payments: subPayments } = useSubcontractorPayments();
 
   const [addModal, setAddModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
   const [reportDateFrom, setReportDateFrom] = useState(() => {
@@ -62,11 +63,12 @@ const PaymentsKasaPage = () => {
   const [reportDateTo, setReportDateTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [reportProjectFilter, setReportProjectFilter] = useState<string>("all");
 
-  const [expForm, setExpForm] = useState({
+  const defaultForm = {
     project_id: "", category: "Malzeme", description: "", amount: "",
     expense_date: new Date().toISOString().slice(0, 10), has_invoice: false,
     invoice_no: "", note: "", is_income: false
-  });
+  };
+  const [expForm, setExpForm] = useState(defaultForm);
 
   // Fetch all hakedis
   const { data: allHakedis = [] } = useQuery({
@@ -180,27 +182,59 @@ const PaymentsKasaPage = () => {
     return Object.entries(cats).map(([name, value]) => ({ name, value }));
   }, [reportExpenses]);
 
-  const handleAddExpense = async () => {
+  const openEditModal = (e: ProjectExpense) => {
+    setEditTarget(e);
+    setExpForm({
+      project_id: e.project_id,
+      category: e.category,
+      description: e.description,
+      amount: String(e.amount),
+      expense_date: e.expense_date,
+      has_invoice: e.has_invoice,
+      invoice_no: e.invoice_no || "",
+      note: e.note || "",
+      is_income: INCOME_CATEGORIES.includes(e.category),
+    });
+    setAddModal(true);
+  };
+
+  const handleSaveExpense = async () => {
     if (!expForm.project_id || !expForm.amount || Number(expForm.amount) <= 0) {
       toast.error("Proje ve tutar zorunludur");
       return;
     }
-    await addExpense.mutateAsync({
-      project_id: expForm.project_id,
-      user_id: user!.id,
-      category: expForm.category,
-      description: expForm.description,
-      amount: Number(expForm.amount),
-      expense_date: expForm.expense_date,
-      has_invoice: expForm.has_invoice,
-      invoice_no: expForm.invoice_no || null,
-      invoice_url: null,
-      note: expForm.note || null,
-      source: "manual",
-    });
-    toast.success(expForm.is_income ? "Gelir eklendi" : "Gider eklendi");
+    if (editTarget) {
+      await updateExpense.mutateAsync({
+        id: editTarget.id,
+        project_id: expForm.project_id,
+        category: expForm.category,
+        description: expForm.description,
+        amount: Number(expForm.amount),
+        expense_date: expForm.expense_date,
+        has_invoice: expForm.has_invoice,
+        invoice_no: expForm.invoice_no || null,
+        note: expForm.note || null,
+      });
+      toast.success("Kayıt güncellendi");
+    } else {
+      await addExpense.mutateAsync({
+        project_id: expForm.project_id,
+        user_id: user!.id,
+        category: expForm.category,
+        description: expForm.description,
+        amount: Number(expForm.amount),
+        expense_date: expForm.expense_date,
+        has_invoice: expForm.has_invoice,
+        invoice_no: expForm.invoice_no || null,
+        invoice_url: null,
+        note: expForm.note || null,
+        source: "manual",
+      });
+      toast.success(expForm.is_income ? "Gelir eklendi" : "Gider eklendi");
+    }
     setAddModal(false);
-    setExpForm({ project_id: "", category: "Malzeme", description: "", amount: "", expense_date: new Date().toISOString().slice(0, 10), has_invoice: false, invoice_no: "", note: "", is_income: false });
+    setEditTarget(null);
+    setExpForm(defaultForm);
   };
 
   const handleExport = (type: "pdf" | "excel") => {
@@ -326,7 +360,7 @@ const PaymentsKasaPage = () => {
                 <option value="all">Tüm Projeler</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-              <button onClick={() => setAddModal(true)}
+              <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
                 className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
                 <Plus className="w-4 h-4" /> Kayıt Ekle
               </button>
@@ -351,9 +385,13 @@ const PaymentsKasaPage = () => {
                             <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <span className="text-sm font-semibold" style={{ color: "#EF4444" }}>-{fmtFull(Number(e.amount))}</span>
-                          <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description} - ${fmtFull(Number(e.amount))}` })}
+                          <button onClick={() => openEditModal(e)}
+                            className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                          <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
                             className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                             <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
@@ -553,11 +591,11 @@ const PaymentsKasaPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Expense Modal */}
-      <Dialog open={addModal} onOpenChange={() => setAddModal(false)}>
+      {/* Add/Edit Expense Modal */}
+      <Dialog open={addModal} onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Kayıt Ekle</DialogTitle>
+            <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -608,10 +646,18 @@ const PaymentsKasaPage = () => {
               <textarea value={expForm.note} onChange={e => setExpForm(f => ({ ...f, note: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg text-sm resize-none bg-background border border-border text-foreground" rows={2} />
             </div>
-            <button onClick={handleAddExpense} disabled={addExpense.isPending}
-              className="w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-primary text-primary-foreground">
-              {addExpense.isPending ? "Kaydediliyor..." : "Kaydet"}
-            </button>
+            <div className="flex gap-2">
+              {editTarget && (
+                <button onClick={() => { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); }}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-muted-foreground">
+                  İptal
+                </button>
+              )}
+              <button onClick={handleSaveExpense} disabled={addExpense.isPending || updateExpense.isPending}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-primary text-primary-foreground">
+                {(addExpense.isPending || updateExpense.isPending) ? "Kaydediliyor..." : "Kaydet"}
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
