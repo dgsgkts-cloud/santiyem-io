@@ -5,7 +5,7 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
 import TypingIndicator from "@/components/TypingIndicator";
-import CalculatorsPanel from "@/components/CalculatorsPanel";
+
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
 import PricingPanel from "@/components/PricingPanel";
@@ -40,7 +40,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -49,7 +49,7 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
-  { id: "calc", label: "Hesap", shortLabel: "Hesap", icon: Calculator },
+  
   
   { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
   { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
@@ -59,7 +59,6 @@ const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementTyp
 const NAVIGABLE_TABS: Tab[] = [
   "dashboard",
   "chat",
-  "calc",
   "reminders",
   "pricing",
   "daily",
@@ -84,7 +83,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
-  { id: "calc", label: "Hesap Araçları", emoji: "🧮", icon: Calculator },
+  
   
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
   { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
@@ -95,7 +94,7 @@ const TAB_TITLES: Record<string, string> = {
   dashboard: "Dashboard",
   chat: "AI Asistan",
   daily: "Günlük Bilgi",
-  calc: "Hesap Araçları",
+  
   render: "Proje Analizi",
   reminders: "Hatırlatıcı",
   pricing: "Planlar",
@@ -300,8 +299,6 @@ const Index = () => {
                   <div className="bg-background"><PricingPanel /></div>
                 ) : activeTab === "daily" ? (
                   <DailyKnowledgePanel />
-                ) : activeTab === "calc" ? (
-                  <CalculatorsPanel />
                 ) : activeTab === "render" ? (
                   <RenderPanel />
                 ) : (
@@ -564,8 +561,6 @@ const Index = () => {
             <EKBBasvurulariPanel />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
-          ) : activeTab === "calc" ? (
-            <CalculatorsPanel />
           ) : activeTab === "render" ? (
             <RenderPanel />
           ) : activeTab === "pricing" ? (

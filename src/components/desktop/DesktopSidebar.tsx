@@ -10,7 +10,7 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "calc" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -38,9 +38,7 @@ const NAV_SECTIONS = [
   },
   {
     label: "ARAÇLAR",
-    items: [
-      { id: "calc" as Tab, label: "Hesap Araçları", icon: Calculator },
-    ],
+    items: [],
   },
   {
     label: "İÇERİK",
