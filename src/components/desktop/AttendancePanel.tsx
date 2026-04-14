@@ -13,6 +13,14 @@ const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
   const { attendance, loading, refreshAttendance } = useWorkerAttendance(projectId);
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshAttendance();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refreshAttendance]);
+
   const filtered = useMemo(() => {
     return attendance.filter(a => format(parseISO(a.check_in), "yyyy-MM-dd") === filterDate);
   }, [attendance, filterDate]);
