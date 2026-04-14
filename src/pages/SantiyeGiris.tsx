@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { usePublicAttendance } from "@/hooks/useWorkerAttendance";
-import { HardHat, LogIn, LogOut, Users, User, UserCheck, ChevronLeft } from "lucide-react";
+import { HardHat, Users, User, UserCheck, ChevronLeft, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,8 +10,7 @@ import logo from "@/assets/muhendis-logo.png";
 const TITLES = ["Mühendis", "Tekniker", "Ustabaşı", "İşçi", "Diğer"];
 const OCCUPATIONS = ["Kalıpçı", "Demirci", "Betoncu", "Sıvacı", "Elektrikçi", "Tesisatçı", "Diğer"];
 
-type Mode = "select" | "individual" | "team" | "checkout" | "success";
-type ActionType = "giris" | "cikis";
+type Mode = "select" | "individual" | "team" | "success";
 
 const SantiyeGiris = () => {
   const { token } = useParams<{ token: string }>();
@@ -24,13 +23,11 @@ const SantiyeGiris = () => {
   // Individual form
   const [fullName, setFullName] = useState("");
   const [title, setTitle] = useState("İşçi");
-  const [individualAction, setIndividualAction] = useState<ActionType>("giris");
 
   // Team form
   const [foremanName, setForemanName] = useState("");
   const [occupation, setOccupation] = useState("Kalıpçı");
   const [teamSize, setTeamSize] = useState<number>(1);
-  const [teamAction, setTeamAction] = useState<ActionType>("giris");
 
   const activeWorkers = todayWorkers.filter(w => !w.check_out);
   const totalOnSite = activeWorkers.reduce((s, w) => s + (w.team_size || 1), 0);
@@ -44,62 +41,65 @@ const SantiyeGiris = () => {
       setFullName("");
       setForemanName("");
       setTeamSize(1);
-      setIndividualAction("giris");
-      setTeamAction("giris");
     }, 3000);
   };
 
+  const formatDuration = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h} saat ${m} dakika` : `${m} dakika`;
+  };
+
   const handleIndividualSubmit = async () => {
-    if (!fullName.trim()) return;
+    const name = fullName.trim();
+    if (!name) return;
     setSubmitting(true);
 
-    if (individualAction === "giris") {
-      const ok = await checkInIndividual({ full_name: fullName.trim(), title });
-      if (ok) resetAndReturn(`Hoş geldiniz ${fullName}!\nGiriş saati: ${format(new Date(), "HH:mm")}`);
-    } else {
-      // Find active record for this person
-      const record = activeWorkers.find(
-        w => w.entry_type === "individual" && w.full_name.toLowerCase() === fullName.trim().toLowerCase()
-      );
-      if (record) {
-        const ok = await checkOut(record.id);
-        if (ok) resetAndReturn(`Güle güle ${fullName}!\nÇıkış saati: ${format(new Date(), "HH:mm")}`);
-      } else {
-        resetAndReturn(`"${fullName}" adına aktif giriş kaydı bulunamadı.`);
+    // Find today's record for this name+title
+    const existing = todayWorkers.find(
+      w => w.entry_type === "individual" &&
+        w.full_name.toLowerCase() === name.toLowerCase() &&
+        (w.title || w.occupation) === title
+    );
+
+    if (!existing) {
+      // No record → check in
+      const ok = await checkInIndividual({ full_name: name, title });
+      if (ok) resetAndReturn(`Günaydın ${name}!\nGiriş saati: ${format(new Date(), "HH:mm")} ✅`);
+    } else if (!existing.check_out) {
+      // Has check-in, no check-out → check out
+      const ok = await checkOut(existing.id);
+      if (ok) {
+        const checkInTime = new Date(existing.check_in);
+        const durationMin = Math.round((Date.now() - checkInTime.getTime()) / 60000);
+        resetAndReturn(`İyi çalışmalar ${name}!\nÇıkış saati: ${format(new Date(), "HH:mm")}\nToplam çalışma: ${formatDuration(durationMin)} ✅`);
       }
+    } else {
+      // Both done
+      resetAndReturn(`Bugünkü kaydınız tamamlandı.\nGiriş: ${format(new Date(existing.check_in), "HH:mm")} / Çıkış: ${format(new Date(existing.check_out), "HH:mm")} ✅`);
     }
     setSubmitting(false);
   };
 
   const handleTeamSubmit = async () => {
-    if (!foremanName.trim() || teamSize < 1) return;
+    const name = foremanName.trim();
+    if (!name || teamSize < 1) return;
     setSubmitting(true);
 
-    if (teamAction === "giris") {
-      const ok = await checkInTeam({ foreman_name: foremanName.trim(), occupation, team_size: teamSize });
-      if (ok) resetAndReturn(`Ekip girişi kaydedildi!\n${teamSize} ${occupation} — ${format(new Date(), "HH:mm")}`);
+    const existing = todayWorkers.find(
+      w => w.entry_type === "team" &&
+        (w.foreman_name || w.full_name).toLowerCase() === name.toLowerCase() &&
+        w.occupation === occupation
+    );
+
+    if (!existing) {
+      const ok = await checkInTeam({ foreman_name: name, occupation, team_size: teamSize });
+      if (ok) resetAndReturn(`Ekip girişi kaydedildi!\n${teamSize} ${occupation} — ${format(new Date(), "HH:mm")} ✅`);
+    } else if (!existing.check_out) {
+      const ok = await checkOut(existing.id);
+      if (ok) resetAndReturn(`Ekip çıkışı kaydedildi!\n${existing.team_size} ${existing.occupation} — ${format(new Date(), "HH:mm")} ✅`);
     } else {
-      const record = activeWorkers.find(
-        w => w.entry_type === "team" && (w.foreman_name || w.full_name).toLowerCase() === foremanName.trim().toLowerCase()
-      );
-      if (record) {
-        const ok = await checkOut(record.id);
-        if (ok) resetAndReturn(`${record.team_size} ${record.occupation} çıkış yaptı\nÇıkış: ${format(new Date(), "HH:mm")}`);
-      } else {
-        resetAndReturn(`"${foremanName}" adına aktif ekip kaydı bulunamadı.`);
-      }
-    }
-    setSubmitting(false);
-  };
-
-  const handleQuickCheckOut = async (id: string, name: string, isTeam: boolean, size: number, occ: string) => {
-    setSubmitting(true);
-    const ok = await checkOut(id);
-    if (ok) {
-      const msg = isTeam
-        ? `${size} ${occ} çıkış yaptı\nÇıkış: ${format(new Date(), "HH:mm")}`
-        : `Güle güle ${name}!\nÇıkış saati: ${format(new Date(), "HH:mm")}`;
-      resetAndReturn(msg);
+      resetAndReturn(`Bugünkü kaydınız tamamlandı.\nGiriş: ${format(new Date(existing.check_in), "HH:mm")} / Çıkış: ${format(new Date(existing.check_out), "HH:mm")} ✅`);
     }
     setSubmitting(false);
   };
@@ -132,30 +132,6 @@ const SantiyeGiris = () => {
       </div>
     );
   }
-
-  // ========== ACTION TYPE TOGGLE ==========
-  const ActionToggle = ({ value, onChange }: { value: ActionType; onChange: (v: ActionType) => void }) => (
-    <div className="flex rounded-xl overflow-hidden border-2 border-gray-200">
-      <button
-        type="button"
-        onClick={() => onChange("giris")}
-        className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-          value === "giris" ? "bg-green-500 text-white" : "bg-white text-gray-500"
-        }`}
-      >
-        <LogIn className="w-4 h-4" /> Giriş Yap
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange("cikis")}
-        className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-          value === "cikis" ? "bg-red-500 text-white" : "bg-white text-gray-500"
-        }`}
-      >
-        <LogOut className="w-4 h-4" /> Çıkış Yap
-      </button>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -193,7 +169,7 @@ const SantiyeGiris = () => {
                   <User className="w-7 h-7 text-blue-600" />
                 </div>
                 <div className="font-bold text-gray-900 text-sm">🧑 Bireysel</div>
-                <div className="font-bold text-gray-900 text-sm">Giriş / Çıkış</div>
+                <div className="font-bold text-gray-900 text-sm">Giriş</div>
               </button>
               <button
                 onClick={() => setMode("team")}
@@ -203,48 +179,16 @@ const SantiyeGiris = () => {
                   <Users className="w-7 h-7 text-green-600" />
                 </div>
                 <div className="font-bold text-gray-900 text-sm">👷 Ekip</div>
-                <div className="font-bold text-gray-900 text-sm">Giriş / Çıkış</div>
+                <div className="font-bold text-gray-900 text-sm">Girişi</div>
               </button>
             </div>
 
-            {/* Quick checkout list */}
-            {activeWorkers.length > 0 && (
-              <div className="bg-white rounded-xl shadow p-4">
-                <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-                  <LogOut className="w-4 h-4 text-red-500" /> Hızlı Çıkış ({activeWorkers.length} aktif)
-                </h3>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                  {activeWorkers.map(w => (
-                    <button
-                      key={w.id}
-                      onClick={() => handleQuickCheckOut(w.id, w.full_name, w.entry_type === "team", w.team_size || 1, w.occupation)}
-                      disabled={submitting}
-                      className="w-full flex justify-between items-center bg-red-50 hover:bg-red-100 rounded-xl px-3 py-2.5 transition-all text-left disabled:opacity-50"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        {w.entry_type === "team"
-                          ? <Users className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                          : <User className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />}
-                        <div className="min-w-0">
-                          <div className="font-medium text-gray-900 text-sm truncate">
-                            {w.entry_type === "team" ? (w.foreman_name || w.full_name) : w.full_name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {w.entry_type === "team" ? `${w.team_size} ${w.occupation}` : (w.title || w.occupation)}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-red-500 font-semibold text-xs flex-shrink-0">Çıkış →</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quick stats */}
+            {/* Today summary */}
             {todayWorkers.length > 0 && (
               <div className="bg-white rounded-xl shadow p-4">
-                <h3 className="font-semibold text-gray-700 text-sm mb-2">Bugünkü Özet</h3>
+                <h3 className="font-semibold text-gray-700 text-sm mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-orange-500" /> Bugünkü Özet
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {(() => {
                     const map: Record<string, number> = {};
@@ -258,6 +202,11 @@ const SantiyeGiris = () => {
                       </span>
                     ));
                   })()}
+                  {activeWorkers.length > 0 && (
+                    <span className="bg-green-50 text-green-700 rounded-lg px-2.5 py-1 text-xs font-bold">
+                      Toplam: {totalOnSite}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -273,8 +222,10 @@ const SantiyeGiris = () => {
             <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
               <User className="w-5 h-5 text-blue-500" /> Bireysel Giriş / Çıkış
             </h2>
+            <p className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2">
+              Bilgilerinizi girin, sistem giriş veya çıkış kaydını otomatik oluşturur.
+            </p>
             <div className="space-y-4">
-              <ActionToggle value={individualAction} onChange={setIndividualAction} />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Ad Soyad *</label>
                 <input
@@ -285,27 +236,22 @@ const SantiyeGiris = () => {
                   autoFocus
                 />
               </div>
-              {individualAction === "giris" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Unvan *</label>
-                  <select
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base bg-white outline-none"
-                  >
-                    {TITLES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Unvan *</label>
+                <select
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base bg-white outline-none"
+                >
+                  {TITLES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
               <button
                 onClick={handleIndividualSubmit}
                 disabled={!fullName.trim() || submitting}
-                className={`w-full font-bold rounded-xl py-4 text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${
-                  individualAction === "giris" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                }`}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl py-4 text-lg transition-all flex items-center justify-center gap-2"
               >
-                {individualAction === "giris" ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
-                {submitting ? "Kaydediliyor..." : individualAction === "giris" ? "Giriş Kaydet" : "Çıkış Kaydet"}
+                {submitting ? "Kaydediliyor..." : "Kaydet"}
               </button>
             </div>
           </div>
@@ -320,8 +266,10 @@ const SantiyeGiris = () => {
             <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
               <Users className="w-5 h-5 text-green-500" /> Ekip Giriş / Çıkış
             </h2>
+            <p className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2">
+              Bilgilerinizi girin, sistem giriş veya çıkış kaydını otomatik oluşturur.
+            </p>
             <div className="space-y-4">
-              <ActionToggle value={teamAction} onChange={setTeamAction} />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Ustabaşı Adı *</label>
                 <input
@@ -332,50 +280,43 @@ const SantiyeGiris = () => {
                   autoFocus
                 />
               </div>
-              {teamAction === "giris" && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Meslek Grubu *</label>
-                    <select
-                      value={occupation}
-                      onChange={e => setOccupation(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base bg-white outline-none"
-                    >
-                      {OCCUPATIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Kişi Sayısı *</label>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setTeamSize(Math.max(1, teamSize - 1))}
-                        className="w-12 h-12 bg-gray-100 rounded-xl text-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors"
-                      >−</button>
-                      <input
-                        type="number"
-                        value={teamSize}
-                        onChange={e => setTeamSize(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-20 text-center border border-gray-300 rounded-xl px-3 py-3 text-xl font-bold outline-none"
-                        min={1}
-                        inputMode="numeric"
-                      />
-                      <button
-                        onClick={() => setTeamSize(teamSize + 1)}
-                        className="w-12 h-12 bg-gray-100 rounded-xl text-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors"
-                      >+</button>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Meslek Grubu *</label>
+                <select
+                  value={occupation}
+                  onChange={e => setOccupation(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base bg-white outline-none"
+                >
+                  {OCCUPATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Kişi Sayısı *</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setTeamSize(Math.max(1, teamSize - 1))}
+                    className="w-12 h-12 bg-gray-100 rounded-xl text-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                  >−</button>
+                  <input
+                    type="number"
+                    value={teamSize}
+                    onChange={e => setTeamSize(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 text-center border border-gray-300 rounded-xl px-3 py-3 text-xl font-bold outline-none"
+                    min={1}
+                    inputMode="numeric"
+                  />
+                  <button
+                    onClick={() => setTeamSize(teamSize + 1)}
+                    className="w-12 h-12 bg-gray-100 rounded-xl text-xl font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                  >+</button>
+                </div>
+              </div>
               <button
                 onClick={handleTeamSubmit}
-                disabled={!foremanName.trim() || (teamAction === "giris" && teamSize < 1) || submitting}
-                className={`w-full font-bold rounded-xl py-4 text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${
-                  teamAction === "giris" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                }`}
+                disabled={!foremanName.trim() || teamSize < 1 || submitting}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl py-4 text-lg transition-all flex items-center justify-center gap-2"
               >
-                {teamAction === "giris" ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
-                {submitting ? "Kaydediliyor..." : teamAction === "giris" ? `${teamSize} Kişi Giriş Kaydet` : "Ekip Çıkış Kaydet"}
+                {submitting ? "Kaydediliyor..." : "Kaydet"}
               </button>
             </div>
           </div>
