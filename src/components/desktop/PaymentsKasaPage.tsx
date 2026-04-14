@@ -182,27 +182,59 @@ const PaymentsKasaPage = () => {
     return Object.entries(cats).map(([name, value]) => ({ name, value }));
   }, [reportExpenses]);
 
-  const handleAddExpense = async () => {
+  const openEditModal = (e: ProjectExpense) => {
+    setEditTarget(e);
+    setExpForm({
+      project_id: e.project_id,
+      category: e.category,
+      description: e.description,
+      amount: String(e.amount),
+      expense_date: e.expense_date,
+      has_invoice: e.has_invoice,
+      invoice_no: e.invoice_no || "",
+      note: e.note || "",
+      is_income: INCOME_CATEGORIES.includes(e.category),
+    });
+    setAddModal(true);
+  };
+
+  const handleSaveExpense = async () => {
     if (!expForm.project_id || !expForm.amount || Number(expForm.amount) <= 0) {
       toast.error("Proje ve tutar zorunludur");
       return;
     }
-    await addExpense.mutateAsync({
-      project_id: expForm.project_id,
-      user_id: user!.id,
-      category: expForm.category,
-      description: expForm.description,
-      amount: Number(expForm.amount),
-      expense_date: expForm.expense_date,
-      has_invoice: expForm.has_invoice,
-      invoice_no: expForm.invoice_no || null,
-      invoice_url: null,
-      note: expForm.note || null,
-      source: "manual",
-    });
-    toast.success(expForm.is_income ? "Gelir eklendi" : "Gider eklendi");
+    if (editTarget) {
+      await updateExpense.mutateAsync({
+        id: editTarget.id,
+        project_id: expForm.project_id,
+        category: expForm.category,
+        description: expForm.description,
+        amount: Number(expForm.amount),
+        expense_date: expForm.expense_date,
+        has_invoice: expForm.has_invoice,
+        invoice_no: expForm.invoice_no || null,
+        note: expForm.note || null,
+      });
+      toast.success("Kayıt güncellendi");
+    } else {
+      await addExpense.mutateAsync({
+        project_id: expForm.project_id,
+        user_id: user!.id,
+        category: expForm.category,
+        description: expForm.description,
+        amount: Number(expForm.amount),
+        expense_date: expForm.expense_date,
+        has_invoice: expForm.has_invoice,
+        invoice_no: expForm.invoice_no || null,
+        invoice_url: null,
+        note: expForm.note || null,
+        source: "manual",
+      });
+      toast.success(expForm.is_income ? "Gelir eklendi" : "Gider eklendi");
+    }
     setAddModal(false);
-    setExpForm({ project_id: "", category: "Malzeme", description: "", amount: "", expense_date: new Date().toISOString().slice(0, 10), has_invoice: false, invoice_no: "", note: "", is_income: false });
+    setEditTarget(null);
+    setExpForm(defaultForm);
   };
 
   const handleExport = (type: "pdf" | "excel") => {
