@@ -43,6 +43,14 @@ export const useProjectExpenses = (projectId?: string) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
   });
 
+  const updateExpense = useMutation({
+    mutationFn: async ({ id, ...fields }: Partial<ProjectExpense> & { id: string }) => {
+      const { error } = await supabase.from("project_expenses" as any).update(fields as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
+  });
+
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("project_expenses" as any).delete().eq("id", id);
@@ -51,5 +59,5 @@ export const useProjectExpenses = (projectId?: string) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
   });
 
-  return { expenses, isLoading, addExpense, deleteExpense };
+  return { expenses, isLoading, addExpense, updateExpense, deleteExpense };
 };
