@@ -1,9 +1,12 @@
 import { useState, useMemo } from "react";
+import AttendancePanel from "./AttendancePanel";
+import { useWorkerAttendance } from "@/hooks/useWorkerAttendance";
+import QrCodeModal from "./QrCodeModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/hooks/useSiteDiary";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
-import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X } from "lucide-react";
+import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
