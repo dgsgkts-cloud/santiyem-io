@@ -1,9 +1,12 @@
 import { useState, useMemo } from "react";
+import AttendancePanel from "./AttendancePanel";
+import { useWorkerAttendance } from "@/hooks/useWorkerAttendance";
+import QrCodeModal from "./QrCodeModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/hooks/useSiteDiary";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
-import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X } from "lucide-react";
+import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -44,6 +47,8 @@ const SiteDiaryPage = () => {
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
 
   const entries = dbEntries;
 
@@ -303,6 +308,30 @@ const SiteDiaryPage = () => {
 
         {selectedProjectId && (
           <>
+            {/* Worker Attendance Section */}
+            <div className="rounded-xl p-4 bg-card border border-border">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <HardHat className="w-4 h-4 text-primary" /> İşçi Devam Takibi
+                </h3>
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <QrCode className="w-3.5 h-3.5" /> QR Kod
+                </button>
+              </div>
+              <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
+            </div>
+
+            {showQrModal && selectedProject && (
+              <QrCodeModal
+                projectId={selectedProjectId}
+                projectName={selectedProject.name}
+                onClose={() => setShowQrModal(false)}
+              />
+            )}
+
             {/* Calendar */}
             <div className="rounded-xl p-4 bg-card border border-border">
               <div className="flex items-center justify-between mb-4">
