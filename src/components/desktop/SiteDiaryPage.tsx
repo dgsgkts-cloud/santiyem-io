@@ -42,6 +42,7 @@ const SiteDiaryPage = () => {
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const { entries: dbEntries, photos, isLoading, createEntry, updateEntry, deleteEntry, uploadPhoto, deletePhoto } = useSiteDiary(selectedProjectId || undefined);
+  const { attendance: attendanceRecords } = useWorkerAttendance(selectedProjectId || undefined);
   const [view, setView] = useState<View>("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
@@ -75,13 +76,29 @@ const SiteDiaryPage = () => {
   const [periodEnd, setPeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
   const [includePhotos, setIncludePhotos] = useState(true);
 
+  const getAttendanceCrews = (date: string): { team: string; count: number; hours: number; note: string }[] => {
+    const dayRecords = attendanceRecords.filter(a => {
+      try { return format(parseISO(a.check_in), "yyyy-MM-dd") === date; } catch { return false; }
+    });
+    if (dayRecords.length === 0) return [{ team: "Kalıpçı", count: 0, hours: 8, note: "" }];
+    
+    const map: Record<string, number> = {};
+    dayRecords.forEach(a => {
+      const label = a.entry_type === "team" ? a.occupation : (a.title || a.occupation);
+      map[label] = (map[label] || 0) + (a.team_size || 1);
+    });
+    const crews = Object.entries(map).map(([team, count]) => ({ team, count, hours: 8, note: "QR'den otomatik" }));
+    return crews.length > 0 ? crews : [{ team: "Kalıpçı", count: 0, hours: 8, note: "" }];
+  };
+
   const resetForm = () => {
-    setFormDate(format(new Date(), "yyyy-MM-dd"));
+    const today = format(new Date(), "yyyy-MM-dd");
+    setFormDate(today);
     setFormWeather("☀️");
     setFormTemp("");
     setFormWorkStatus("normal");
     setFormStopReason("");
-    setFormCrews([{ team: "Kalıpçı", count: 0, hours: 8, note: "" }]);
+    setFormCrews(getAttendanceCrews(today));
     setFormWorkDone("");
     setFormMaterials([]);
     setFormMachines([]);

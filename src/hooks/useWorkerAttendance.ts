@@ -133,7 +133,15 @@ export const usePublicAttendance = (token: string) => {
         setLoading(false);
         return;
       }
-      setProjectInfo({ project_id: qr.project_id, user_id: qr.user_id });
+
+      // Fetch project name via security definer function
+      let projectName: string | undefined;
+      try {
+        const { data: nameData } = await supabase.rpc("get_project_name_by_qr_token", { _token: token });
+        if (nameData) projectName = nameData as string;
+      } catch {}
+
+      setProjectInfo({ project_id: qr.project_id, user_id: qr.user_id, project_name: projectName });
       await refreshWorkers(qr.project_id);
       setLoading(false);
     };

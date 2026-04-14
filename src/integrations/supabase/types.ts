@@ -2441,6 +2441,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_project_name_by_qr_token: {
+        Args: { _token: string }
+        Returns: string
+      }
       get_user_team_id: { Args: { _user_id: string }; Returns: string }
       is_same_team: {
         Args: { _user_id_a: string; _user_id_b: string }

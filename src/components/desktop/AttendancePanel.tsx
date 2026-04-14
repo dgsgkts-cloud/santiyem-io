@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useWorkerAttendance, WorkerAttendance } from "@/hooks/useWorkerAttendance";
 import { Users, User, Clock, RefreshCw, Calendar, HardHat, FileDown } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -12,6 +12,14 @@ interface AttendancePanelProps {
 const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
   const { attendance, loading, refreshAttendance } = useWorkerAttendance(projectId);
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshAttendance();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refreshAttendance]);
 
   const filtered = useMemo(() => {
     return attendance.filter(a => format(parseISO(a.check_in), "yyyy-MM-dd") === filterDate);
