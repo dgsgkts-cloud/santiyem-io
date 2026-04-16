@@ -37,10 +37,6 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: "ARAÇLAR",
-    items: [],
-  },
-  {
     label: "İÇERİK",
     items: [
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
