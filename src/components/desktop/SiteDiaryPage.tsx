@@ -302,7 +302,7 @@ const SiteDiaryPage = () => {
                 <select
                   value={selectedProjectId}
                   onChange={e => setSelectedProjectId(e.target.value)}
-                  className="w-full max-w-xs h-11 rounded-xl px-4 text-sm mb-4 cursor-pointer"
+                  className="w-full max-w-sm h-11 rounded-xl px-4 text-sm mb-4 cursor-pointer bg-card border border-border text-foreground"
                 >
                   <option value="">Proje seçin...</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
