@@ -885,6 +885,65 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         </div>
       )}
 
+      {/* Edit Hakediş Modal */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setEditModal(null)}>
+          <div className="rounded-xl p-5 w-full max-w-md space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold text-foreground">✏️ Hakediş Düzenle</h3>
+              <button onClick={() => setEditModal(null)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
+              <input value={editPeriod} onChange={e => setEditPeriod(e.target.value)} placeholder="örn: Ocak 2026"
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
+                <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="örn: 485000"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
+                <input type="number" value={editKdvRate} onChange={e => setEditKdvRate(e.target.value)} placeholder="20"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi (opsiyonel)</label>
+              <input type="date" value={editExpectedDate} onChange={e => setEditExpectedDate(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const amount = parseFloat(editAmount);
+                  if (!editPeriod || isNaN(amount)) { toast.error("Dönem ve tutar gerekli"); return; }
+                  const kdvRate = parseFloat(editKdvRate) / 100;
+                  const kdv = Math.round(amount * kdvRate * 100) / 100;
+                  const net = amount + kdv;
+                  await updateHakedis(editModal.id, {
+                    period: editPeriod,
+                    amount,
+                    kdv,
+                    net,
+                    expected_payment_date: editExpectedDate || null,
+                  });
+                  setEditModal(null);
+                }}
+                disabled={!editPeriod || !editAmount}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
+                💾 Kaydet
+              </button>
+              <button onClick={() => setEditModal(null)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PDF Signature Modal */}
       {showPdfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
