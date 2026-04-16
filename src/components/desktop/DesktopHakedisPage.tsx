@@ -664,6 +664,16 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         </button>
                       )}
 
+                      <button onClick={() => {
+                        setEditModal(h);
+                        setEditPeriod(h.period);
+                        const kdvRate = h.amount > 0 ? Math.round((h.kdv / h.amount) * 100) : 20;
+                        setEditKdvRate(String(kdvRate));
+                        setEditAmount(String(h.amount));
+                        setEditExpectedDate(h.expected_payment_date || "");
+                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#3B82F6" }}>
+                        <Edit3 className="w-3 h-3" /> Düzenle
+                      </button>
                       <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
                         <Trash2 className="w-3 h-3" /> Sil
                       </button>
