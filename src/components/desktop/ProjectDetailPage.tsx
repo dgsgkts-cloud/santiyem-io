@@ -206,7 +206,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                   });
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
+                style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
               >
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
@@ -378,14 +378,14 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisPDF(hakedisler, p.name, { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: {} }, p.client)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732" }}
+                  style={{ backgroundColor: "#1E2732", color: "#E2E8F0" }}
                 >
                   <FileDown className="w-3 h-3" /> PDF
                 </button>
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-                  style={{ backgroundColor: "#1E2732" }}
+                  style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
                 >
                   <FileSpreadsheet className="w-3 h-3" /> Excel
                 </button>
