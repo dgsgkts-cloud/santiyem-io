@@ -19,7 +19,7 @@ const TABS = [
 ];
 
 const DesktopSettingsPage = () => {
-  const { profile, plan } = useUser();
+  const { user, profile, plan } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
@@ -62,7 +62,7 @@ const DesktopSettingsPage = () => {
                 <FormField label="Ad Soyad" value={profile?.full_name || ""} />
                 <FormField label="Unvan" value={profile?.title || ""} />
                 <FormField label="İl" value={profile?.city || ""} />
-                <FormField label="E-posta" value="kullanici@email.com" />
+                <FormField label="E-posta" value={user?.email || ""} />
               </div>
               <div className="flex justify-end pt-4" style={{ borderTop: "1px solid #1E2732" }}>
                 <button className="px-4 rounded-lg text-[13px] font-semibold text-white" style={{ height: 36, backgroundColor: "#FF6B2B" }}>

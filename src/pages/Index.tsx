@@ -45,15 +45,11 @@ type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" |
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
-  { id: "chat", label: "Sohbet", shortLabel: "Sohbet", icon: MessageSquare },
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
-  { id: "daily", label: "Günlük Bilgi", shortLabel: "Bilgi", icon: Lightbulb },
-  
-  
-  { id: "reminders", label: "Hatırlatıcı", shortLabel: "Hatırlat", icon: CalendarClock },
-  { id: "pricing", label: "Planlar", shortLabel: "Plan", icon: Zap },
-  { id: "settings", label: "Ayarlar", shortLabel: "Ayar", icon: Settings },
+  { id: "chat", label: "AI Asistan", shortLabel: "AI", icon: MessageSquare },
+  { id: "payments-kasa", label: "Ödemeler & Kasa", shortLabel: "Kasa", icon: FileText },
+  { id: "site-diary", label: "Şantiye Günlüğü", shortLabel: "Günlük", icon: BookOpen },
 ];
 
 const NAVIGABLE_TABS: Tab[] = [

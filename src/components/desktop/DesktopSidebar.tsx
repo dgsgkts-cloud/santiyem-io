@@ -37,10 +37,6 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: "ARAÇLAR",
-    items: [],
-  },
-  {
     label: "İÇERİK",
     items: [
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
@@ -107,7 +103,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4" style={{ padding: collapsed ? "12px 4px" : "12px 8px" }}>
+      <nav className="flex-1 overflow-y-auto py-3 space-y-4" style={{ padding: collapsed ? "12px 4px" : "12px 8px", overflow: "visible auto" }}>
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             {!collapsed && (
