@@ -209,7 +209,7 @@ export function useProjectHakedis(projectId: string) {
     return true;
   };
 
-  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: fetchHakedisler };
+  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: fetchHakedisler };
 }
 
 // Hook to fetch all hakedis across all projects
