@@ -5,12 +5,12 @@ import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
   Bell, Crown, FileSignature, Wallet,
-  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, ClipboardList
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "ekb-basvuru";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -108,7 +108,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4" style={{ padding: collapsed ? "12px 4px" : "12px 8px" }}>
-        {[...NAV_SECTIONS, ...(isAdmin ? [{ label: "YÖNETİM", items: [{ id: "ekb-basvuru" as Tab, label: "EKB Başvuruları", icon: ClipboardList }] }] : [])].map((section) => (
+        {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             {!collapsed && (
               <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/60">
