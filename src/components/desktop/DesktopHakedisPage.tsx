@@ -191,12 +191,17 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
   const { user } = useUser();
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
+  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
   const [approvalModal, setApprovalModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
   const [approvalEmail, setApprovalEmail] = useState("");
   const [approvalSending, setApprovalSending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [editModal, setEditModal] = useState<ProjectHakedis | null>(null);
+  const [editPeriod, setEditPeriod] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editKdvRate, setEditKdvRate] = useState("20");
+  const [editExpectedDate, setEditExpectedDate] = useState("");
   const [formPeriod, setFormPeriod] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formKdvRate, setFormKdvRate] = useState("20");
