@@ -196,7 +196,7 @@ const SiteDiaryPage = () => {
             <select
               value={selectedProjectId}
               onChange={e => setSelectedProjectId(e.target.value)}
-              className="flex-1 sm:w-[220px] h-9 rounded-lg px-3 text-sm"
+              className="flex-1 sm:min-w-[280px] sm:max-w-[400px] h-9 rounded-lg px-3 text-sm bg-card border border-border text-foreground"
             >
               <option value="">Proje seçin...</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -207,7 +207,7 @@ const SiteDiaryPage = () => {
                 className="h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors"
                 style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
               >
-                <FileDown className="w-4 h-4" /> Dönem Raporu
+                <FileDown className="w-4 h-4 text-muted-foreground" /> <span className="text-foreground">Dönem Raporu</span>
               </button>
             )}
             <button
