@@ -23,7 +23,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
-import EKBBasvurulariPanel from "@/components/desktop/EKBBasvurulariPanel";
+
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
@@ -291,8 +291,6 @@ const Index = () => {
                   <PaymentsKasaPage />
                 ) : activeTab === "materials" ? (
                   <MaterialsPage />
-                ) : activeTab === "ekb-basvuru" ? (
-                  <EKBBasvurulariPanel />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
@@ -557,8 +555,6 @@ const Index = () => {
             <SiteDiaryPage />
           ) : activeTab === "materials" ? (
             <MaterialsPage />
-          ) : activeTab === "ekb-basvuru" ? (
-            <EKBBasvurulariPanel />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (
