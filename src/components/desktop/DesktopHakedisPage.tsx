@@ -191,12 +191,17 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
 const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
   const { user } = useUser();
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
+  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
   const [approvalModal, setApprovalModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
   const [approvalEmail, setApprovalEmail] = useState("");
   const [approvalSending, setApprovalSending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [editModal, setEditModal] = useState<ProjectHakedis | null>(null);
+  const [editPeriod, setEditPeriod] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editKdvRate, setEditKdvRate] = useState("20");
+  const [editExpectedDate, setEditExpectedDate] = useState("");
   const [formPeriod, setFormPeriod] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formKdvRate, setFormKdvRate] = useState("20");
@@ -659,6 +664,16 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         </button>
                       )}
 
+                      <button onClick={() => {
+                        setEditModal(h);
+                        setEditPeriod(h.period);
+                        const kdvRate = h.amount > 0 ? Math.round((h.kdv / h.amount) * 100) : 20;
+                        setEditKdvRate(String(kdvRate));
+                        setEditAmount(String(h.amount));
+                        setEditExpectedDate(h.expected_payment_date || "");
+                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#3B82F6" }}>
+                        <Edit3 className="w-3 h-3" /> Düzenle
+                      </button>
                       <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
                         <Trash2 className="w-3 h-3" /> Sil
                       </button>
@@ -863,6 +878,65 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
               </button>
               <button onClick={() => setPaymentModal(null)}
                 className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Hakediş Modal */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setEditModal(null)}>
+          <div className="rounded-xl p-5 w-full max-w-md space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-semibold text-foreground">✏️ Hakediş Düzenle</h3>
+              <button onClick={() => setEditModal(null)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
+              <input value={editPeriod} onChange={e => setEditPeriod(e.target.value)} placeholder="örn: Ocak 2026"
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
+                <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="örn: 485000"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
+                <input type="number" value={editKdvRate} onChange={e => setEditKdvRate(e.target.value)} placeholder="20"
+                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi (opsiyonel)</label>
+              <input type="date" value={editExpectedDate} onChange={e => setEditExpectedDate(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  const amount = parseFloat(editAmount);
+                  if (!editPeriod || isNaN(amount)) { toast.error("Dönem ve tutar gerekli"); return; }
+                  const kdvRate = parseFloat(editKdvRate) / 100;
+                  const kdv = Math.round(amount * kdvRate * 100) / 100;
+                  const net = amount + kdv;
+                  await updateHakedis(editModal.id, {
+                    period: editPeriod,
+                    amount,
+                    kdv,
+                    net,
+                    expected_payment_date: editExpectedDate || null,
+                  });
+                  setEditModal(null);
+                }}
+                disabled={!editPeriod || !editAmount}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
+                💾 Kaydet
+              </button>
+              <button onClick={() => setEditModal(null)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
                 İptal
               </button>
             </div>

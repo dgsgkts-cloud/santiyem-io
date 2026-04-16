@@ -83,6 +83,13 @@ export function useProjectHakedis(projectId: string) {
     toast.success("Hakediş durumu güncellendi");
   };
 
+  const updateHakedis = async (id: string, updates: { period?: string; amount?: number; kdv?: number; net?: number; expected_payment_date?: string | null }) => {
+    const { error } = await supabase.from("project_hakedis").update(updates).eq("id", id);
+    if (error) { toast.error("Hakediş güncellenemedi"); return; }
+    setHakedisler(prev => prev.map(h => h.id === id ? { ...h, ...updates } : h));
+    toast.success("Hakediş güncellendi ✅");
+  };
+
   const setExpectedPaymentDate = async (id: string, date: string, reminderDays: number) => {
     const { error } = await supabase.from("project_hakedis").update({
       expected_payment_date: date,
@@ -202,7 +209,7 @@ export function useProjectHakedis(projectId: string) {
     return true;
   };
 
-  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: fetchHakedisler };
+  return { hakedisler, loading, addHakedis, deleteHakedis, updateHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: fetchHakedisler };
 }
 
 // Hook to fetch all hakedis across all projects
