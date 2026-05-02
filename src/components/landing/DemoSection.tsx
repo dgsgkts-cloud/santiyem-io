@@ -49,7 +49,7 @@ const DemoSection = () => {
             {active === "projects" && <ProjectsDemo />}
             {active === "ai" && <AIDemo />}
             {active === "santiye" && <SantiyeDemo />}
-            {active === "calc" && <CalcDemo />}
+            
           </div>
         </div>
       </div>
