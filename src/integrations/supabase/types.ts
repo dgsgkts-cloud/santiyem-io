@@ -2441,14 +2441,62 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_hakedis_by_approval_token: { Args: { _token: string }; Returns: Json }
       get_project_name_by_qr_token: {
         Args: { _token: string }
         Returns: string
+      }
+      get_signature_request_by_token: {
+        Args: { _token: string }
+        Returns: {
+          contract_counterparty: string
+          contract_file_name: string
+          contract_file_url: string
+          contract_id: string
+          contract_name: string
+          deadline: string
+          id: string
+          message: string
+          recipient_email: string
+          recipient_name: string
+          sent_at: string
+          signed_at: string
+          status: string
+        }[]
       }
       get_user_team_id: { Args: { _user_id: string }; Returns: string }
       is_same_team: {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
+      }
+      list_signed_uploads_by_token: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          file_name: string
+          file_size: number
+          file_url: string
+          id: string
+          signature_request_id: string
+          signer_name: string
+          signer_title: string
+        }[]
+      }
+      list_today_workers_by_qr: {
+        Args: { _token: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          duration_minutes: number
+          entry_type: string
+          foreman_name: string
+          full_name: string
+          id: string
+          occupation: string
+          project_id: string
+          team_size: number
+          title: string
+        }[]
       }
       move_to_dlq: {
         Args: {
@@ -2467,12 +2515,48 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_signed_upload: {
+        Args: {
+          _file_name: string
+          _file_size: number
+          _file_url: string
+          _signer_name: string
+          _signer_title: string
+          _token: string
+        }
+        Returns: string
+      }
       update_hakedis_approval: {
         Args: {
           _approval_status: string
           _client_note?: string
           _token: string
         }
+        Returns: boolean
+      }
+      validate_qr_token: {
+        Args: { _token: string }
+        Returns: {
+          expires_at: string
+          project_id: string
+          project_name: string
+          user_id: string
+        }[]
+      }
+      worker_check_in: {
+        Args: {
+          _entry_type: string
+          _foreman_name: string
+          _full_name: string
+          _occupation: string
+          _team_size: number
+          _title: string
+          _token: string
+        }
+        Returns: string
+      }
+      worker_check_out: {
+        Args: { _attendance_id: string; _token: string }
         Returns: boolean
       }
     }

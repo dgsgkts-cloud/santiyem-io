@@ -22,13 +22,11 @@ export default function HakedisApproval() {
   const loadData = useCallback(async () => {
     if (!token) { setStatus("invalid"); return; }
 
-    const { data: h, error } = await supabase
-      .from("project_hakedis")
-      .select("*")
-      .eq("approval_token", token)
-      .maybeSingle();
+    const { data: bundle, error } = await (supabase as any).rpc("get_hakedis_by_approval_token", { _token: token });
 
-    if (error || !h) { setStatus("invalid"); return; }
+    if (error || !bundle || !bundle.hakedis) { setStatus("invalid"); return; }
+
+    const h = bundle.hakedis;
 
     // Check expiry: 30 days from sent
     if (h.approval_sent_at) {
@@ -36,46 +34,17 @@ export default function HakedisApproval() {
       if (new Date() > expiry) { setHakedis(h); setStatus("expired"); return; }
     }
 
-    // Check if already approved/rejected
     if (h.approval_status === "onaylandi") {
-      setHakedis(h);
-      setStatus("already_done");
-      setDone("approved");
-      return;
+      setHakedis(h); setStatus("already_done"); setDone("approved"); return;
     }
     if (h.approval_status === "itiraz_edildi") {
-      setHakedis(h);
-      setStatus("already_done");
-      setDone("rejected");
-      return;
+      setHakedis(h); setStatus("already_done"); setDone("rejected"); return;
     }
 
     setHakedis(h);
-
-    // Fetch project
-    const { data: p } = await supabase
-      .from("projects")
-      .select("name, client, location")
-      .eq("id", h.project_id)
-      .maybeSingle();
-    setProject(p);
-
-    // Fetch hakedis items
-    const { data: hi } = await supabase
-      .from("hakedis_items")
-      .select("*")
-      .eq("hakedis_id", h.id)
-      .order("sort_order");
-    setItems(hi || []);
-
-    // Fetch deductions
-    const { data: hd } = await supabase
-      .from("hakedis_deductions")
-      .select("*")
-      .eq("hakedis_id", h.id)
-      .order("sort_order");
-    setDeductions(hd || []);
-
+    setProject(bundle.project || null);
+    setItems(Array.isArray(bundle.items) ? bundle.items : []);
+    setDeductions(Array.isArray(bundle.deductions) ? bundle.deductions : []);
     setStatus("valid");
   }, [token]);
 

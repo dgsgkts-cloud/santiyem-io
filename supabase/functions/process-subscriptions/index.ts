@@ -171,6 +171,14 @@ async function chargeStoredCard(sub: any, supabaseAdmin: any): Promise<boolean> 
 }
 
 Deno.serve(async (req) => {
+  // Require shared cron secret to prevent public abuse
+  const cronSecret = req.headers.get('x-cron-secret');
+  const expected = Deno.env.get('CRON_SECRET');
+  if (!expected || cronSecret !== expected) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403, headers: { 'Content-Type': 'application/json' },
+    });
+  }
   try {
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     const now = new Date()

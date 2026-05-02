@@ -20,38 +20,29 @@ export default function ContractSignUpload() {
   const loadData = useCallback(async () => {
     if (!token) { setStatus("invalid"); return; }
 
-    const { data: req, error } = await (supabase as any)
-      .from("contract_signature_requests")
-      .select("*")
-      .eq("token", token)
-      .maybeSingle();
+    const { data: rows, error } = await (supabase as any)
+      .rpc("get_signature_request_by_token", { _token: token });
 
+    const req = Array.isArray(rows) ? rows[0] : rows;
     if (error || !req) { setStatus("invalid"); return; }
 
-    // Check expiry: 30 days or deadline
     const expiryDate = req.deadline
       ? new Date(req.deadline)
       : new Date(new Date(req.sent_at).getTime() + 30 * 24 * 60 * 60 * 1000);
-    
+
     if (new Date() > expiryDate) { setRequest(req); setStatus("expired"); return; }
 
     setRequest(req);
+    setContract({
+      name: req.contract_name,
+      counterparty: req.contract_counterparty,
+      file_url: req.contract_file_url,
+      file_name: req.contract_file_name,
+    });
 
-    // Fetch contract
-    const { data: c } = await (supabase as any)
-      .from("contracts")
-      .select("name, counterparty, file_url, file_name")
-      .eq("id", req.contract_id)
-      .maybeSingle();
-    setContract(c);
-
-    // Fetch existing uploads
     const { data: uploads } = await (supabase as any)
-      .from("contract_signed_uploads")
-      .select("*")
-      .eq("signature_request_id", req.id)
-      .order("created_at", { ascending: false });
-    setExistingUploads(uploads || []);
+      .rpc("list_signed_uploads_by_token", { _token: token });
+    setExistingUploads(Array.isArray(uploads) ? uploads : []);
 
     setStatus("valid");
   }, [token]);
@@ -74,28 +65,15 @@ export default function ContractSignUpload() {
 
       const { data: urlData } = supabase.storage.from("signed-contracts").getPublicUrl(path);
 
-      await (supabase as any).from("contract_signed_uploads").insert({
-        signature_request_id: request.id,
-        signer_name: signerName.trim(),
-        signer_title: signerTitle.trim() || null,
-        file_url: urlData.publicUrl,
-        file_name: file.name,
-        file_size: file.size,
+      const { error: rpcErr } = await (supabase as any).rpc("record_signed_upload", {
+        _token: token,
+        _signer_name: signerName.trim(),
+        _signer_title: signerTitle.trim() || null,
+        _file_url: urlData.publicUrl,
+        _file_name: file.name,
+        _file_size: file.size,
       });
-
-      // Update request status
-      await (supabase as any).from("contract_signature_requests")
-        .update({ status: "imzalandi", signed_at: new Date().toISOString() })
-        .eq("id", request.id);
-
-      // Log activity
-      await (supabase as any).from("contract_activity_log").insert({
-        contract_id: request.contract_id,
-        action: "imzali_yuklendi",
-        description: `İmzalı versiyon yüklendi — ${signerName.trim()}${signerTitle ? ` (${signerTitle})` : ""}`,
-        actor_name: signerName.trim(),
-        actor_email: request.recipient_email,
-      });
+      if (rpcErr) throw rpcErr;
 
       // Notify owner via email
       await supabase.functions.invoke("send-transactional-email", {

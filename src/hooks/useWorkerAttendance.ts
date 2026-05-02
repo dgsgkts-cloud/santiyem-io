@@ -103,46 +103,28 @@ export const usePublicAttendance = (token: string) => {
     return d.toISOString();
   };
 
-  const refreshWorkers = async (projectId: string) => {
-    const { data: workers } = await supabase
-      .from("worker_attendance")
-      .select("*")
-      .eq("project_id", projectId)
-      .gte("check_in", todayStart())
-      .order("check_in", { ascending: false });
-    if (workers) setTodayWorkers(workers as unknown as WorkerAttendance[]);
+  const refreshWorkers = async (_projectId: string) => {
+    const { data: workers } = await (supabase as any).rpc("list_today_workers_by_qr", { _token: token });
+    if (Array.isArray(workers)) setTodayWorkers(workers as unknown as WorkerAttendance[]);
   };
 
   useEffect(() => {
     if (!token) return;
     const validate = async () => {
       setLoading(true);
-      const { data, error: err } = await supabase
-        .from("project_qr_codes")
-        .select("project_id, user_id, expires_at")
-        .eq("token", token)
-        .limit(1);
-      if (err || !data || data.length === 0) {
+      const { data, error: err } = await (supabase as any).rpc("validate_qr_token", { _token: token });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (err || !row) {
         setError("Geçersiz veya süresi dolmuş QR kod");
         setLoading(false);
         return;
       }
-      const qr = data[0] as unknown as { project_id: string; user_id: string; expires_at: string };
-      if (new Date(qr.expires_at) < new Date()) {
-        setError("Bu QR kodun süresi dolmuş. Lütfen şantiye yöneticinize başvurun.");
-        setLoading(false);
-        return;
-      }
-
-      // Fetch project name via security definer function
-      let projectName: string | undefined;
-      try {
-        const { data: nameData } = await supabase.rpc("get_project_name_by_qr_token", { _token: token });
-        if (nameData) projectName = nameData as string;
-      } catch {}
-
-      setProjectInfo({ project_id: qr.project_id, user_id: qr.user_id, project_name: projectName });
-      await refreshWorkers(qr.project_id);
+      setProjectInfo({
+        project_id: row.project_id,
+        user_id: row.user_id,
+        project_name: row.project_name || undefined,
+      });
+      await refreshWorkers(row.project_id);
       setLoading(false);
     };
     validate();
@@ -150,86 +132,59 @@ export const usePublicAttendance = (token: string) => {
 
   const checkInIndividual = async (data: { full_name: string; title: string }) => {
     if (!projectInfo) return false;
-    // Rate limiting: 5 min
-    const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
-    const { data: recent } = await supabase
-      .from("worker_attendance")
-      .select("id")
-      .eq("project_id", projectInfo.project_id)
-      .eq("full_name", data.full_name)
-      .eq("entry_type", "individual")
-      .is("check_out", null)
-      .gte("check_in", fiveMinAgo);
-    if (recent && recent.length > 0) {
-      toast.error("5 dakika içinde tekrar giriş yapamazsınız.");
+    const { error } = await (supabase as any).rpc("worker_check_in", {
+      _token: token,
+      _entry_type: "individual",
+      _full_name: data.full_name,
+      _title: data.title,
+      _occupation: data.title,
+      _foreman_name: null,
+      _team_size: 1,
+    });
+    if (error) {
+      const msg = error.message || "";
+      if (msg.includes("Rate limited")) toast.error("5 dakika içinde tekrar giriş yapamazsınız.");
+      else toast.error("Giriş kaydedilemedi");
       return false;
     }
-
-    const { error } = await supabase.from("worker_attendance").insert({
-      project_id: projectInfo.project_id,
-      user_id: projectInfo.user_id,
-      qr_token: token,
-      full_name: data.full_name,
-      title: data.title,
-      occupation: data.title,
-      entry_type: "individual",
-      team_size: 1,
-    });
-    if (error) { toast.error("Giriş kaydedilemedi"); return false; }
     await refreshWorkers(projectInfo.project_id);
     return true;
   };
 
   const checkInTeam = async (data: { foreman_name: string; occupation: string; team_size: number }) => {
     if (!projectInfo) return false;
-    const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
-    const { data: recent } = await supabase
-      .from("worker_attendance")
-      .select("id")
-      .eq("project_id", projectInfo.project_id)
-      .eq("foreman_name", data.foreman_name)
-      .eq("entry_type", "team")
-      .is("check_out", null)
-      .gte("check_in", fiveMinAgo);
-    if (recent && recent.length > 0) {
-      toast.error("5 dakika içinde tekrar ekip girişi yapamazsınız.");
+    const { error } = await (supabase as any).rpc("worker_check_in", {
+      _token: token,
+      _entry_type: "team",
+      _full_name: data.foreman_name,
+      _title: null,
+      _occupation: data.occupation,
+      _foreman_name: data.foreman_name,
+      _team_size: data.team_size,
+    });
+    if (error) {
+      const msg = error.message || "";
+      if (msg.includes("Rate limited")) toast.error("5 dakika içinde tekrar ekip girişi yapamazsınız.");
+      else toast.error("Ekip girişi kaydedilemedi");
       return false;
     }
-
-    const { error } = await supabase.from("worker_attendance").insert({
-      project_id: projectInfo.project_id,
-      user_id: projectInfo.user_id,
-      qr_token: token,
-      full_name: data.foreman_name,
-      foreman_name: data.foreman_name,
-      occupation: data.occupation,
-      entry_type: "team",
-      team_size: data.team_size,
-    });
-    if (error) { toast.error("Ekip girişi kaydedilemedi"); return false; }
     await refreshWorkers(projectInfo.project_id);
     return true;
   };
 
   const checkOut = async (attendanceId: string) => {
-    const now = new Date();
-    const { data: record } = await supabase
-      .from("worker_attendance")
-      .select("check_in")
-      .eq("id", attendanceId)
-      .single();
-    if (!record) { toast.error("Kayıt bulunamadı"); return false; }
-    const checkInTime = new Date((record as any).check_in);
-    const durationMin = Math.round((now.getTime() - checkInTime.getTime()) / 60000);
+    const { data: ok, error } = await (supabase as any).rpc("worker_check_out", {
+      _token: token,
+      _attendance_id: attendanceId,
+    });
+    if (error || !ok) { toast.error("Çıkış kaydedilemedi"); return false; }
 
-    const { error } = await supabase
-      .from("worker_attendance")
-      .update({ check_out: now.toISOString(), duration_minutes: durationMin })
-      .eq("id", attendanceId);
-    if (error) { toast.error("Çıkış kaydedilemedi"); return false; }
-
-    setTodayWorkers(prev => prev.map(w => w.id === attendanceId
-      ? { ...w, check_out: now.toISOString(), duration_minutes: durationMin } : w));
+    const now = new Date().toISOString();
+    setTodayWorkers(prev => prev.map(w => {
+      if (w.id !== attendanceId) return w;
+      const dur = Math.round((Date.now() - new Date(w.check_in).getTime()) / 60000);
+      return { ...w, check_out: now, duration_minutes: dur };
+    }));
     return true;
   };
 
