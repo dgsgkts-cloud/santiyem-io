@@ -6,7 +6,6 @@ const TABS = [
   { id: "projects", label: "Proje Yönetimi" },
   { id: "ai", label: "AI Asistan" },
   { id: "santiye", label: "Şantiye Günlüğü" },
-  { id: "calc", label: "Hesap Araçları" },
 ];
 
 const DemoSection = () => {

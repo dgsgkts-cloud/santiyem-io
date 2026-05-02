@@ -5,7 +5,7 @@ const FEATURES = [
   { emoji: "📋", title: "Tüm Şantiyeni Tek Ekranda Gör", desc: "İş kalemleri, kişi atama, hatırlatıcılar ve fotoğraf belgeleme. Geciken işleri anında fark et.", sub: "→ Proje & Şantiye Takibi" },
   { emoji: "👥", title: "Ekibinle Ortak Çalış", desc: "Görev ata, not bırak, ilerlemeyi takip et. Ofis planında tüm ekip aynı panelde.", sub: "→ Ekip Koordinasyonu" },
   { emoji: "💬", title: "Mevzuat ve Teknik Sorulara Anında Cevap", desc: "TBDY 2018, İmar Yönetmeliği, TS standartları — madde numarasıyla kaynaklı yanıt.", sub: "→ AI Asistan" },
-  { emoji: "🧮", title: "Mühendislik Hesaplarını Hızlandır", desc: "Zemin basıncı, rüzgar yükü, EKB, maliyet tahmini ve daha fazlası.", sub: "→ Hesap Araçları" },
+  
   { emoji: "📸", title: "Şantiye Sorunlarını Fotoğraftan Tespit Et", desc: "Segregasyon, çatlak, donatı hatası — fotoğraf yükle, AI saniyeler içinde raporlar.", sub: "→ Fotoğraf Analizi" },
 ];
 
