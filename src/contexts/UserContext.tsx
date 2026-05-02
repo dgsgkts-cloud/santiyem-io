@@ -164,11 +164,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
+  // Plan changes are server-authoritative — only payment edge functions
+  // (running with the service role) can write to profiles.plan.
+  // This setter only updates local state to reflect a server-confirmed change.
   const setPlan = (newPlan: PlanType) => {
     setPlanState(newPlan);
-    if (user) {
-      supabase.from("profiles").update({ plan: newPlan }).eq("user_id", user.id).then(() => {});
-    }
   };
 
   const signOut = async () => {
