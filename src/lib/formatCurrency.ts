@@ -1,30 +1,36 @@
 /**
  * Türkçe para formatı: 7500000 → "7.500.000 ₺"
- * Boş veya geçersiz değerlerde girdiyi olduğu gibi döner.
+ * Geçersiz, boş veya NaN değerlerde "0 ₺" döner — asla crash vermez.
  */
 export function formatCurrency(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
-  const raw = typeof value === "number" ? value : String(value).trim();
+  const ZERO = "0 ₺";
+  try {
+    if (value === null || value === undefined) return ZERO;
 
-  let num: number;
-  if (typeof raw === "string") {
-    const cleaned = raw.replace(/[₺\s]/g, "").replace(/\./g, "").replace(",", ".");
-    num = Number(cleaned);
-    if (!isFinite(num) || cleaned === "" || /[a-zA-Z]/.test(raw)) return raw;
-  } else {
-    num = raw;
+    let num: number;
+    if (typeof value === "number") {
+      num = value;
+    } else {
+      const trimmed = String(value).trim();
+      if (trimmed === "") return ZERO;
+      const cleaned = trimmed.replace(/[₺\s]/g, "").replace(/\./g, "").replace(",", ".");
+      if (cleaned === "" || /[a-zA-Z]/.test(trimmed)) return ZERO;
+      num = Number(cleaned);
+    }
+
+    if (!Number.isFinite(num) || Number.isNaN(num)) return ZERO;
+    if (Object.is(num, -0)) num = 0;
+
+    const abs = Math.abs(num);
+    const hasFraction = Math.abs(abs - Math.trunc(abs)) > 1e-9;
+    const opts: Intl.NumberFormatOptions = hasFraction
+      ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      : { maximumFractionDigits: 0 };
+    const sign = num < 0 ? "-" : "";
+    return `${sign}${abs.toLocaleString("tr-TR", opts)} ₺`;
+  } catch {
+    return ZERO;
   }
-
-  // -0 normalize
-  if (Object.is(num, -0)) num = 0;
-
-  const abs = Math.abs(num);
-  const hasFraction = Math.abs(abs - Math.trunc(abs)) > 1e-9;
-  const opts: Intl.NumberFormatOptions = hasFraction
-    ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-    : { maximumFractionDigits: 0 };
-  const sign = num < 0 ? "-" : "";
-  return `${sign}${abs.toLocaleString("tr-TR", opts)} ₺`;
 }
 
 /**
