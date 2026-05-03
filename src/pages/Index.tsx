@@ -22,6 +22,7 @@ import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
 import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
+import EInvoicesPage from "@/components/desktop/EInvoicesPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 
 import { useUser } from "@/contexts/UserContext";
@@ -40,7 +41,7 @@ import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -66,6 +67,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "payments-kasa",
   "contracts",
   "materials",
+  "e-invoices",
 ];
 
 // Mobile drawer menu items
@@ -78,6 +80,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
+  { id: "e-invoices", label: "E-Fatura / E-Arşiv", emoji: "🧾", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   
   
@@ -100,6 +103,7 @@ const TAB_TITLES: Record<string, string> = {
   contracts: "Sözleşme Takibi",
   "payments-kasa": "Ödemeler & Kasa",
   materials: "Malzeme Takibi",
+  "e-invoices": "E-Fatura / E-Arşiv",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
@@ -287,6 +291,8 @@ const Index = () => {
                   <PaymentsKasaPage />
                 ) : activeTab === "materials" ? (
                   <MaterialsPage />
+                ) : activeTab === "e-invoices" ? (
+                  <EInvoicesPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
@@ -551,6 +557,8 @@ const Index = () => {
             <SiteDiaryPage />
           ) : activeTab === "materials" ? (
             <MaterialsPage />
+          ) : activeTab === "e-invoices" ? (
+            <EInvoicesPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (
