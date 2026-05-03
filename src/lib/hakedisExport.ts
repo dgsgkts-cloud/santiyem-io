@@ -6,8 +6,7 @@ import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import type { ProjectHakedis } from "@/hooks/useProjectHakedis";
 
-const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtCurrency = (n: number) => `₺${n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { formatNumber2 as fmt, formatCurrency2 as fmtCurrency } from "@/lib/formatCurrency";
 
 export interface PDFSignatureInfo {
   hazirlayan?: { name: string; title: string };

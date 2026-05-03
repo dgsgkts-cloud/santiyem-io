@@ -24,8 +24,7 @@ const STATUS_OPTIONS = [
   { label: "Ödendi", color: "#10B981", emoji: "✅" },
 ];
 
-import { formatCurrencyFull, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
-const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+import { formatCurrencyFull, formatCurrencyFull as fmt, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
 
 const LEGAL_INTEREST_RATE = 0.48;
 const DAILY_RATE = LEGAL_INTEREST_RATE / 365;

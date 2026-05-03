@@ -17,8 +17,7 @@ interface AIKalem {
   approved?: boolean;
 }
 
-const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtCurrency = (n: number) => `₺${fmt(n)}`;
+import { formatNumber2 as fmt, formatCurrency2 as fmtCurrency } from "@/lib/formatCurrency";
 
 interface WizardProps {
   projectId: string;

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { CheckCircle2, AlertTriangle, Clock, FileText, XCircle, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+import { formatCurrencyFull as fmt } from "@/lib/formatCurrency";
 
 export default function HakedisApproval() {
   const { token } = useParams<{ token: string }>();
