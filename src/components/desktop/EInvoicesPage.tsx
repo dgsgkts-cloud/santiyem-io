@@ -217,7 +217,11 @@ const EInvoicesPage = () => {
                   const meta = STATUS_META[eff] || STATUS_META.beklemede;
                   const Icon = meta.icon;
                   return (
-                    <tr key={inv.id} className="border-t border-border hover:bg-muted/20 group">
+                    <tr
+                      key={inv.id}
+                      onClick={() => setDetailTarget(inv)}
+                      className="border-t border-border hover:bg-muted/20 group cursor-pointer"
+                    >
                       <td className="px-4 py-3">
                         {inv.direction === "gelen" ? (
                           <Badge variant="outline" className="text-[10px]"><Inbox className="w-3 h-3 mr-1" /> Gelen</Badge>
