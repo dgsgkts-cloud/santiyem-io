@@ -25,13 +25,7 @@ const CATEGORIES = ["İşçilik", "Malzeme", "Makine-Ekipman", "Taşeron", "Gene
 const PIE_COLORS = ["#FF6B2B", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#64748B"];
 const FILTERS = ["Bu Ay", "Bu Çeyrek", "Bu Yıl", "Tümü"] as const;
 
-const formatCurrency = (n: number) => {
-  if (Math.abs(n) >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000) return `₺${(n / 1_000).toFixed(0)}K`;
-  return `₺${Math.round(n).toLocaleString("tr-TR")}`;
-};
-
-const fmtFull = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
+import { formatCurrencyShort as formatCurrency, formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 
 const ProfitabilityCashFlowPage = () => {
   const { user } = useUser();
