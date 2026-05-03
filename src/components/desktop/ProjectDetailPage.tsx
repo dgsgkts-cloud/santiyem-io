@@ -145,6 +145,39 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
       {showQrModal && <QrCodeModal projectId={p.id} projectName={p.name} onClose={() => setShowQrModal(false)} />}
+      <EditProjectModal
+        open={showEditModal}
+        initial={{
+          name: p.name,
+          client: p.client,
+          location: p.location,
+          manager: p.manager,
+          site_responsible: (p as any).site_responsible || "",
+          description: p.description,
+          budget: p.budget,
+          start_date: p.start,
+          end_date: p.end,
+        }}
+        onClose={() => setShowEditModal(false)}
+        onSave={async (data) => {
+          if (!onUpdate) return false;
+          const ok = await onUpdate(p.id, data);
+          if (ok) {
+            setEditedProject(prev => ({
+              ...prev,
+              name: data.name,
+              client: data.client,
+              location: data.location,
+              manager: data.manager,
+              description: data.description,
+              budget: data.budget,
+              start: data.start_date,
+              end: data.end_date,
+            }));
+          }
+          return ok;
+        }}
+      />
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
