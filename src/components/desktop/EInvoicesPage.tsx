@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
-import { useEInvoices, EInvoice } from "@/hooks/useEInvoices";
+import { useEInvoices, EInvoice, computeEffectiveStatus } from "@/hooks/useEInvoices";
+import InvoiceWizard from "./InvoiceWizard";
 import { useProjects } from "@/hooks/useProjects";
 import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { parseUBLInvoice } from "@/lib/ublParser";
@@ -20,14 +21,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUS_META: Record<EInvoice["status"], { label: string; color: string; icon: any }> = {
-  beklemede: { label: "Beklemede", color: "#F59E0B", icon: Clock },
+const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
+  beklemede: { label: "Bekliyor", color: "#F59E0B", icon: Clock },
   onaylandi: { label: "Onaylandı", color: "#22C55E", icon: CheckCircle2 },
   reddedildi: { label: "Reddedildi", color: "#EF4444", icon: XCircle },
   iade: { label: "İade", color: "#A855F7", icon: RotateCcw },
   iptal: { label: "İptal", color: "#64748B", icon: XCircle },
   odendi: { label: "Ödendi", color: "#22C55E", icon: CheckCircle2 },
   tahsil_edildi: { label: "Tahsil Edildi", color: "#22C55E", icon: CheckCircle2 },
+  gecikmis: { label: "Gecikmiş", color: "#EF4444", icon: AlertCircle },
 };
 
 const EInvoicesPage = () => {
@@ -46,19 +48,6 @@ const EInvoicesPage = () => {
   const [linkAccount, setLinkAccount] = useState<string>("");
   const [linkProject, setLinkProject] = useState<string>("");
 
-  const [manual, setManual] = useState({
-    direction: "gelen" as "gelen" | "giden",
-    invoice_type: "e_fatura" as "e_fatura" | "e_arsiv",
-    invoice_no: "",
-    invoice_date: new Date().toISOString().slice(0, 10),
-    counterparty_name: "",
-    counterparty_tax_no: "",
-    subtotal: "",
-    kdv_total: "",
-    grand_total: "",
-    project_id: "",
-    description: "",
-  });
 
   const filtered = useMemo(() => {
     return invoices.filter((i) => {
@@ -113,36 +102,6 @@ const EInvoicesPage = () => {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const handleManualSave = async () => {
-    if (!manual.counterparty_name || !manual.grand_total) {
-      toast.error("Karşı taraf ve toplam tutar zorunludur");
-      return;
-    }
-    const r = await addInvoice({
-      direction: manual.direction,
-      invoice_type: manual.invoice_type,
-      invoice_no: manual.invoice_no,
-      invoice_date: manual.invoice_date,
-      counterparty_name: manual.counterparty_name,
-      counterparty_tax_no: manual.counterparty_tax_no || undefined,
-      subtotal: Number(manual.subtotal) || 0,
-      kdv_total: Number(manual.kdv_total) || 0,
-      grand_total: Number(manual.grand_total),
-      description: manual.description,
-      project_id: manual.project_id || undefined,
-      source: "manuel",
-    });
-    if (r) {
-      setShowManual(false);
-      setManual({
-        direction: "gelen", invoice_type: "e_fatura", invoice_no: "",
-        invoice_date: new Date().toISOString().slice(0, 10),
-        counterparty_name: "", counterparty_tax_no: "",
-        subtotal: "", kdv_total: "", grand_total: "",
-        project_id: "", description: "",
-      });
-    }
-  };
 
   const handleLink = async () => {
     if (!linkTarget) return;
@@ -179,7 +138,7 @@ const EInvoicesPage = () => {
             <Upload className="w-4 h-4 mr-2" /> UBL XML Yükle
           </Button>
           <Button onClick={() => setShowManual(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Manuel Ekle
+            <Plus className="w-4 h-4 mr-2" /> Yeni Fatura
           </Button>
         </div>
       </div>
@@ -252,7 +211,8 @@ const EInvoicesPage = () => {
               </thead>
               <tbody>
                 {filtered.map((inv) => {
-                  const meta = STATUS_META[inv.status];
+                  const eff = computeEffectiveStatus(inv);
+                  const meta = STATUS_META[eff] || STATUS_META.beklemede;
                   const Icon = meta.icon;
                   return (
                     <tr key={inv.id} className="border-t border-border hover:bg-muted/20 group">
@@ -322,7 +282,8 @@ const EInvoicesPage = () => {
           {/* Mobile cards */}
           <div className="lg:hidden space-y-2">
             {filtered.map((inv) => {
-              const meta = STATUS_META[inv.status];
+              const eff = computeEffectiveStatus(inv);
+              const meta = STATUS_META[eff] || STATUS_META.beklemede;
               return (
                 <div key={inv.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
                   <div className="flex justify-between items-start">
@@ -362,53 +323,7 @@ const EInvoicesPage = () => {
         </>
       )}
 
-      {/* Manual add modal */}
-      <Dialog open={showManual} onOpenChange={setShowManual}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Manuel Fatura Ekle</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={manual.direction} onValueChange={(v) => setManual({ ...manual, direction: v as any })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gelen">Gelen</SelectItem>
-                  <SelectItem value="giden">Giden</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={manual.invoice_type} onValueChange={(v) => setManual({ ...manual, invoice_type: v as any })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="e_fatura">E-Fatura</SelectItem>
-                  <SelectItem value="e_arsiv">E-Arşiv</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Fatura No" value={manual.invoice_no} onChange={(e) => setManual({ ...manual, invoice_no: e.target.value })} />
-              <Input type="date" value={manual.invoice_date} onChange={(e) => setManual({ ...manual, invoice_date: e.target.value })} />
-            </div>
-            <Input placeholder="Karşı Taraf *" value={manual.counterparty_name} onChange={(e) => setManual({ ...manual, counterparty_name: e.target.value })} />
-            <Input placeholder="VKN/TCKN" value={manual.counterparty_tax_no} onChange={(e) => setManual({ ...manual, counterparty_tax_no: e.target.value })} />
-            <div className="grid grid-cols-3 gap-2">
-              <Input type="number" placeholder="Matrah" value={manual.subtotal} onChange={(e) => setManual({ ...manual, subtotal: e.target.value })} />
-              <Input type="number" placeholder="KDV" value={manual.kdv_total} onChange={(e) => setManual({ ...manual, kdv_total: e.target.value })} />
-              <Input type="number" placeholder="Toplam *" value={manual.grand_total} onChange={(e) => setManual({ ...manual, grand_total: e.target.value })} />
-            </div>
-            <Select value={manual.project_id || "none"} onValueChange={(v) => setManual({ ...manual, project_id: v === "none" ? "" : v })}>
-              <SelectTrigger><SelectValue placeholder="Proje (opsiyonel)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Proje yok</SelectItem>
-                {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input placeholder="Açıklama" value={manual.description} onChange={(e) => setManual({ ...manual, description: e.target.value })} />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setShowManual(false)}>Vazgeç</Button>
-              <Button onClick={handleManualSave}>Kaydet</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InvoiceWizard open={showManual} onClose={() => setShowManual(false)} />
 
       {/* Link to cash modal */}
       <Dialog open={!!linkTarget} onOpenChange={(o) => !o && setLinkTarget(null)}>
