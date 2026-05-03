@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import QrCodeModal from "./QrCodeModal";
-import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode, Pencil } from "lucide-react";
+import EditProjectModal, { EditProjectData } from "./EditProjectModal";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
 import { useProjectFiles } from "@/hooks/useProjectFiles";
@@ -37,6 +38,7 @@ interface ProjectDetailPageProps {
   onBack: () => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: string, color: string) => void;
+  onUpdate?: (id: string, data: EditProjectData) => Promise<boolean> | boolean;
   isDeletable?: boolean;
 }
 
@@ -46,7 +48,10 @@ const formatBytes = (bytes: number) => {
   return (bytes / 1048576).toFixed(1) + " MB";
 };
 
-const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDeletable }: ProjectDetailPageProps) => {
+const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate, isDeletable }: ProjectDetailPageProps) => {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedProject, setEditedProject] = useState<Project>(project);
+  const p = editedProject;
   const { user } = useUser();
   const { milestones, loading: mLoading, progress: milestoneProgress, toggleCompleted, addMilestone, deleteMilestone } = useProjectMilestones(p.id, p.milestones);
   const { hakedisler, loading: hLoading, addHakedis, deleteHakedis, updateHakedisStatus } = useProjectHakedis(p.id);
@@ -140,6 +145,39 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
       {showQrModal && <QrCodeModal projectId={p.id} projectName={p.name} onClose={() => setShowQrModal(false)} />}
+      <EditProjectModal
+        open={showEditModal}
+        initial={{
+          name: p.name,
+          client: p.client,
+          location: p.location,
+          manager: p.manager,
+          site_responsible: (p as any).site_responsible || "",
+          description: p.description,
+          budget: p.budget,
+          start_date: p.start,
+          end_date: p.end,
+        }}
+        onClose={() => setShowEditModal(false)}
+        onSave={async (data) => {
+          if (!onUpdate) return false;
+          const ok = await onUpdate(p.id, data);
+          if (ok) {
+            setEditedProject(prev => ({
+              ...prev,
+              name: data.name,
+              client: data.client,
+              location: data.location,
+              manager: data.manager,
+              description: data.description,
+              budget: data.budget,
+              start: data.start_date,
+              end: data.end_date,
+            }));
+          }
+          return ok;
+        }}
+      />
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -189,7 +227,15 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
               </div>
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              {onUpdate && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80 bg-card border border-border text-foreground"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Düzenle
+                </button>
+              )}
               <button
                 onClick={() => setShowQrModal(true)}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
@@ -317,7 +363,7 @@ const ProjectDetailPage = ({ project: p, onBack, onDelete, onStatusChange, isDel
                     {m.completed && <CheckCircle2 className="w-3 h-3 text-white" />}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through" : ""}`} style={{ color: m.completed ? "#64748B" : "#F1F5F9" }}>{m.title}</p>
+                    <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{m.title}</p>
                   </div>
                   <span className="text-[10px] lg:text-[11px] font-mono shrink-0" style={labelStyle}>{m.milestone_date}</span>
                   {user && (
