@@ -24,12 +24,8 @@ const STATUS_OPTIONS = [
   { label: "Ödendi", color: "#10B981", emoji: "✅" },
 ];
 
+import { formatCurrencyFull, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
 const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
-const fmtShort = (n: number) => {
-  if (n >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `₺${Math.round(n / 1_000)}K`;
-  return `₺${Math.round(n)}`;
-};
 
 const LEGAL_INTEREST_RATE = 0.48;
 const DAILY_RATE = LEGAL_INTEREST_RATE / 365;
