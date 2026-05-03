@@ -414,15 +414,15 @@ const PaymentsKasaPage = () => {
                       <div className="grid grid-cols-3 gap-2 text-[11px]">
                         <div>
                           <span className="text-muted-foreground">Gelir</span>
-                          <p className="font-semibold" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p>
+                          <p className="font-semibold truncate" style={{ color: "#22C55E" }} title={fmtFull(p.hakedisTotal)}>{fmtShort(p.hakedisTotal)}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Gider</span>
-                          <p className="font-semibold" style={{ color: "#EF4444" }}>{fmtShort(p.expenseTotal)}</p>
+                          <p className="font-semibold truncate" style={{ color: "#EF4444" }} title={fmtFull(p.expenseTotal)}>{fmtShort(p.expenseTotal)}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Net</span>
-                          <p className="font-semibold" style={{ color: karColor(p.karMarji) }}>{fmtShort(p.netKar)}</p>
+                          <p className="font-semibold truncate" style={{ color: karColor(p.karMarji) }} title={fmtFull(p.netKar)}>{fmtShort(p.netKar)}</p>
                         </div>
                       </div>
                     </div>
