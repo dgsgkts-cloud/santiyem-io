@@ -66,6 +66,14 @@ export function useProjects() {
     toast.success("Proje silindi");
   };
 
+  const updateProject = async (id: string, updates: Partial<Omit<UserProject, "id" | "created_at">>) => {
+    const { error } = await supabase.from("projects").update(updates).eq("id", id);
+    if (error) { toast.error("Proje güncellenemedi"); return false; }
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } as UserProject : p));
+    toast.success("Proje güncellendi");
+    return true;
+  };
+
   const updateProjectStatus = async (id: string, status: string, statusColor: string) => {
     const { error } = await supabase.from("projects").update({ status, status_color: statusColor }).eq("id", id);
     if (error) { toast.error("Durum güncellenemedi"); return; }
