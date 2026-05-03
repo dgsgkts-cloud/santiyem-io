@@ -6,8 +6,9 @@ import type { CashPayment } from "@/hooks/useCashPayments";
 import type { CashCollection } from "@/hooks/useCashCollections";
 import type { CashCheck } from "@/hooks/useCashChecks";
 import type { CashAccount } from "@/hooks/useCashAccounts";
+import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 
-import { formatNumber2 as fmt } from "@/lib/formatCurrency";
+import { formatNumber2 as fmt, formatCurrencyFull as money } from "@/lib/formatCurrency";
 
 const statusLabels: Record<string, string> = {
   odendi: "Ödendi",
