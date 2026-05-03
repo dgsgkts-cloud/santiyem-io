@@ -331,18 +331,18 @@ const PaymentsKasaPage = () => {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start mb-6 h-11 p-1 rounded-xl bg-card border border-border flex-wrap">
-          <TabsTrigger value="overview" className="gap-2 text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <BarChart3 className="w-4 h-4" /> Genel Bakış
+        <TabsList className="w-full mb-6 h-auto p-1 rounded-xl bg-card border border-border flex flex-nowrap gap-1">
+          <TabsTrigger value="overview" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
+            <BarChart3 className="w-4 h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
           </TabsTrigger>
-          <TabsTrigger value="transactions" className="gap-2 text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <CreditCard className="w-4 h-4" /> Gelir & Giderler
+          <TabsTrigger value="transactions" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
+            <CreditCard className="w-4 h-4 shrink-0" /> <span className="truncate">Gelir & Giderler</span>
           </TabsTrigger>
-          <TabsTrigger value="kasa" className="gap-2 text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <Wallet className="w-4 h-4" /> Kasa & Ödemeler
+          <TabsTrigger value="kasa" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
+            <Wallet className="w-4 h-4 shrink-0" /> <span className="truncate">Kasa & Ödemeler</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="gap-2 text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <FileText className="w-4 h-4" /> Raporlar
+          <TabsTrigger value="reports" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
+            <FileText className="w-4 h-4 shrink-0" /> <span className="truncate">Raporlar</span>
           </TabsTrigger>
         </TabsList>
 
