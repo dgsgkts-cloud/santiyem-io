@@ -11,6 +11,7 @@ import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
+import TrialBanner from "@/components/TrialBanner";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import MetricTooltip from "@/components/MetricTooltip";
 import { formatCurrencyShort as formatCurrency, formatCurrencyFull, formatPercent, formatPercentFull } from "@/lib/formatCurrency";
@@ -201,6 +202,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
+      <TrialBanner />
       {/* Welcome */}
       <div className="rounded-xl p-5 lg:p-6 bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
