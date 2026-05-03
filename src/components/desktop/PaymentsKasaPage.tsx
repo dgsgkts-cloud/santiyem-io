@@ -356,31 +356,31 @@ const PaymentsKasaPage = () => {
                 { label: "Net Bakiye", value: totals.kar, color: "#3B82F6", icon: DollarSign },
                 { label: "Bekleyen Hakediş", value: totals.bekleyenTahsilat, color: "#F59E0B", icon: Receipt },
               ].map((c, i) => (
-                <div key={i} className="rounded-xl p-4 bg-card border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <c.icon className="w-4 h-4" style={{ color: c.color }} />
-                    <span className="text-xs text-muted-foreground">{c.label}</span>
+                <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-2 min-w-0">
+                    <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
+                    <span className="text-xs text-muted-foreground truncate">{c.label}</span>
                   </div>
-                  <p className="text-xl font-bold" style={{ color: c.color }}>{fmtFull(c.value)}</p>
+                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: c.color }} title={fmtFull(c.value)}>{fmtShort(c.value)}</p>
                 </div>
               ))}
             </div>
 
             {/* Kasa Bakiyeleri */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Banknote className="w-4 h-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Nakit Kasa</span>
+              <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-1 min-w-0">
+                  <Banknote className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs text-muted-foreground truncate">Nakit Kasa</span>
                 </div>
-                <p className="text-lg font-bold text-foreground">{fmtFull(nakitKasaBalance)}</p>
+                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(nakitKasaBalance)}>{fmtShort(nakitKasaBalance)}</p>
               </div>
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Building2 className="w-4 h-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Banka</span>
+              <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-1 min-w-0">
+                  <Building2 className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs text-muted-foreground truncate">Banka</span>
                 </div>
-                <p className="text-lg font-bold text-foreground">{fmtFull(bankaBalance)}</p>
+                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(bankaBalance)}>{fmtShort(bankaBalance)}</p>
               </div>
             </div>
 
