@@ -660,6 +660,90 @@ export type Database = {
         }
         Relationships: []
       }
+      e_invoices: {
+        Row: {
+          counterparty_name: string
+          counterparty_tax_no: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          direction: string
+          file_name: string | null
+          file_url: string | null
+          grand_total: number
+          id: string
+          invoice_date: string
+          invoice_no: string
+          invoice_type: string
+          invoice_uuid: string | null
+          kdv_total: number
+          linked_collection_id: string | null
+          linked_payment_id: string | null
+          notes: string | null
+          project_id: string | null
+          source: string
+          status: string
+          subtotal: number
+          ubl_payload: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          counterparty_name?: string
+          counterparty_tax_no?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          direction: string
+          file_name?: string | null
+          file_url?: string | null
+          grand_total?: number
+          id?: string
+          invoice_date?: string
+          invoice_no?: string
+          invoice_type?: string
+          invoice_uuid?: string | null
+          kdv_total?: number
+          linked_collection_id?: string | null
+          linked_payment_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          source?: string
+          status?: string
+          subtotal?: number
+          ubl_payload?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          counterparty_name?: string
+          counterparty_tax_no?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          direction?: string
+          file_name?: string | null
+          file_url?: string | null
+          grand_total?: number
+          id?: string
+          invoice_date?: string
+          invoice_no?: string
+          invoice_type?: string
+          invoice_uuid?: string | null
+          kdv_total?: number
+          linked_collection_id?: string | null
+          linked_payment_id?: string | null
+          notes?: string | null
+          project_id?: string | null
+          source?: string
+          status?: string
+          subtotal?: number
+          ubl_payload?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ekb_basvurulari: {
         Row: {
           ad_soyad: string
