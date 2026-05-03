@@ -291,7 +291,11 @@ const EInvoicesPage = () => {
               const eff = computeEffectiveStatus(inv);
               const meta = STATUS_META[eff] || STATUS_META.beklemede;
               return (
-                <div key={inv.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
+                <div
+                  key={inv.id}
+                  onClick={() => setDetailTarget(inv)}
+                  className="bg-card border border-border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30"
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2">
@@ -308,7 +312,7 @@ const EInvoicesPage = () => {
                       <div className="text-[10px]" style={{ color: meta.color }}>{meta.label}</div>
                     </div>
                   </div>
-                  <div className="flex gap-2 pt-2 border-t border-border">
+                  <div className="flex gap-2 pt-2 border-t border-border" onClick={(e) => e.stopPropagation()}>
                     {!inv.linked_payment_id && !inv.linked_collection_id ? (
                       <Button size="sm" variant="outline" className="flex-1 h-8" onClick={() => setLinkTarget(inv)}>
                         <Link2 className="w-3 h-3 mr-1" /> Kasaya Bağla
