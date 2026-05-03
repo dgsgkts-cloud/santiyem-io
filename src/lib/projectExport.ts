@@ -41,7 +41,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
   doc.setFont("Roboto");
 
   const pw = doc.internal.pageSize.getWidth();
-  let y = addCompanyHeader(doc, "PROJE DURUM RAPORU");
+  let y = addPdfHeader(doc, "PROJE DURUM RAPORU");
 
   // ── Project Info Table ──
   const todoCount = tasks.filter(t => t.status === "todo").length;
@@ -62,7 +62,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
       ["Lokasyon", project.location],
       ["Başlangıç", project.start],
       ["Tahmini Bitiş", project.end],
-      ["Bütçe", formatCurrency(project.budget)],
+      ["Bütçe", fmtMoney(project.budget)],
       ["Durum", project.status],
     ],
   });
@@ -216,7 +216,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
     doc.setFontSize(8);
   });
 
-  addPageNumbers(doc);
+  addPdfFooter(doc);
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -243,7 +243,7 @@ export function exportProjectExcel(project: Project, tasks: Task[], milestones: 
     ["Lokasyon", project.location],
     ["Başlangıç", project.start],
     ["Bitiş", project.end],
-    ["Bütçe", formatCurrency(project.budget)],
+    ["Bütçe", fmtMoney(project.budget)],
     ["Durum", project.status],
     ["Proje Sorumlusu", project.manager],
     [],
