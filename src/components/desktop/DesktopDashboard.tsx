@@ -23,9 +23,17 @@ const formatDate = (d: Date) =>
   `${d.getDate()} ${["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][d.getMonth()]} ${d.getFullYear()}`;
 
 const formatCurrency = (n: number) => {
-  if (n >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `₺${Math.round(n / 1_000)}K`;
-  return `₺${Math.round(n)}`;
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `₺${sign}${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `₺${sign}${Math.round(abs / 1_000)}K`;
+  return `₺${sign}${Math.round(abs)}`;
+};
+
+const formatPercent = (p: number) => {
+  const abs = Math.abs(p);
+  if (abs > 999) return ">%999";
+  return `%${abs}`;
 };
 
 const getDaysDiff = (dateStr: string) => {
@@ -298,12 +306,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 ? (isUp ? "#EF4444" : "#22C55E")
                 : (isUp ? "#22C55E" : "#EF4444");
               return (
-                <div key={item.label} className="rounded-lg p-4 bg-background border border-border">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground">{item.label}</p>
-                  <p className="text-xl lg:text-2xl font-bold" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
-                  <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: changeColor }}>
-                    {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                    <span>%{Math.abs(item.change)} geçen aya göre</span>
+                <div key={item.label} className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground truncate">{item.label}</p>
+                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
+                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }}>
+                    {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
+                    <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
                   </p>
                 </div>
               );
@@ -378,26 +386,26 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nakit Kasa</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Wallet className="w-3.5 h-3.5 shrink-0" style={{ color: "#F59E0B" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Nakit Kasa</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Building2 className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Banka</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: "#3B82F6" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Banka</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Banknote className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Toplam</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Banknote className="w-3.5 h-3.5 shrink-0" style={{ color: "#22C55E" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Toplam</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
               </div>
             </div>
             {upcomingChecks.length > 0 && (
