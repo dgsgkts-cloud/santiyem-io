@@ -1,8 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { robotoBase64 } from "@/lib/robotoFont";
-import { logoBase64 } from "@/lib/logoBase64";
-import { getCompanyProfile } from "@/lib/companyProfile";
+import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import type { DiaryEntry, CrewRow, DiaryPhoto } from "@/hooks/useSiteDiary";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -19,64 +18,11 @@ function initDoc(): jsPDF {
 }
 
 function addHeader(doc: jsPDF, title: string, subtitle?: string): number {
-  const cp = getCompanyProfile();
-  const pw = doc.internal.pageSize.getWidth();
-  let y = 18;
-
-  const hasLogo = cp.logoDataUrl || logoBase64;
-  if (hasLogo) {
-    try {
-      const src = cp.logoDataUrl || `data:image/png;base64,${logoBase64}`;
-      doc.addImage(src, "PNG", 15, y - 5, 22, 11);
-    } catch {}
-  }
-
-  const rx = pw - 15;
-  doc.setFontSize(10);
-  doc.setTextColor(30);
-  doc.text(cp.companyName || "", rx, y, { align: "right" });
-  doc.setFontSize(7.5);
-  doc.setTextColor(100);
-  if (cp.address) doc.text(cp.address, rx, y + 4.5, { align: "right" });
-  const parts: string[] = [];
-  if (cp.phone) parts.push(`Tel: ${cp.phone}`);
-  if (cp.email) parts.push(cp.email);
-  if (parts.length) doc.text(parts.join("  |  "), rx, y + 9, { align: "right" });
-  y += 15;
-
-  doc.setDrawColor(51);
-  doc.setLineWidth(0.4);
-  doc.line(15, y, pw - 15, y);
-  y += 7;
-
-  doc.setFontSize(13);
-  doc.setTextColor(51);
-  doc.text(title, pw / 2, y, { align: "center" });
-  y += 5;
-
-  if (subtitle) {
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text(subtitle, pw / 2, y, { align: "center" });
-    y += 5;
-  }
-
-  doc.setFontSize(7.5);
-  doc.setTextColor(140);
-  doc.text(`Rapor Tarihi: ${new Date().toLocaleDateString("tr-TR")}`, pw - 15, y, { align: "right" });
-  y += 6;
-
-  return y;
+  return addPdfHeader(doc, title, subtitle);
 }
 
 function addPageNumbers(doc: jsPDF) {
-  const n = doc.getNumberOfPages();
-  for (let i = 1; i <= n; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7.5);
-    doc.setTextColor(150);
-    doc.text(`Sayfa ${i} / ${n}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
-  }
+  addPdfFooter(doc);
 }
 
 function addSignature(doc: jsPDF, y: number) {
