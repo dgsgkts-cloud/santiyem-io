@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, AlertTriangle, FileText } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
+import { formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const CHECK_STATUSES = [
   { value: "bekliyor", label: "⏳ Vadesi Gelmedi", color: "#64748B" },
@@ -20,7 +21,7 @@ const CHECK_STATUSES = [
   { value: "karsilsiz", label: "❌ Karşılıksız", color: "#EF4444" },
 ];
 
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
+
 
 const getCheckStatus = (check: { due_date: string; status: string }) => {
   if (check.status === "odendi" || check.status === "tahsil_edildi" || check.status === "karsilsiz") return check.status;

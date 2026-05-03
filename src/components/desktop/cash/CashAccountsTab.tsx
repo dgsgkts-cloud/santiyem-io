@@ -7,14 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Banknote, Building2, CreditCard, ArrowLeftRight } from "lucide-react";
+import { formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const ACCOUNT_TYPES = [
   { value: "nakit_kasa", label: "💵 Nakit Kasa", icon: Banknote, color: "#22C55E" },
   { value: "banka", label: "🏦 Banka Hesabı", icon: Building2, color: "#3B82F6" },
   { value: "kredi_karti", label: "💳 Kredi Kartı", icon: CreditCard, color: "#A855F7" },
 ];
-
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
 
 const CashAccountsTab = () => {
   const { accounts, addAccount, updateAccount, deleteAccount } = useCashAccounts();
