@@ -2,11 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
-import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
-import { formatCurrency, formatNumber0 as fmt } from "@/lib/formatCurrency";
+import { formatCurrencyFull } from "@/lib/formatCurrency";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "Bekliyor",
@@ -27,60 +27,11 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 // ── PDF ──
 
-function addCompanyHeader(doc: jsPDF, title: string): number {
-  const cp = getCompanyProfile();
-  const pw = doc.internal.pageSize.getWidth();
-  let y = 20;
-
-  const hasLogo = cp.logoDataUrl || logoBase64;
-  if (hasLogo) {
-    try {
-      const src = cp.logoDataUrl || `data:image/png;base64,${logoBase64}`;
-      doc.addImage(src, "PNG", 15, y - 5, 24, 12);
-    } catch {}
-  }
-
-  const rx = pw - 15;
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text(cp.companyName || "", rx, y, { align: "right" });
-  doc.setFontSize(8);
-  doc.setTextColor(100);
-  if (cp.address) doc.text(cp.address, rx, y + 5, { align: "right" });
-  const parts: string[] = [];
-  if (cp.phone) parts.push(`Tel: ${cp.phone}`);
-  if (cp.email) parts.push(cp.email);
-  if (parts.length) doc.text(parts.join("  |  "), rx, y + 10, { align: "right" });
-  y += 18;
-
-  doc.setDrawColor(51);
-  doc.setLineWidth(0.5);
-  doc.line(15, y, pw - 15, y);
-  y += 8;
-
-  doc.setFontSize(14);
-  doc.setTextColor(51);
-  doc.text(title, pw / 2, y, { align: "center" });
-  y += 4;
-
-  // Report date
-  doc.setFontSize(8);
-  doc.setTextColor(130);
-  const now = new Date();
-  doc.text(`Rapor Tarihi: ${now.toLocaleDateString("tr-TR")}`, pw - 15, y, { align: "right" });
-  y += 8;
-
-  return y;
-}
-
-function addPageNumbers(doc: jsPDF) {
-  const n = doc.getNumberOfPages();
-  for (let i = 1; i <= n; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Sayfa ${i} / ${n}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
-  }
+function fmtMoney(v: string | number | null | undefined): string {
+  if (v === null || v === undefined || v === "") return "—";
+  const raw = typeof v === "number" ? v : Number(String(v).replace(/[₺\s]/g, "").replace(/\./g, "").replace(",", "."));
+  if (!isFinite(raw)) return String(v);
+  return formatCurrencyFull(raw);
 }
 
 export function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
@@ -90,7 +41,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
   doc.setFont("Roboto");
 
   const pw = doc.internal.pageSize.getWidth();
-  let y = addCompanyHeader(doc, "PROJE DURUM RAPORU");
+  let y = addPdfHeader(doc, "PROJE DURUM RAPORU");
 
   // ── Project Info Table ──
   const todoCount = tasks.filter(t => t.status === "todo").length;
@@ -111,7 +62,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
       ["Lokasyon", project.location],
       ["Başlangıç", project.start],
       ["Tahmini Bitiş", project.end],
-      ["Bütçe", formatCurrency(project.budget)],
+      ["Bütçe", fmtMoney(project.budget)],
       ["Durum", project.status],
     ],
   });
@@ -265,7 +216,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
     doc.setFontSize(8);
   });
 
-  addPageNumbers(doc);
+  addPdfFooter(doc);
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -292,7 +243,7 @@ export function exportProjectExcel(project: Project, tasks: Task[], milestones: 
     ["Lokasyon", project.location],
     ["Başlangıç", project.start],
     ["Bitiş", project.end],
-    ["Bütçe", formatCurrency(project.budget)],
+    ["Bütçe", fmtMoney(project.budget)],
     ["Durum", project.status],
     ["Proje Sorumlusu", project.manager],
     [],

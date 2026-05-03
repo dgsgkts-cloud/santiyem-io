@@ -2,11 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
-import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
+import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import type { ProjectHakedis } from "@/hooks/useProjectHakedis";
 
-import { formatNumber2 as fmt, formatCurrency2 as fmtCurrency } from "@/lib/formatCurrency";
+import { formatNumber2 as fmt, formatCurrencyFull as fmtCurrency } from "@/lib/formatCurrency";
 
 export interface PDFSignatureInfo {
   hazirlayan?: { name: string; title: string };
@@ -72,66 +72,7 @@ function numberToTurkishText(n: number): string {
   return result;
 }
 
-function addPageNumbers(doc: jsPDF) {
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Sayfa ${i} / ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
-  }
-}
-
-function addCompanyHeader(doc: jsPDF, docType: string, projectName?: string): number {
-  const cp = getCompanyProfile();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 20;
-
-  // Logo (left)
-  const hasLogo = cp.logoDataUrl || logoBase64;
-  if (hasLogo) {
-    try {
-      const logoSrc = cp.logoDataUrl || `data:image/png;base64,${logoBase64}`;
-      doc.addImage(logoSrc, "PNG", 15, y - 5, 24, 12);
-    } catch {}
-  }
-
-  // Company info (right)
-  const rightX = pageWidth - 15;
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text(cp.companyName || "Göktaş Global Mühendislik", rightX, y, { align: "right" });
-
-  doc.setFontSize(8);
-  doc.setTextColor(100);
-  if (cp.address) doc.text(cp.address, rightX, y + 5, { align: "right" });
-
-  const contactParts: string[] = [];
-  if (cp.phone) contactParts.push(`Tel: ${cp.phone}`);
-  if (cp.email) contactParts.push(cp.email);
-  if (contactParts.length > 0) doc.text(contactParts.join("  |  "), rightX, y + 10, { align: "right" });
-
-  const taxParts: string[] = [];
-  if (cp.taxNumber) taxParts.push(`VKN: ${cp.taxNumber}`);
-  if (cp.taxOffice) taxParts.push(`VD: ${cp.taxOffice}`);
-  if (taxParts.length > 0) doc.text(taxParts.join("  |  "), rightX, y + 15, { align: "right" });
-
-  y += 22;
-
-  // Divider
-  doc.setDrawColor(51, 51, 51);
-  doc.setLineWidth(0.5);
-  doc.line(15, y, pageWidth - 15, y);
-  y += 8;
-
-  // Document title
-  doc.setFontSize(14);
-  doc.setTextColor(51, 51, 51);
-  doc.text(docType, pageWidth / 2, y, { align: "center" });
-  y += 8;
-
-  return y;
-}
+// (header/footer helpers replaced by shared addPdfHeader / addPdfFooter)
 
 export interface HakedisWorkItem {
   description: string;
@@ -171,7 +112,7 @@ export function exportHakedisPDF(
   // ─── Company Header ───
   let y = 20;
   if (options.includeHeader) {
-    y = addCompanyHeader(doc, "HAKEDİŞ İCMAL FORMU", projectName);
+    y = addPdfHeader(doc, "HAKEDİŞ İCMAL FORMU", projectName);
   } else {
     doc.setFontSize(14);
     doc.setTextColor(51, 51, 51);
@@ -423,7 +364,7 @@ export function exportHakedisPDF(
   progress(90);
 
   // ─── Page numbers ───
-  addPageNumbers(doc);
+  addPdfFooter(doc);
 
   progress(100);
 
@@ -739,6 +680,3 @@ export function exportHakedisExcel(
   const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }
-
-// Export the header function for use in other PDF generators
-export { addCompanyHeader };
