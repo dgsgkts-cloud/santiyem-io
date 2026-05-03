@@ -23,9 +23,17 @@ const formatDate = (d: Date) =>
   `${d.getDate()} ${["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][d.getMonth()]} ${d.getFullYear()}`;
 
 const formatCurrency = (n: number) => {
-  if (n >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `₺${Math.round(n / 1_000)}K`;
-  return `₺${Math.round(n)}`;
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `₺${sign}${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `₺${sign}${Math.round(abs / 1_000)}K`;
+  return `₺${sign}${Math.round(abs)}`;
+};
+
+const formatPercent = (p: number) => {
+  const abs = Math.abs(p);
+  if (abs > 999) return ">%999";
+  return `%${abs}`;
 };
 
 const getDaysDiff = (dateStr: string) => {
