@@ -21,14 +21,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUS_META: Record<EInvoice["status"], { label: string; color: string; icon: any }> = {
-  beklemede: { label: "Beklemede", color: "#F59E0B", icon: Clock },
+const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
+  beklemede: { label: "Bekliyor", color: "#F59E0B", icon: Clock },
   onaylandi: { label: "Onaylandı", color: "#22C55E", icon: CheckCircle2 },
   reddedildi: { label: "Reddedildi", color: "#EF4444", icon: XCircle },
   iade: { label: "İade", color: "#A855F7", icon: RotateCcw },
   iptal: { label: "İptal", color: "#64748B", icon: XCircle },
   odendi: { label: "Ödendi", color: "#22C55E", icon: CheckCircle2 },
   tahsil_edildi: { label: "Tahsil Edildi", color: "#22C55E", icon: CheckCircle2 },
+  gecikmis: { label: "Gecikmiş", color: "#EF4444", icon: AlertCircle },
 };
 
 const EInvoicesPage = () => {
