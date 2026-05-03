@@ -425,7 +425,7 @@ const PaymentsKasaPage = () => {
                         </div>
                         <div>
                           <span className="text-muted-foreground">Gider</span>
-                          <p className="font-semibold truncate" style={{ color: "#EF4444" }} title={fmtFull(p.expenseTotal)}>{fmtShort(p.expenseTotal)}</p>
+                          <MetricTooltip full={fmtFull(p.expenseTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#EF4444" }}>{fmtShort(p.expenseTotal)}</p></MetricTooltip>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Net</span>
