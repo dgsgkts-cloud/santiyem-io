@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 
+export interface EInvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  kdv_rate: number; // %
+}
+
 export interface EInvoice {
   id: string;
   user_id: string;
@@ -11,6 +18,7 @@ export interface EInvoice {
   invoice_no: string;
   invoice_uuid: string | null;
   invoice_date: string;
+  due_date: string | null;
   counterparty_name: string;
   counterparty_tax_no: string | null;
   description: string | null;
@@ -21,6 +29,7 @@ export interface EInvoice {
   status: "beklemede" | "onaylandi" | "reddedildi" | "iade" | "iptal" | "odendi" | "tahsil_edildi";
   source: "manuel" | "ubl_upload" | "provider_api";
   ubl_payload: any;
+  items: EInvoiceItem[];
   file_url: string | null;
   file_name: string | null;
   project_id: string | null;
@@ -32,6 +41,29 @@ export interface EInvoice {
 }
 
 export type EInvoiceInput = Omit<EInvoice, "id" | "user_id" | "created_at" | "updated_at">;
+
+/** Effective status — overdue computed from due_date if still pending */
+export function computeEffectiveStatus(inv: EInvoice): EInvoice["status"] | "gecikmis" {
+  const pending = inv.status === "beklemede" || inv.status === "onaylandi";
+  if (pending && inv.due_date) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (inv.due_date < today) return "gecikmis";
+  }
+  return inv.status;
+}
+
+export function generateInvoiceNo(direction: "gelen" | "giden", existing: EInvoice[]): string {
+  const prefix = direction === "giden" ? "FTR" : "GLN";
+  const d = new Date();
+  const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const re = new RegExp(`^${prefix}-${ym}-(\\d+)$`);
+  let max = 0;
+  for (const inv of existing) {
+    const m = inv.invoice_no?.match(re);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `${prefix}-${ym}-${String(max + 1).padStart(4, "0")}`;
+}
 
 export function useEInvoices() {
   const { user } = useUser();
@@ -56,7 +88,13 @@ export function useEInvoices() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const addInvoice = async (input: Partial<EInvoiceInput>): Promise<EInvoice | null> => {
+  /**
+   * Yeni fatura ekler. autoLinkToCash=true ise kasaya otomatik bağlar.
+   */
+  const addInvoice = async (
+    input: Partial<EInvoiceInput>,
+    opts: { autoLinkToCash?: boolean } = {}
+  ): Promise<EInvoice | null> => {
     if (!user) return null;
     const payload: any = {
       user_id: user.id,
@@ -65,6 +103,7 @@ export function useEInvoices() {
       invoice_no: input.invoice_no || "",
       invoice_uuid: input.invoice_uuid || null,
       invoice_date: input.invoice_date || new Date().toISOString().slice(0, 10),
+      due_date: input.due_date || null,
       counterparty_name: input.counterparty_name || "",
       counterparty_tax_no: input.counterparty_tax_no || null,
       description: input.description || null,
@@ -75,6 +114,7 @@ export function useEInvoices() {
       status: input.status || "beklemede",
       source: input.source || "manuel",
       ubl_payload: input.ubl_payload || null,
+      items: input.items || [],
       file_url: input.file_url || null,
       file_name: input.file_name || null,
       project_id: input.project_id || null,
@@ -87,8 +127,12 @@ export function useEInvoices() {
       return null;
     }
     toast.success("Fatura eklendi");
+    const created = data as unknown as EInvoice;
+    if (opts.autoLinkToCash) {
+      await linkToCash(created, undefined, created.project_id || undefined);
+    }
     await fetchAll();
-    return data as unknown as EInvoice;
+    return created;
   };
 
   const updateInvoice = async (id: string, patch: Partial<EInvoice>) => {
@@ -124,7 +168,9 @@ export function useEInvoices() {
         project_id: projectId || inv.project_id || null,
       }).select().single();
       if (error) { toast.error("Ödeme oluşturulamadı"); return false; }
-      await updateInvoice(inv.id, { linked_payment_id: data.id, status: "odendi" });
+      await supabase.from("e_invoices" as any)
+        .update({ linked_payment_id: data.id, status: "odendi" })
+        .eq("id", inv.id);
       toast.success("Gider olarak kasaya işlendi");
     } else {
       const { data, error } = await supabase.from("cash_collections").insert({
@@ -140,7 +186,9 @@ export function useEInvoices() {
         project_id: projectId || inv.project_id || null,
       }).select().single();
       if (error) { toast.error("Tahsilat oluşturulamadı"); return false; }
-      await updateInvoice(inv.id, { linked_collection_id: data.id, status: "tahsil_edildi" });
+      await supabase.from("e_invoices" as any)
+        .update({ linked_collection_id: data.id, status: "tahsil_edildi" })
+        .eq("id", inv.id);
       toast.success("Tahsilat olarak kasaya işlendi");
     }
     return true;
