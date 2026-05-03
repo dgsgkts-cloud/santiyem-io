@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import MetricTooltip from "@/components/MetricTooltip";
+import { formatCurrencyShort as formatCurrency, formatCurrencyFull, formatPercent, formatPercentFull } from "@/lib/formatCurrency";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -22,25 +23,6 @@ interface DesktopDashboardProps {
 
 const formatDate = (d: Date) =>
   `${d.getDate()} ${["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][d.getMonth()]} ${d.getFullYear()}`;
-
-const formatCurrency = (n: number) => {
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `₺${sign}${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `₺${sign}${Math.round(abs / 1_000)}K`;
-  return `₺${sign}${Math.round(abs)}`;
-};
-
-const formatCurrencyFull = (n: number) =>
-  `${n < 0 ? "-" : ""}₺${Math.round(Math.abs(n)).toLocaleString("tr-TR")}`;
-
-const formatPercent = (p: number) => {
-  const abs = Math.abs(p);
-  if (abs > 999) return ">%999";
-  return `%${abs}`;
-};
-
-const formatPercentFull = (p: number) => `%${p}`;
 
 const getDaysDiff = (dateStr: string) => {
   const now = new Date(); now.setHours(0,0,0,0);

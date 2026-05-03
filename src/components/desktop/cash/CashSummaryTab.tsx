@@ -8,14 +8,8 @@ import { tr } from "date-fns/locale";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
 import MetricTooltip from "@/components/MetricTooltip";
 
+import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
-const fmtShort = (n: number) => {
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}${Math.round(abs / 1_000)}K`;
-  return `${sign}${Math.round(abs).toLocaleString("tr-TR")}`;
-};
 
 const CashSummaryTab = () => {
   const { accounts } = useCashAccounts();
@@ -77,8 +71,8 @@ const CashSummaryTab = () => {
                 </div>
                 <p className="text-[12px] font-medium text-muted-foreground truncate">{card.label}</p>
               </div>
-              <MetricTooltip full={`₺${fmt(card.value)}`}>
-                <p className="text-lg lg:text-2xl font-bold mb-1 truncate cursor-help" style={{ color: card.color }}>₺{fmtShort(card.value)}</p>
+              <MetricTooltip full={formatCurrencyFull(card.value)}>
+                <p className="text-lg lg:text-2xl font-bold mb-1 truncate cursor-help" style={{ color: card.color }}>{formatCurrencyShort(card.value)}</p>
               </MetricTooltip>
               <p className="text-[11px] text-muted-foreground truncate" title={card.sub}>{card.sub}</p>
             </CardContent>
