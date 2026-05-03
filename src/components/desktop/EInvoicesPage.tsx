@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useEInvoices, EInvoice, computeEffectiveStatus } from "@/hooks/useEInvoices";
 import InvoiceWizard from "./InvoiceWizard";
+import InvoiceDetailModal from "./InvoiceDetailModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { parseUBLInvoice } from "@/lib/ublParser";
@@ -44,6 +45,7 @@ const EInvoicesPage = () => {
   const [showManual, setShowManual] = useState(false);
   const [linkTarget, setLinkTarget] = useState<EInvoice | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [detailTarget, setDetailTarget] = useState<EInvoice | null>(null);
 
   const [linkAccount, setLinkAccount] = useState<string>("");
   const [linkProject, setLinkProject] = useState<string>("");
@@ -215,7 +217,11 @@ const EInvoicesPage = () => {
                   const meta = STATUS_META[eff] || STATUS_META.beklemede;
                   const Icon = meta.icon;
                   return (
-                    <tr key={inv.id} className="border-t border-border hover:bg-muted/20 group">
+                    <tr
+                      key={inv.id}
+                      onClick={() => setDetailTarget(inv)}
+                      className="border-t border-border hover:bg-muted/20 group cursor-pointer"
+                    >
                       <td className="px-4 py-3">
                         {inv.direction === "gelen" ? (
                           <Badge variant="outline" className="text-[10px]"><Inbox className="w-3 h-3 mr-1" /> Gelen</Badge>
@@ -236,7 +242,7 @@ const EInvoicesPage = () => {
                           <span>{formatCurrencyShort(inv.grand_total)}</span>
                         </MetricTooltip>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Select value={inv.status} onValueChange={(v) => updateInvoice(inv.id, { status: v as any })}>
                           <SelectTrigger className="h-7 w-[140px] text-xs" style={{ color: meta.color }}>
                             <span className="flex items-center gap-1.5"><Icon className="w-3 h-3" />{meta.label}</span>
@@ -248,7 +254,7 @@ const EInvoicesPage = () => {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           {!inv.linked_payment_id && !inv.linked_collection_id ? (
                             <button
@@ -285,7 +291,11 @@ const EInvoicesPage = () => {
               const eff = computeEffectiveStatus(inv);
               const meta = STATUS_META[eff] || STATUS_META.beklemede;
               return (
-                <div key={inv.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
+                <div
+                  key={inv.id}
+                  onClick={() => setDetailTarget(inv)}
+                  className="bg-card border border-border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30"
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2">
@@ -302,7 +312,7 @@ const EInvoicesPage = () => {
                       <div className="text-[10px]" style={{ color: meta.color }}>{meta.label}</div>
                     </div>
                   </div>
-                  <div className="flex gap-2 pt-2 border-t border-border">
+                  <div className="flex gap-2 pt-2 border-t border-border" onClick={(e) => e.stopPropagation()}>
                     {!inv.linked_payment_id && !inv.linked_collection_id ? (
                       <Button size="sm" variant="outline" className="flex-1 h-8" onClick={() => setLinkTarget(inv)}>
                         <Link2 className="w-3 h-3 mr-1" /> Kasaya Bağla
@@ -324,6 +334,16 @@ const EInvoicesPage = () => {
       )}
 
       <InvoiceWizard open={showManual} onClose={() => setShowManual(false)} />
+
+      <InvoiceDetailModal
+        invoice={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onLinkToCash={(inv) => { setDetailTarget(null); setLinkTarget(inv); }}
+        onDelete={(inv) => {
+          setDetailTarget(null);
+          setDeleteTarget({ id: inv.id, name: `${inv.invoice_no || "Fatura"} — ${inv.counterparty_name}` });
+        }}
+      />
 
       {/* Link to cash modal */}
       <Dialog open={!!linkTarget} onOpenChange={(o) => !o && setLinkTarget(null)}>
