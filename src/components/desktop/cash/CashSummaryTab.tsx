@@ -71,8 +71,8 @@ const CashSummaryTab = () => {
                 </div>
                 <p className="text-[12px] font-medium text-muted-foreground truncate">{card.label}</p>
               </div>
-              <MetricTooltip full={`₺${fmt(card.value)}`}>
-                <p className="text-lg lg:text-2xl font-bold mb-1 truncate cursor-help" style={{ color: card.color }}>₺{fmtShort(card.value)}</p>
+              <MetricTooltip full={formatCurrencyFull(card.value)}>
+                <p className="text-lg lg:text-2xl font-bold mb-1 truncate cursor-help" style={{ color: card.color }}>{formatCurrencyShort(card.value)}</p>
               </MetricTooltip>
               <p className="text-[11px] text-muted-foreground truncate" title={card.sub}>{card.sub}</p>
             </CardContent>
