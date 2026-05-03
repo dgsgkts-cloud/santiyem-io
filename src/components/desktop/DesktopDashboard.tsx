@@ -306,12 +306,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                 ? (isUp ? "#EF4444" : "#22C55E")
                 : (isUp ? "#22C55E" : "#EF4444");
               return (
-                <div key={item.label} className="rounded-lg p-4 bg-background border border-border">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground">{item.label}</p>
-                  <p className="text-xl lg:text-2xl font-bold" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
-                  <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: changeColor }}>
-                    {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                    <span>%{Math.abs(item.change)} geçen aya göre</span>
+                <div key={item.label} className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground truncate">{item.label}</p>
+                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
+                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }}>
+                    {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
+                    <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
                   </p>
                 </div>
               );
