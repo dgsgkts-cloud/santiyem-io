@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 
 const UNIT_OPTIONS = ["adet", "m²", "m³", "mt", "kg", "ton", "lt", "takım", "gün", "saat", "sefer"];
 
-const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+import { formatNumber2 as fmt } from "@/lib/formatCurrency";
 
 const inputStyle = {  };
 
