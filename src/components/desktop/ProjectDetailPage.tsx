@@ -38,6 +38,7 @@ interface ProjectDetailPageProps {
   onBack: () => void;
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: string, color: string) => void;
+  onUpdate?: (id: string, data: EditProjectData) => Promise<boolean> | boolean;
   isDeletable?: boolean;
 }
 
