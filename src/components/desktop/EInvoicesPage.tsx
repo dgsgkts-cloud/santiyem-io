@@ -366,53 +366,7 @@ const EInvoicesPage = () => {
         </>
       )}
 
-      {/* Manual add modal */}
-      <Dialog open={showManual} onOpenChange={setShowManual}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Manuel Fatura Ekle</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={manual.direction} onValueChange={(v) => setManual({ ...manual, direction: v as any })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gelen">Gelen</SelectItem>
-                  <SelectItem value="giden">Giden</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={manual.invoice_type} onValueChange={(v) => setManual({ ...manual, invoice_type: v as any })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="e_fatura">E-Fatura</SelectItem>
-                  <SelectItem value="e_arsiv">E-Arşiv</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Fatura No" value={manual.invoice_no} onChange={(e) => setManual({ ...manual, invoice_no: e.target.value })} />
-              <Input type="date" value={manual.invoice_date} onChange={(e) => setManual({ ...manual, invoice_date: e.target.value })} />
-            </div>
-            <Input placeholder="Karşı Taraf *" value={manual.counterparty_name} onChange={(e) => setManual({ ...manual, counterparty_name: e.target.value })} />
-            <Input placeholder="VKN/TCKN" value={manual.counterparty_tax_no} onChange={(e) => setManual({ ...manual, counterparty_tax_no: e.target.value })} />
-            <div className="grid grid-cols-3 gap-2">
-              <Input type="number" placeholder="Matrah" value={manual.subtotal} onChange={(e) => setManual({ ...manual, subtotal: e.target.value })} />
-              <Input type="number" placeholder="KDV" value={manual.kdv_total} onChange={(e) => setManual({ ...manual, kdv_total: e.target.value })} />
-              <Input type="number" placeholder="Toplam *" value={manual.grand_total} onChange={(e) => setManual({ ...manual, grand_total: e.target.value })} />
-            </div>
-            <Select value={manual.project_id || "none"} onValueChange={(v) => setManual({ ...manual, project_id: v === "none" ? "" : v })}>
-              <SelectTrigger><SelectValue placeholder="Proje (opsiyonel)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Proje yok</SelectItem>
-                {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input placeholder="Açıklama" value={manual.description} onChange={(e) => setManual({ ...manual, description: e.target.value })} />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setShowManual(false)}>Vazgeç</Button>
-              <Button onClick={handleManualSave}>Kaydet</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InvoiceWizard open={showManual} onClose={() => setShowManual(false)} />
 
       {/* Link to cash modal */}
       <Dialog open={!!linkTarget} onOpenChange={(o) => !o && setLinkTarget(null)}>
