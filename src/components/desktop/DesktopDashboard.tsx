@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import MetricTooltip from "@/components/MetricTooltip";
+import { formatCurrencyShort as formatCurrency, formatCurrencyFull, formatPercent, formatPercentFull } from "@/lib/formatCurrency";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -22,8 +23,6 @@ interface DesktopDashboardProps {
 
 const formatDate = (d: Date) =>
   `${d.getDate()} ${["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][d.getMonth()]} ${d.getFullYear()}`;
-
-import { formatCurrencyShort as formatCurrency, formatCurrencyFull, formatPercent, formatPercentFull } from "@/lib/formatCurrency";
 
 const getDaysDiff = (dateStr: string) => {
   const now = new Date(); now.setHours(0,0,0,0);
