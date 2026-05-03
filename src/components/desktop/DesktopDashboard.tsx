@@ -313,8 +313,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               return (
                 <div key={item.label} className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
                   <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground truncate">{item.label}</p>
-                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
-                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }}>
+                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(item.value)}>{formatCurrency(item.value)}</p>
+                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }} title={`${formatPercentFull(item.change)} geçen aya göre`}>
                     {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
                     <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
                   </p>
