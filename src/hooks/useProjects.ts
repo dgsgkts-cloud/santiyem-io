@@ -81,5 +81,5 @@ export function useProjects() {
     toast.success("Proje durumu güncellendi");
   };
 
-  return { projects, loading, addProject, deleteProject, updateProjectStatus, refetch: fetchProjects };
+  return { projects, loading, addProject, deleteProject, updateProject, updateProjectStatus, refetch: fetchProjects };
 }
