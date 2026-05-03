@@ -242,7 +242,7 @@ const EInvoicesPage = () => {
                           <span>{formatCurrencyShort(inv.grand_total)}</span>
                         </MetricTooltip>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Select value={inv.status} onValueChange={(v) => updateInvoice(inv.id, { status: v as any })}>
                           <SelectTrigger className="h-7 w-[140px] text-xs" style={{ color: meta.color }}>
                             <span className="flex items-center gap-1.5"><Icon className="w-3 h-3" />{meta.label}</span>
@@ -254,7 +254,7 @@ const EInvoicesPage = () => {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           {!inv.linked_payment_id && !inv.linked_collection_id ? (
                             <button
