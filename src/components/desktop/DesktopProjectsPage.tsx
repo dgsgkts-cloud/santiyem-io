@@ -67,6 +67,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         isDeletable={true}
         onDelete={(id) => { handleDeleteProject(id); handleBack(); }}
         onStatusChange={(id, status, color) => updateProjectStatus(id, status, color)}
+        onUpdate={(id, data) => updateProject(id, data)}
       />
     );
   }
