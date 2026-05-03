@@ -254,7 +254,8 @@ const EInvoicesPage = () => {
               </thead>
               <tbody>
                 {filtered.map((inv) => {
-                  const meta = STATUS_META[inv.status];
+                  const eff = computeEffectiveStatus(inv);
+                  const meta = STATUS_META[eff] || STATUS_META.beklemede;
                   const Icon = meta.icon;
                   return (
                     <tr key={inv.id} className="border-t border-border hover:bg-muted/20 group">
