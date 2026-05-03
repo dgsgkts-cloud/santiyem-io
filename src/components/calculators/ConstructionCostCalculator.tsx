@@ -12,6 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
+import { formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 // ── Constants ──────────────────────────────────────────
 
@@ -259,8 +260,6 @@ function hesapla(f: FormData): { groups: CostGroup[]; genelToplam: number } {
 }
 
 // ── Helpers ──────────────────────────────────────────────
-
-const fmt = (n: number) => n.toLocaleString("tr-TR");
 
 const COLORS = ["#E8590C","#2563EB","#16A34A","#9333EA","#DC2626","#0891B2","#CA8A04","#6366F1"];
 
