@@ -403,7 +403,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: "#3B82F6" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Banka</p>
                 </div>
-                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(bankaBalance)}>{formatCurrency(bankaBalance)}</p>
               </div>
               <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-2 min-w-0">
