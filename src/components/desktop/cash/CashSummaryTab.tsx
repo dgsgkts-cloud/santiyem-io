@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
+import MetricTooltip from "@/components/MetricTooltip";
 
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
 const fmtShort = (n: number) => {
