@@ -225,7 +225,7 @@ const EInvoicesPage = () => {
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground text-sm">Yükleniyor…</div>
       ) : filtered.length === 0 ? (
-        <EmptyState
+        <EmptyStateFix
           icon={FileText}
           title={invoices.length === 0 ? "Henüz fatura yok" : "Filtreye uygun fatura yok"}
           description={
@@ -272,7 +272,7 @@ const EInvoicesPage = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">
-                        <MetricTooltip content={formatCurrencyFull(inv.grand_total)}>
+                        <MetricTooltip full={formatCurrencyFull(inv.grand_total)}>
                           <span>{formatCurrencyShort(inv.grand_total)}</span>
                         </MetricTooltip>
                       </td>
@@ -475,7 +475,7 @@ const StatCard = ({ icon: Icon, label, value, color, raw }: { icon: any; label: 
       <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
       <Icon className="w-4 h-4" style={{ color }} />
     </div>
-    <MetricTooltip content={raw ? String(value) : formatCurrencyFull(value)}>
+    <MetricTooltip full={raw ? String(value) : formatCurrencyFull(value)}>
       <div className="text-xl font-bold" style={{ color }}>
         {raw ? value : formatCurrencyShort(value)}
       </div>
