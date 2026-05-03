@@ -6,14 +6,20 @@ export function formatCurrency(value: string | number | null | undefined): strin
   if (value === null || value === undefined || value === "") return "—";
   const raw = typeof value === "number" ? value : String(value).trim();
 
+  let num: number;
   if (typeof raw === "string") {
     const cleaned = raw.replace(/[₺\s]/g, "").replace(/\./g, "").replace(",", ".");
-    const num = Number(cleaned);
+    num = Number(cleaned);
     if (!isFinite(num) || cleaned === "" || /[a-zA-Z]/.test(raw)) return raw;
-    return `${num.toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ₺`;
+  } else {
+    num = raw;
   }
 
-  return `${raw.toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ₺`;
+  const hasFraction = Math.abs(num - Math.trunc(num)) > 1e-9;
+  const opts: Intl.NumberFormatOptions = hasFraction
+    ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    : { maximumFractionDigits: 0 };
+  return `${num.toLocaleString("tr-TR", opts)} ₺`;
 }
 
 /**
