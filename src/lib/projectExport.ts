@@ -6,9 +6,7 @@ import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile } from "@/lib/companyProfile";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
-import { formatCurrency } from "@/lib/formatCurrency";
-
-const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+import { formatCurrency, formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "Bekliyor",
