@@ -362,7 +362,9 @@ const PaymentsKasaPage = () => {
                     <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
                     <span className="text-xs text-muted-foreground truncate">{c.label}</span>
                   </div>
-                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: c.color }} title={fmtFull(c.value)}>{fmtShort(c.value)}</p>
+                  <MetricTooltip full={fmtFull(c.value)}>
+                    <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
+                  </MetricTooltip>
                 </div>
               ))}
             </div>
