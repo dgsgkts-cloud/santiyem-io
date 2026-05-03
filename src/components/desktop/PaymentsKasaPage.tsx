@@ -385,7 +385,9 @@ const PaymentsKasaPage = () => {
                   <Building2 className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground truncate">Banka</span>
                 </div>
-                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(bankaBalance)}>{fmtShort(bankaBalance)}</p>
+                <MetricTooltip full={fmtFull(bankaBalance)}>
+                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(bankaBalance)}</p>
+                </MetricTooltip>
               </div>
             </div>
 
