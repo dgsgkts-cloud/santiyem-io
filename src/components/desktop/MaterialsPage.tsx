@@ -16,8 +16,9 @@ type View = "stock" | "entry-form" | "exit-form" | "suppliers" | "reports";
 
 const UNITS = ["m³", "m²", "m", "ton", "kg", "adet", "litre", "çuval", "paket"];
 
+import { formatCurrency } from "@/lib/formatCurrency";
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
-const fmtMoney = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n) + " ₺";
+const fmtMoney = (n: number) => formatCurrency(Math.round(n));
 
 const MaterialsPage = () => {
   const { user } = useUser();

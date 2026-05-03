@@ -29,9 +29,7 @@ export function getStatusInfo(endDate: string | null, status?: string): { label:
   return { label: "Aktif", color: "#22C55E", bg: "rgba(34,197,94,0.1)", icon: "✅" };
 }
 
-export function formatCurrency(v: number) {
-  return v.toLocaleString("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 0 });
-}
+export { formatCurrencyFull as formatCurrency } from "@/lib/formatCurrency";
 
 export function formatDate(d: string | null) {
   if (!d) return "—";

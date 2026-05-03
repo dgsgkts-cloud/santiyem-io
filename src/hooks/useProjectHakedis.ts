@@ -134,7 +134,7 @@ export function useProjectHakedis(projectId: string) {
     const senderName = company.companyName || user.email || "Şantiyem";
 
     // Send email
-    const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+    const { formatCurrencyFull: fmt } = await import("@/lib/formatCurrency");
     await supabase.functions.invoke("send-transactional-email", {
       body: {
         templateName: "hakedis-approval-request",
@@ -185,7 +185,7 @@ export function useProjectHakedis(projectId: string) {
     const { getCompanyProfile } = await import("@/lib/companyProfile");
     const company = getCompanyProfile();
     const senderName = company.companyName || "Şantiyem";
-    const fmt = (n: number) => n.toLocaleString("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+    const { formatCurrencyFull: fmt } = await import("@/lib/formatCurrency");
 
     const project = (await supabase.from("projects").select("name").eq("id", h.project_id).maybeSingle()).data;
 

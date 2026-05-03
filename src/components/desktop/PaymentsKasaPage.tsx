@@ -35,8 +35,7 @@ const PAYMENT_TYPES = [
 ];
 const PIE_COLORS = ["#FF6B2B", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#64748B", "#EC4899", "#14B8A6"];
 
-import { formatCurrencyFull as fmtFull, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
+import { formatCurrencyFull as fmtFull, formatCurrencyShort as fmtShort, formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const PaymentsKasaPage = () => {
   const { user } = useUser();

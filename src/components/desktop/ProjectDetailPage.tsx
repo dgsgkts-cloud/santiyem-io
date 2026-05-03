@@ -16,7 +16,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
-import { formatCurrency } from "@/lib/formatCurrency";
+import { formatCurrency, formatNumber0 } from "@/lib/formatCurrency";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
@@ -640,7 +640,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
 
       {/* Ödemeler & Tahsilatlar */}
       {user && (() => {
-        const fmt = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
+        const fmt = formatNumber0;
         const projectPayments = payments.filter(pay => pay.project_id === p.id);
         const projectCollections = collections.filter(col => col.project_id === p.id);
         const projectChecks = checks.filter(chk => chk.project_id === p.id);

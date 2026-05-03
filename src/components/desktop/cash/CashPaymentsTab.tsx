@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const CATEGORIES = ["Malzeme", "Taşeron", "İşçilik", "Ekipman Kirası", "Nakliye", "Vergi/SGK", "Sigorta", "Ofis Gideri", "Diğer"];
 const PAYMENT_TYPES = [
@@ -22,7 +23,7 @@ const STATUSES = [
   { value: "planlandi", label: "📅 Planlandı", color: "#3B82F6" },
 ];
 
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
+
 
 const CashPaymentsTab = () => {
   const { payments, isLoading, addPayment, deletePayment } = useCashPayments();
