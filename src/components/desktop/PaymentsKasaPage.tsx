@@ -35,12 +35,7 @@ const PAYMENT_TYPES = [
 ];
 const PIE_COLORS = ["#FF6B2B", "#3B82F6", "#22C55E", "#A855F7", "#F59E0B", "#64748B", "#EC4899", "#14B8A6"];
 
-const fmtFull = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
-const fmtShort = (n: number) => {
-  if (Math.abs(n) >= 1_000_000) return `₺${(n / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000) return `₺${(n / 1_000).toFixed(0)}K`;
-  return `₺${Math.round(n).toLocaleString("tr-TR")}`;
-};
+import { formatCurrencyFull as fmtFull, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
 
 const PaymentsKasaPage = () => {
