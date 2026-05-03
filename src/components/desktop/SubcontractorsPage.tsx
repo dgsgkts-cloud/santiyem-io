@@ -9,7 +9,7 @@ import { Plus, Trash2, ArrowLeft, Phone, Wrench, AlertTriangle, ChevronRight } f
 import { differenceInDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 
-const fmt = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
+import { formatCurrencyFull as fmt } from "@/lib/formatCurrency";
 
 const SubcontractorsPage = () => {
   const { user } = useUser();
