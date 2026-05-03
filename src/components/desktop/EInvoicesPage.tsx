@@ -181,7 +181,7 @@ const EInvoicesPage = () => {
             <Upload className="w-4 h-4 mr-2" /> UBL XML Yükle
           </Button>
           <Button onClick={() => setShowManual(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Manuel Ekle
+            <Plus className="w-4 h-4 mr-2" /> Yeni Fatura
           </Button>
         </div>
       </div>
