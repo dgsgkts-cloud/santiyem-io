@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
 import HakedisWizard from "./HakedisWizard";
+import MetricTooltip from "@/components/MetricTooltip";
 
 const STATUS_OPTIONS = [
   { label: "Taslak", color: "#64748B", emoji: "📝" },
