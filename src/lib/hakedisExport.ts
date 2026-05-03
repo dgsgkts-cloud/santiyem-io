@@ -112,7 +112,7 @@ export function exportHakedisPDF(
   // ─── Company Header ───
   let y = 20;
   if (options.includeHeader) {
-    y = addCompanyHeader(doc, "HAKEDİŞ İCMAL FORMU", projectName);
+    y = addPdfHeader(doc, "HAKEDİŞ İCMAL FORMU", projectName);
   } else {
     doc.setFontSize(14);
     doc.setTextColor(51, 51, 51);
@@ -364,7 +364,7 @@ export function exportHakedisPDF(
   progress(90);
 
   // ─── Page numbers ───
-  addPageNumbers(doc);
+  addPdfFooter(doc);
 
   progress(100);
 
@@ -680,6 +680,3 @@ export function exportHakedisExcel(
   const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }
-
-// Export the header function for use in other PDF generators
-export { addCompanyHeader };
