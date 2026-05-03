@@ -417,7 +417,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   <Banknote className="w-3.5 h-3.5 shrink-0" style={{ color: "#22C55E" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Toplam</p>
                 </div>
-                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(toplamBalance)}>{formatCurrency(toplamBalance)}</p>
+                <MetricTooltip full={formatCurrencyFull(toplamBalance)}>
+                  <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
+                </MetricTooltip>
               </div>
             </div>
             {upcomingChecks.length > 0 && (
