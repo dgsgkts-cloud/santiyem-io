@@ -45,6 +45,7 @@ const EInvoicesPage = () => {
   const [showManual, setShowManual] = useState(false);
   const [linkTarget, setLinkTarget] = useState<EInvoice | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [detailTarget, setDetailTarget] = useState<EInvoice | null>(null);
 
   const [linkAccount, setLinkAccount] = useState<string>("");
   const [linkProject, setLinkProject] = useState<string>("");
