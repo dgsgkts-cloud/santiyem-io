@@ -48,19 +48,6 @@ const EInvoicesPage = () => {
   const [linkAccount, setLinkAccount] = useState<string>("");
   const [linkProject, setLinkProject] = useState<string>("");
 
-  const [manual, setManual] = useState({
-    direction: "gelen" as "gelen" | "giden",
-    invoice_type: "e_fatura" as "e_fatura" | "e_arsiv",
-    invoice_no: "",
-    invoice_date: new Date().toISOString().slice(0, 10),
-    counterparty_name: "",
-    counterparty_tax_no: "",
-    subtotal: "",
-    kdv_total: "",
-    grand_total: "",
-    project_id: "",
-    description: "",
-  });
 
   const filtered = useMemo(() => {
     return invoices.filter((i) => {
