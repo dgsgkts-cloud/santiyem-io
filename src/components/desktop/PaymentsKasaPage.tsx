@@ -376,7 +376,9 @@ const PaymentsKasaPage = () => {
                   <Banknote className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground truncate">Nakit Kasa</span>
                 </div>
-                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(nakitKasaBalance)}>{fmtShort(nakitKasaBalance)}</p>
+                <MetricTooltip full={fmtFull(nakitKasaBalance)}>
+                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(nakitKasaBalance)}</p>
+                </MetricTooltip>
               </div>
               <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1 min-w-0">
