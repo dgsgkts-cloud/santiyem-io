@@ -173,9 +173,9 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
                 </div>
               )}
               <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
-                <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><p className="text-[12px] font-semibold truncate" style={{ color: "#22C55E" }} title={fmt(p.collected)}>{fmtShort(p.collected)}</p></div>
-                <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><p className="text-[12px] font-semibold truncate" style={{ color: "#F59E0B" }} title={fmt(p.pending)}>{fmtShort(p.pending)}</p></div>
-                <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><p className="text-[12px] font-semibold truncate" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }} title={fmt(p.overdueAmount)}>{fmtShort(p.overdueAmount)}</p></div>
+                <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><MetricTooltip full={fmt(p.collected)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></MetricTooltip></div>
+                <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><MetricTooltip full={fmt(p.pending)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></MetricTooltip></div>
+                <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><MetricTooltip full={fmt(p.overdueAmount)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></MetricTooltip></div>
               </div>
               <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
                 Detay →
