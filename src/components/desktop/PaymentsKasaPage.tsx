@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import MetricTooltip from "@/components/MetricTooltip";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectExpenses, ProjectExpense } from "@/hooks/useProjectExpenses";
 import { useUser } from "@/contexts/UserContext";
