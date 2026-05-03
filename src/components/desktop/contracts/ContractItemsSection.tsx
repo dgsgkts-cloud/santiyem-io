@@ -3,9 +3,7 @@ import { useContractItems, UNITS } from "@/hooks/useContractItems";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Upload, Save, X, Edit2, ClipboardPaste } from "lucide-react";
 import { toast } from "sonner";
-
-const formatCurrency = (n: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 0 }).format(n);
+import { formatCurrencyFull as formatCurrency } from "@/lib/formatCurrency";
 
 interface Props {
   contractId: string;
