@@ -2,11 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
-import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
-import { formatCurrency, formatNumber0 as fmt } from "@/lib/formatCurrency";
+import { formatCurrencyFull } from "@/lib/formatCurrency";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "Bekliyor",
