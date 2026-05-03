@@ -500,9 +500,9 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                     <tr key={h.id} style={{ borderBottom: "1px solid #1E2732" }}>
                       <td className="px-4 py-3 font-mono" style={textStyle}>{i + 1}</td>
                       <td className="px-4 py-3 text-muted-foreground">{h.period}</td>
-                      <td className="px-4 py-3 font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</td>
-                      <td className="px-4 py-3 font-mono text-muted-foreground">₺{h.kdv.toLocaleString("tr-TR")}</td>
-                      <td className="px-4 py-3 font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</td>
+                      <td className="px-4 py-3 font-mono" style={textStyle}>₺{formatNumber0(h.amount)}</td>
+                      <td className="px-4 py-3 font-mono text-muted-foreground">₺{formatNumber0(h.kdv)}</td>
+                      <td className="px-4 py-3 font-mono font-semibold" style={textStyle}>₺{formatNumber0(h.net)}</td>
                       <td className="px-4 py-3 relative">
                         <button
                           onClick={() => setHakedisStatusMenuId(hakedisStatusMenuId === h.id ? null : h.id)}
@@ -568,8 +568,8 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                     )}
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{h.amount.toLocaleString("tr-TR")}</span></span>
-                    <span style={labelStyle}>Net: <span className="font-mono font-semibold" style={textStyle}>₺{h.net.toLocaleString("tr-TR")}</span></span>
+                    <span style={labelStyle}>Tutar: <span className="font-mono" style={textStyle}>₺{formatNumber0(h.amount)}</span></span>
+                    <span style={labelStyle}>Net: <span className="font-mono font-semibold" style={textStyle}>₺{formatNumber0(h.net)}</span></span>
                     <button onClick={() => setDeleteTarget({ type: "hakedis", id: h.id, name: `#${i + 1} — ${h.period}` })} className="text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
@@ -579,7 +579,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
             <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #1E2732" }}>
               <span className="text-[11px] font-semibold uppercase" style={labelStyle}>Toplam</span>
               <span className="text-[14px] font-bold font-mono" style={{ color: "#FF6B2B" }}>
-                ₺{hakedisler.reduce((s, h) => s + h.net, 0).toLocaleString("tr-TR")}
+                ₺{formatNumber0(hakedisler.reduce((s, h) => s + h.net, 0))}
               </span>
             </div>
           </>
