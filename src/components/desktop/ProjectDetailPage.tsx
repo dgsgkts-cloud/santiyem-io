@@ -330,7 +330,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                     {m.completed && <CheckCircle2 className="w-3 h-3 text-white" />}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through" : ""}`} style={{ color: m.completed ? "#64748B" : "#F1F5F9" }}>{m.title}</p>
+                    <p className={`text-[12px] lg:text-[13px] font-medium ${m.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{m.title}</p>
                   </div>
                   <span className="text-[10px] lg:text-[11px] font-mono shrink-0" style={labelStyle}>{m.milestone_date}</span>
                   {user && (
