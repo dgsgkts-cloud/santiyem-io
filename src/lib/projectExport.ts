@@ -6,6 +6,7 @@ import { logoBase64 } from "@/lib/logoBase64";
 import { getCompanyProfile } from "@/lib/companyProfile";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
@@ -112,7 +113,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
       ["Lokasyon", project.location],
       ["Başlangıç", project.start],
       ["Tahmini Bitiş", project.end],
-      ["Bütçe", project.budget],
+      ["Bütçe", formatCurrency(project.budget)],
       ["Durum", project.status],
     ],
   });
@@ -293,7 +294,7 @@ export function exportProjectExcel(project: Project, tasks: Task[], milestones: 
     ["Lokasyon", project.location],
     ["Başlangıç", project.start],
     ["Bitiş", project.end],
-    ["Bütçe", project.budget],
+    ["Bütçe", formatCurrency(project.budget)],
     ["Durum", project.status],
     ["Proje Sorumlusu", project.manager],
     [],

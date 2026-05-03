@@ -16,6 +16,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
@@ -286,7 +287,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         {[
           { icon: MapPin, label: "Lokasyon", value: p.location },
           { icon: User, label: "Müşteri", value: p.client },
-          { icon: DollarSign, label: "Bütçe", value: p.budget },
+          { icon: DollarSign, label: "Bütçe", value: formatCurrency(p.budget) },
           { icon: Calendar, label: "Süre", value: `${p.start} → ${p.end}` },
         ].map((info, i) => {
           const Icon = info.icon;
