@@ -317,10 +317,12 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   <MetricTooltip full={formatCurrencyFull(item.value)}>
                     <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
                   </MetricTooltip>
-                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }} title={`${formatPercentFull(item.change)} geçen aya göre`}>
-                    {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
-                    <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
-                  </p>
+                  <MetricTooltip full={`${formatPercentFull(item.change)} geçen aya göre`}>
+                    <p className="text-[10px] mt-1 flex items-center gap-1 truncate cursor-help" style={{ color: changeColor }}>
+                      {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
+                      <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
+                    </p>
+                  </MetricTooltip>
                 </div>
               );
             });
