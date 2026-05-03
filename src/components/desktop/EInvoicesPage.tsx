@@ -335,6 +335,16 @@ const EInvoicesPage = () => {
 
       <InvoiceWizard open={showManual} onClose={() => setShowManual(false)} />
 
+      <InvoiceDetailModal
+        invoice={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onLinkToCash={(inv) => { setDetailTarget(null); setLinkTarget(inv); }}
+        onDelete={(inv) => {
+          setDetailTarget(null);
+          setDeleteTarget({ id: inv.id, name: `${inv.invoice_no || "Fatura"} — ${inv.counterparty_name}` });
+        }}
+      />
+
       {/* Link to cash modal */}
       <Dialog open={!!linkTarget} onOpenChange={(o) => !o && setLinkTarget(null)}>
         <DialogContent className="max-w-md">
