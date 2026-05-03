@@ -41,15 +41,8 @@ export function exportCashPDF(data: CashReportData) {
   const dateStr = now.toLocaleDateString("tr-TR");
   const pw = doc.internal.pageSize.getWidth();
 
-  // ── Header
-  doc.setFillColor(15, 20, 25);
-  doc.rect(0, 0, pw, 28, "F");
-  doc.setFontSize(16);
-  doc.setTextColor(255, 107, 43);
-  doc.text("Şantiyem — Kasa & Ödeme Raporu", 14, 14);
-  doc.setFontSize(9);
-  doc.setTextColor(148, 163, 184);
-  doc.text(`Rapor Tarihi: ${dateStr}`, 14, 22);
+  // ── Header (firma profili) ──
+  let y = addPdfHeader(doc, "Kasa & Ödeme Raporu");
 
   // ── Summary
   const totalBalance = data.accounts.reduce((s, a) => s + Number(a.balance), 0);
@@ -57,10 +50,9 @@ export function exportCashPDF(data: CashReportData) {
   const totalCollections = data.collections.reduce((s, c) => s + Number(c.amount), 0);
 
   doc.setFontSize(10);
-  doc.setTextColor(241, 245, 249);
-  let y = 36;
-  doc.text(`Toplam Bakiye: ₺${fmt(totalBalance)}    |    Toplam Ödemeler: ₺${fmt(totalPayments)}    |    Toplam Tahsilatlar: ₺${fmt(totalCollections)}    |    Net: ₺${fmt(totalCollections - totalPayments)}`, 14, y);
-  y += 10;
+  doc.setTextColor(40);
+  doc.text(`Toplam Bakiye: ${money(totalBalance)}    |    Toplam Ödemeler: ${money(totalPayments)}    |    Toplam Tahsilatlar: ${money(totalCollections)}    |    Net: ${money(totalCollections - totalPayments)}`, 14, y);
+  y += 8;
 
   // ── Accounts
   doc.setFontSize(12);
