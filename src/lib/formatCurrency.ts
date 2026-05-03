@@ -15,11 +15,16 @@ export function formatCurrency(value: string | number | null | undefined): strin
     num = raw;
   }
 
-  const hasFraction = Math.abs(num - Math.trunc(num)) > 1e-9;
+  // -0 normalize
+  if (Object.is(num, -0)) num = 0;
+
+  const abs = Math.abs(num);
+  const hasFraction = Math.abs(abs - Math.trunc(abs)) > 1e-9;
   const opts: Intl.NumberFormatOptions = hasFraction
     ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     : { maximumFractionDigits: 0 };
-  return `${num.toLocaleString("tr-TR", opts)} ₺`;
+  const sign = num < 0 ? "-" : "";
+  return `${sign}${abs.toLocaleString("tr-TR", opts)} ₺`;
 }
 
 /**
