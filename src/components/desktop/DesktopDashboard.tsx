@@ -202,6 +202,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
+      <TrialBanner />
       {/* Welcome */}
       <div className="rounded-xl p-5 lg:p-6 bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
