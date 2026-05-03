@@ -113,7 +113,7 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
       ["Lokasyon", project.location],
       ["Başlangıç", project.start],
       ["Tahmini Bitiş", project.end],
-      ["Bütçe", project.budget],
+      ["Bütçe", formatCurrency(project.budget)],
       ["Durum", project.status],
     ],
   });
@@ -294,7 +294,7 @@ export function exportProjectExcel(project: Project, tasks: Task[], milestones: 
     ["Lokasyon", project.location],
     ["Başlangıç", project.start],
     ["Bitiş", project.end],
-    ["Bütçe", project.budget],
+    ["Bütçe", formatCurrency(project.budget)],
     ["Durum", project.status],
     ["Proje Sorumlusu", project.manager],
     [],
