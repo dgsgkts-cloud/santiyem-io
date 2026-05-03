@@ -61,6 +61,12 @@ export function formatNumber2(n: number): string {
   return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** PDF/Excel için tam sayı binlik ayraçlı (₺ olmadan). */
+export function formatNumber0(n: number): string {
+  if (!isFinite(n)) return "0";
+  return Math.round(n).toLocaleString("tr-TR");
+}
+
 /**
  * PDF/Excel exportları için 2 ondalıklı para tutarı (₺ ile).
  * Örn: 1234.5 → "₺1.234,50"
