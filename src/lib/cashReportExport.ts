@@ -7,7 +7,7 @@ import type { CashCollection } from "@/hooks/useCashCollections";
 import type { CashCheck } from "@/hooks/useCashChecks";
 import type { CashAccount } from "@/hooks/useCashAccounts";
 
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+import { formatNumber2 as fmt } from "@/lib/formatCurrency";
 
 const statusLabels: Record<string, string> = {
   odendi: "Ödendi",
