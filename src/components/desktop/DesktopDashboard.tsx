@@ -386,26 +386,26 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               </button>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nakit Kasa</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Wallet className="w-3.5 h-3.5 shrink-0" style={{ color: "#F59E0B" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Nakit Kasa</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Building2 className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Banka</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: "#3B82F6" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Banka</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
               </div>
-              <div className="rounded-lg p-4 bg-background border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Banknote className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Toplam</p>
+              <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <Banknote className="w-3.5 h-3.5 shrink-0" style={{ color: "#22C55E" }} />
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Toplam</p>
                 </div>
-                <p className="text-xl lg:text-2xl font-bold" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
+                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
               </div>
             </div>
             {upcomingChecks.length > 0 && (
