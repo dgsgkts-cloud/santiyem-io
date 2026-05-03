@@ -30,11 +30,16 @@ const formatCurrency = (n: number) => {
   return `₺${sign}${Math.round(abs)}`;
 };
 
+const formatCurrencyFull = (n: number) =>
+  `${n < 0 ? "-" : ""}₺${Math.round(Math.abs(n)).toLocaleString("tr-TR")}`;
+
 const formatPercent = (p: number) => {
   const abs = Math.abs(p);
   if (abs > 999) return ">%999";
   return `%${abs}`;
 };
+
+const formatPercentFull = (p: number) => `%${p}`;
 
 const getDaysDiff = (dateStr: string) => {
   const now = new Date(); now.setHours(0,0,0,0);
