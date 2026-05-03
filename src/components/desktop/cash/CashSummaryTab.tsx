@@ -8,14 +8,8 @@ import { tr } from "date-fns/locale";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
 import MetricTooltip from "@/components/MetricTooltip";
 
+import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
-const fmtShort = (n: number) => {
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}${Math.round(abs / 1_000)}K`;
-  return `${sign}${Math.round(abs).toLocaleString("tr-TR")}`;
-};
 
 const CashSummaryTab = () => {
   const { accounts } = useCashAccounts();
