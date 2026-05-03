@@ -102,36 +102,6 @@ const EInvoicesPage = () => {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const handleManualSave = async () => {
-    if (!manual.counterparty_name || !manual.grand_total) {
-      toast.error("Karşı taraf ve toplam tutar zorunludur");
-      return;
-    }
-    const r = await addInvoice({
-      direction: manual.direction,
-      invoice_type: manual.invoice_type,
-      invoice_no: manual.invoice_no,
-      invoice_date: manual.invoice_date,
-      counterparty_name: manual.counterparty_name,
-      counterparty_tax_no: manual.counterparty_tax_no || undefined,
-      subtotal: Number(manual.subtotal) || 0,
-      kdv_total: Number(manual.kdv_total) || 0,
-      grand_total: Number(manual.grand_total),
-      description: manual.description,
-      project_id: manual.project_id || undefined,
-      source: "manuel",
-    });
-    if (r) {
-      setShowManual(false);
-      setManual({
-        direction: "gelen", invoice_type: "e_fatura", invoice_no: "",
-        invoice_date: new Date().toISOString().slice(0, 10),
-        counterparty_name: "", counterparty_tax_no: "",
-        subtotal: "", kdv_total: "", grand_total: "",
-        project_id: "", description: "",
-      });
-    }
-  };
 
   const handleLink = async () => {
     if (!linkTarget) return;
