@@ -668,6 +668,7 @@ export type Database = {
           currency: string
           description: string | null
           direction: string
+          due_date: string | null
           file_name: string | null
           file_url: string | null
           grand_total: number
@@ -676,6 +677,7 @@ export type Database = {
           invoice_no: string
           invoice_type: string
           invoice_uuid: string | null
+          items: Json
           kdv_total: number
           linked_collection_id: string | null
           linked_payment_id: string | null
@@ -695,6 +697,7 @@ export type Database = {
           currency?: string
           description?: string | null
           direction: string
+          due_date?: string | null
           file_name?: string | null
           file_url?: string | null
           grand_total?: number
@@ -703,6 +706,7 @@ export type Database = {
           invoice_no?: string
           invoice_type?: string
           invoice_uuid?: string | null
+          items?: Json
           kdv_total?: number
           linked_collection_id?: string | null
           linked_payment_id?: string | null
@@ -722,6 +726,7 @@ export type Database = {
           currency?: string
           description?: string | null
           direction?: string
+          due_date?: string | null
           file_name?: string | null
           file_url?: string | null
           grand_total?: number
@@ -730,6 +735,7 @@ export type Database = {
           invoice_no?: string
           invoice_type?: string
           invoice_uuid?: string | null
+          items?: Json
           kdv_total?: number
           linked_collection_id?: string | null
           linked_payment_id?: string | null
