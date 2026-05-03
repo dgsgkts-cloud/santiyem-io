@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
+import { formatNumber0 } from "@/lib/formatCurrency";
 
 const PLANS = [
   {
@@ -117,8 +118,8 @@ const PricingSection = () => {
             const price = p.monthlyPrice === 0
               ? { display: "0₺", period: "/ay", sub: null }
               : yearly
-                ? { display: `${p.yearlyPrice.toLocaleString("tr-TR")}₺`, period: "/ay", sub: `Yıllık ${(p.yearlyPrice * 12).toLocaleString("tr-TR")}₺` }
-                : { display: `${p.monthlyPrice.toLocaleString("tr-TR")}₺`, period: "/ay", sub: null };
+                ? { display: `${formatNumber0(p.yearlyPrice)}₺`, period: "/ay", sub: `Yıllık ${formatNumber0(p.yearlyPrice * 12)}₺` }
+                : { display: `${formatNumber0(p.monthlyPrice)}₺`, period: "/ay", sub: null };
             return (
               <div key={p.name} className={`rounded-xl p-6 border relative ${p.popular ? "ring-1 ring-[#FF6B2B]/50" : ""}`}
                 style={{ background: "#161C23", borderColor: p.popular ? "rgba(255,107,43,0.3)" : "#1E2732" }}>
@@ -170,10 +171,10 @@ const PricingSection = () => {
                             style={{ background: "transparent", border: "1px solid #1E2732", color: "#fff" }}
                           >
                             {loadingPlan === `direct-${planKey}` && <Loader2 size={16} className="animate-spin inline mr-1" />}
-                            Hemen Başla — {(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")}₺/ay
+                            Hemen Başla — {formatNumber0(yearly ? p.yearlyPrice : p.monthlyPrice)}₺/ay
                           </button>
                           <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: "#64748B" }}>
-                            🔒 Kartınızı doğrulamak için 1₺ tahsil edilecek, hemen iade edilecektir. 14 gün sonra aylık ₺{(yearly ? p.yearlyPrice : p.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                            🔒 Kartınızı doğrulamak için 1₺ tahsil edilecek, hemen iade edilecektir. 14 gün sonra aylık ₺{formatNumber0(yearly ? p.yearlyPrice : p.monthlyPrice)} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
                             <br /><strong style={{ color: "#FF6B2B" }}>⚠️ Ödeme formunda "Kartımı Kaydet" kutucuğunu mutlaka işaretleyin.</strong>
                           </p>
                         </>

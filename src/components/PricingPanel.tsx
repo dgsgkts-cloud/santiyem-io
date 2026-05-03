@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PaymentLogos } from "@/components/PaymentLogos";
 import { useUser } from "@/contexts/UserContext";
+import { formatNumber0 } from "@/lib/formatCurrency";
 
 const PAYMENT_DISABLED = false;
 
@@ -167,12 +168,12 @@ const PricingPanel = () => {
     if (p.monthlyPrice === 0) return { display: "0₺", period: "/ay", sub: null };
     if (yearly) {
       return {
-        display: `${p.yearlyPrice.toLocaleString("tr-TR")}₺`,
+        display: `${formatNumber0(p.yearlyPrice)}₺`,
         period: "/ay",
-        sub: `Yıllık ${(p.yearlyPrice * 12).toLocaleString("tr-TR")}₺ · %20 tasarruf`,
+        sub: `Yıllık ${formatNumber0(p.yearlyPrice * 12)}₺ · %20 tasarruf`,
       };
     }
-    return { display: `${p.monthlyPrice.toLocaleString("tr-TR")}₺`, period: "/ay", sub: null };
+    return { display: `${formatNumber0(p.monthlyPrice)}₺`, period: "/ay", sub: null };
   };
 
   const handleEnterpriseSubmit = async (e: React.FormEvent) => {
@@ -363,10 +364,10 @@ const PricingPanel = () => {
                       className="w-full font-semibold h-11 bg-transparent border border-border text-foreground hover:bg-secondary"
                     >
                       {loadingPlan === `direct-${plan.id}` && <Loader2 size={16} className="animate-spin mr-1" />}
-                      Hemen Başla — {(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")}₺/ay
+                      Hemen Başla — {formatNumber0(yearly ? plan.yearlyPrice : plan.monthlyPrice)}₺/ay
                     </Button>
                     <p className="text-[11px] text-center text-muted-foreground mt-1 leading-relaxed">
-                      14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{(yearly ? plan.yearlyPrice : plan.monthlyPrice).toLocaleString("tr-TR")} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                      14 gün boyunca ücret alınmaz. 15. günden itibaren aylık ₺{formatNumber0(yearly ? plan.yearlyPrice : plan.monthlyPrice)} otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
                     </p>
                   </>
                 )}

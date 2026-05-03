@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Upload, Plus, Trash2, Bot, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cardStyleClass, CONTRACT_TYPES, CriticalClause } from "./ContractTypes";
+import { formatNumber0 } from "@/lib/formatCurrency";
 
 interface Props {
   contract?: Contract;
@@ -318,10 +319,10 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
               border: `1px solid ${Math.abs(scheduleDiff) < 1 ? "rgba(34,197,94,0.2)" : "rgba(245,158,11,0.2)"}`,
             }}>
               <span className="text-muted-foreground">
-                Toplam: {scheduleTotal.toLocaleString("tr-TR")} ₺ / Sözleşme: {form.amount.toLocaleString("tr-TR")} ₺
+                Toplam: {formatNumber0(scheduleTotal)} ₺ / Sözleşme: {formatNumber0(form.amount)} ₺
               </span>
               <span style={{ color: Math.abs(scheduleDiff) < 1 ? "#22C55E" : "#F59E0B" }}>
-                {Math.abs(scheduleDiff) < 1 ? "✓ Tutarlar eşleşiyor" : `Fark: ${scheduleDiff.toLocaleString("tr-TR")} ₺`}
+                {Math.abs(scheduleDiff) < 1 ? "✓ Tutarlar eşleşiyor" : `Fark: ${formatNumber0(scheduleDiff)} ₺`}
               </span>
             </div>
           )}

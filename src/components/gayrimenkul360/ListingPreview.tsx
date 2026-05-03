@@ -1,6 +1,7 @@
 import { Copy, Check, MapPin, Phone, Building2, TreePine, Tag } from "lucide-react";
 import { useState } from "react";
 import { Listing } from "@/hooks/useListings";
+import { formatNumber0 } from "@/lib/formatCurrency";
 
 interface ListingPreviewProps {
   listing: Listing;
@@ -64,7 +65,7 @@ const ListingPreview = ({ listing, onFinish }: ListingPreviewProps) => {
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4" style={{ color: "#10B981" }} />
             <span className="text-xl font-bold" style={{ color: "#10B981" }}>
-              {listing.price?.toLocaleString("tr-TR")} ₺
+              {formatNumber0(Number(listing.price ?? 0))} ₺
             </span>
           </div>
 

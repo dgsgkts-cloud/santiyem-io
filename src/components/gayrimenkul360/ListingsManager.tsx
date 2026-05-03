@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Building2, Plus, Trash2, Eye, MapPin, Tag, TreePine } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { formatNumber0 } from "@/lib/formatCurrency";
 
 interface ListingsManagerProps {
   onNewListing: () => void;
@@ -88,7 +89,7 @@ const ListingsManager = ({ onNewListing }: ListingsManagerProps) => {
                 )}
                 <span className="flex items-center gap-1">
                   <Tag className="w-3 h-3" />
-                  {listing.price?.toLocaleString("tr-TR")} ₺
+                  {formatNumber0(Number(listing.price ?? 0))} ₺
                 </span>
               </div>
             </div>
