@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import MetricTooltip from "@/components/MetricTooltip";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectExpenses, ProjectExpense } from "@/hooks/useProjectExpenses";
 import { useUser } from "@/contexts/UserContext";
@@ -361,7 +362,9 @@ const PaymentsKasaPage = () => {
                     <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
                     <span className="text-xs text-muted-foreground truncate">{c.label}</span>
                   </div>
-                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: c.color }} title={fmtFull(c.value)}>{fmtShort(c.value)}</p>
+                  <MetricTooltip full={fmtFull(c.value)}>
+                    <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
+                  </MetricTooltip>
                 </div>
               ))}
             </div>
@@ -373,14 +376,18 @@ const PaymentsKasaPage = () => {
                   <Banknote className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground truncate">Nakit Kasa</span>
                 </div>
-                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(nakitKasaBalance)}>{fmtShort(nakitKasaBalance)}</p>
+                <MetricTooltip full={fmtFull(nakitKasaBalance)}>
+                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(nakitKasaBalance)}</p>
+                </MetricTooltip>
               </div>
               <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1 min-w-0">
                   <Building2 className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-muted-foreground truncate">Banka</span>
                 </div>
-                <p className="text-base lg:text-lg font-bold text-foreground truncate" title={fmtFull(bankaBalance)}>{fmtShort(bankaBalance)}</p>
+                <MetricTooltip full={fmtFull(bankaBalance)}>
+                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(bankaBalance)}</p>
+                </MetricTooltip>
               </div>
             </div>
 
@@ -414,15 +421,15 @@ const PaymentsKasaPage = () => {
                       <div className="grid grid-cols-3 gap-2 text-[11px]">
                         <div>
                           <span className="text-muted-foreground">Gelir</span>
-                          <p className="font-semibold truncate" style={{ color: "#22C55E" }} title={fmtFull(p.hakedisTotal)}>{fmtShort(p.hakedisTotal)}</p>
+                          <MetricTooltip full={fmtFull(p.hakedisTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p></MetricTooltip>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Gider</span>
-                          <p className="font-semibold truncate" style={{ color: "#EF4444" }} title={fmtFull(p.expenseTotal)}>{fmtShort(p.expenseTotal)}</p>
+                          <MetricTooltip full={fmtFull(p.expenseTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#EF4444" }}>{fmtShort(p.expenseTotal)}</p></MetricTooltip>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Net</span>
-                          <p className="font-semibold truncate" style={{ color: karColor(p.karMarji) }} title={fmtFull(p.netKar)}>{fmtShort(p.netKar)}</p>
+                          <MetricTooltip full={fmtFull(p.netKar)}><p className="font-semibold truncate cursor-help" style={{ color: karColor(p.karMarji) }}>{fmtShort(p.netKar)}</p></MetricTooltip>
                         </div>
                       </div>
                     </div>

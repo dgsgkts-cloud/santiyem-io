@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
+import MetricTooltip from "@/components/MetricTooltip";
 
 const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
 const fmtShort = (n: number) => {
@@ -76,7 +77,9 @@ const CashSummaryTab = () => {
                 </div>
                 <p className="text-[12px] font-medium text-muted-foreground truncate">{card.label}</p>
               </div>
-              <p className="text-lg lg:text-2xl font-bold mb-1 truncate" style={{ color: card.color }} title={`₺${fmt(card.value)}`}>₺{fmtShort(card.value)}</p>
+              <MetricTooltip full={`₺${fmt(card.value)}`}>
+                <p className="text-lg lg:text-2xl font-bold mb-1 truncate cursor-help" style={{ color: card.color }}>₺{fmtShort(card.value)}</p>
+              </MetricTooltip>
               <p className="text-[11px] text-muted-foreground truncate" title={card.sub}>{card.sub}</p>
             </CardContent>
           </Card>

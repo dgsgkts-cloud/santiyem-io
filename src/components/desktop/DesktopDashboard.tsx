@@ -12,6 +12,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
 import UpgradeModal from "@/components/UpgradeModal";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import MetricTooltip from "@/components/MetricTooltip";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -313,11 +314,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               return (
                 <div key={item.label} className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
                   <p className="text-[11px] font-semibold uppercase tracking-wide mb-2 text-muted-foreground truncate">{item.label}</p>
-                  <p className="text-base lg:text-xl font-bold truncate" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(item.value)}>{formatCurrency(item.value)}</p>
-                  <p className="text-[10px] mt-1 flex items-center gap-1 truncate" style={{ color: changeColor }} title={`${formatPercentFull(item.change)} geçen aya göre`}>
-                    {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
-                    <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
-                  </p>
+                  <MetricTooltip full={formatCurrencyFull(item.value)}>
+                    <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(item.value)}</p>
+                  </MetricTooltip>
+                  <MetricTooltip full={`${formatPercentFull(item.change)} geçen aya göre`}>
+                    <p className="text-[10px] mt-1 flex items-center gap-1 truncate cursor-help" style={{ color: changeColor }}>
+                      {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
+                      <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
+                    </p>
+                  </MetricTooltip>
                 </div>
               );
             });
@@ -396,21 +401,27 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
                   <Wallet className="w-3.5 h-3.5 shrink-0" style={{ color: "#F59E0B" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Nakit Kasa</p>
                 </div>
-                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(kasaBalance)}>{formatCurrency(kasaBalance)}</p>
+                <MetricTooltip full={formatCurrencyFull(kasaBalance)}>
+                  <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: "#F59E0B", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(kasaBalance)}</p>
+                </MetricTooltip>
               </div>
               <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-2 min-w-0">
                   <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: "#3B82F6" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Banka</p>
                 </div>
-                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(bankaBalance)}>{formatCurrency(bankaBalance)}</p>
+                <MetricTooltip full={formatCurrencyFull(bankaBalance)}>
+                  <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: "#3B82F6", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(bankaBalance)}</p>
+                </MetricTooltip>
               </div>
               <div className="rounded-lg p-4 bg-background border border-border min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-2 min-w-0">
                   <Banknote className="w-3.5 h-3.5 shrink-0" style={{ color: "#22C55E" }} />
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground truncate">Toplam</p>
                 </div>
-                <p className="text-base lg:text-xl font-bold truncate" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }} title={formatCurrencyFull(toplamBalance)}>{formatCurrency(toplamBalance)}</p>
+                <MetricTooltip full={formatCurrencyFull(toplamBalance)}>
+                  <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: "#22C55E", fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(toplamBalance)}</p>
+                </MetricTooltip>
               </div>
             </div>
             {upcomingChecks.length > 0 && (
