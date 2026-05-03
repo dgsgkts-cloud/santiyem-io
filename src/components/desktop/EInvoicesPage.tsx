@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useEInvoices, EInvoice, computeEffectiveStatus } from "@/hooks/useEInvoices";
 import InvoiceWizard from "./InvoiceWizard";
+import InvoiceDetailModal from "./InvoiceDetailModal";
 import { useProjects } from "@/hooks/useProjects";
 import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { parseUBLInvoice } from "@/lib/ublParser";
