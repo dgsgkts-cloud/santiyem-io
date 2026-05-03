@@ -325,7 +325,8 @@ const EInvoicesPage = () => {
           {/* Mobile cards */}
           <div className="lg:hidden space-y-2">
             {filtered.map((inv) => {
-              const meta = STATUS_META[inv.status];
+              const eff = computeEffectiveStatus(inv);
+              const meta = STATUS_META[eff] || STATUS_META.beklemede;
               return (
                 <div key={inv.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
                   <div className="flex justify-between items-start">
