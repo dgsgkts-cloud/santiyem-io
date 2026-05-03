@@ -225,8 +225,8 @@ const EInvoicesPage = () => {
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground text-sm">Yükleniyor…</div>
       ) : filtered.length === 0 ? (
-        <EmptyStateFix
-          icon={FileText}
+        <EmptyState
+          icon="🧾"
           title={invoices.length === 0 ? "Henüz fatura yok" : "Filtreye uygun fatura yok"}
           description={
             invoices.length === 0
@@ -457,6 +457,7 @@ const EInvoicesPage = () => {
       {deleteTarget && (
         <DeleteConfirmModal
           open
+          title="Faturayı Sil"
           itemName={deleteTarget.name}
           onClose={() => setDeleteTarget(null)}
           onConfirm={async () => {
