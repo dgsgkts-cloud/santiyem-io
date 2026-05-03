@@ -194,7 +194,15 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
               </div>
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              {onUpdate && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80 bg-card border border-border text-foreground"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Düzenle
+                </button>
+              )}
               <button
                 onClick={() => setShowQrModal(true)}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
