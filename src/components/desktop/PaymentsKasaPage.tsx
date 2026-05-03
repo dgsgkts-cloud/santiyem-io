@@ -331,18 +331,18 @@ const PaymentsKasaPage = () => {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full mb-6 h-auto p-1 rounded-xl bg-card border border-border flex flex-nowrap gap-1">
-          <TabsTrigger value="overview" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <BarChart3 className="w-4 h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
+        <TabsList className="w-full mb-6 h-auto p-1 rounded-xl bg-card border border-border flex flex-nowrap gap-0.5 sm:gap-1">
+          <TabsTrigger value="overview" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
           </TabsTrigger>
-          <TabsTrigger value="transactions" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <CreditCard className="w-4 h-4 shrink-0" /> <span className="truncate">Gelir & Giderler</span>
+          <TabsTrigger value="transactions" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Gelir & Gider</span>
           </TabsTrigger>
-          <TabsTrigger value="kasa" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <Wallet className="w-4 h-4 shrink-0" /> <span className="truncate">Kasa & Ödemeler</span>
+          <TabsTrigger value="kasa" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Kasa</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-0 flex-col sm:flex-row gap-1 sm:gap-2 py-2 text-[11px] sm:text-[13px] data-[state=active]:bg-primary/15 data-[state=active]:text-primary rounded-lg">
-            <FileText className="w-4 h-4 shrink-0" /> <span className="truncate">Raporlar</span>
+          <TabsTrigger value="reports" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Raporlar</span>
           </TabsTrigger>
         </TabsList>
 
