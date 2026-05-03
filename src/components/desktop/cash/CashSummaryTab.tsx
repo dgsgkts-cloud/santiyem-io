@@ -8,8 +8,7 @@ import { tr } from "date-fns/locale";
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, FileText, Receipt } from "lucide-react";
 import MetricTooltip from "@/components/MetricTooltip";
 
-import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
-const fmt = (n: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 0 }).format(n);
+import { formatCurrencyFull, formatCurrencyShort, formatNumber0 as fmt } from "@/lib/formatCurrency";
 
 const CashSummaryTab = () => {
   const { accounts } = useCashAccounts();
