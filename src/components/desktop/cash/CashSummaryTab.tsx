@@ -68,16 +68,16 @@ const CashSummaryTab = () => {
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
-          <Card key={card.label} className="border-0" style={{ backgroundColor: card.bg }}>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: card.bg }}>
+          <Card key={card.label} className="border-0 min-w-0 overflow-hidden" style={{ backgroundColor: card.bg }}>
+            <CardContent className="p-5 min-w-0">
+              <div className="flex items-center gap-3 mb-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: card.bg }}>
                   <card.icon className="w-5 h-5" style={{ color: card.color }} />
                 </div>
-                <p className="text-[12px] font-medium text-muted-foreground">{card.label}</p>
+                <p className="text-[12px] font-medium text-muted-foreground truncate">{card.label}</p>
               </div>
-              <p className="text-2xl font-bold mb-1" style={{ color: card.color }}>₺{fmt(card.value)}</p>
-              <p className="text-[11px] text-muted-foreground">{card.sub}</p>
+              <p className="text-lg lg:text-2xl font-bold mb-1 truncate" style={{ color: card.color }} title={`₺${fmt(card.value)}`}>₺{fmtShort(card.value)}</p>
+              <p className="text-[11px] text-muted-foreground truncate" title={card.sub}>{card.sub}</p>
             </CardContent>
           </Card>
         ))}
