@@ -19,7 +19,10 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
   const [trialUsed, setTrialUsed] = useState(false);
+  const [trialCheckLoading, setTrialCheckLoading] = useState(true);
   const { user } = useUser();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const cleanup = listenForIyzicoClose();
@@ -29,21 +32,58 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
   useEffect(() => {
     if (!user || !open) return;
     let cancelled = false;
+    setTrialCheckLoading(true);
     (async () => {
-      const { data } = await supabase
-        .from("user_subscriptions")
-        .select("status, trial_start, trial_end")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      if (data && (data.trial_start || data.trial_end || ["trialing","trial_expired","expired","cancelled","active"].includes(data.status))) {
-        setTrialUsed(true);
+      try {
+        const { data, error } = await supabase
+          .from("user_subscriptions")
+          .select("status, trial_start, trial_end")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          toast.error("Deneme durumu kontrol edilemedi, lütfen tekrar deneyin.");
+        } else if (data && (data.trial_start || data.trial_end || ["trialing","trial_expired","expired","cancelled","active"].includes(data.status))) {
+          setTrialUsed(true);
+        }
+      } catch {
+        if (!cancelled) toast.error("Deneme durumu kontrol edilemedi, lütfen tekrar deneyin.");
+      } finally {
+        if (!cancelled) setTrialCheckLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [user, open]);
+
+  // Focus trap + ESC close
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    closeBtnRef.current?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus?.();
+    };
+  }, [open, onClose]);
 
   const goToPlans = () => {
     onClose();
