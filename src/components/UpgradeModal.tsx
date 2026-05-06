@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
