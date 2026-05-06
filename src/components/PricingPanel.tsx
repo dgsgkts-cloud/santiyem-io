@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Check, X, Shield, Lock, RefreshCw, FileText, MessageCircle, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -18,6 +18,21 @@ const PricingPanel = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useUser();
+  const compareRef = useRef<HTMLDivElement>(null);
+  const [highlightCompare, setHighlightCompare] = useState(false);
+
+  useEffect(() => {
+    let flag = false;
+    try { flag = sessionStorage.getItem("pricing_open_compare") === "1"; } catch {}
+    if (!flag) return;
+    try { sessionStorage.removeItem("pricing_open_compare"); } catch {}
+    setHighlightCompare(true);
+    const t = setTimeout(() => {
+      compareRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
+    const t2 = setTimeout(() => setHighlightCompare(false), 2400);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, []);
 
   const openCheckoutForm = (data: any) => {
     const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
@@ -378,7 +393,7 @@ const PricingPanel = () => {
       </div>
 
       {/* Comparison Table */}
-      <div className="mb-14">
+      <div ref={compareRef} className={`mb-14 scroll-mt-20 transition-all rounded-xl ${highlightCompare ? "ring-2 ring-[#FF6B2B]/60 shadow-[0_0_0_8px_rgba(255,107,43,0.08)]" : ""}`}>
         <h2 className="text-xl font-bold text-foreground text-center mb-6">Planları Karşılaştır</h2>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm" style={{ minWidth: 700 }}>

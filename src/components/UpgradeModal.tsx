@@ -87,6 +87,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
 
   const goToPlans = () => {
     onClose();
+    try { sessionStorage.setItem("pricing_open_compare", "1"); } catch {}
     window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "pricing" }));
   };
 
