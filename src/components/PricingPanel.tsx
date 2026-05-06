@@ -18,6 +18,21 @@ const PricingPanel = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useUser();
+  const compareRef = useRef<HTMLDivElement>(null);
+  const [highlightCompare, setHighlightCompare] = useState(false);
+
+  useEffect(() => {
+    let flag = false;
+    try { flag = sessionStorage.getItem("pricing_open_compare") === "1"; } catch {}
+    if (!flag) return;
+    try { sessionStorage.removeItem("pricing_open_compare"); } catch {}
+    setHighlightCompare(true);
+    const t = setTimeout(() => {
+      compareRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
+    const t2 = setTimeout(() => setHighlightCompare(false), 2400);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, []);
 
   const openCheckoutForm = (data: any) => {
     const checkoutDiv = document.getElementById("iyzico-checkout-container-panel");
