@@ -393,7 +393,7 @@ const PricingPanel = () => {
       </div>
 
       {/* Comparison Table */}
-      <div className="mb-14">
+      <div ref={compareRef} className={`mb-14 scroll-mt-20 transition-all rounded-xl ${highlightCompare ? "ring-2 ring-[#FF6B2B]/60 shadow-[0_0_0_8px_rgba(255,107,43,0.08)]" : ""}`}>
         <h2 className="text-xl font-bold text-foreground text-center mb-6">Planları Karşılaştır</h2>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm" style={{ minWidth: 700 }}>
