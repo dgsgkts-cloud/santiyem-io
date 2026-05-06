@@ -18,12 +18,37 @@ interface UpgradeModalProps {
 const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalProps) => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);
+  const [trialUsed, setTrialUsed] = useState(false);
   const { user } = useUser();
 
   useEffect(() => {
     const cleanup = listenForIyzicoClose();
     return cleanup;
   }, []);
+
+  useEffect(() => {
+    if (!user || !open) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("user_subscriptions")
+        .select("status, trial_start, trial_end")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data && (data.trial_start || data.trial_end || ["trialing","trial_expired","expired","cancelled","active"].includes(data.status))) {
+        setTrialUsed(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, open]);
+
+  const goToPlans = () => {
+    onClose();
+    window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "pricing" }));
+  };
 
   const openCheckoutForm = (data: any) => {
     onClose();
