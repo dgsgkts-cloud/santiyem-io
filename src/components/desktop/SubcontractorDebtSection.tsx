@@ -602,7 +602,40 @@ export default function SubcontractorDebtSection() {
       <Sheet open={!!detailSub} onOpenChange={o => !o && setDetailSub(null)}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{detailSub?.name}</SheetTitle>
+            <div className="flex items-center justify-between gap-2 pr-6">
+              <SheetTitle className="truncate">{detailSub?.name}</SheetTitle>
+              {detailSub && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-xs hover:bg-muted/60">
+                      <Download className="w-3.5 h-3.5" /> Dışa Aktar
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        try {
+                          exportSubcontractorExcel(detailSub, detailPayments, projectName);
+                          toast.success("Excel indirildi");
+                        } catch { toast.error("Excel oluşturulamadı"); }
+                      }}
+                    >
+                      Excel İndir
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        try {
+                          exportSubcontractorPDF(detailSub, detailPayments, projectName);
+                          toast.success("PDF indirildi");
+                        } catch { toast.error("PDF oluşturulamadı"); }
+                      }}
+                    >
+                      PDF İndir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </SheetHeader>
           {detailSub && detailEnriched && (
             <div className="mt-4 space-y-4">
