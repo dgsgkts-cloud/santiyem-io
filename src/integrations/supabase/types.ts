@@ -2110,12 +2110,19 @@ export type Database = {
       }
       subcontractor_payments: {
         Row: {
+          account_no: string | null
           amount: number
+          bank_name: string | null
+          check_due_date: string | null
+          check_no: string | null
           created_at: string
           description: string | null
           id: string
+          note: string | null
           payment_date: string
+          payment_method: string
           planned_date: string | null
+          project_id: string | null
           receipt_url: string | null
           status: string
           subcontractor_id: string
@@ -2123,12 +2130,19 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_no?: string | null
           amount?: number
+          bank_name?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          note?: string | null
           payment_date?: string
+          payment_method?: string
           planned_date?: string | null
+          project_id?: string | null
           receipt_url?: string | null
           status?: string
           subcontractor_id: string
@@ -2136,12 +2150,19 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_no?: string | null
           amount?: number
+          bank_name?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          note?: string | null
           payment_date?: string
+          payment_method?: string
           planned_date?: string | null
+          project_id?: string | null
           receipt_url?: string | null
           status?: string
           subcontractor_id?: string
@@ -2160,40 +2181,49 @@ export type Database = {
       }
       subcontractors: {
         Row: {
+          contact_person: string | null
           contract_amount: number
           created_at: string
+          description: string | null
           id: string
           name: string
           notes: string | null
           payment_schedule: Json | null
           phone: string | null
           project_id: string | null
+          project_ids: string[]
           specialty: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          contact_person?: string | null
           contract_amount?: number
           created_at?: string
+          description?: string | null
           id?: string
           name?: string
           notes?: string | null
           payment_schedule?: Json | null
           phone?: string | null
           project_id?: string | null
+          project_ids?: string[]
           specialty?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          contact_person?: string | null
           contract_amount?: number
           created_at?: string
+          description?: string | null
           id?: string
           name?: string
           notes?: string | null
           payment_schedule?: Json | null
           phone?: string | null
           project_id?: string | null
+          project_ids?: string[]
           specialty?: string | null
           updated_at?: string
           user_id?: string
