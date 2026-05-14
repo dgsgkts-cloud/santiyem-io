@@ -108,12 +108,15 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("Malzemeler", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Malzeme", "Miktar", "Birim", "Giriş/Çıkış"]],
-      body: entry.materials.map(m => [m.name, String(m.quantity), m.unit, m.direction]),
+      body: entry.materials.map(m => [
+        m.name,
+        String(m.quantity),
+        m.unit,
+        m.direction === "in" ? "Giriş" : m.direction === "out" ? "Çıkış" : nz(m.direction),
+      ]),
     });
     y = (doc as any).lastAutoTable.finalY + 4;
   }
