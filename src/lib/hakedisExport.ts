@@ -92,22 +92,13 @@ export function exportHakedisPDF(
   contractDate?: string,
   workItems?: HakedisWorkItem[],
 ) {
-  const doc = new jsPDF();
+  const doc = createPdfDoc();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const cp = getCompanyProfile();
 
   // Progress callback
   const progress = options.onProgress || (() => {});
-  progress(10);
-
-  // Add Roboto font for Turkish chars
-  if (robotoBase64) {
-    doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    doc.setFont("Roboto");
-  }
-
   progress(20);
 
   // ─── Company Header ───
