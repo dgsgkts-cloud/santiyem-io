@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { robotoBase64 } from "@/lib/robotoFont";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import { createPdfDoc, defaultTableTheme, nz } from "@/lib/reportUtils";
 import type { DiaryEntry, CrewRow, DiaryPhoto } from "@/hooks/useSiteDiary";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -10,11 +10,7 @@ const WORK_STATUS_LABEL: Record<string, string> = { normal: "Normal Çalışma",
 const WORK_STATUS_ICON: Record<string, string> = { normal: "✅", partial: "⚠️", stopped: "❌" };
 
 function initDoc(): jsPDF {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
-  return doc;
+  return createPdfDoc({ orientation: "portrait", format: "a4" });
 }
 
 function addHeader(doc: jsPDF, title: string, subtitle?: string): number {
