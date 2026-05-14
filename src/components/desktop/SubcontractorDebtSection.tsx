@@ -500,8 +500,8 @@ export default function SubcontractorDebtSection() {
               <textarea value={payForm.note} onChange={e => setPayForm({ ...payForm, note: e.target.value })} rows={2} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div className="flex gap-2 pt-2">
-              <button onClick={() => setPayModalFor(null)} className="flex-1 py-2 rounded-lg border border-border text-sm">Vazgeç</button>
-              <button onClick={handleAddPay} className="flex-1 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: "#FF6B2B" }}>Kaydet</button>
+              <button onClick={() => { setPayModalFor(null); setEditPayId(null); setPayForm(payForm0); setPayErrors({}); }} className="flex-1 py-2 rounded-lg border border-border text-sm">Vazgeç</button>
+              <button onClick={handleSavePay} className="flex-1 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: "#FF6B2B" }}>{editPayId ? "Güncelle" : "Kaydet"}</button>
             </div>
           </div>
         </DialogContent>
