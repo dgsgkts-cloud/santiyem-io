@@ -481,17 +481,93 @@ export default function SubcontractorDebtSection() {
               </button>
 
               <div>
-                <h4 className="text-xs font-semibold mb-2 text-foreground">Ödeme Geçmişi</h4>
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-semibold text-foreground">Ödeme Geçmişi</h4>
+                    {detailOverdueCount > 0 && (
+                      <button
+                        onClick={() => setShowOverdueOnly(v => !v)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border"
+                        style={{
+                          borderColor: showOverdueOnly ? "#F59E0B" : "rgba(245,158,11,0.4)",
+                          backgroundColor: showOverdueOnly ? "rgba(245,158,11,0.18)" : "rgba(245,158,11,0.08)",
+                          color: "#F59E0B",
+                        }}
+                        title="Vadesi geçmiş çekleri göster"
+                      >
+                        <AlertTriangle className="w-3 h-3" /> {detailOverdueCount} vadesi geçti
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {detailPayments.length} kayıt
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={paySearch}
+                    onChange={e => setPaySearch(e.target.value)}
+                    placeholder="Ara: not, çek no, banka, proje, tutar…"
+                    className="flex-1 min-w-[180px] px-3 py-1.5 rounded-lg border border-border bg-background text-xs"
+                  />
+                  <select
+                    value={payMethodFilter}
+                    onChange={e => setPayMethodFilter(e.target.value)}
+                    className="px-2 py-1.5 rounded-lg border border-border bg-background text-xs"
+                  >
+                    <option value="all">Tüm yöntemler</option>
+                    {PAYMENT_METHODS.map(m => (
+                      <option key={m.value} value={m.value}>{m.emoji} {m.label}</option>
+                    ))}
+                  </select>
+                  {(paySearch || payMethodFilter !== "all" || showOverdueOnly) && (
+                    <button
+                      onClick={() => { setPaySearch(""); setPayMethodFilter("all"); setShowOverdueOnly(false); }}
+                      className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                    >
+                      Temizle
+                    </button>
+                  )}
+                </div>
+
                 {detailPayments.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Henüz ödeme yok</p>
+                  <p className="text-xs text-muted-foreground text-center py-6 border border-dashed border-border rounded-lg">
+                    {(paySearch || payMethodFilter !== "all" || showOverdueOnly) ? "Filtrelere uygun kayıt yok" : "Henüz ödeme yok"}
+                  </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="text-left text-muted-foreground border-b border-border">
-                          <th className="py-2 px-2">Tarih</th>
-                          <th className="py-2 px-2">Tutar</th>
-                          <th className="py-2 px-2">Yöntem</th>
+                        <tr className="text-left text-muted-foreground border-b border-border select-none">
+                          {([
+                            { key: "date", label: "Tarih" },
+                            { key: "amount", label: "Tutar" },
+                          ] as const).map(col => {
+                            const active = paySortKey === col.key;
+                            return (
+                              <th
+                                key={col.key}
+                                className="py-2 px-2 cursor-pointer hover:text-foreground"
+                                onClick={() => {
+                                  if (active) setPaySortDir(d => (d === "asc" ? "desc" : "asc"));
+                                  else { setPaySortKey(col.key); setPaySortDir("desc"); }
+                                }}
+                              >
+                                {col.label}{active ? (paySortDir === "asc" ? " ↑" : " ↓") : ""}
+                              </th>
+                            );
+                          })}
+                          <th
+                            className="py-2 px-2 cursor-pointer hover:text-foreground"
+                            onClick={() => {
+                              if (paySortKey === "due") setPaySortDir(d => (d === "asc" ? "desc" : "asc"));
+                              else { setPaySortKey("due"); setPaySortDir("asc"); }
+                            }}
+                          >
+                            Yöntem / Vade{paySortKey === "due" ? (paySortDir === "asc" ? " ↑" : " ↓") : ""}
+                          </th>
                           <th className="py-2 px-2">Proje</th>
                           <th className="py-2 px-2">Not</th>
                           <th className="py-2 px-2"></th>
@@ -502,15 +578,20 @@ export default function SubcontractorDebtSection() {
                           const m = methodLabel(p.payment_method);
                           const isOverdueCheck = p.payment_method === "cek" && p.check_due_date && isBefore(parseISO(p.check_due_date), new Date());
                           return (
-                            <tr key={p.id} className={`border-b border-border ${isOverdueCheck ? "bg-yellow-500/10" : ""}`}>
+                            <tr
+                              key={p.id}
+                              className={`border-b border-border ${isOverdueCheck ? "bg-yellow-500/10" : "hover:bg-muted/30"}`}
+                              style={isOverdueCheck ? { borderLeft: "3px solid #F59E0B" } : undefined}
+                            >
                               <td className="py-2 px-2">{format(parseISO(p.payment_date), "dd.MM.yyyy")}</td>
                               <td className="py-2 px-2 font-semibold">{fmtFull(Number(p.amount))}</td>
                               <td className="py-2 px-2">
                                 <span title={m.label}>{m.emoji} {m.label}</span>
                                 {p.payment_method === "cek" && p.check_due_date && (
-                                  <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                    {isOverdueCheck && <AlertTriangle className="w-3 h-3" style={{ color: "#F59E0B" }} />}
-                                    Vade: {format(parseISO(p.check_due_date), "dd.MM.yyyy")}
+                                  <div className={`text-[10px] flex items-center gap-1 mt-0.5 ${isOverdueCheck ? "font-medium" : "text-muted-foreground"}`} style={isOverdueCheck ? { color: "#F59E0B" } : undefined}>
+                                    {isOverdueCheck && <AlertTriangle className="w-3 h-3" />}
+                                    {isOverdueCheck ? "Vadesi geçti: " : "Vade: "}
+                                    {format(parseISO(p.check_due_date), "dd.MM.yyyy")}
                                   </div>
                                 )}
                               </td>
