@@ -306,7 +306,7 @@ export default function SubcontractorDebtSection() {
               </div>
 
               <button
-                onClick={() => { setPayForm(payForm0); setPayModalFor(s); }}
+                onClick={() => { setPayForm(payForm0); payFormSnapshot.current = payForm0; setPayModalFor(s); }}
                 className="w-full py-2 rounded-lg text-xs font-medium text-white"
                 style={{ backgroundColor: "#FF6B2B" }}
               >
@@ -505,7 +505,7 @@ export default function SubcontractorDebtSection() {
               </div>
 
               <button
-                onClick={() => { setPayForm(payForm0); setPayModalFor(detailSub); }}
+                onClick={() => { setPayForm(payForm0); payFormSnapshot.current = payForm0; setPayModalFor(detailSub); }}
                 className="w-full py-2 rounded-lg text-sm font-medium text-white"
                 style={{ backgroundColor: "#FF6B2B" }}
               >
