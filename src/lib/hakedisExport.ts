@@ -1,9 +1,10 @@
-import jsPDF from "jspdf";
+// jsPDF dolaylı olarak reportUtils.createPdfDoc üzerinden kullanılır
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import { createPdfDoc, autoFitColumns, styleExcelHeaderRow, nz } from "@/lib/reportUtils";
 import type { ProjectHakedis } from "@/hooks/useProjectHakedis";
 
 import { formatNumber2 as fmt, formatCurrencyFull as fmtCurrency } from "@/lib/formatCurrency";
@@ -91,22 +92,13 @@ export function exportHakedisPDF(
   contractDate?: string,
   workItems?: HakedisWorkItem[],
 ) {
-  const doc = new jsPDF();
+  const doc = createPdfDoc();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const cp = getCompanyProfile();
 
   // Progress callback
   const progress = options.onProgress || (() => {});
-  progress(10);
-
-  // Add Roboto font for Turkish chars
-  if (robotoBase64) {
-    doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-    doc.setFont("Roboto");
-  }
-
   progress(20);
 
   // ─── Company Header ───

@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { robotoBase64 } from "@/lib/robotoFont";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import { createPdfDoc, defaultTableTheme, nz } from "@/lib/reportUtils";
 import type { DiaryEntry, CrewRow, DiaryPhoto } from "@/hooks/useSiteDiary";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -10,11 +10,7 @@ const WORK_STATUS_LABEL: Record<string, string> = { normal: "Normal Çalışma",
 const WORK_STATUS_ICON: Record<string, string> = { normal: "✅", partial: "⚠️", stopped: "❌" };
 
 function initDoc(): jsPDF {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
-  return doc;
+  return createPdfDoc({ orientation: "portrait", format: "a4" });
 }
 
 function addHeader(doc: jsPDF, title: string, subtitle?: string): number {
@@ -79,13 +75,11 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("İşgücü", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Ekip / Usta", "Kişi", "Saat", "Not"]],
       body: [
-        ...entry.crews.map(c => [c.team, String(c.count), String(c.hours), c.note || ""]),
+        ...entry.crews.map(c => [c.team, String(c.count), String(c.hours), nz(c.note)]),
         [{ content: `Toplam: ${workers} işçi · ${totalManHours(entry.crews)} adam/saat`, colSpan: 4, styles: { fontStyle: "bold" as const, textColor: [255, 107, 43] } }],
       ],
     });
@@ -114,12 +108,15 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("Malzemeler", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Malzeme", "Miktar", "Birim", "Giriş/Çıkış"]],
-      body: entry.materials.map(m => [m.name, String(m.quantity), m.unit, m.direction]),
+      body: entry.materials.map(m => [
+        m.name,
+        String(m.quantity),
+        m.unit,
+        m.direction === "in" ? "Giriş" : m.direction === "out" ? "Çıkış" : nz(m.direction),
+      ]),
     });
     y = (doc as any).lastAutoTable.finalY + 4;
   }
@@ -132,12 +129,10 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("Makine / Ekipman", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Makine", "Çalışma Süresi (saat)", "Not"]],
-      body: entry.machines.map(m => [m.name, String(m.hours), m.note || ""]),
+      body: entry.machines.map(m => [m.name, String(m.hours), nz(m.note)]),
     });
     y = (doc as any).lastAutoTable.finalY + 4;
   }

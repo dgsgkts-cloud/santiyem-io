@@ -1,9 +1,14 @@
-import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import { robotoBase64 } from "@/lib/robotoFont";
 import { getCompanyProfile } from "@/lib/companyProfile";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import {
+  createPdfDoc,
+  defaultTableTheme,
+  autoFitColumns,
+  styleExcelHeaderRow,
+  nz,
+} from "@/lib/reportUtils";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
 import { formatCurrencyFull } from "@/lib/formatCurrency";
@@ -35,10 +40,7 @@ function fmtMoney(v: string | number | null | undefined): string {
 }
 
 export function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
+  const doc = createPdfDoc({ orientation: "portrait", format: "a4" });
 
   const pw = doc.internal.pageSize.getWidth();
   let y = addPdfHeader(doc, "PROJE DURUM RAPORU");
