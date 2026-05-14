@@ -402,9 +402,9 @@ export default function SubcontractorDebtSection() {
       )}
 
       {/* ── Add subcontractor modal ── */}
-      <Dialog open={addSubModal} onOpenChange={setAddSubModal}>
+      <Dialog open={addSubModal || !!editSub} onOpenChange={o => { if (!o) { setAddSubModal(false); setEditSub(null); setSubForm(subForm0); } }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Yeni Taşeron Ekle</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editSub ? "Taşeronu Düzenle" : "Yeni Taşeron Ekle"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-xs text-muted-foreground">Taşeron / Firma Adı *</label>
