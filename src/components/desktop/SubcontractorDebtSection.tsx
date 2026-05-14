@@ -29,7 +29,7 @@ export default function SubcontractorDebtSection() {
   const queryClient = useQueryClient();
   const { projects } = useProjects();
   const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
-  const { payments: allPayments, deletePayment } = useSubcontractorPayments();
+  const { payments: allPayments } = useSubcontractorPayments();
 
 
   const [addSubModal, setAddSubModal] = useState(false);
