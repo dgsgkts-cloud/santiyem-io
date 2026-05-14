@@ -26,6 +26,8 @@ export interface MaterialEntry {
   waybill_photo_url: string | null;
   note: string | null;
   created_at: string;
+  source_type?: string | null;
+  source_id?: string | null;
 }
 
 export interface MaterialExit {
@@ -38,6 +40,8 @@ export interface MaterialExit {
   location: string | null;
   note: string | null;
   created_at: string;
+  source_type?: string | null;
+  source_id?: string | null;
 }
 
 export interface MaterialNorm {

@@ -82,6 +82,13 @@ export function useSiteDiary(projectId?: string) {
     },
   });
 
+  const invalidateAfterMutation = () => {
+    qc.invalidateQueries({ queryKey: ["site-diary"] });
+    qc.invalidateQueries({ queryKey: ["materials"] });
+    qc.invalidateQueries({ queryKey: ["material_entries"] });
+    qc.invalidateQueries({ queryKey: ["material_exits"] });
+  };
+
   const createEntry = useMutation({
     mutationFn: async (entry: Omit<DiaryEntry, "id" | "user_id" | "created_at" | "updated_at" | "photos">) => {
       const { data, error } = await supabase
@@ -92,7 +99,7 @@ export function useSiteDiary(projectId?: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["site-diary"] }); toast.success("Günlük kaydı oluşturuldu"); },
+    onSuccess: () => { invalidateAfterMutation(); toast.success("Günlük kaydı oluşturuldu"); },
     onError: (e: any) => toast.error(e.message || "Kayıt oluşturulamadı"),
   });
 
@@ -104,7 +111,7 @@ export function useSiteDiary(projectId?: string) {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["site-diary"] }); toast.success("Kayıt güncellendi"); },
+    onSuccess: () => { invalidateAfterMutation(); toast.success("Kayıt güncellendi"); },
     onError: (e: any) => toast.error(e.message || "Güncelleme hatası"),
   });
 
@@ -113,7 +120,7 @@ export function useSiteDiary(projectId?: string) {
       const { error } = await supabase.from("site_diary_entries").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["site-diary"] }); toast.success("Kayıt silindi"); },
+    onSuccess: () => { invalidateAfterMutation(); toast.success("Kayıt silindi"); },
     onError: (e: any) => toast.error(e.message || "Silme hatası"),
   });
 

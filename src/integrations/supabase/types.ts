@@ -1166,6 +1166,8 @@ export type Database = {
           material_id: string
           note: string | null
           quantity: number
+          source_id: string | null
+          source_type: string | null
           supplier: string
           total_amount: number
           unit_price: number
@@ -1180,6 +1182,8 @@ export type Database = {
           material_id: string
           note?: string | null
           quantity?: number
+          source_id?: string | null
+          source_type?: string | null
           supplier?: string
           total_amount?: number
           unit_price?: number
@@ -1194,6 +1198,8 @@ export type Database = {
           material_id?: string
           note?: string | null
           quantity?: number
+          source_id?: string | null
+          source_type?: string | null
           supplier?: string
           total_amount?: number
           unit_price?: number
@@ -1221,6 +1227,8 @@ export type Database = {
           material_id: string
           note: string | null
           quantity: number
+          source_id: string | null
+          source_type: string | null
           user_id: string
         }
         Insert: {
@@ -1232,6 +1240,8 @@ export type Database = {
           material_id: string
           note?: string | null
           quantity?: number
+          source_id?: string | null
+          source_type?: string | null
           user_id: string
         }
         Update: {
@@ -1243,6 +1253,8 @@ export type Database = {
           material_id?: string
           note?: string | null
           quantity?: number
+          source_id?: string | null
+          source_type?: string | null
           user_id?: string
         }
         Relationships: [

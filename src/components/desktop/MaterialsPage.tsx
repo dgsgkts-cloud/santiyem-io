@@ -473,11 +473,23 @@ const MaterialsPage = () => {
                 <div className="divide-y divide-border">
                   {entries.slice(0, 5).map(e => {
                     const mat = materials.find(m => m.id === e.material_id);
+                    const fromDiary = e.source_type === "site_diary";
                     return (
-                      <div key={e.id} className="px-4 py-3 flex items-center justify-between">
+                      <div
+                        key={e.id}
+                        className={`px-4 py-3 flex items-center justify-between ${fromDiary ? "cursor-pointer hover:bg-muted/30" : ""}`}
+                        onClick={() => {
+                          if (fromDiary) {
+                            window.dispatchEvent(new CustomEvent("navigate-tab", { detail: { tab: "site-diary", entryId: e.source_id } }));
+                          }
+                        }}
+                        title={fromDiary ? "Şantiye Günlüğü kaydına git" : undefined}
+                      >
                         <div>
                           <p className="text-sm font-medium" style={textStyle}>{mat?.name || "—"}</p>
-                          <p className="text-[11px]" style={labelStyle}>{e.entry_date} · {e.supplier || "—"}</p>
+                          <p className="text-[11px]" style={labelStyle}>
+                            {e.entry_date} · {fromDiary ? `Şantiye Günlüğü — ${new Date(e.entry_date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}` : (e.supplier || "—")}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold" style={{ color: "#22C55E" }}>+{fmt(e.quantity)} {mat?.unit}</p>
@@ -499,11 +511,23 @@ const MaterialsPage = () => {
                 <div className="divide-y divide-border">
                   {exits.slice(0, 5).map(e => {
                     const mat = materials.find(m => m.id === e.material_id);
+                    const fromDiary = e.source_type === "site_diary";
                     return (
-                      <div key={e.id} className="px-4 py-3 flex items-center justify-between">
+                      <div
+                        key={e.id}
+                        className={`px-4 py-3 flex items-center justify-between ${fromDiary ? "cursor-pointer hover:bg-muted/30" : ""}`}
+                        onClick={() => {
+                          if (fromDiary) {
+                            window.dispatchEvent(new CustomEvent("navigate-tab", { detail: { tab: "site-diary", entryId: e.source_id } }));
+                          }
+                        }}
+                        title={fromDiary ? "Şantiye Günlüğü kaydına git" : undefined}
+                      >
                         <div>
                           <p className="text-sm font-medium" style={textStyle}>{mat?.name || "—"}</p>
-                          <p className="text-[11px]" style={labelStyle}>{e.exit_date} · {e.location || "—"}</p>
+                          <p className="text-[11px]" style={labelStyle}>
+                            {e.exit_date} · {fromDiary ? `Şantiye Günlüğü — ${new Date(e.exit_date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}` : (e.location || "—")}
+                          </p>
                         </div>
                         <p className="text-sm font-semibold" style={{ color: "#EF4444" }}>-{fmt(e.quantity)} {mat?.unit}</p>
                       </div>
