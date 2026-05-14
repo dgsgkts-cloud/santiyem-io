@@ -40,10 +40,7 @@ function fmtMoney(v: string | number | null | undefined): string {
 }
 
 export function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
+  const doc = createPdfDoc({ orientation: "portrait", format: "a4" });
 
   const pw = doc.internal.pageSize.getWidth();
   let y = addPdfHeader(doc, "PROJE DURUM RAPORU");
