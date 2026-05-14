@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import { createPdfDoc, autoFitColumns, styleExcelHeaderRow, nz } from "@/lib/reportUtils";
 import type { ProjectHakedis } from "@/hooks/useProjectHakedis";
 
 import { formatNumber2 as fmt, formatCurrencyFull as fmtCurrency } from "@/lib/formatCurrency";
