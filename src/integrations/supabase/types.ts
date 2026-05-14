@@ -2563,6 +2563,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      delete_subcontractor_payment_with_cash: {
+        Args: { _payment_id: string }
+        Returns: undefined
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -2649,6 +2653,23 @@ export type Database = {
           _signer_name: string
           _signer_title: string
           _token: string
+        }
+        Returns: string
+      }
+      save_subcontractor_payment_with_cash: {
+        Args: {
+          _account_no: string
+          _amount: number
+          _bank_name: string
+          _check_due_date: string
+          _check_no: string
+          _note: string
+          _payment_date: string
+          _payment_id: string
+          _payment_method: string
+          _project_id: string
+          _recipient: string
+          _subcontractor_id: string
         }
         Returns: string
       }
