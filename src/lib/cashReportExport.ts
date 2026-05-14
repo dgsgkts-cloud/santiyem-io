@@ -1,14 +1,20 @@
-import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import { robotoBase64 } from "@/lib/robotoFont";
 import type { CashPayment } from "@/hooks/useCashPayments";
 import type { CashCollection } from "@/hooks/useCashCollections";
 import type { CashCheck } from "@/hooks/useCashChecks";
 import type { CashAccount } from "@/hooks/useCashAccounts";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
+import {
+  createPdfDoc,
+  defaultTableTheme,
+  autoFitColumns,
+  fillEmpty,
+  styleExcelHeaderRow,
+  nz,
+} from "@/lib/reportUtils";
 
-import { formatNumber2 as fmt, formatCurrencyFull as money } from "@/lib/formatCurrency";
+import { formatCurrencyFull as money } from "@/lib/formatCurrency";
 
 const statusLabels: Record<string, string> = {
   odendi: "Ödendi",
