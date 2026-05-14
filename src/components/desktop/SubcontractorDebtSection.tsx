@@ -8,6 +8,12 @@ import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { format, parseISO, isBefore } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
+
+const SUB_PAY_MARKER = "__sub_pay:";
+
 
 const PAYMENT_METHODS = [
   { value: "nakit", label: "Nakit", icon: Banknote, emoji: "💵" },
@@ -19,9 +25,12 @@ const PAYMENT_METHODS = [
 const methodLabel = (m: string) => PAYMENT_METHODS.find(x => x.value === m) ?? PAYMENT_METHODS[0];
 
 export default function SubcontractorDebtSection() {
+  const { user } = useUser();
+  const queryClient = useQueryClient();
   const { projects } = useProjects();
   const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
-  const { payments: allPayments, addPayment, deletePayment } = useSubcontractorPayments();
+  const { payments: allPayments, deletePayment } = useSubcontractorPayments();
+
 
   const [addSubModal, setAddSubModal] = useState(false);
   const [detailSub, setDetailSub] = useState<Subcontractor | null>(null);
@@ -72,27 +81,83 @@ export default function SubcontractorDebtSection() {
   };
 
   const handleAddPay = async () => {
-    if (!payModalFor) return;
+    if (!payModalFor || !user) return;
     if (!payForm.amount || Number(payForm.amount) <= 0) return toast.error("Tutar zorunlu");
     if (!payForm.payment_date) return toast.error("Tarih zorunlu");
     if (payForm.payment_method === "cek" && (!payForm.check_no || !payForm.check_due_date)) return toast.error("Çek No ve vade zorunlu");
     if (payForm.payment_method === "havale" && !payForm.bank_name) return toast.error("Banka adı zorunlu");
 
-    await addPayment.mutateAsync({
-      subcontractor_id: payModalFor.id,
+    // 1) Insert subcontractor payment, get its id back
+    const { data: subPayRow, error: spErr } = await supabase
+      .from("subcontractor_payments" as any)
+      .insert({
+        user_id: user.id,
+        subcontractor_id: payModalFor.id,
+        amount: Number(payForm.amount),
+        payment_date: payForm.payment_date,
+        payment_method: payForm.payment_method,
+        project_id: payForm.project_id || null,
+        check_no: payForm.check_no || null,
+        check_due_date: payForm.check_due_date || null,
+        bank_name: payForm.bank_name || null,
+        account_no: payForm.account_no || null,
+        note: payForm.note || null,
+        status: "odendi",
+      } as any)
+      .select()
+      .single();
+
+    if (spErr || !subPayRow) {
+      toast.error("Ödeme eklenemedi");
+      return;
+    }
+
+    // 2) Mirror into Kasa as a general expense (cash_payments)
+    const subPayId = (subPayRow as any).id;
+    const cashPayloadDesc = [
+      payForm.note?.trim(),
+      `[${SUB_PAY_MARKER}${subPayId}]`,
+    ].filter(Boolean).join(" ");
+
+    const { error: cashErr } = await supabase.from("cash_payments" as any).insert({
+      user_id: user.id,
+      recipient: payModalFor.name,
+      category: "Taşeron Ödemesi",
       amount: Number(payForm.amount),
       payment_date: payForm.payment_date,
-      payment_method: payForm.payment_method,
+      payment_type: payForm.payment_method === "kredi_karti" ? "kredi_karti" : payForm.payment_method,
       project_id: payForm.project_id || null,
-      check_no: payForm.check_no || null,
-      check_due_date: payForm.check_due_date || null,
-      bank_name: payForm.bank_name || null,
-      account_no: payForm.account_no || null,
-      note: payForm.note || null,
+      check_no: payForm.payment_method === "cek" ? (payForm.check_no || null) : null,
+      check_due_date: payForm.payment_method === "cek" ? (payForm.check_due_date || null) : null,
+      check_bank: payForm.payment_method === "cek" ? (payForm.bank_name || null) : null,
+      bank_name: payForm.payment_method === "havale" ? (payForm.bank_name || null) : null,
+      iban: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
+      description: cashPayloadDesc,
       status: "odendi",
     } as any);
+
+    if (cashErr) {
+      console.warn("Kasa kaydı eklenemedi", cashErr);
+      toast.warning("Ödeme kaydedildi ancak kasa akışına yansıtılamadı");
+    } else {
+      toast.success("Ödeme kaydedildi ve kasaya yansıtıldı");
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["subcontractor_payments"] });
+    queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
+
     setPayForm(payForm0);
     setPayModalFor(null);
+  };
+
+  const handleDeletePay = async (id: string) => {
+    // Remove mirrored cash row first (best-effort)
+    await supabase
+      .from("cash_payments" as any)
+      .delete()
+      .like("description", `%${SUB_PAY_MARKER}${id}%`);
+    await deletePayment.mutateAsync(id);
+    queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
   };
 
   const detailPayments = useMemo(() => {
@@ -422,7 +487,7 @@ export default function SubcontractorDebtSection() {
         onClose={() => setDeletePay(null)}
         title="Ödemeyi Sil"
         itemName="ödeme kaydı"
-        onConfirm={async () => { if (deletePay) await deletePayment.mutateAsync(deletePay.id); setDeletePay(null); }}
+        onConfirm={async () => { if (deletePay) await handleDeletePay(deletePay.id); setDeletePay(null); }}
       />
     </div>
   );
