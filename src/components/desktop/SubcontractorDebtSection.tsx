@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { useSubcontractors, useSubcontractorPayments, Subcontractor } from "@/hooks/useSubcontractors";
+import { useSubcontractors, useSubcontractorPayments, Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
@@ -37,6 +37,7 @@ export default function SubcontractorDebtSection() {
   const [payModalFor, setPayModalFor] = useState<Subcontractor | null>(null);
   const [deleteSub, setDeleteSub] = useState<Subcontractor | null>(null);
   const [deletePay, setDeletePay] = useState<{ id: string } | null>(null);
+  const [editPayId, setEditPayId] = useState<string | null>(null);
 
   const subForm0 = { name: "", contact_person: "", phone: "", project_ids: [] as string[], contract_amount: "", description: "" };
   const [subForm, setSubForm] = useState(subForm0);
@@ -96,7 +97,7 @@ export default function SubcontractorDebtSection() {
     setAddSubModal(false);
   };
 
-  const handleAddPay = async () => {
+  const handleSavePay = async () => {
     if (!payModalFor || !user) return;
     const errs = validatePayForm(payForm);
     if (Object.keys(errs).length > 0) {
@@ -106,40 +107,55 @@ export default function SubcontractorDebtSection() {
     }
     setPayErrors({});
 
-    // 1) Insert subcontractor payment, get its id back
-    const { data: subPayRow, error: spErr } = await supabase
-      .from("subcontractor_payments" as any)
-      .insert({
-        user_id: user.id,
-        subcontractor_id: payModalFor.id,
-        amount: Number(payForm.amount),
-        payment_date: payForm.payment_date,
-        payment_method: payForm.payment_method,
-        project_id: payForm.project_id || null,
-        check_no: payForm.check_no || null,
-        check_due_date: payForm.check_due_date || null,
-        bank_name: payForm.bank_name || null,
-        account_no: payForm.account_no || null,
-        note: payForm.note || null,
-        status: "odendi",
-      } as any)
-      .select()
-      .single();
+    const subPayload = {
+      amount: Number(payForm.amount),
+      payment_date: payForm.payment_date,
+      payment_method: payForm.payment_method,
+      project_id: payForm.project_id || null,
+      check_no: payForm.payment_method === "cek" ? (payForm.check_no || null) : null,
+      check_due_date: payForm.payment_method === "cek" ? (payForm.check_due_date || null) : null,
+      bank_name: ["cek", "havale"].includes(payForm.payment_method) ? (payForm.bank_name || null) : null,
+      account_no: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
+      note: payForm.note || null,
+    };
 
-    if (spErr || !subPayRow) {
-      toast.error("Ödeme eklenemedi");
-      return;
+    let subPayId = editPayId;
+
+    if (editPayId) {
+      const { error: upErr } = await supabase
+        .from("subcontractor_payments" as any)
+        .update(subPayload as any)
+        .eq("id", editPayId);
+      if (upErr) {
+        toast.error("Ödeme güncellenemedi");
+        return;
+      }
+    } else {
+      const { data: subPayRow, error: spErr } = await supabase
+        .from("subcontractor_payments" as any)
+        .insert({
+          ...subPayload,
+          user_id: user.id,
+          subcontractor_id: payModalFor.id,
+          status: "odendi",
+        } as any)
+        .select()
+        .single();
+
+      if (spErr || !subPayRow) {
+        toast.error("Ödeme eklenemedi");
+        return;
+      }
+      subPayId = (subPayRow as any).id;
     }
 
-    // 2) Mirror into Kasa as a general expense (cash_payments)
-    const subPayId = (subPayRow as any).id;
+    // Mirror into Kasa as a general expense (cash_payments)
     const cashPayloadDesc = [
       payForm.note?.trim(),
       `[${SUB_PAY_MARKER}${subPayId}]`,
     ].filter(Boolean).join(" ");
 
-    const { error: cashErr } = await supabase.from("cash_payments" as any).insert({
-      user_id: user.id,
+    const cashPayload = {
       recipient: payModalFor.name,
       category: "Taşeron Ödemesi",
       amount: Number(payForm.amount),
@@ -153,13 +169,43 @@ export default function SubcontractorDebtSection() {
       iban: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
       description: cashPayloadDesc,
       status: "odendi",
-    } as any);
+    };
+
+    let cashErr: any = null;
+
+    if (editPayId) {
+      // Find linked cash row by marker, then update — or insert if missing.
+      const { data: existingCash } = await supabase
+        .from("cash_payments" as any)
+        .select("id")
+        .like("description", `%${SUB_PAY_MARKER}${subPayId}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingCash) {
+        const { error } = await supabase
+          .from("cash_payments" as any)
+          .update(cashPayload as any)
+          .eq("id", (existingCash as any).id);
+        cashErr = error;
+      } else {
+        const { error } = await supabase
+          .from("cash_payments" as any)
+          .insert({ ...cashPayload, user_id: user.id } as any);
+        cashErr = error;
+      }
+    } else {
+      const { error } = await supabase
+        .from("cash_payments" as any)
+        .insert({ ...cashPayload, user_id: user.id } as any);
+      cashErr = error;
+    }
 
     if (cashErr) {
-      console.warn("Kasa kaydı eklenemedi", cashErr);
-      toast.warning("Ödeme kaydedildi ancak kasa akışına yansıtılamadı");
+      console.warn("Kasa kaydı senkron edilemedi", cashErr);
+      toast.warning(editPayId ? "Ödeme güncellendi ancak kasa akışına yansıtılamadı" : "Ödeme kaydedildi ancak kasa akışına yansıtılamadı");
     } else {
-      toast.success("Ödeme kaydedildi ve kasaya yansıtıldı");
+      toast.success(editPayId ? "Ödeme ve kasa kaydı güncellendi" : "Ödeme kaydedildi ve kasaya yansıtıldı");
     }
 
     queryClient.invalidateQueries({ queryKey: ["subcontractor_payments"] });
@@ -167,7 +213,25 @@ export default function SubcontractorDebtSection() {
 
     setPayForm(payForm0);
     setPayErrors({});
+    setEditPayId(null);
     setPayModalFor(null);
+  };
+
+  const openEditPay = (p: SubcontractorPayment, sub: Subcontractor) => {
+    setPayForm({
+      payment_date: p.payment_date,
+      amount: String(p.amount ?? ""),
+      payment_method: p.payment_method || "nakit",
+      project_id: p.project_id || "",
+      check_no: p.check_no || "",
+      check_due_date: p.check_due_date || "",
+      bank_name: p.bank_name || "",
+      account_no: p.account_no || "",
+      note: p.note || "",
+    });
+    setPayErrors({});
+    setEditPayId(p.id);
+    setPayModalFor(sub);
   };
 
   const handleDeletePay = async (id: string) => {
@@ -355,9 +419,9 @@ export default function SubcontractorDebtSection() {
       </Dialog>
 
       {/* ── Add payment modal ── */}
-      <Dialog open={!!payModalFor} onOpenChange={o => { if (!o) { setPayModalFor(null); setPayErrors({}); } }}>
+      <Dialog open={!!payModalFor} onOpenChange={o => { if (!o) { setPayModalFor(null); setPayErrors({}); setEditPayId(null); setPayForm(payForm0); } }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Ödeme Ekle — {payModalFor?.name}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editPayId ? "Ödemeyi Düzenle" : "Ödeme Ekle"} — {payModalFor?.name}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -436,8 +500,8 @@ export default function SubcontractorDebtSection() {
               <textarea value={payForm.note} onChange={e => setPayForm({ ...payForm, note: e.target.value })} rows={2} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div className="flex gap-2 pt-2">
-              <button onClick={() => setPayModalFor(null)} className="flex-1 py-2 rounded-lg border border-border text-sm">Vazgeç</button>
-              <button onClick={handleAddPay} className="flex-1 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: "#FF6B2B" }}>Kaydet</button>
+              <button onClick={() => { setPayModalFor(null); setEditPayId(null); setPayForm(payForm0); setPayErrors({}); }} className="flex-1 py-2 rounded-lg border border-border text-sm">Vazgeç</button>
+              <button onClick={handleSavePay} className="flex-1 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: "#FF6B2B" }}>{editPayId ? "Güncelle" : "Kaydet"}</button>
             </div>
           </div>
         </DialogContent>
@@ -598,9 +662,14 @@ export default function SubcontractorDebtSection() {
                               <td className="py-2 px-2">{projectName(p.project_id)}</td>
                               <td className="py-2 px-2 text-muted-foreground">{p.note || "—"}</td>
                               <td className="py-2 px-2">
-                                <button onClick={() => setDeletePay({ id: p.id })} className="text-muted-foreground hover:text-red-500">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => detailSub && openEditPay(p, detailSub)} className="text-muted-foreground hover:text-[#FF6B2B]" title="Düzenle">
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => setDeletePay({ id: p.id })} className="text-muted-foreground hover:text-red-500" title="Sil">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
