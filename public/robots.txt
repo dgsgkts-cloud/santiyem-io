@@ -4,10 +4,23 @@ Allow: /hakkimizda
 Allow: /iletisim
 Allow: /gizlilik-politikasi
 Allow: /kullanim-sartlari
+Allow: /iptal-iade-politikasi
+Allow: /teslimat-iade
+Allow: /mesafeli-satis-sozlesmesi
 Disallow: /dashboard
 Disallow: /ai-asistan
 Disallow: /proje-yonetimi
 Disallow: /hakedis-yonetimi
 Disallow: /ayarlar
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /odeme-sonucu
+Disallow: /sozlesme-imza/
+Disallow: /hakedis-onay/
+Disallow: /santiye-giris/
 
 Sitemap: https://santiyem.io/sitemap.xml
