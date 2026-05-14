@@ -3,7 +3,7 @@ import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriang
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { useSubcontractors, useSubcontractorPayments, Subcontractor } from "@/hooks/useSubcontractors";
+import { useSubcontractors, useSubcontractorPayments, Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
