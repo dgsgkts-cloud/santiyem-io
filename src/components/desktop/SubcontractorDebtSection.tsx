@@ -284,6 +284,51 @@ export default function SubcontractorDebtSection() {
         </button>
       </div>
 
+      {/* Summary banner */}
+      {enriched.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <div className="rounded-lg border border-border bg-background p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
+              <Users className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam Taşeron</p>
+              <p className="text-base font-bold text-foreground">{enriched.length}</p>
+            </div>
+          </div>
+          <div className="rounded-lg border p-3 flex items-center gap-3" style={{ borderColor: "rgba(239,68,68,0.4)", backgroundColor: "rgba(239,68,68,0.06)" }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.18)" }}>
+              <Banknote className="w-4 h-4" style={{ color: "#EF4444" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam Kalan Borç</p>
+              <p className="text-base font-bold truncate" style={{ color: "#EF4444" }}>{fmtFull(totalRemaining)}</p>
+            </div>
+          </div>
+          <div
+            className="rounded-lg border p-3 flex items-center gap-3"
+            style={{
+              borderColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.4)",
+              backgroundColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.06)",
+            }}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.18)" : "rgba(34,197,94,0.18)" }}>
+              <AlertTriangle className="w-4 h-4" style={{ color: overdueAlerts.length > 0 ? "#EF4444" : "#22C55E" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vadesi Geçmiş Çek</p>
+              {overdueAlerts.length > 0 ? (
+                <p className="text-base font-bold truncate" style={{ color: "#EF4444" }}>
+                  {fmtFull(overdueTotal)} <span className="text-[10px] font-medium">({overdueAlerts.length})</span>
+                </p>
+              ) : (
+                <p className="text-base font-bold" style={{ color: "#22C55E" }}>Temiz</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {enriched.length === 0 ? (
         <p className="text-xs text-muted-foreground text-center py-6">Taşeron kaydı yok</p>
       ) : (
@@ -298,12 +343,21 @@ export default function SubcontractorDebtSection() {
                   <p className="text-[14px] font-semibold text-foreground truncate">{s.name}</p>
                   {s.contact_person && <p className="text-[11px] text-muted-foreground truncate">{s.contact_person}</p>}
                 </button>
-                <button
-                  onClick={() => setDeleteSub(s)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-red-500"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60" aria-label="İşlemler">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditSub(s)}>
+                      <Pencil className="w-3.5 h-3.5 mr-2" /> Düzenle
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeleteSub(s)} className="text-red-500 focus:text-red-500">
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {(s.project_ids?.length > 0 || s.project_id) && (
