@@ -67,6 +67,7 @@ export default function SubcontractorDebtSection() {
   };
   const [payForm, setPayForm] = useState(payForm0);
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
+  const payFieldRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
 
   const validatePayForm = (f: typeof payForm0) => {
     const errs: Record<string, string> = {};
