@@ -100,12 +100,29 @@ export default function SubcontractorDebtSection() {
     return { ...s, totalPaid, remaining, pct };
   }), [subcontractors, allPayments]);
 
+  const totalRemaining = useMemo(
+    () => enriched.reduce((s, e) => s + Math.max(0, e.remaining), 0),
+    [enriched],
+  );
+
   const projectName = (id?: string | null) => projects.find(p => p.id === id)?.name || "—";
+
+  const openEditSub = (s: Subcontractor) => {
+    setSubForm({
+      name: s.name,
+      contact_person: s.contact_person || "",
+      phone: s.phone || "",
+      project_ids: s.project_ids || (s.project_id ? [s.project_id] : []),
+      contract_amount: String(s.contract_amount ?? ""),
+      description: s.description || "",
+    });
+    setEditSub(s);
+  };
 
   const handleAddSub = async () => {
     if (!subForm.name.trim()) return toast.error("Taşeron adı zorunlu");
     if (!subForm.contract_amount || Number(subForm.contract_amount) <= 0) return toast.error("Sözleşme bedeli zorunlu");
-    await addSubcontractor.mutateAsync({
+    const payload = {
       name: subForm.name.trim(),
       contact_person: subForm.contact_person.trim() || null,
       phone: subForm.phone.trim() || null,
@@ -113,9 +130,15 @@ export default function SubcontractorDebtSection() {
       project_id: subForm.project_ids[0] || null,
       contract_amount: Number(subForm.contract_amount),
       description: subForm.description.trim() || null,
-    } as any);
+    };
+    if (editSub) {
+      await updateSubcontractor.mutateAsync({ id: editSub.id, ...payload } as any);
+      setEditSub(null);
+    } else {
+      await addSubcontractor.mutateAsync(payload as any);
+      setAddSubModal(false);
+    }
     setSubForm(subForm0);
-    setAddSubModal(false);
   };
 
   const handleSavePay = async () => {
