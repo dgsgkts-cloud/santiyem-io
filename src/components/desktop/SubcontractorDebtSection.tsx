@@ -410,20 +410,18 @@ export default function SubcontractorDebtSection() {
         </SheetContent>
       </Sheet>
 
-      {deleteSub && (
-        <DeleteConfirmModal
-          itemName={deleteSub.name}
-          onConfirm={async () => { await deleteSubcontractor.mutateAsync(deleteSub.id); setDeleteSub(null); }}
-          onCancel={() => setDeleteSub(null)}
-        />
-      )}
-      {deletePay && (
-        <DeleteConfirmModal
-          itemName="ödeme kaydı"
-          onConfirm={async () => { await deletePayment.mutateAsync(deletePay.id); setDeletePay(null); }}
-          onCancel={() => setDeletePay(null)}
-        />
-      )}
+      <DeleteConfirmModal
+        open={!!deleteSub}
+        onClose={() => setDeleteSub(null)}
+        itemName={deleteSub?.name || ""}
+        onConfirm={async () => { if (deleteSub) await deleteSubcontractor.mutateAsync(deleteSub.id); setDeleteSub(null); }}
+      />
+      <DeleteConfirmModal
+        open={!!deletePay}
+        onClose={() => setDeletePay(null)}
+        itemName="ödeme kaydı"
+        onConfirm={async () => { if (deletePay) await deletePayment.mutateAsync(deletePay.id); setDeletePay(null); }}
+      />
     </div>
   );
 }
