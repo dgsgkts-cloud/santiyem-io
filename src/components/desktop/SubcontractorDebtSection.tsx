@@ -42,6 +42,18 @@ export default function SubcontractorDebtSection() {
   const subForm0 = { name: "", contact_person: "", phone: "", project_ids: [] as string[], contract_amount: "", description: "" };
   const [subForm, setSubForm] = useState(subForm0);
 
+  // Cross-page deep-link: open a subcontractor's drawer from elsewhere (e.g. cash list)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent).detail?.id;
+      if (!id) return;
+      const sub = subcontractors.find(s => s.id === id);
+      if (sub) setDetailSub(sub);
+    };
+    window.addEventListener("open-subcontractor-detail", handler as EventListener);
+    return () => window.removeEventListener("open-subcontractor-detail", handler as EventListener);
+  }, [subcontractors]);
+
   const payForm0 = {
     payment_date: new Date().toISOString().slice(0, 10),
     amount: "",
