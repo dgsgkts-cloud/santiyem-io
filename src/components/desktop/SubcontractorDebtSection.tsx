@@ -33,11 +33,13 @@ export default function SubcontractorDebtSection() {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const { projects } = useProjects();
-  const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
+  const { subcontractors, addSubcontractor, updateSubcontractor, deleteSubcontractor } = useSubcontractors();
   const { payments: allPayments } = useSubcontractorPayments();
+  const { overdue: overdueAlerts, overdueTotal } = useSubcontractorCheckAlerts();
 
 
   const [addSubModal, setAddSubModal] = useState(false);
+  const [editSub, setEditSub] = useState<Subcontractor | null>(null);
   const [detailSub, setDetailSub] = useState<Subcontractor | null>(null);
   const [payModalFor, setPayModalFor] = useState<Subcontractor | null>(null);
   const [deleteSub, setDeleteSub] = useState<Subcontractor | null>(null);
