@@ -201,6 +201,7 @@ const CashPaymentsTab = () => {
                   </div>
                 </div>
                 <p className="text-xl font-bold mb-1" style={{ color: "#EF4444" }}>₺{fmt(p.amount)}</p>
+                <div className="text-[12px] mb-1">{renderDescription(p)}</div>
                 <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
                   <span>📅 {p.payment_date}</span>
                   {proj && <span>📁 {proj.name}</span>}
