@@ -321,7 +321,7 @@ export default function SubcontractorDebtSection() {
       </Dialog>
 
       {/* ── Add payment modal ── */}
-      <Dialog open={!!payModalFor} onOpenChange={o => !o && setPayModalFor(null)}>
+      <Dialog open={!!payModalFor} onOpenChange={o => { if (!o) { setPayModalFor(null); setPayErrors({}); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Ödeme Ekle — {payModalFor?.name}</DialogTitle></DialogHeader>
           <div className="space-y-3">
