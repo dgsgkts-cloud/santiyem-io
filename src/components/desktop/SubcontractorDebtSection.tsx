@@ -413,12 +413,14 @@ export default function SubcontractorDebtSection() {
       <DeleteConfirmModal
         open={!!deleteSub}
         onClose={() => setDeleteSub(null)}
+        title="Taşeronu Sil"
         itemName={deleteSub?.name || ""}
         onConfirm={async () => { if (deleteSub) await deleteSubcontractor.mutateAsync(deleteSub.id); setDeleteSub(null); }}
       />
       <DeleteConfirmModal
         open={!!deletePay}
         onClose={() => setDeletePay(null)}
+        title="Ödemeyi Sil"
         itemName="ödeme kaydı"
         onConfirm={async () => { if (deletePay) await deletePayment.mutateAsync(deletePay.id); setDeletePay(null); }}
       />
