@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle, Pencil } from "lucide-react";
+import { Plus, Banknote, FileText, Building2, CreditCard, Trash2, AlertTriangle, Pencil, MoreHorizontal, Download, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useSubcontractors, useSubcontractorPayments, Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
+import { useSubcontractorCheckAlerts } from "@/hooks/useSubcontractorCheckAlerts";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
@@ -11,6 +15,7 @@ import { format, parseISO, isBefore } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { exportSubcontractorPDF, exportSubcontractorExcel } from "@/lib/subcontractorReportExport";
 
 
 
