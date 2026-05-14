@@ -1,9 +1,17 @@
-import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { format, parseISO } from "date-fns";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import { formatCurrencyFull as money } from "@/lib/formatCurrency";
+import {
+  createPdfDoc,
+  defaultTableTheme,
+  autoFitColumns,
+  fillEmpty,
+  styleExcelHeaderRow,
+  nz,
+  EMPTY_CELL,
+} from "@/lib/reportUtils";
 import type { Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
 
 const METHOD_LABELS: Record<string, string> = {
@@ -39,29 +47,39 @@ export function exportSubcontractorExcel(
   const s = summary(sub, payments);
   const wb = XLSX.utils.book_new();
 
-  const summaryRows = [
-    ["Taşeron", sub.name],
-    ["Yetkili", sub.contact_person || "—"],
-    ["Telefon", sub.phone || "—"],
+  // Özet sheet
+  const summaryRows: any[][] = [
+    ["Taşeron Ödeme Geçmişi — Özet"],
+    [],
+    ["Alan", "Değer"],
+    ["Taşeron", nz(sub.name)],
+    ["Yetkili", nz(sub.contact_person)],
+    ["Telefon", nz(sub.phone)],
     ["Sözleşme Bedeli", s.contract],
     ["Toplam Ödenen", s.totalPaid],
     ["Kalan Borç", s.remaining],
   ];
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+  styleExcelHeaderRow(wsSummary, 3, 2);
+  autoFitColumns(wsSummary, summaryRows);
   XLSX.utils.book_append_sheet(wb, wsSummary, "Özet");
 
-  const header = ["Tarih", "Tutar (₺)", "Yöntem", "Çek/Vade", "Proje", "Not"];
-  const rows = payments.map(p => [
+  // Ödemeler sheet
+  const header = ["Tarih", "Tutar (₺)", "Yöntem", "Çek No / Vade", "Proje", "Not"];
+  const bodyRaw: any[][] = payments.map(p => [
     format(parseISO(p.payment_date), "dd.MM.yyyy"),
     Number(p.amount) || 0,
     METHOD_LABELS[p.payment_method] || p.payment_method,
     p.payment_method === "cek" && p.check_due_date
-      ? `${p.check_no || "—"} / ${format(parseISO(p.check_due_date), "dd.MM.yyyy")}`
-      : "—",
+      ? `${p.check_no || EMPTY_CELL} / ${format(parseISO(p.check_due_date), "dd.MM.yyyy")}`
+      : EMPTY_CELL,
     projectName(p.project_id),
-    p.note || "",
+    p.note,
   ]);
-  const wsPay = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  const payRows = [header, ...fillEmpty(bodyRaw)];
+  const wsPay = XLSX.utils.aoa_to_sheet(payRows);
+  styleExcelHeaderRow(wsPay, 1, header.length);
+  autoFitColumns(wsPay, payRows);
   XLSX.utils.book_append_sheet(wb, wsPay, "Ödemeler");
 
   XLSX.writeFile(wb, `${buildBaseName(sub)}.xlsx`);
@@ -73,26 +91,28 @@ export function exportSubcontractorPDF(
   projectName: (id?: string | null) => string,
 ) {
   const s = summary(sub, payments);
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = createPdfDoc();
   let y = addPdfHeader(doc, "Taşeron Ödeme Geçmişi", sub.name);
 
-  doc.setFontSize(10);
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(9.5);
   doc.setTextColor(60, 60, 60);
   const lines = [
-    `Taşeron: ${sub.name}`,
-    sub.contact_person ? `Yetkili: ${sub.contact_person}` : "",
-    sub.phone ? `Telefon: ${sub.phone}` : "",
+    `Taşeron: ${nz(sub.name)}`,
+    `Yetkili: ${nz(sub.contact_person)}`,
+    `Telefon: ${nz(sub.phone)}`,
     `Sözleşme Bedeli: ${money(s.contract)}`,
     `Toplam Ödenen: ${money(s.totalPaid)}`,
     `Kalan Borç: ${money(s.remaining)}`,
-  ].filter(Boolean);
+  ];
   for (const ln of lines) {
     doc.text(ln, 15, y);
     y += 5;
   }
-  y += 2;
+  y += 3;
 
   autoTable(doc, {
+    ...defaultTableTheme(),
     startY: y,
     head: [["Tarih", "Tutar", "Yöntem", "Çek No / Vade", "Proje", "Not"]],
     body: payments.map(p => [
@@ -100,15 +120,14 @@ export function exportSubcontractorPDF(
       money(Number(p.amount) || 0),
       METHOD_LABELS[p.payment_method] || p.payment_method,
       p.payment_method === "cek" && p.check_due_date
-        ? `${p.check_no || "—"}\n${format(parseISO(p.check_due_date), "dd.MM.yyyy")}`
-        : "—",
+        ? `${p.check_no || EMPTY_CELL}\n${format(parseISO(p.check_due_date), "dd.MM.yyyy")}`
+        : EMPTY_CELL,
       projectName(p.project_id),
-      p.note || "—",
+      nz(p.note),
     ]),
-    styles: { font: "helvetica", fontSize: 9, cellPadding: 2 },
-    headStyles: { fillColor: [255, 107, 43], textColor: 255 },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
-    margin: { left: 15, right: 15 },
+    columnStyles: {
+      1: { halign: "right" },
+    },
   });
 
   addPdfFooter(doc);
