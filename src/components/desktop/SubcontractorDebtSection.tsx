@@ -662,9 +662,14 @@ export default function SubcontractorDebtSection() {
                               <td className="py-2 px-2">{projectName(p.project_id)}</td>
                               <td className="py-2 px-2 text-muted-foreground">{p.note || "—"}</td>
                               <td className="py-2 px-2">
-                                <button onClick={() => setDeletePay({ id: p.id })} className="text-muted-foreground hover:text-red-500">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => detailSub && openEditPay(p, detailSub)} className="text-muted-foreground hover:text-[#FF6B2B]" title="Düzenle">
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => setDeletePay({ id: p.id })} className="text-muted-foreground hover:text-red-500" title="Sil">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
