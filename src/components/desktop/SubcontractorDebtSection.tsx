@@ -67,7 +67,7 @@ export default function SubcontractorDebtSection() {
   };
   const [payForm, setPayForm] = useState(payForm0);
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
-  const payFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const payFieldRefs = useRef<Record<string, HTMLElement | null>>({});
   const payFormSnapshot = useRef<typeof payForm0>(payForm0);
 
   const validatePayForm = (f: typeof payForm0) => {
@@ -378,6 +378,43 @@ export default function SubcontractorDebtSection() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editPayId ? "Ödemeyi Düzenle" : "Ödeme Ekle"} — {payModalFor?.name}</DialogTitle></DialogHeader>
           <div className="space-y-3">
+            {Object.keys(payErrors).filter(k => payErrors[k]).length > 0 && (
+              <div className="rounded-lg border border-red-500/60 bg-red-500/10 p-3">
+                <p className="text-xs font-semibold text-red-500 mb-1.5">Lütfen aşağıdaki alanları düzeltin:</p>
+                <ul className="space-y-1">
+                  {(() => {
+                    const labels: Record<string, string> = {
+                      payment_date: "Ödeme tarihi zorunludur",
+                      amount: "Geçerli bir ödeme tutarı girin",
+                      payment_method: "Ödeme yöntemi seçilmelidir",
+                      check_no: "Çek No zorunludur",
+                      check_due_date: "Vade tarihi zorunludur",
+                      bank_name: "Banka adı zorunludur",
+                    };
+                    const order = ["payment_date", "amount", "payment_method", "check_no", "check_due_date", "bank_name"];
+                    return order.filter(k => payErrors[k]).map(k => (
+                      <li key={k}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const el = payFieldRefs.current[k];
+                            if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              if ("focus" in el && typeof (el as HTMLInputElement).focus === "function") {
+                                (el as HTMLInputElement).focus();
+                              }
+                            }
+                          }}
+                          className="text-left text-xs text-red-500 hover:underline"
+                        >
+                          • {labels[k] || payErrors[k]}
+                        </button>
+                      </li>
+                    ));
+                  })()}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground">Ödeme Tarihi *</label>
@@ -392,7 +429,7 @@ export default function SubcontractorDebtSection() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Ödeme Yöntemi *</label>
-              <div className={`grid grid-cols-4 gap-1.5 mt-1 ${payErrors.payment_method ? "p-1 rounded-lg border border-red-500" : ""}`}>
+              <div ref={el => { payFieldRefs.current.payment_method = el; }} className={`grid grid-cols-4 gap-1.5 mt-1 ${payErrors.payment_method ? "p-1 rounded-lg border border-red-500" : ""}`}>
                 {PAYMENT_METHODS.map(m => (
                   <button
                     key={m.value}
