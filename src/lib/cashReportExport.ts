@@ -38,10 +38,7 @@ interface CashReportData {
 
 // ─── PDF ────────────────────────────────────────
 export function exportCashPDF(data: CashReportData) {
-  const doc = new jsPDF({ orientation: "landscape" });
-  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
+  const doc = createPdfDoc({ orientation: "landscape" });
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("tr-TR");
