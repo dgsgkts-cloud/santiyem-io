@@ -205,6 +205,29 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-4">
       <TrialBanner />
+      {autoReminders.length > 0 && (
+        <button
+          onClick={() => onTabChange("reminders")}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors px-4 py-3 text-left"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+              <CalendarClock className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{autoReminders.length} adet bekleyen işlem var</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {[
+                  autoReminders.filter(a => a.kind === "hakedis").length && `${autoReminders.filter(a => a.kind === "hakedis").length} hakediş`,
+                  autoReminders.filter(a => a.kind === "contract").length && `${autoReminders.filter(a => a.kind === "contract").length} sözleşme`,
+                  autoReminders.filter(a => a.kind === "check").length && `${autoReminders.filter(a => a.kind === "check").length} çek vadesi`,
+                ].filter(Boolean).join(" • ")}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        </button>
+      )}
       {/* Welcome */}
       <div className="rounded-xl p-5 lg:p-6 bg-card border border-border" style={{ borderLeft: "3px solid #FF6B2B" }}>
         <div className="flex items-start justify-between">
