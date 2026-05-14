@@ -170,13 +170,17 @@ export default function SubcontractorDebtSection() {
   };
 
   const handleDeletePay = async (id: string) => {
-    // Remove mirrored cash row(s) — match by source_id, fall back to legacy marker
-    await supabase
-      .from("cash_payments" as any)
-      .delete()
-      .or(`source_id.eq.${id},description.ilike.%${SUB_PAY_MARKER}${id}%`);
-    await deletePayment.mutateAsync(id);
+    // Atomic: removes both the subcontractor payment and the linked cash row.
+    const { error } = await supabase.rpc("delete_subcontractor_payment_with_cash" as any, {
+      _payment_id: id,
+    });
+    if (error) {
+      toast.error("Ödeme silinemedi");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["subcontractor_payments"] });
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
+    toast.success("Ödeme silindi");
   };
 
   // Drawer filters / sort
