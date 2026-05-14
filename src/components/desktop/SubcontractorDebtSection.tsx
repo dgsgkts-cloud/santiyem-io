@@ -57,7 +57,7 @@ export default function SubcontractorDebtSection() {
   const payForm0 = {
     payment_date: new Date().toISOString().slice(0, 10),
     amount: "",
-    payment_method: "nakit",
+    payment_method: "",
     project_id: "",
     check_no: "",
     check_due_date: "",
