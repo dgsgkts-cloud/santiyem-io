@@ -180,10 +180,44 @@ export default function SubcontractorDebtSection() {
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
   };
 
+  // Drawer filters / sort
+  const [paySearch, setPaySearch] = useState("");
+  const [payMethodFilter, setPayMethodFilter] = useState<string>("all");
+  const [paySortKey, setPaySortKey] = useState<"date" | "amount" | "due">("date");
+  const [paySortDir, setPaySortDir] = useState<"asc" | "desc">("desc");
+  const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+
   const detailPayments = useMemo(() => {
     if (!detailSub) return [];
-    return allPayments.filter(p => p.subcontractor_id === detailSub.id)
-      .sort((a, b) => b.payment_date.localeCompare(a.payment_date));
+    const today = new Date();
+    const q = paySearch.trim().toLowerCase();
+    let list = allPayments.filter(p => p.subcontractor_id === detailSub.id);
+
+    if (payMethodFilter !== "all") list = list.filter(p => p.payment_method === payMethodFilter);
+    if (showOverdueOnly) list = list.filter(p => p.payment_method === "cek" && p.check_due_date && isBefore(parseISO(p.check_due_date), today));
+    if (q) list = list.filter(p => {
+      const haystack = [
+        p.note, p.check_no, p.bank_name, projectName(p.project_id), String(p.amount),
+      ].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+
+    const dir = paySortDir === "asc" ? 1 : -1;
+    return [...list].sort((a, b) => {
+      if (paySortKey === "amount") return (Number(a.amount) - Number(b.amount)) * dir;
+      if (paySortKey === "due") {
+        const av = a.check_due_date || "";
+        const bv = b.check_due_date || "";
+        return av.localeCompare(bv) * dir;
+      }
+      return a.payment_date.localeCompare(b.payment_date) * dir;
+    });
+  }, [detailSub, allPayments, paySearch, payMethodFilter, paySortKey, paySortDir, showOverdueOnly, projects]);
+
+  const detailOverdueCount = useMemo(() => {
+    if (!detailSub) return 0;
+    const today = new Date();
+    return allPayments.filter(p => p.subcontractor_id === detailSub.id && p.payment_method === "cek" && p.check_due_date && isBefore(parseISO(p.check_due_date), today)).length;
   }, [detailSub, allPayments]);
 
   const detailEnriched = detailSub ? enriched.find(e => e.id === detailSub.id) : null;
