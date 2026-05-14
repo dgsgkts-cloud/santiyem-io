@@ -68,6 +68,7 @@ export default function SubcontractorDebtSection() {
   const [payForm, setPayForm] = useState(payForm0);
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
   const payFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const payFormSnapshot = useRef<typeof payForm0>(payForm0);
 
   const validatePayForm = (f: typeof payForm0) => {
     const errs: Record<string, string> = {};
@@ -146,7 +147,11 @@ export default function SubcontractorDebtSection() {
     });
 
     if (error) {
-      toast.error(editPayId ? "Ödeme güncellenemedi" : "Ödeme kaydedilemedi");
+      const msg = error.message || (editPayId ? "Ödeme güncellenemedi" : "Ödeme kaydedilemedi");
+      toast.error(`${editPayId ? "Güncelleme" : "Kayıt"} başarısız: ${msg}. Form önceki değerlerine geri yüklendi.`);
+      // Restore the form to its last known good state (original record on edit, empty on new)
+      setPayForm(payFormSnapshot.current);
+      setPayErrors({});
       return;
     }
 
@@ -162,7 +167,7 @@ export default function SubcontractorDebtSection() {
   };
 
   const openEditPay = (p: SubcontractorPayment, sub: Subcontractor) => {
-    setPayForm({
+    const snapshot = {
       payment_date: p.payment_date,
       amount: String(p.amount ?? ""),
       payment_method: p.payment_method || "nakit",
@@ -172,7 +177,9 @@ export default function SubcontractorDebtSection() {
       bank_name: p.bank_name || "",
       account_no: p.account_no || "",
       note: p.note || "",
-    });
+    };
+    setPayForm(snapshot);
+    payFormSnapshot.current = snapshot;
     setPayErrors({});
     setEditPayId(p.id);
     setPayModalFor(sub);
