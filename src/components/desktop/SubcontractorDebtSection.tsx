@@ -400,6 +400,8 @@ export default function SubcontractorDebtSection() {
                             const el = payFieldRefs.current[k];
                             if (el) {
                               el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              // Compensate for fixed header (~80px)
+                              setTimeout(() => window.scrollBy({ top: -80, left: 0, behavior: "smooth" }), 300);
                               if ("focus" in el && typeof (el as HTMLInputElement).focus === "function") {
                                 (el as HTMLInputElement).focus();
                               }
