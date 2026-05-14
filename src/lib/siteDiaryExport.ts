@@ -129,12 +129,10 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("Makine / Ekipman", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Makine", "Çalışma Süresi (saat)", "Not"]],
-      body: entry.machines.map(m => [m.name, String(m.hours), m.note || ""]),
+      body: entry.machines.map(m => [m.name, String(m.hours), nz(m.note)]),
     });
     y = (doc as any).lastAutoTable.finalY + 4;
   }
