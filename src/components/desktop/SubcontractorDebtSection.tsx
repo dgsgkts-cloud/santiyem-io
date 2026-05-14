@@ -166,6 +166,7 @@ export default function SubcontractorDebtSection() {
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
 
     setPayForm(payForm0);
+    setPayErrors({});
     setPayModalFor(null);
   };
 
