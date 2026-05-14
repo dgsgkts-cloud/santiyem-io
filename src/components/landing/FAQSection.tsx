@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -14,6 +15,29 @@ const FAQS = [
 
 const FAQSection = () => {
   const { ref, isVisible } = useScrollAnimation();
+
+  useEffect(() => {
+    const id = "faq-jsonld";
+    const existing = document.getElementById(id);
+    if (existing) existing.remove();
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = id;
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQS.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.getElementById(id)?.remove();
+    };
+  }, []);
+
   return (
     <section id="faq" className="py-24 px-6 border-t" style={{ background: "#0A0E13", borderColor: "#1E2732" }}>
       <div ref={ref} className={`max-w-5xl mx-auto transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
