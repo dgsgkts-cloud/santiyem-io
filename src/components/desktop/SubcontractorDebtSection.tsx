@@ -450,7 +450,19 @@ export default function SubcontractorDebtSection() {
             </div>
             <div className="flex gap-2 pt-2">
               <button onClick={() => { setPayModalFor(null); setEditPayId(null); setPayForm(payForm0); setPayErrors({}); }} className="flex-1 py-2 rounded-lg border border-border text-sm">Vazgeç</button>
-              <button onClick={handleSavePay} className="flex-1 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: "#FF6B2B" }}>{editPayId ? "Güncelle" : "Kaydet"}</button>
+              {(() => {
+                const isInvalid = Object.keys(validatePayForm(payForm)).length > 0;
+                return (
+                  <button
+                    onClick={handleSavePay}
+                    disabled={isInvalid}
+                    className="flex-1 py-2 rounded-lg text-sm font-medium text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: "#FF6B2B" }}
+                  >
+                    {editPayId ? "Güncelle" : "Kaydet"}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </DialogContent>
