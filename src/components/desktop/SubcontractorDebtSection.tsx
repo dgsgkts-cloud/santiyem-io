@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle, Pencil } from "lucide-react";
+import { Plus, Banknote, FileText, Building2, CreditCard, Trash2, AlertTriangle, Pencil, MoreHorizontal, Download, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useSubcontractors, useSubcontractorPayments, Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
+import { useSubcontractorCheckAlerts } from "@/hooks/useSubcontractorCheckAlerts";
 import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
@@ -11,6 +15,7 @@ import { format, parseISO, isBefore } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { exportSubcontractorPDF, exportSubcontractorExcel } from "@/lib/subcontractorReportExport";
 
 
 
@@ -28,11 +33,13 @@ export default function SubcontractorDebtSection() {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const { projects } = useProjects();
-  const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
+  const { subcontractors, addSubcontractor, updateSubcontractor, deleteSubcontractor } = useSubcontractors();
   const { payments: allPayments } = useSubcontractorPayments();
+  const { overdue: overdueAlerts, overdueTotal } = useSubcontractorCheckAlerts();
 
 
   const [addSubModal, setAddSubModal] = useState(false);
+  const [editSub, setEditSub] = useState<Subcontractor | null>(null);
   const [detailSub, setDetailSub] = useState<Subcontractor | null>(null);
   const [payModalFor, setPayModalFor] = useState<Subcontractor | null>(null);
   const [deleteSub, setDeleteSub] = useState<Subcontractor | null>(null);
@@ -93,12 +100,29 @@ export default function SubcontractorDebtSection() {
     return { ...s, totalPaid, remaining, pct };
   }), [subcontractors, allPayments]);
 
+  const totalRemaining = useMemo(
+    () => enriched.reduce((s, e) => s + Math.max(0, e.remaining), 0),
+    [enriched],
+  );
+
   const projectName = (id?: string | null) => projects.find(p => p.id === id)?.name || "—";
+
+  const openEditSub = (s: Subcontractor) => {
+    setSubForm({
+      name: s.name,
+      contact_person: s.contact_person || "",
+      phone: s.phone || "",
+      project_ids: s.project_ids || (s.project_id ? [s.project_id] : []),
+      contract_amount: String(s.contract_amount ?? ""),
+      description: s.description || "",
+    });
+    setEditSub(s);
+  };
 
   const handleAddSub = async () => {
     if (!subForm.name.trim()) return toast.error("Taşeron adı zorunlu");
     if (!subForm.contract_amount || Number(subForm.contract_amount) <= 0) return toast.error("Sözleşme bedeli zorunlu");
-    await addSubcontractor.mutateAsync({
+    const payload = {
       name: subForm.name.trim(),
       contact_person: subForm.contact_person.trim() || null,
       phone: subForm.phone.trim() || null,
@@ -106,9 +130,15 @@ export default function SubcontractorDebtSection() {
       project_id: subForm.project_ids[0] || null,
       contract_amount: Number(subForm.contract_amount),
       description: subForm.description.trim() || null,
-    } as any);
+    };
+    if (editSub) {
+      await updateSubcontractor.mutateAsync({ id: editSub.id, ...payload } as any);
+      setEditSub(null);
+    } else {
+      await addSubcontractor.mutateAsync(payload as any);
+      setAddSubModal(false);
+    }
     setSubForm(subForm0);
-    setAddSubModal(false);
   };
 
   const handleSavePay = async () => {
@@ -254,6 +284,51 @@ export default function SubcontractorDebtSection() {
         </button>
       </div>
 
+      {/* Summary banner */}
+      {enriched.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <div className="rounded-lg border border-border bg-background p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
+              <Users className="w-4 h-4" style={{ color: "#FF6B2B" }} />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam Taşeron</p>
+              <p className="text-base font-bold text-foreground">{enriched.length}</p>
+            </div>
+          </div>
+          <div className="rounded-lg border p-3 flex items-center gap-3" style={{ borderColor: "rgba(239,68,68,0.4)", backgroundColor: "rgba(239,68,68,0.06)" }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.18)" }}>
+              <Banknote className="w-4 h-4" style={{ color: "#EF4444" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam Kalan Borç</p>
+              <p className="text-base font-bold truncate" style={{ color: "#EF4444" }}>{fmtFull(totalRemaining)}</p>
+            </div>
+          </div>
+          <div
+            className="rounded-lg border p-3 flex items-center gap-3"
+            style={{
+              borderColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.4)",
+              backgroundColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.06)",
+            }}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: overdueAlerts.length > 0 ? "rgba(239,68,68,0.18)" : "rgba(34,197,94,0.18)" }}>
+              <AlertTriangle className="w-4 h-4" style={{ color: overdueAlerts.length > 0 ? "#EF4444" : "#22C55E" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vadesi Geçmiş Çek</p>
+              {overdueAlerts.length > 0 ? (
+                <p className="text-base font-bold truncate" style={{ color: "#EF4444" }}>
+                  {fmtFull(overdueTotal)} <span className="text-[10px] font-medium">({overdueAlerts.length})</span>
+                </p>
+              ) : (
+                <p className="text-base font-bold" style={{ color: "#22C55E" }}>Temiz</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {enriched.length === 0 ? (
         <p className="text-xs text-muted-foreground text-center py-6">Taşeron kaydı yok</p>
       ) : (
@@ -268,12 +343,21 @@ export default function SubcontractorDebtSection() {
                   <p className="text-[14px] font-semibold text-foreground truncate">{s.name}</p>
                   {s.contact_person && <p className="text-[11px] text-muted-foreground truncate">{s.contact_person}</p>}
                 </button>
-                <button
-                  onClick={() => setDeleteSub(s)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-red-500"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60" aria-label="İşlemler">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditSub(s)}>
+                      <Pencil className="w-3.5 h-3.5 mr-2" /> Düzenle
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeleteSub(s)} className="text-red-500 focus:text-red-500">
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {(s.project_ids?.length > 0 || s.project_id) && (
@@ -318,9 +402,9 @@ export default function SubcontractorDebtSection() {
       )}
 
       {/* ── Add subcontractor modal ── */}
-      <Dialog open={addSubModal} onOpenChange={setAddSubModal}>
+      <Dialog open={addSubModal || !!editSub} onOpenChange={o => { if (!o) { setAddSubModal(false); setEditSub(null); setSubForm(subForm0); } }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Yeni Taşeron Ekle</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editSub ? "Taşeronu Düzenle" : "Yeni Taşeron Ekle"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-xs text-muted-foreground">Taşeron / Firma Adı *</label>
@@ -518,7 +602,40 @@ export default function SubcontractorDebtSection() {
       <Sheet open={!!detailSub} onOpenChange={o => !o && setDetailSub(null)}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{detailSub?.name}</SheetTitle>
+            <div className="flex items-center justify-between gap-2 pr-6">
+              <SheetTitle className="truncate">{detailSub?.name}</SheetTitle>
+              {detailSub && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-xs hover:bg-muted/60">
+                      <Download className="w-3.5 h-3.5" /> Dışa Aktar
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        try {
+                          exportSubcontractorExcel(detailSub, detailPayments, projectName);
+                          toast.success("Excel indirildi");
+                        } catch { toast.error("Excel oluşturulamadı"); }
+                      }}
+                    >
+                      Excel İndir
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        try {
+                          exportSubcontractorPDF(detailSub, detailPayments, projectName);
+                          toast.success("PDF indirildi");
+                        } catch { toast.error("PDF oluşturulamadı"); }
+                      }}
+                    >
+                      PDF İndir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </SheetHeader>
           {detailSub && detailEnriched && (
             <div className="mt-4 space-y-4">
