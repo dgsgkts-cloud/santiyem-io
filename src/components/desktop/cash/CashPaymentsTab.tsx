@@ -2,6 +2,7 @@ import { useState } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useCashPayments, CashPayment } from "@/hooks/useCashPayments";
 import { useProjects } from "@/hooks/useProjects";
+import { useSubcontractors } from "@/hooks/useSubcontractors";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
