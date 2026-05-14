@@ -25,9 +25,12 @@ const PAYMENT_METHODS = [
 const methodLabel = (m: string) => PAYMENT_METHODS.find(x => x.value === m) ?? PAYMENT_METHODS[0];
 
 export default function SubcontractorDebtSection() {
+  const { user } = useUser();
+  const queryClient = useQueryClient();
   const { projects } = useProjects();
   const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
-  const { payments: allPayments, addPayment, deletePayment } = useSubcontractorPayments();
+  const { payments: allPayments, deletePayment } = useSubcontractorPayments();
+
 
   const [addSubModal, setAddSubModal] = useState(false);
   const [detailSub, setDetailSub] = useState<Subcontractor | null>(null);
