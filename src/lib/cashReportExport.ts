@@ -41,8 +41,6 @@ export function exportCashPDF(data: CashReportData) {
   const doc = createPdfDoc({ orientation: "landscape" });
 
   const now = new Date();
-  const dateStr = now.toLocaleDateString("tr-TR");
-  const pw = doc.internal.pageSize.getWidth();
 
   // ── Header (firma profili) ──
   let y = addPdfHeader(doc, "Kasa & Ödeme Raporu");
