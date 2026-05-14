@@ -53,6 +53,22 @@ export default function SubcontractorDebtSection() {
     note: "",
   };
   const [payForm, setPayForm] = useState(payForm0);
+  const [payErrors, setPayErrors] = useState<Record<string, string>>({});
+
+  const validatePayForm = (f: typeof payForm0) => {
+    const errs: Record<string, string> = {};
+    if (!f.payment_date) errs.payment_date = "Ödeme tarihi zorunlu";
+    if (!f.amount || Number(f.amount) <= 0) errs.amount = "Geçerli bir tutar girin";
+    if (!f.payment_method) errs.payment_method = "Ödeme yöntemi seçin";
+    if (f.payment_method === "cek") {
+      if (!f.check_no.trim()) errs.check_no = "Çek No zorunlu";
+      if (!f.check_due_date) errs.check_due_date = "Vade tarihi zorunlu";
+    }
+    if (f.payment_method === "havale" && !f.bank_name.trim()) {
+      errs.bank_name = "Banka adı zorunlu";
+    }
+    return errs;
+  };
 
   const enriched = useMemo(() => subcontractors.map(s => {
     const pays = allPayments.filter(p => p.subcontractor_id === s.id && p.status === "odendi");
