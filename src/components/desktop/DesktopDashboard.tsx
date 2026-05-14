@@ -39,6 +39,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { profile, user, plan, role } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
+  const autoReminders = useAutoReminders();
   const { contracts, stats: contractStats } = useContracts();
   const { accounts } = useCashAccounts();
   const { checks } = useCashChecks();
