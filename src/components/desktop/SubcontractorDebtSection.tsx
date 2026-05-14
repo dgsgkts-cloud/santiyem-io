@@ -328,11 +328,13 @@ export default function SubcontractorDebtSection() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground">Ödeme Tarihi *</label>
-                <input type="date" value={payForm.payment_date} onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                <input type="date" value={payForm.payment_date} onChange={e => { setPayForm({ ...payForm, payment_date: e.target.value }); if (payErrors.payment_date) setPayErrors({ ...payErrors, payment_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.payment_date ? "border-red-500" : "border-border"}`} />
+                {payErrors.payment_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.payment_date}</p>}
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Tutar (₺) *</label>
-                <input type="number" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                <input type="number" value={payForm.amount} onChange={e => { setPayForm({ ...payForm, amount: e.target.value }); if (payErrors.amount) setPayErrors({ ...payErrors, amount: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.amount ? "border-red-500" : "border-border"}`} />
+                {payErrors.amount && <p className="text-[11px] text-red-500 mt-1">{payErrors.amount}</p>}
               </div>
             </div>
             <div>
@@ -342,7 +344,7 @@ export default function SubcontractorDebtSection() {
                   <button
                     key={m.value}
                     type="button"
-                    onClick={() => setPayForm({ ...payForm, payment_method: m.value })}
+                    onClick={() => { setPayForm({ ...payForm, payment_method: m.value }); setPayErrors({ ...payErrors, check_no: "", check_due_date: "", bank_name: "" }); }}
                     className="py-2 rounded-lg text-xs font-medium border transition-colors"
                     style={{
                       borderColor: payForm.payment_method === m.value ? "#FF6B2B" : "hsl(var(--border))",
