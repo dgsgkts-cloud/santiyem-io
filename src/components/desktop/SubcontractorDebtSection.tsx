@@ -53,6 +53,22 @@ export default function SubcontractorDebtSection() {
     note: "",
   };
   const [payForm, setPayForm] = useState(payForm0);
+  const [payErrors, setPayErrors] = useState<Record<string, string>>({});
+
+  const validatePayForm = (f: typeof payForm0) => {
+    const errs: Record<string, string> = {};
+    if (!f.payment_date) errs.payment_date = "Ödeme tarihi zorunlu";
+    if (!f.amount || Number(f.amount) <= 0) errs.amount = "Geçerli bir tutar girin";
+    if (!f.payment_method) errs.payment_method = "Ödeme yöntemi seçin";
+    if (f.payment_method === "cek") {
+      if (!f.check_no.trim()) errs.check_no = "Çek No zorunlu";
+      if (!f.check_due_date) errs.check_due_date = "Vade tarihi zorunlu";
+    }
+    if (f.payment_method === "havale" && !f.bank_name.trim()) {
+      errs.bank_name = "Banka adı zorunlu";
+    }
+    return errs;
+  };
 
   const enriched = useMemo(() => subcontractors.map(s => {
     const pays = allPayments.filter(p => p.subcontractor_id === s.id && p.status === "odendi");
@@ -82,10 +98,13 @@ export default function SubcontractorDebtSection() {
 
   const handleAddPay = async () => {
     if (!payModalFor || !user) return;
-    if (!payForm.amount || Number(payForm.amount) <= 0) return toast.error("Tutar zorunlu");
-    if (!payForm.payment_date) return toast.error("Tarih zorunlu");
-    if (payForm.payment_method === "cek" && (!payForm.check_no || !payForm.check_due_date)) return toast.error("Çek No ve vade zorunlu");
-    if (payForm.payment_method === "havale" && !payForm.bank_name) return toast.error("Banka adı zorunlu");
+    const errs = validatePayForm(payForm);
+    if (Object.keys(errs).length > 0) {
+      setPayErrors(errs);
+      toast.error("Lütfen zorunlu alanları doldurun");
+      return;
+    }
+    setPayErrors({});
 
     // 1) Insert subcontractor payment, get its id back
     const { data: subPayRow, error: spErr } = await supabase
@@ -147,6 +166,7 @@ export default function SubcontractorDebtSection() {
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
 
     setPayForm(payForm0);
+    setPayErrors({});
     setPayModalFor(null);
   };
 
@@ -301,18 +321,20 @@ export default function SubcontractorDebtSection() {
       </Dialog>
 
       {/* ── Add payment modal ── */}
-      <Dialog open={!!payModalFor} onOpenChange={o => !o && setPayModalFor(null)}>
+      <Dialog open={!!payModalFor} onOpenChange={o => { if (!o) { setPayModalFor(null); setPayErrors({}); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Ödeme Ekle — {payModalFor?.name}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground">Ödeme Tarihi *</label>
-                <input type="date" value={payForm.payment_date} onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                <input type="date" value={payForm.payment_date} onChange={e => { setPayForm({ ...payForm, payment_date: e.target.value }); if (payErrors.payment_date) setPayErrors({ ...payErrors, payment_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.payment_date ? "border-red-500" : "border-border"}`} />
+                {payErrors.payment_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.payment_date}</p>}
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Tutar (₺) *</label>
-                <input type="number" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                <input type="number" value={payForm.amount} onChange={e => { setPayForm({ ...payForm, amount: e.target.value }); if (payErrors.amount) setPayErrors({ ...payErrors, amount: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.amount ? "border-red-500" : "border-border"}`} />
+                {payErrors.amount && <p className="text-[11px] text-red-500 mt-1">{payErrors.amount}</p>}
               </div>
             </div>
             <div>
@@ -322,7 +344,7 @@ export default function SubcontractorDebtSection() {
                   <button
                     key={m.value}
                     type="button"
-                    onClick={() => setPayForm({ ...payForm, payment_method: m.value })}
+                    onClick={() => { setPayForm({ ...payForm, payment_method: m.value }); setPayErrors({ ...payErrors, check_no: "", check_due_date: "", bank_name: "" }); }}
                     className="py-2 rounded-lg text-xs font-medium border transition-colors"
                     style={{
                       borderColor: payForm.payment_method === m.value ? "#FF6B2B" : "hsl(var(--border))",
@@ -341,11 +363,13 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Çek No *</label>
-                  <input value={payForm.check_no} onChange={e => setPayForm({ ...payForm, check_no: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input value={payForm.check_no} onChange={e => { setPayForm({ ...payForm, check_no: e.target.value }); if (payErrors.check_no) setPayErrors({ ...payErrors, check_no: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_no ? "border-red-500" : "border-border"}`} />
+                  {payErrors.check_no && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_no}</p>}
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">Vade Tarihi *</label>
-                  <input type="date" value={payForm.check_due_date} onChange={e => setPayForm({ ...payForm, check_due_date: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input type="date" value={payForm.check_due_date} onChange={e => { setPayForm({ ...payForm, check_due_date: e.target.value }); if (payErrors.check_due_date) setPayErrors({ ...payErrors, check_due_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_due_date ? "border-red-500" : "border-border"}`} />
+                  {payErrors.check_due_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_due_date}</p>}
                 </div>
               </div>
             )}
@@ -353,7 +377,8 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Banka Adı *</label>
-                  <input value={payForm.bank_name} onChange={e => setPayForm({ ...payForm, bank_name: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input value={payForm.bank_name} onChange={e => { setPayForm({ ...payForm, bank_name: e.target.value }); if (payErrors.bank_name) setPayErrors({ ...payErrors, bank_name: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.bank_name ? "border-red-500" : "border-border"}`} />
+                  {payErrors.bank_name && <p className="text-[11px] text-red-500 mt-1">{payErrors.bank_name}</p>}
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">IBAN / Hesap No</label>
