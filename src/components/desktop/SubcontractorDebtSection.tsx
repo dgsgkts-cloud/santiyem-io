@@ -8,6 +8,12 @@ import { useProjects } from "@/hooks/useProjects";
 import { formatCurrencyFull as fmtFull } from "@/lib/formatCurrency";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { format, parseISO, isBefore } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
+
+const SUB_PAY_MARKER = "__sub_pay:";
+
 
 const PAYMENT_METHODS = [
   { value: "nakit", label: "Nakit", icon: Banknote, emoji: "💵" },
