@@ -429,7 +429,7 @@ export default function SubcontractorDebtSection() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Ödeme Yöntemi *</label>
-              <div className={`grid grid-cols-4 gap-1.5 mt-1 ${payErrors.payment_method ? "p-1 rounded-lg border border-red-500" : ""}`}>
+              <div ref={el => { payFieldRefs.current.payment_method = el; }} className={`grid grid-cols-4 gap-1.5 mt-1 ${payErrors.payment_method ? "p-1 rounded-lg border border-red-500" : ""}`}>
                 {PAYMENT_METHODS.map(m => (
                   <button
                     key={m.value}
