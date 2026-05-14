@@ -75,13 +75,11 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
     doc.text("İşgücü", 15, y);
     y += 1;
     autoTable(doc, {
+      ...defaultTableTheme(),
       startY: y,
-      margin: { left: 15, right: 15 },
-      styles: { font: "Roboto", fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 20, 25], textColor: [200, 200, 200], fontStyle: "bold" },
       head: [["Ekip / Usta", "Kişi", "Saat", "Not"]],
       body: [
-        ...entry.crews.map(c => [c.team, String(c.count), String(c.hours), c.note || ""]),
+        ...entry.crews.map(c => [c.team, String(c.count), String(c.hours), nz(c.note)]),
         [{ content: `Toplam: ${workers} işçi · ${totalManHours(entry.crews)} adam/saat`, colSpan: 4, styles: { fontStyle: "bold" as const, textColor: [255, 107, 43] } }],
       ],
     });
