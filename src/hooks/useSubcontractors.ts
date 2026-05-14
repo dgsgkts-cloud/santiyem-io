@@ -10,6 +10,9 @@ export interface Subcontractor {
   phone: string | null;
   specialty: string | null;
   project_id: string | null;
+  project_ids: string[];
+  contact_person: string | null;
+  description: string | null;
   contract_amount: number;
   payment_schedule: any[];
   notes: string | null;
@@ -21,10 +24,17 @@ export interface SubcontractorPayment {
   id: string;
   user_id: string;
   subcontractor_id: string;
+  project_id: string | null;
   amount: number;
   payment_date: string;
   planned_date: string | null;
   description: string | null;
+  note: string | null;
+  payment_method: string;
+  check_no: string | null;
+  check_due_date: string | null;
+  bank_name: string | null;
+  account_no: string | null;
   receipt_url: string | null;
   status: string;
   created_at: string;
