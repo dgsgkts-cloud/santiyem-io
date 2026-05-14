@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 
-const SUB_PAY_MARKER = "__sub_pay:";
+
 
 
 const PAYMENT_METHODS = [
