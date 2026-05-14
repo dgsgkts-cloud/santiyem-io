@@ -487,7 +487,7 @@ export default function SubcontractorDebtSection() {
         onClose={() => setDeletePay(null)}
         title="Ödemeyi Sil"
         itemName="ödeme kaydı"
-        onConfirm={async () => { if (deletePay) await deletePayment.mutateAsync(deletePay.id); setDeletePay(null); }}
+        onConfirm={async () => { if (deletePay) await handleDeletePay(deletePay.id); setDeletePay(null); }}
       />
     </div>
   );
