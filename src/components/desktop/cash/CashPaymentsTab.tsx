@@ -2,6 +2,7 @@ import { useState } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useCashPayments, CashPayment } from "@/hooks/useCashPayments";
 import { useProjects } from "@/hooks/useProjects";
+import { useSubcontractors } from "@/hooks/useSubcontractors";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,6 +29,35 @@ const STATUSES = [
 const CashPaymentsTab = () => {
   const { payments, isLoading, addPayment, deletePayment } = useCashPayments();
   const { projects } = useProjects();
+  const { subcontractors } = useSubcontractors();
+  const subMap = new Map(subcontractors.map(s => [s.id, s]));
+
+  const openSubDetail = (id: string) => {
+    window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "payments-kasa" }));
+    // Slight delay so the section is mounted before the drawer opens
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("open-subcontractor-detail", { detail: { id } }));
+    }, 50);
+  };
+
+  const renderDescription = (p: any) => {
+    if (p.source_type === "subcontractor_payment" && p.source_id) {
+      const sub = subMap.get(p.source_id);
+      if (sub) {
+        return (
+          <button
+            onClick={() => openSubDetail(sub.id)}
+            className="text-[#FF6B2B] hover:underline font-medium text-left"
+          >
+            {sub.name} — Ödeme
+          </button>
+        );
+      }
+      return <span className="text-muted-foreground italic">Silinmiş Taşeron</span>;
+    }
+    return <span className="text-muted-foreground">{p.description || "-"}</span>;
+  };
+
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
@@ -115,14 +145,14 @@ const CashPaymentsTab = () => {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-border">
-                  {["Tarih", "Alıcı", "Kategori", "Proje", "Tutar", "Ödeme Tipi", "Durum", ""].map(h => (
+                  {["Tarih", "Alıcı", "Açıklama", "Kategori", "Proje", "Tutar", "Ödeme Tipi", "Durum", ""].map(h => (
                     <th key={h} className="px-4 py-3 text-left font-medium text-muted-foreground">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-12 text-muted-foreground">Henüz ödeme yok</td></tr>
+                  <tr><td colSpan={9} className="text-center py-12 text-muted-foreground">Henüz ödeme yok</td></tr>
                 ) : filtered.map(p => {
                   const si = statusInfo(p.status);
                   const proj = projects.find(pr => pr.id === p.project_id);
@@ -130,6 +160,7 @@ const CashPaymentsTab = () => {
                     <tr key={p.id} className="border-b border-border hover-row">
                       <td className="px-4 py-3 text-foreground">{p.payment_date}</td>
                       <td className="px-4 py-3 font-medium text-foreground">{p.recipient}</td>
+                      <td className="px-4 py-3 text-[12px]">{renderDescription(p)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
                       <td className="px-4 py-3 text-muted-foreground">{proj?.name || "-"}</td>
                       <td className="px-4 py-3 font-semibold" style={{ color: "#EF4444" }}>₺{fmt(p.amount)}</td>
@@ -170,6 +201,7 @@ const CashPaymentsTab = () => {
                   </div>
                 </div>
                 <p className="text-xl font-bold mb-1" style={{ color: "#EF4444" }}>₺{fmt(p.amount)}</p>
+                <div className="text-[12px] mb-1">{renderDescription(p)}</div>
                 <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
                   <span>📅 {p.payment_date}</span>
                   {proj && <span>📁 {proj.name}</span>}
