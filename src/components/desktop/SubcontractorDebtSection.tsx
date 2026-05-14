@@ -225,11 +225,11 @@ export default function SubcontractorDebtSection() {
   };
 
   const handleDeletePay = async (id: string) => {
-    // Remove mirrored cash row first (best-effort)
+    // Remove mirrored cash row(s) — match by source_id, fall back to legacy marker
     await supabase
       .from("cash_payments" as any)
       .delete()
-      .like("description", `%${SUB_PAY_MARKER}${id}%`);
+      .or(`source_id.eq.${id},description.ilike.%${SUB_PAY_MARKER}${id}%`);
     await deletePayment.mutateAsync(id);
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
   };
