@@ -1,4 +1,4 @@
-import jsPDF from "jspdf";
+// jsPDF dolaylı olarak reportUtils.createPdfDoc üzerinden kullanılır
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { robotoBase64 } from "@/lib/robotoFont";
