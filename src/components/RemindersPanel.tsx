@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, User } from "lucide-react";
+import { CalendarClock, Plus, Trash2, CheckCircle2, Clock, AlertTriangle, User, Sparkles, FileSignature, FileText, Banknote, ListFilter } from "lucide-react";
 import { useReminders } from "@/hooks/useReminders";
 import { useUser } from "@/contexts/UserContext";
 import { useTeam } from "@/hooks/useTeam";
+import { useAutoReminders, AutoReminder, AutoReminderSeverity } from "@/hooks/useAutoReminders";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("tr-TR", {
@@ -31,9 +32,28 @@ function getStatusInfo(dateStr: string, done: boolean) {
   return { label: `${diff} gün kaldı`, color: "text-primary bg-primary/10 border-primary/20", icon: Clock };
 }
 
+function autoSeverityClasses(sev: AutoReminderSeverity) {
+  switch (sev) {
+    case "critical": return "text-red-700 bg-red-700/10 border-red-700/30";
+    case "danger":   return "text-destructive bg-destructive/10 border-destructive/20";
+    case "orange":   return "text-orange-600 bg-orange-500/10 border-orange-500/20";
+    case "warning":  return "text-amber-600 bg-amber-500/10 border-amber-500/20";
+    default:         return "text-primary bg-primary/10 border-primary/20";
+  }
+}
+
+const KIND_META = {
+  check:    { label: "Çek Vadesi", icon: Banknote },
+  hakedis:  { label: "Hakediş", icon: FileText },
+  contract: { label: "Sözleşme", icon: FileSignature },
+} as const;
+
+type TypeFilter = "all" | "check" | "hakedis" | "contract" | "manual";
+
 const RemindersPanel = () => {
   const { user, plan } = useUser();
   const { reminders, loading, addReminder, toggleDone, deleteReminder } = useReminders();
+  const auto = useAutoReminders();
   const { members } = useTeam();
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
@@ -42,6 +62,7 @@ const RemindersPanel = () => {
   const [assignedTo, setAssignedTo] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "done" | "overdue">("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
   const handleAdd = async () => {
     if (!title.trim() || !date) return;
@@ -53,6 +74,10 @@ const RemindersPanel = () => {
       setAssignedTo("");
       setShowForm(false);
     }
+  };
+
+  const goTo = (tab: string) => {
+    window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
   };
 
   const filtered = useMemo(() => {
@@ -70,11 +95,26 @@ const RemindersPanel = () => {
     }
   }, [reminders, filter]);
 
+  const showManual = typeFilter === "all" || typeFilter === "manual";
+  const visibleAuto = useMemo<AutoReminder[]>(() => {
+    if (typeFilter === "manual") return [];
+    if (typeFilter === "all") return auto;
+    return auto.filter(a => a.kind === typeFilter);
+  }, [auto, typeFilter]);
+
   const overdue = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) < 0).length;
   const today = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) === 0).length;
   const upcoming = reminders.filter((r) => !r.done && getDaysDiff(r.reminder_date) > 0).length;
 
   const showTeamFeatures = (plan === "office_free" || plan === "office_pro" || plan === "office_custom") && members.length > 1;
+
+  const typeChips: { key: TypeFilter; label: string; count: number }[] = [
+    { key: "all",      label: "Tümü",        count: auto.length + reminders.length },
+    { key: "check",    label: "Çek Vadesi",  count: auto.filter(a => a.kind === "check").length },
+    { key: "hakedis",  label: "Hakediş",     count: auto.filter(a => a.kind === "hakedis").length },
+    { key: "contract", label: "Sözleşme",    count: auto.filter(a => a.kind === "contract").length },
+    { key: "manual",   label: "Diğer",       count: reminders.length },
+  ];
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 animate-fade-in">
@@ -158,7 +198,30 @@ const RemindersPanel = () => {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Type filters */}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <ListFilter className="w-3.5 h-3.5 text-muted-foreground" />
+        {typeChips.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setTypeFilter(c.key)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              typeFilter === c.key
+                ? "bg-primary text-primary-foreground"
+                : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
+            }`}
+          >
+            {c.label}
+            {c.count > 0 && (
+              <span className={`ml-1.5 text-[10px] ${typeFilter === c.key ? "opacity-90" : "opacity-70"}`}>
+                {c.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Status filters (manual only) */}
       <div className="flex items-center gap-2 mb-4">
         {(["all", "upcoming", "overdue", "done"] as const).map((f) => {
           const labels = { all: "Tümü", upcoming: "Yaklaşan", overdue: "Gecikmiş", done: "Tamamlanan" };
@@ -178,8 +241,43 @@ const RemindersPanel = () => {
         })}
       </div>
 
-      {/* Reminders list */}
-      {loading ? (
+      {/* Auto reminders */}
+      {visibleAuto.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {visibleAuto.map((a) => {
+            const Meta = KIND_META[a.kind];
+            const KindIcon = Meta.icon;
+            return (
+              <button
+                key={a.id}
+                onClick={() => goTo(a.navigateTab)}
+                className="w-full text-left glass-card rounded-lg p-4 flex items-start gap-3 transition-all hover:border-primary/40 hover:shadow-sm"
+              >
+                <div className={`mt-0.5 shrink-0 w-7 h-7 rounded-full flex items-center justify-center border ${autoSeverityClasses(a.severity)}`}>
+                  <KindIcon className="w-3.5 h-3.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="text-sm font-medium text-foreground">{a.title}</h3>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${autoSeverityClasses(a.severity)}`}>
+                      {Meta.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      <Sparkles className="w-3 h-3" />
+                      Otomatik
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{formatDate(a.reminder_date)}</p>
+                  {a.note && <p className="text-xs text-muted-foreground mt-1">{a.note}</p>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Manual reminders list */}
+      {!showManual ? null : loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="glass-card rounded-lg p-4 animate-pulse">
@@ -189,12 +287,14 @@ const RemindersPanel = () => {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <CalendarClock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
-            {reminders.length === 0 ? "Henüz hatırlatıcı eklenmemiş" : "Bu filtrede hatırlatıcı yok"}
-          </p>
-        </div>
+        visibleAuto.length === 0 ? (
+          <div className="text-center py-16">
+            <CalendarClock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">
+              {reminders.length === 0 ? "Henüz hatırlatıcı eklenmemiş" : "Bu filtrede hatırlatıcı yok"}
+            </p>
+          </div>
+        ) : null
       ) : (
         <div className="space-y-2">
           {filtered.map((r) => {
