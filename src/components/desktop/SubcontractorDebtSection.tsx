@@ -233,7 +233,6 @@ export default function SubcontractorDebtSection() {
     setEditPayId(p.id);
     setPayModalFor(sub);
   };
-  };
 
   const handleDeletePay = async (id: string) => {
     // Remove mirrored cash row first (best-effort)
