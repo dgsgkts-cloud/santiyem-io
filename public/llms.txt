@@ -1,0 +1,19 @@
+# Şantiyem
+
+> Türk mühendis, mimar ve müteahhitler için AI destekli şantiye yönetim platformu. Hakediş takibi, proje yönetimi, şantiye günlüğü, EKB hesaplama ve sözleşme yönetimi tek panelde.
+
+Şantiyem; TBDY 2018, İmar Kanunu ve Türk inşaat mevzuatına özel eğitilmiş AI asistan ile birlikte hakediş hazırlama, proje takibi, ekip koordinasyonu, nakit akışı ve şantiye günlüğü özelliklerini sunar. 14 gün ücretsiz denenebilir, kredi kartı gerektirmez.
+
+## Pages
+
+- [Ana Sayfa](/): Platformun tanıtımı, özellikler, fiyatlandırma ve SSS.
+- [Hakkımızda](/hakkimizda): Şirket, ekip ve misyon hakkında bilgi.
+- [İletişim](/iletisim): Destek ve satış iletişim kanalları.
+
+## Legal
+
+- [Kullanım Şartları](/kullanim-sartlari): Hizmet kullanım koşulları.
+- [Gizlilik Politikası](/gizlilik-politikasi): Kişisel verilerin işlenmesi.
+- [İptal ve İade Politikası](/iptal-iade-politikasi): Abonelik iptal ve iade kuralları.
+- [Teslimat ve İade](/teslimat-iade): Dijital hizmet teslimat şartları.
+- [Mesafeli Satış Sözleşmesi](/mesafeli-satis-sozlesmesi): Online satış sözleşmesi.
