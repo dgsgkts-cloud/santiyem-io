@@ -7,6 +7,7 @@ import {
 import { useContracts } from "@/hooks/useContracts";
 import { useProjects } from "@/hooks/useProjects";
 import { useReminders } from "@/hooks/useReminders";
+import { useAutoReminders } from "@/hooks/useAutoReminders";
 import { useCashAccounts } from "@/hooks/useCashAccounts";
 import { useCashChecks } from "@/hooks/useCashChecks";
 import { supabase } from "@/integrations/supabase/client";
