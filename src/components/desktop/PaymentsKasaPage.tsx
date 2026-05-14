@@ -25,6 +25,7 @@ import { exportCashPDF, exportCashExcel } from "@/lib/cashReportExport";
 import { useSubcontractors, useSubcontractorPayments } from "@/hooks/useSubcontractors";
 import { differenceInDays, parseISO, format } from "date-fns";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSection";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
 const EXPENSE_CATEGORIES = ["Malzeme", "Taşeron Ödemesi", "Ekipman/Kira", "Genel Gider", "Diğer"];
@@ -570,26 +571,8 @@ const PaymentsKasaPage = () => {
             )}
 
             {/* Subcontractor debts */}
-            <div className="rounded-xl bg-card border border-border p-4">
-              <h3 className="text-sm font-semibold mb-3 text-foreground">Taşeron Borç Takibi</h3>
-              {enrichedSubs.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Taşeron kaydı yok</p>
-              ) : (
-                <div className="space-y-2">
-                  {enrichedSubs.map(s => (
-                    <div key={s.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
-                      <div>
-                        <p className="text-[13px] font-medium text-foreground">{s.name}</p>
-                        <p className="text-[11px] text-muted-foreground">Sözleşme: {fmtFull(Number(s.contract_amount))} • Ödenen: {fmtFull(s.totalPaid)}</p>
-                      </div>
-                      <span className="text-sm font-bold" style={{ color: s.remaining > 0 ? "#EF4444" : "#22C55E" }}>
-                        {fmtFull(s.remaining)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <SubcontractorDebtSection />
+
 
             {/* Cash flow forecast */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
