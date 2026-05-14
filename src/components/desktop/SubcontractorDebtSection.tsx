@@ -149,12 +149,8 @@ export default function SubcontractorDebtSection() {
       subPayId = (subPayRow as any).id;
     }
 
-    // Mirror into Kasa as a general expense (cash_payments)
-    const cashPayloadDesc = [
-      payForm.note?.trim(),
-      `[${SUB_PAY_MARKER}${subPayId}]`,
-    ].filter(Boolean).join(" ");
-
+    // Mirror into Kasa as a general expense (cash_payments).
+    // Dedup via (source_type, source_id) — one cash row per subcontractor payment.
     const cashPayload = {
       recipient: payModalFor.name,
       category: "Taşeron Ödemesi",
@@ -167,33 +163,27 @@ export default function SubcontractorDebtSection() {
       check_bank: payForm.payment_method === "cek" ? (payForm.bank_name || null) : null,
       bank_name: payForm.payment_method === "havale" ? (payForm.bank_name || null) : null,
       iban: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
-      description: cashPayloadDesc,
+      description: payForm.note?.trim() || null,
       status: "odendi",
+      source_type: "subcontractor_payment",
+      source_id: subPayId,
     };
 
+    // Look up by source_id (preferred) or legacy marker for backfill safety.
+    const { data: existingCash } = await supabase
+      .from("cash_payments" as any)
+      .select("id")
+      .or(`source_id.eq.${subPayId},description.ilike.%${SUB_PAY_MARKER}${subPayId}%`)
+      .limit(1)
+      .maybeSingle();
+
     let cashErr: any = null;
-
-    if (editPayId) {
-      // Find linked cash row by marker, then update — or insert if missing.
-      const { data: existingCash } = await supabase
+    if (existingCash) {
+      const { error } = await supabase
         .from("cash_payments" as any)
-        .select("id")
-        .like("description", `%${SUB_PAY_MARKER}${subPayId}%`)
-        .limit(1)
-        .maybeSingle();
-
-      if (existingCash) {
-        const { error } = await supabase
-          .from("cash_payments" as any)
-          .update(cashPayload as any)
-          .eq("id", (existingCash as any).id);
-        cashErr = error;
-      } else {
-        const { error } = await supabase
-          .from("cash_payments" as any)
-          .insert({ ...cashPayload, user_id: user.id } as any);
-        cashErr = error;
-      }
+        .update(cashPayload as any)
+        .eq("id", (existingCash as any).id);
+      cashErr = error;
     } else {
       const { error } = await supabase
         .from("cash_payments" as any)
