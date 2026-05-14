@@ -98,10 +98,13 @@ export default function SubcontractorDebtSection() {
 
   const handleAddPay = async () => {
     if (!payModalFor || !user) return;
-    if (!payForm.amount || Number(payForm.amount) <= 0) return toast.error("Tutar zorunlu");
-    if (!payForm.payment_date) return toast.error("Tarih zorunlu");
-    if (payForm.payment_method === "cek" && (!payForm.check_no || !payForm.check_due_date)) return toast.error("Çek No ve vade zorunlu");
-    if (payForm.payment_method === "havale" && !payForm.bank_name) return toast.error("Banka adı zorunlu");
+    const errs = validatePayForm(payForm);
+    if (Object.keys(errs).length > 0) {
+      setPayErrors(errs);
+      toast.error("Lütfen zorunlu alanları doldurun");
+      return;
+    }
+    setPayErrors({});
 
     // 1) Insert subcontractor payment, get its id back
     const { data: subPayRow, error: spErr } = await supabase
