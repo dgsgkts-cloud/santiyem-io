@@ -25,6 +25,7 @@ import { exportCashPDF, exportCashExcel } from "@/lib/cashReportExport";
 import { useSubcontractors, useSubcontractorPayments } from "@/hooks/useSubcontractors";
 import { differenceInDays, parseISO, format } from "date-fns";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSection";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
 const EXPENSE_CATEGORIES = ["Malzeme", "Taşeron Ödemesi", "Ekipman/Kira", "Genel Gider", "Diğer"];
