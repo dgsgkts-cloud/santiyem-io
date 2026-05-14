@@ -57,7 +57,7 @@ export default function SubcontractorDebtSection() {
   const payForm0 = {
     payment_date: new Date().toISOString().slice(0, 10),
     amount: "",
-    payment_method: "nakit",
+    payment_method: "",
     project_id: "",
     check_no: "",
     check_due_date: "",
@@ -385,12 +385,12 @@ export default function SubcontractorDebtSection() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Ödeme Yöntemi *</label>
-              <div className="grid grid-cols-4 gap-1.5 mt-1">
+              <div className={`grid grid-cols-4 gap-1.5 mt-1 ${payErrors.payment_method ? "p-1 rounded-lg border border-red-500" : ""}`}>
                 {PAYMENT_METHODS.map(m => (
                   <button
                     key={m.value}
                     type="button"
-                    onClick={() => { setPayForm({ ...payForm, payment_method: m.value }); setPayErrors({ ...payErrors, check_no: "", check_due_date: "", bank_name: "" }); }}
+                    onClick={() => { setPayForm({ ...payForm, payment_method: m.value }); setPayErrors({ ...payErrors, payment_method: "", check_no: "", check_due_date: "", bank_name: "" }); }}
                     className="py-2 rounded-lg text-xs font-medium border transition-colors"
                     style={{
                       borderColor: payForm.payment_method === m.value ? "#FF6B2B" : "hsl(var(--border))",
@@ -403,6 +403,7 @@ export default function SubcontractorDebtSection() {
                   </button>
                 ))}
               </div>
+              {payErrors.payment_method && <p className="text-[11px] text-red-500 mt-1">{payErrors.payment_method}</p>}
             </div>
 
             {payForm.payment_method === "cek" && (
