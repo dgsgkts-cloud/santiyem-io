@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -67,6 +67,7 @@ export default function SubcontractorDebtSection() {
   };
   const [payForm, setPayForm] = useState(payForm0);
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
+  const payFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const validatePayForm = (f: typeof payForm0) => {
     const errs: Record<string, string> = {};
@@ -115,6 +116,14 @@ export default function SubcontractorDebtSection() {
     if (Object.keys(errs).length > 0) {
       setPayErrors(errs);
       toast.error("Lütfen zorunlu alanları doldurun");
+      const order = ["payment_date", "amount", "check_no", "check_due_date", "bank_name"];
+      const firstKey = order.find(k => errs[k]);
+      if (firstKey) {
+        setTimeout(() => {
+          const el = payFieldRefs.current[firstKey];
+          if (el) { el.focus(); el.scrollIntoView({ behavior: "smooth", block: "center" }); }
+        }, 0);
+      }
       return;
     }
     setPayErrors({});
@@ -365,12 +374,12 @@ export default function SubcontractorDebtSection() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground">Ödeme Tarihi *</label>
-                <input type="date" value={payForm.payment_date} onChange={e => { setPayForm({ ...payForm, payment_date: e.target.value }); if (payErrors.payment_date) setPayErrors({ ...payErrors, payment_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.payment_date ? "border-red-500" : "border-border"}`} />
+                <input ref={el => { payFieldRefs.current.payment_date = el; }} type="date" value={payForm.payment_date} onChange={e => { setPayForm({ ...payForm, payment_date: e.target.value }); if (payErrors.payment_date) setPayErrors({ ...payErrors, payment_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.payment_date ? "border-red-500" : "border-border"}`} />
                 {payErrors.payment_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.payment_date}</p>}
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Tutar (₺) *</label>
-                <input type="number" value={payForm.amount} onChange={e => { setPayForm({ ...payForm, amount: e.target.value }); if (payErrors.amount) setPayErrors({ ...payErrors, amount: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.amount ? "border-red-500" : "border-border"}`} />
+                <input ref={el => { payFieldRefs.current.amount = el; }} type="number" value={payForm.amount} onChange={e => { setPayForm({ ...payForm, amount: e.target.value }); if (payErrors.amount) setPayErrors({ ...payErrors, amount: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.amount ? "border-red-500" : "border-border"}`} />
                 {payErrors.amount && <p className="text-[11px] text-red-500 mt-1">{payErrors.amount}</p>}
               </div>
             </div>
@@ -400,12 +409,12 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Çek No *</label>
-                  <input value={payForm.check_no} onChange={e => { setPayForm({ ...payForm, check_no: e.target.value }); if (payErrors.check_no) setPayErrors({ ...payErrors, check_no: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_no ? "border-red-500" : "border-border"}`} />
+                  <input ref={el => { payFieldRefs.current.check_no = el; }} value={payForm.check_no} onChange={e => { setPayForm({ ...payForm, check_no: e.target.value }); if (payErrors.check_no) setPayErrors({ ...payErrors, check_no: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_no ? "border-red-500" : "border-border"}`} />
                   {payErrors.check_no && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_no}</p>}
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">Vade Tarihi *</label>
-                  <input type="date" value={payForm.check_due_date} onChange={e => { setPayForm({ ...payForm, check_due_date: e.target.value }); if (payErrors.check_due_date) setPayErrors({ ...payErrors, check_due_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_due_date ? "border-red-500" : "border-border"}`} />
+                  <input ref={el => { payFieldRefs.current.check_due_date = el; }} type="date" value={payForm.check_due_date} onChange={e => { setPayForm({ ...payForm, check_due_date: e.target.value }); if (payErrors.check_due_date) setPayErrors({ ...payErrors, check_due_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_due_date ? "border-red-500" : "border-border"}`} />
                   {payErrors.check_due_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_due_date}</p>}
                 </div>
               </div>
@@ -414,7 +423,7 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Banka Adı *</label>
-                  <input value={payForm.bank_name} onChange={e => { setPayForm({ ...payForm, bank_name: e.target.value }); if (payErrors.bank_name) setPayErrors({ ...payErrors, bank_name: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.bank_name ? "border-red-500" : "border-border"}`} />
+                  <input ref={el => { payFieldRefs.current.bank_name = el; }} value={payForm.bank_name} onChange={e => { setPayForm({ ...payForm, bank_name: e.target.value }); if (payErrors.bank_name) setPayErrors({ ...payErrors, bank_name: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.bank_name ? "border-red-500" : "border-border"}`} />
                   {payErrors.bank_name && <p className="text-[11px] text-red-500 mt-1">{payErrors.bank_name}</p>}
                 </div>
                 <div>
