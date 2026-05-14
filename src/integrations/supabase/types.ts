@@ -201,6 +201,8 @@ export type Database = {
           project_id: string | null
           recipient: string
           recurring_interval: string | null
+          source_id: string | null
+          source_type: string | null
           status: string
           updated_at: string
           user_id: string
@@ -224,6 +226,8 @@ export type Database = {
           project_id?: string | null
           recipient?: string
           recurring_interval?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -247,6 +251,8 @@ export type Database = {
           project_id?: string | null
           recipient?: string
           recurring_interval?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: string
           updated_at?: string
           user_id?: string
