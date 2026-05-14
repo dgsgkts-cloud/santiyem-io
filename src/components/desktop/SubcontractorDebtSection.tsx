@@ -363,11 +363,13 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Çek No *</label>
-                  <input value={payForm.check_no} onChange={e => setPayForm({ ...payForm, check_no: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input value={payForm.check_no} onChange={e => { setPayForm({ ...payForm, check_no: e.target.value }); if (payErrors.check_no) setPayErrors({ ...payErrors, check_no: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_no ? "border-red-500" : "border-border"}`} />
+                  {payErrors.check_no && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_no}</p>}
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">Vade Tarihi *</label>
-                  <input type="date" value={payForm.check_due_date} onChange={e => setPayForm({ ...payForm, check_due_date: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input type="date" value={payForm.check_due_date} onChange={e => { setPayForm({ ...payForm, check_due_date: e.target.value }); if (payErrors.check_due_date) setPayErrors({ ...payErrors, check_due_date: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.check_due_date ? "border-red-500" : "border-border"}`} />
+                  {payErrors.check_due_date && <p className="text-[11px] text-red-500 mt-1">{payErrors.check_due_date}</p>}
                 </div>
               </div>
             )}
@@ -375,7 +377,8 @@ export default function SubcontractorDebtSection() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground">Banka Adı *</label>
-                  <input value={payForm.bank_name} onChange={e => setPayForm({ ...payForm, bank_name: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+                  <input value={payForm.bank_name} onChange={e => { setPayForm({ ...payForm, bank_name: e.target.value }); if (payErrors.bank_name) setPayErrors({ ...payErrors, bank_name: "" }); }} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-background text-sm ${payErrors.bank_name ? "border-red-500" : "border-border"}`} />
+                  {payErrors.bank_name && <p className="text-[11px] text-red-500 mt-1">{payErrors.bank_name}</p>}
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">IBAN / Hesap No</label>
