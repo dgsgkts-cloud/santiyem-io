@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Plus, Banknote, FileText, Building2, CreditCard, X, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -67,7 +67,7 @@ export default function SubcontractorDebtSection() {
   };
   const [payForm, setPayForm] = useState(payForm0);
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
-  const payFieldRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
+  const payFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const validatePayForm = (f: typeof payForm0) => {
     const errs: Record<string, string> = {};
@@ -116,6 +116,14 @@ export default function SubcontractorDebtSection() {
     if (Object.keys(errs).length > 0) {
       setPayErrors(errs);
       toast.error("Lütfen zorunlu alanları doldurun");
+      const order = ["payment_date", "amount", "check_no", "check_due_date", "bank_name"];
+      const firstKey = order.find(k => errs[k]);
+      if (firstKey) {
+        setTimeout(() => {
+          const el = payFieldRefs.current[firstKey];
+          if (el) { el.focus(); el.scrollIntoView({ behavior: "smooth", block: "center" }); }
+        }, 0);
+      }
       return;
     }
     setPayErrors({});
