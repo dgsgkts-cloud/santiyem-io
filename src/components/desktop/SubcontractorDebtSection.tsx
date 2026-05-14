@@ -37,6 +37,7 @@ export default function SubcontractorDebtSection() {
   const [payModalFor, setPayModalFor] = useState<Subcontractor | null>(null);
   const [deleteSub, setDeleteSub] = useState<Subcontractor | null>(null);
   const [deletePay, setDeletePay] = useState<{ id: string } | null>(null);
+  const [editPayId, setEditPayId] = useState<string | null>(null);
 
   const subForm0 = { name: "", contact_person: "", phone: "", project_ids: [] as string[], contract_amount: "", description: "" };
   const [subForm, setSubForm] = useState(subForm0);
