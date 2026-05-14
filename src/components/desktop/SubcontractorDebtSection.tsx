@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 
-const SUB_PAY_MARKER = "__sub_pay:";
+
 
 
 const PAYMENT_METHODS = [
@@ -29,7 +29,7 @@ export default function SubcontractorDebtSection() {
   const queryClient = useQueryClient();
   const { projects } = useProjects();
   const { subcontractors, addSubcontractor, deleteSubcontractor } = useSubcontractors();
-  const { payments: allPayments, deletePayment } = useSubcontractorPayments();
+  const { payments: allPayments } = useSubcontractorPayments();
 
 
   const [addSubModal, setAddSubModal] = useState(false);
@@ -119,96 +119,29 @@ export default function SubcontractorDebtSection() {
     }
     setPayErrors({});
 
-    const subPayload = {
-      amount: Number(payForm.amount),
-      payment_date: payForm.payment_date,
-      payment_method: payForm.payment_method,
-      project_id: payForm.project_id || null,
-      check_no: payForm.payment_method === "cek" ? (payForm.check_no || null) : null,
-      check_due_date: payForm.payment_method === "cek" ? (payForm.check_due_date || null) : null,
-      bank_name: ["cek", "havale"].includes(payForm.payment_method) ? (payForm.bank_name || null) : null,
-      account_no: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
-      note: payForm.note || null,
-    };
+    // Single atomic transaction — both subcontractor_payments and cash_payments
+    // are written together (or neither is) via the database function.
+    const { error } = await supabase.rpc("save_subcontractor_payment_with_cash" as any, {
+      _payment_id: editPayId,
+      _subcontractor_id: payModalFor.id,
+      _amount: Number(payForm.amount),
+      _payment_date: payForm.payment_date,
+      _payment_method: payForm.payment_method,
+      _project_id: payForm.project_id || null,
+      _check_no: payForm.payment_method === "cek" ? (payForm.check_no || null) : null,
+      _check_due_date: payForm.payment_method === "cek" ? (payForm.check_due_date || null) : null,
+      _bank_name: ["cek", "havale"].includes(payForm.payment_method) ? (payForm.bank_name || null) : null,
+      _account_no: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
+      _note: payForm.note || null,
+      _recipient: payModalFor.name,
+    });
 
-    let subPayId = editPayId;
-
-    if (editPayId) {
-      const { error: upErr } = await supabase
-        .from("subcontractor_payments" as any)
-        .update(subPayload as any)
-        .eq("id", editPayId);
-      if (upErr) {
-        toast.error("Ödeme güncellenemedi");
-        return;
-      }
-    } else {
-      const { data: subPayRow, error: spErr } = await supabase
-        .from("subcontractor_payments" as any)
-        .insert({
-          ...subPayload,
-          user_id: user.id,
-          subcontractor_id: payModalFor.id,
-          status: "odendi",
-        } as any)
-        .select()
-        .single();
-
-      if (spErr || !subPayRow) {
-        toast.error("Ödeme eklenemedi");
-        return;
-      }
-      subPayId = (subPayRow as any).id;
+    if (error) {
+      toast.error(editPayId ? "Ödeme güncellenemedi" : "Ödeme kaydedilemedi");
+      return;
     }
 
-    // Mirror into Kasa as a general expense (cash_payments).
-    // Dedup via (source_type, source_id) — one cash row per subcontractor payment.
-    const cashPayload = {
-      recipient: payModalFor.name,
-      category: "Taşeron Ödemesi",
-      amount: Number(payForm.amount),
-      payment_date: payForm.payment_date,
-      payment_type: payForm.payment_method === "kredi_karti" ? "kredi_karti" : payForm.payment_method,
-      project_id: payForm.project_id || null,
-      check_no: payForm.payment_method === "cek" ? (payForm.check_no || null) : null,
-      check_due_date: payForm.payment_method === "cek" ? (payForm.check_due_date || null) : null,
-      check_bank: payForm.payment_method === "cek" ? (payForm.bank_name || null) : null,
-      bank_name: payForm.payment_method === "havale" ? (payForm.bank_name || null) : null,
-      iban: payForm.payment_method === "havale" ? (payForm.account_no || null) : null,
-      description: payForm.note?.trim() || null,
-      status: "odendi",
-      source_type: "subcontractor_payment",
-      source_id: subPayId,
-    };
-
-    // Look up by source_id (preferred) or legacy marker for backfill safety.
-    const { data: existingCash } = await supabase
-      .from("cash_payments" as any)
-      .select("id")
-      .or(`source_id.eq.${subPayId},description.ilike.%${SUB_PAY_MARKER}${subPayId}%`)
-      .limit(1)
-      .maybeSingle();
-
-    let cashErr: any = null;
-    if (existingCash) {
-      const { error } = await supabase
-        .from("cash_payments" as any)
-        .update(cashPayload as any)
-        .eq("id", (existingCash as any).id);
-      cashErr = error;
-    } else {
-      const { error } = await supabase
-        .from("cash_payments" as any)
-        .insert({ ...cashPayload, user_id: user.id } as any);
-      cashErr = error;
-    }
-
-    if (cashErr) {
-      console.warn("Kasa kaydı senkron edilemedi", cashErr);
-      toast.warning(editPayId ? "Ödeme güncellendi ancak kasa akışına yansıtılamadı" : "Ödeme kaydedildi ancak kasa akışına yansıtılamadı");
-    } else {
-      toast.success(editPayId ? "Ödeme ve kasa kaydı güncellendi" : "Ödeme kaydedildi ve kasaya yansıtıldı");
-    }
+    toast.success(editPayId ? "Ödeme ve kasa kaydı güncellendi" : "Ödeme kaydedildi ve kasaya yansıtıldı");
 
     queryClient.invalidateQueries({ queryKey: ["subcontractor_payments"] });
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
@@ -237,13 +170,17 @@ export default function SubcontractorDebtSection() {
   };
 
   const handleDeletePay = async (id: string) => {
-    // Remove mirrored cash row(s) — match by source_id, fall back to legacy marker
-    await supabase
-      .from("cash_payments" as any)
-      .delete()
-      .or(`source_id.eq.${id},description.ilike.%${SUB_PAY_MARKER}${id}%`);
-    await deletePayment.mutateAsync(id);
+    // Atomic: removes both the subcontractor payment and the linked cash row.
+    const { error } = await supabase.rpc("delete_subcontractor_payment_with_cash" as any, {
+      _payment_id: id,
+    });
+    if (error) {
+      toast.error("Ödeme silinemedi");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["subcontractor_payments"] });
     queryClient.invalidateQueries({ queryKey: ["cash_payments"] });
+    toast.success("Ödeme silindi");
   };
 
   // Drawer filters / sort
