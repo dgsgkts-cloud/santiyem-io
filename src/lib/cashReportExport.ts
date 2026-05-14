@@ -64,13 +64,19 @@ export function exportCashPDF(data: CashReportData) {
   y += 2;
 
   autoTable(doc, {
+    ...defaultTableTheme({
+      headStyles: { font: "Roboto", fillColor: [255, 107, 43], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8.5, cellPadding: 2.5 },
+    }),
     startY: y,
     head: [["Hesap Adı", "Tür", "Banka", "IBAN", "Bakiye"]],
-    body: data.accounts.map(a => [a.name, a.account_type === "nakit_kasa" ? "Nakit Kasa" : a.account_type === "banka" ? "Banka" : "Kredi Kartı", a.bank_name || "-", a.iban || "-", money(a.balance)]),
-    styles: { font: "Roboto", fontSize: 8, textColor: [241, 245, 249], fillColor: [26, 32, 40] },
-    headStyles: { fillColor: [255, 107, 43], textColor: [255, 255, 255], fontSize: 8 },
-    alternateRowStyles: { fillColor: [22, 28, 35] },
-    margin: { left: 14, right: 14 },
+    body: data.accounts.map(a => [
+      nz(a.name),
+      a.account_type === "nakit_kasa" ? "Nakit Kasa" : a.account_type === "banka" ? "Banka" : "Kredi Kartı",
+      nz(a.bank_name),
+      nz(a.iban),
+      money(a.balance),
+    ]),
+    columnStyles: { 4: { halign: "right" } },
   });
 
   // ── Payments
@@ -82,13 +88,13 @@ export function exportCashPDF(data: CashReportData) {
   y += 2;
 
   autoTable(doc, {
+    ...defaultTableTheme({
+      headStyles: { font: "Roboto", fillColor: [239, 68, 68], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8.5, cellPadding: 2.5 },
+    }),
     startY: y,
     head: [["Tarih", "Alıcı", "Kategori", "Tutar", "Ödeme Tipi", "Durum"]],
-    body: data.payments.map(p => [p.payment_date, p.recipient, p.category, money(p.amount), p.payment_type, st(p.status)]),
-    styles: { font: "Roboto", fontSize: 8, textColor: [241, 245, 249], fillColor: [26, 32, 40] },
-    headStyles: { fillColor: [239, 68, 68], textColor: [255, 255, 255], fontSize: 8 },
-    alternateRowStyles: { fillColor: [22, 28, 35] },
-    margin: { left: 14, right: 14 },
+    body: data.payments.map(p => [nz(p.payment_date), nz(p.recipient), nz(p.category), money(p.amount), nz(p.payment_type), st(p.status)]),
+    columnStyles: { 3: { halign: "right" } },
   });
 
   // ── Collections
@@ -100,13 +106,13 @@ export function exportCashPDF(data: CashReportData) {
   y += 2;
 
   autoTable(doc, {
+    ...defaultTableTheme({
+      headStyles: { font: "Roboto", fillColor: [34, 197, 94], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8.5, cellPadding: 2.5 },
+    }),
     startY: y,
     head: [["Tarih", "Gönderen", "Tür", "Tutar", "Ödeme Tipi", "Durum"]],
-    body: data.collections.map(c => [c.collection_date, c.sender, c.collection_type, money(c.amount), c.payment_type, st(c.status)]),
-    styles: { font: "Roboto", fontSize: 8, textColor: [241, 245, 249], fillColor: [26, 32, 40] },
-    headStyles: { fillColor: [34, 197, 94], textColor: [255, 255, 255], fontSize: 8 },
-    alternateRowStyles: { fillColor: [22, 28, 35] },
-    margin: { left: 14, right: 14 },
+    body: data.collections.map(c => [nz(c.collection_date), nz(c.sender), nz(c.collection_type), money(c.amount), nz(c.payment_type), st(c.status)]),
+    columnStyles: { 3: { halign: "right" } },
   });
 
   // ── Checks
@@ -118,13 +124,13 @@ export function exportCashPDF(data: CashReportData) {
   y += 2;
 
   autoTable(doc, {
+    ...defaultTableTheme({
+      headStyles: { font: "Roboto", fillColor: [245, 158, 11], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8.5, cellPadding: 2.5 },
+    }),
     startY: y,
     head: [["Tür", "Çek No", "Banka", "Karşı Taraf", "Tutar", "Vade", "Durum"]],
-    body: data.checks.map(c => [c.check_type === "verilen" ? "Verilen" : "Alınan", c.check_no, c.bank_name, c.counterparty, money(c.amount), c.due_date, st(c.status)]),
-    styles: { font: "Roboto", fontSize: 8, textColor: [241, 245, 249], fillColor: [26, 32, 40] },
-    headStyles: { fillColor: [245, 158, 11], textColor: [255, 255, 255], fontSize: 8 },
-    alternateRowStyles: { fillColor: [22, 28, 35] },
-    margin: { left: 14, right: 14 },
+    body: data.checks.map(c => [c.check_type === "verilen" ? "Verilen" : "Alınan", nz(c.check_no), nz(c.bank_name), nz(c.counterparty), money(c.amount), nz(c.due_date), st(c.status)]),
+    columnStyles: { 4: { halign: "right" } },
   });
 
   addPdfFooter(doc);
