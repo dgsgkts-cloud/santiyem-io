@@ -29,6 +29,35 @@ const STATUSES = [
 const CashPaymentsTab = () => {
   const { payments, isLoading, addPayment, deletePayment } = useCashPayments();
   const { projects } = useProjects();
+  const { subcontractors } = useSubcontractors();
+  const subMap = new Map(subcontractors.map(s => [s.id, s]));
+
+  const openSubDetail = (id: string) => {
+    window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "payments-kasa" }));
+    // Slight delay so the section is mounted before the drawer opens
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("open-subcontractor-detail", { detail: { id } }));
+    }, 50);
+  };
+
+  const renderDescription = (p: any) => {
+    if (p.source_type === "subcontractor_payment" && p.source_id) {
+      const sub = subMap.get(p.source_id);
+      if (sub) {
+        return (
+          <button
+            onClick={() => openSubDetail(sub.id)}
+            className="text-[#FF6B2B] hover:underline font-medium text-left"
+          >
+            {sub.name} — Ödeme
+          </button>
+        );
+      }
+      return <span className="text-muted-foreground italic">Silinmiş Taşeron</span>;
+    }
+    return <span className="text-muted-foreground">{p.description || "-"}</span>;
+  };
+
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [form, setForm] = useState({
