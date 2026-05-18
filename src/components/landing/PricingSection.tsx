@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
+import { isNativePlatform, openIyzicoCheckoutNative } from "@/lib/iyzicoCheckout";
 import { formatNumber0 } from "@/lib/formatCurrency";
 
 const PLANS = [
@@ -66,11 +67,13 @@ const PricingSection = () => {
     if (!user) { navigate("/register"); return; }
     setLoadingPlan(`trial-${planKey}`);
     try {
+      const native = isNativePlatform();
       const { data, error } = await supabase.functions.invoke("create-trial-payment", {
-        body: { planKey, yearly },
+        body: { planKey, yearly, native },
       });
       if (error || data?.error) { toast.error(data?.error || "İşlem başlatılamadı"); return; }
-      openCheckoutForm(data);
+      const handled = await openIyzicoCheckoutNative(data);
+      if (!handled) openCheckoutForm(data);
     } catch (err) {
       console.error(err);
       toast.error("İşlem başlatılırken bir hata oluştu");
@@ -81,11 +84,13 @@ const PricingSection = () => {
     if (!user) { navigate("/register"); return; }
     setLoadingPlan(`direct-${planKey}`);
     try {
+      const native = isNativePlatform();
       const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
-        body: { planKey, yearly },
+        body: { planKey, yearly, native },
       });
       if (error || data?.error) { toast.error(data?.error || "Ödeme başlatılamadı"); return; }
-      openCheckoutForm(data);
+      const handled = await openIyzicoCheckoutNative(data);
+      if (!handled) openCheckoutForm(data);
     } catch (err) {
       console.error(err);
       toast.error("Ödeme başlatılırken bir hata oluştu");
