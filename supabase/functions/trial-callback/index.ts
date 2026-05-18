@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
     const txnId = url.searchParams.get('txnId')
     const subId = url.searchParams.get('subId')
     const planAmount = url.searchParams.get('planAmount')
+    const isNative = url.searchParams.get('native') === '1'
     if (!txnId || !subId) return new Response('Missing params', { status: 400 })
 
     let token = ''
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
       const formData = await req.formData()
       token = formData.get('token')?.toString() || ''
     }
-    if (!token) return redirectWithStatus('failed', 'Token bulunamadi')
+    if (!token) return redirectWithStatus('failed', 'Token bulunamadi', isNative)
 
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
