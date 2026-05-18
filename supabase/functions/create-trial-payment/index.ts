@@ -58,8 +58,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { planKey, yearly } = body
+    const { planKey, yearly, native } = body
     const subType = yearly ? 'yearly' : 'monthly'
+    const isNative = native === true || native === 1 || native === '1'
     if (!planKey || !PLAN_PRICES[planKey]) {
       return new Response(JSON.stringify({ error: 'Gecersiz plan' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}${isNative ? '&native=1' : ''}`,
       enabledInstallments: [1],
       // Enable card storage so iyzico returns cardUserKey & cardToken
       enabledCardStorage: 1,
@@ -179,6 +180,7 @@ Deno.serve(async (req) => {
       await supabaseAdmin.from('payment_transactions').update({ iyzico_token: iyzicoData.token }).eq('id', txn.id)
       return new Response(JSON.stringify({
         checkoutFormContent: iyzicoData.checkoutFormContent,
+        paymentPageUrl: iyzicoData.paymentPageUrl || null,
         token: iyzicoData.token,
         transactionId: txn.id,
         subscriptionId: sub.id,
