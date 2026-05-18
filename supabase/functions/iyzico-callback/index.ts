@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url)
     const txnId = url.searchParams.get('txnId')
+    const isNative = url.searchParams.get('native') === '1'
     if (!txnId) return new Response('Missing txnId', { status: 400 })
 
     let token = ''
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
       const formData = await req.formData()
       token = formData.get('token')?.toString() || ''
     }
-    if (!token) return redirectWithStatus('failed', 'Token bulunamadi')
+    if (!token) return redirectWithStatus('failed', 'Token bulunamadi', isNative)
 
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
@@ -130,13 +131,13 @@ Deno.serve(async (req) => {
           })
         }
       }
-      return redirectWithStatus('success')
+      return redirectWithStatus('success', undefined, isNative)
     } else {
       const errorMsg = iyzicoData.errorMessage || 'Odeme basarisiz'
       await supabaseAdmin.from('payment_transactions').update({
         status: 'failed', error_message: errorMsg, iyzico_token: token, updated_at: new Date().toISOString(),
       }).eq('id', txnId)
-      return redirectWithStatus('failed', errorMsg)
+      return redirectWithStatus('failed', errorMsg, isNative)
     }
   } catch (err) {
     console.error('Callback error:', err)
@@ -144,9 +145,21 @@ Deno.serve(async (req) => {
   }
 })
 
-function redirectWithStatus(status: string, message?: string): Response {
-  const baseUrl = 'https://santiyem.lovable.app'
+function redirectWithStatus(status: string, message?: string, native = false): Response {
   const params = new URLSearchParams({ status })
   if (message) params.set('message', message)
-  return new Response(null, { status: 302, headers: { 'Location': `${baseUrl}/odeme-sonucu?${params.toString()}` } })
+  const location = native
+    ? `santiyem://odeme-sonucu?${params.toString()}`
+    : `https://santiyem.lovable.app/odeme-sonucu?${params.toString()}`
+  // For deep links, return a tiny HTML so the system browser handles the scheme
+  if (native) {
+    const html = `<!doctype html><meta charset="utf-8"><title>Yönlendiriliyor…</title>
+<script>window.location.href=${JSON.stringify(location)};</script>
+<body style="font-family:sans-serif;text-align:center;padding:40px;background:#0F1419;color:#fff">
+<p>Uygulamaya dönülüyor…</p>
+<p><a style="color:#FF6B2B" href="${location}">Buraya tıklayın</a></p>
+</body>`
+    return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+  return new Response(null, { status: 302, headers: { 'Location': location } })
 }
