@@ -10,6 +10,7 @@ import HomePage from "./pages/HomePage";
 import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import DeepLinkHandler from "@/components/DeepLinkHandler";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -72,6 +73,7 @@ const App = () => (
           <CookieBanner />
           <WhatsAppButton />
           <PwaInstallBanner />
+          <DeepLinkHandler />
         </BrowserRouter>
         </ThemeProvider>
       </UserProvider>
