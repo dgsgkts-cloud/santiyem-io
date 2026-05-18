@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
           status: 'failed', error_message: 'Kart kaydedilmedi', iyzico_payment_id: paymentId, iyzico_token: token, updated_at: new Date().toISOString(),
         }).eq('id', txnId)
         await supabaseAdmin.from('user_subscriptions').update({ status: 'failed' }).eq('id', subId)
-        return redirectWithStatus('failed', 'Deneme süresini başlatmak için ödeme formunda "Kartımı Kaydet" kutucuğunu işaretlemeniz gerekir. Lütfen tekrar deneyin.')
+        return redirectWithStatus('failed', 'Deneme süresini başlatmak için ödeme formunda "Kartımı Kaydet" kutucuğunu işaretlemeniz gerekir. Lütfen tekrar deneyin.', isNative)
       }
 
       // Update payment transaction
@@ -180,14 +180,14 @@ Deno.serve(async (req) => {
         }
       }
 
-      return redirectWithStatus('success', 'Deneme süreniz başlatıldı! Kartınızdan herhangi bir ücret alınmadı. 14 gün boyunca tüm özellikleri ücretsiz kullanabilirsiniz.')
+      return redirectWithStatus('success', 'Deneme süreniz başlatıldı! Kartınızdan herhangi bir ücret alınmadı. 14 gün boyunca tüm özellikleri ücretsiz kullanabilirsiniz.', isNative)
     } else {
       const errorMsg = iyzicoData.errorMessage || 'Kart dogrulama basarisiz'
       await supabaseAdmin.from('payment_transactions').update({
         status: 'failed', error_message: errorMsg, iyzico_token: token, updated_at: new Date().toISOString(),
       }).eq('id', txnId)
       await supabaseAdmin.from('user_subscriptions').update({ status: 'failed' }).eq('id', subId)
-      return redirectWithStatus('failed', errorMsg)
+      return redirectWithStatus('failed', errorMsg, isNative)
     }
   } catch (err) {
     console.error('Trial callback error:', err)
@@ -195,9 +195,21 @@ Deno.serve(async (req) => {
   }
 })
 
-function redirectWithStatus(status: string, message?: string): Response {
-  const baseUrl = 'https://santiyem.lovable.app'
+function redirectWithStatus(status: string, message?: string, native = false): Response {
   const params = new URLSearchParams({ status })
   if (message) params.set('message', message)
-  return new Response(null, { status: 302, headers: { 'Location': `${baseUrl}/odeme-sonucu?${params.toString()}` } })
+  const location = native
+    ? `santiyem://odeme-sonucu?${params.toString()}`
+    : `https://santiyem.lovable.app/odeme-sonucu?${params.toString()}`
+  if (native) {
+    const html = `<!doctype html><meta charset="utf-8"><title>Yönlendiriliyor…</title>
+<script>window.location.href=${JSON.stringify(location)};</script>
+<body style="font-family:sans-serif;text-align:center;padding:40px;background:#0F1419;color:#fff">
+<p>Uygulamaya dönülüyor…</p>
+<p><a style="color:#FF6B2B" href="${location}">Buraya tıklayın</a></p>
+</body>`
+    return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+  return new Response(null, { status: 302, headers: { 'Location': location } })
+}
 }
