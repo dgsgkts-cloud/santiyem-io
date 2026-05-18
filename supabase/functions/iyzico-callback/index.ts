@@ -144,9 +144,21 @@ Deno.serve(async (req) => {
   }
 })
 
-function redirectWithStatus(status: string, message?: string): Response {
-  const baseUrl = 'https://santiyem.lovable.app'
+function redirectWithStatus(status: string, message?: string, native = false): Response {
   const params = new URLSearchParams({ status })
   if (message) params.set('message', message)
-  return new Response(null, { status: 302, headers: { 'Location': `${baseUrl}/odeme-sonucu?${params.toString()}` } })
+  const location = native
+    ? `santiyem://odeme-sonucu?${params.toString()}`
+    : `https://santiyem.lovable.app/odeme-sonucu?${params.toString()}`
+  // For deep links, return a tiny HTML so the system browser handles the scheme
+  if (native) {
+    const html = `<!doctype html><meta charset="utf-8"><title>Yönlendiriliyor…</title>
+<script>window.location.href=${JSON.stringify(location)};</script>
+<body style="font-family:sans-serif;text-align:center;padding:40px;background:#0F1419;color:#fff">
+<p>Uygulamaya dönülüyor…</p>
+<p><a style="color:#FF6B2B" href="${location}">Buraya tıklayın</a></p>
+</body>`
+    return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+  return new Response(null, { status: 302, headers: { 'Location': location } })
 }

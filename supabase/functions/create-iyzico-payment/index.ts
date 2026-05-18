@@ -59,7 +59,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { planKey, yearly } = body
+    const { planKey, yearly, native } = body
+    const isNative = native === true || native === 1 || native === '1'
     if (!planKey || !PLAN_PRICES[planKey]) {
       return new Response(JSON.stringify({ error: 'Gecersiz plan' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -99,7 +100,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}&subType=${subType}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}&subType=${subType}${isNative ? '&native=1' : ''}`,
       enabledInstallments: [1],
       enabledCardStorage: 1,
       buyer: {
@@ -129,7 +130,10 @@ Deno.serve(async (req) => {
     if (iyzicoData.status === 'success' && iyzicoData.checkoutFormContent) {
       await supabaseAdmin.from('payment_transactions').update({ iyzico_token: iyzicoData.token }).eq('id', txn.id)
       return new Response(JSON.stringify({
-        checkoutFormContent: iyzicoData.checkoutFormContent, token: iyzicoData.token, transactionId: txn.id,
+        checkoutFormContent: iyzicoData.checkoutFormContent,
+        paymentPageUrl: iyzicoData.paymentPageUrl || null,
+        token: iyzicoData.token,
+        transactionId: txn.id,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     } else {
       const errorMsg = iyzicoData.errorMessage || 'iyzico hatasi'
