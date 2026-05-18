@@ -90,7 +90,12 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         },
         onDone: async () => {
           setLocalTyping(false);
-          if (convId && user && assistantContent) {
+          if (!assistantContent) {
+            console.warn("[AI] Stream ended with empty content");
+            toast.error("AI şu an yanıt veremiyor, lütfen tekrar dene");
+            return;
+          }
+          if (convId && user) {
             await conv.saveMessage(convId, "assistant", assistantContent);
           }
         },
