@@ -119,10 +119,13 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`trial-${planKey}`);
     try {
+      const native = isNativePlatform();
       const { data, error } = await supabase.functions.invoke("create-trial-payment", {
-        body: { planKey, yearly: false },
+        body: { planKey, yearly: false, native },
       });
       if (error || data?.error) { toast.error(data?.error || "İşlem başlatılamadı"); return; }
+      const handled = await openIyzicoCheckoutNative(data);
+      if (handled) { onClose(); return; }
       openCheckoutForm(data);
     } catch (err) {
       console.error(err);
@@ -135,10 +138,13 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
     if (!user) { toast.error("Lütfen önce giriş yapın"); return; }
     setLoadingPlan(`direct-${planKey}`);
     try {
+      const native = isNativePlatform();
       const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
-        body: { planKey, yearly: false },
+        body: { planKey, yearly: false, native },
       });
       if (error || data?.error) { toast.error(data?.error || "Ödeme başlatılamadı"); return; }
+      const handled = await openIyzicoCheckoutNative(data);
+      if (handled) { onClose(); return; }
       openCheckoutForm(data);
     } catch (err) {
       console.error(err);
