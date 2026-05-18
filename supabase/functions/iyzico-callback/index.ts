@@ -131,13 +131,13 @@ Deno.serve(async (req) => {
           })
         }
       }
-      return redirectWithStatus('success')
+      return redirectWithStatus('success', undefined, isNative)
     } else {
       const errorMsg = iyzicoData.errorMessage || 'Odeme basarisiz'
       await supabaseAdmin.from('payment_transactions').update({
         status: 'failed', error_message: errorMsg, iyzico_token: token, updated_at: new Date().toISOString(),
       }).eq('id', txnId)
-      return redirectWithStatus('failed', errorMsg)
+      return redirectWithStatus('failed', errorMsg, isNative)
     }
   } catch (err) {
     console.error('Callback error:', err)
