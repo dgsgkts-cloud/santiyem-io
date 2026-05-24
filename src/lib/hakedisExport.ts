@@ -5,6 +5,7 @@ import { robotoBase64 } from "@/lib/robotoFont";
 import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import { createPdfDoc, autoFitColumns, styleExcelHeaderRow, nz } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 import type { ProjectHakedis } from "@/hooks/useProjectHakedis";
 
 import { formatNumber2 as fmt, formatCurrencyFull as fmtCurrency } from "@/lib/formatCurrency";
@@ -83,7 +84,7 @@ export interface HakedisWorkItem {
   total_price: number;
 }
 
-export function exportHakedisPDF(
+export async function exportHakedisPDF(
   hakedisler: ProjectHakedis[],
   projectName: string,
   options: PDFOptions,
@@ -364,10 +365,10 @@ export function exportHakedisPDF(
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ]/g, "_").replace(/_+/g, "_");
   const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.pdf`;
-  doc.save(fileName);
+  await savePdfDoc(doc, fileName);
 }
 
-export function exportHakedisExcel(
+export async function exportHakedisExcel(
   hakedisler: ProjectHakedis[],
   projectName: string,
   workItems?: HakedisWorkItem[],
@@ -670,5 +671,5 @@ export function exportHakedisExcel(
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ]/g, "_").replace(/_+/g, "_");
   const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  await saveXlsxWorkbook(wb, fileName);
 }

@@ -13,6 +13,7 @@ import {
   styleExcelHeaderRow,
   nz,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 
 import { formatCurrencyFull as money } from "@/lib/formatCurrency";
 
@@ -37,7 +38,7 @@ interface CashReportData {
 }
 
 // ─── PDF ────────────────────────────────────────
-export function exportCashPDF(data: CashReportData) {
+export async function exportCashPDF(data: CashReportData) {
   const doc = createPdfDoc({ orientation: "landscape" });
 
   const now = new Date();
@@ -133,11 +134,11 @@ export function exportCashPDF(data: CashReportData) {
 
   addPdfFooter(doc);
 
-  doc.save(`Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.pdf`);
+  await savePdfDoc(doc, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.pdf`);
 }
 
 // ─── EXCEL ──────────────────────────────────────
-export function exportCashExcel(data: CashReportData) {
+export async function exportCashExcel(data: CashReportData) {
   const wb = XLSX.utils.book_new();
   const now = new Date();
 
@@ -193,5 +194,5 @@ export function exportCashExcel(data: CashReportData) {
   autoFitColumns(wsChk, chkAll);
   XLSX.utils.book_append_sheet(wb, wsChk, "Çekler");
 
-  XLSX.writeFile(wb, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.xlsx`);
+  await saveXlsxWorkbook(wb, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.xlsx`);
 }

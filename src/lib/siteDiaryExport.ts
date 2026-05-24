@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import { createPdfDoc, defaultTableTheme, nz } from "@/lib/reportUtils";
+import { savePdfDoc } from "@/lib/nativeDownload";
 import type { DiaryEntry, CrewRow, DiaryPhoto } from "@/hooks/useSiteDiary";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -208,7 +209,7 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
 }
 
 // ── Single Day PDF ──
-export function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photos: DiaryPhoto[], includePhotos: boolean) {
+export async function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photos: DiaryPhoto[], includePhotos: boolean) {
   const doc = initDoc();
   const dateStr = format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr });
   let y = addHeader(doc, "ŞANTİYE GÜNLÜK KAYIT FORMU", `${projectName} — ${dateStr}`);
@@ -218,11 +219,11 @@ export function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photo
 
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateFile = entry.entry_date.replace(/-/g, "");
-  doc.save(`${safeName}_SantiyeGunlugu_${dateFile}.pdf`);
+  await savePdfDoc(doc, `${safeName}_SantiyeGunlugu_${dateFile}.pdf`);
 }
 
 // ── Period Report PDF ──
-export function exportPeriodPDF(
+export async function exportPeriodPDF(
   entries: DiaryEntry[],
   projectName: string,
   photos: DiaryPhoto[],
@@ -312,5 +313,5 @@ export function exportPeriodPDF(
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const sd2 = startDate.replace(/-/g, "");
   const ed2 = endDate.replace(/-/g, "");
-  doc.save(`${safeName}_SantiyeRaporu_${sd2}-${ed2}.pdf`);
+  await savePdfDoc(doc, `${safeName}_SantiyeRaporu_${sd2}-${ed2}.pdf`);
 }

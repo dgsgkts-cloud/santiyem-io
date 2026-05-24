@@ -12,6 +12,7 @@ import {
   nz,
   EMPTY_CELL,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 import type { Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
 
 const METHOD_LABELS: Record<string, string> = {
@@ -39,7 +40,7 @@ function summary(sub: Subcontractor, payments: SubcontractorPayment[]) {
   };
 }
 
-export function exportSubcontractorExcel(
+export async function exportSubcontractorExcel(
   sub: Subcontractor,
   payments: SubcontractorPayment[],
   projectName: (id?: string | null) => string,
@@ -82,10 +83,10 @@ export function exportSubcontractorExcel(
   autoFitColumns(wsPay, payRows);
   XLSX.utils.book_append_sheet(wb, wsPay, "Ödemeler");
 
-  XLSX.writeFile(wb, `${buildBaseName(sub)}.xlsx`);
+  await saveXlsxWorkbook(wb, `${buildBaseName(sub)}.xlsx`);
 }
 
-export function exportSubcontractorPDF(
+export async function exportSubcontractorPDF(
   sub: Subcontractor,
   payments: SubcontractorPayment[],
   projectName: (id?: string | null) => string,
@@ -131,5 +132,5 @@ export function exportSubcontractorPDF(
   });
 
   addPdfFooter(doc);
-  doc.save(`${buildBaseName(sub)}.pdf`);
+  await savePdfDoc(doc, `${buildBaseName(sub)}.pdf`);
 }

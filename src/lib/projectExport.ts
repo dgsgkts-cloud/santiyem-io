@@ -9,6 +9,7 @@ import {
   styleExcelHeaderRow,
   nz,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
 import { formatCurrencyFull } from "@/lib/formatCurrency";
@@ -39,7 +40,7 @@ function fmtMoney(v: string | number | null | undefined): string {
   return formatCurrencyFull(raw);
 }
 
-export function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
+export async function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
   const doc = createPdfDoc({ orientation: "portrait", format: "a4" });
 
   const pw = doc.internal.pageSize.getWidth();
@@ -222,12 +223,12 @@ export function exportProjectPDF(project: Project, tasks: Task[], milestones: { 
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  doc.save(`${safeName}_DurumRaporu_${dateStr}.pdf`);
+  await savePdfDoc(doc, `${safeName}_DurumRaporu_${dateStr}.pdf`);
 }
 
 // ── Excel ──
 
-export function exportProjectExcel(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
+export async function exportProjectExcel(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
   const wb = XLSX.utils.book_new();
 
   const todoCount = tasks.filter(t => t.status === "todo").length;
@@ -319,5 +320,5 @@ export function exportProjectExcel(project: Project, tasks: Task[], milestones: 
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  XLSX.writeFile(wb, `${safeName}_ProjeRaporu_${dateStr}.xlsx`);
+  await saveXlsxWorkbook(wb, `${safeName}_ProjeRaporu_${dateStr}.xlsx`);
 }
