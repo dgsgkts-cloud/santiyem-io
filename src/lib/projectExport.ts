@@ -9,6 +9,7 @@ import {
   styleExcelHeaderRow,
   nz,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 import type { Project } from "@/lib/projectsData";
 import type { Task } from "@/hooks/useTasks";
 import { formatCurrencyFull } from "@/lib/formatCurrency";
