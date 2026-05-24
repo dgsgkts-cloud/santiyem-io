@@ -84,7 +84,7 @@ export interface HakedisWorkItem {
   total_price: number;
 }
 
-export function exportHakedisPDF(
+export async function exportHakedisPDF(
   hakedisler: ProjectHakedis[],
   projectName: string,
   options: PDFOptions,
