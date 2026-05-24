@@ -365,7 +365,7 @@ export function exportHakedisPDF(
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ]/g, "_").replace(/_+/g, "_");
   const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const fileName = `${safeName}_Hakedis_${hakedisler.length}_${dateTag}.pdf`;
-  doc.save(fileName);
+  await savePdfDoc(doc, fileName);
 }
 
 export function exportHakedisExcel(
