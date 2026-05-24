@@ -368,7 +368,7 @@ export async function exportHakedisPDF(
   await savePdfDoc(doc, fileName);
 }
 
-export function exportHakedisExcel(
+export async function exportHakedisExcel(
   hakedisler: ProjectHakedis[],
   projectName: string,
   workItems?: HakedisWorkItem[],
