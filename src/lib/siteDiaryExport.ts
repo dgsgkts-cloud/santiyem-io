@@ -209,7 +209,7 @@ function renderEntry(doc: jsPDF, entry: DiaryEntry, startY: number, projectName:
 }
 
 // ── Single Day PDF ──
-export function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photos: DiaryPhoto[], includePhotos: boolean) {
+export async function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photos: DiaryPhoto[], includePhotos: boolean) {
   const doc = initDoc();
   const dateStr = format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr });
   let y = addHeader(doc, "ŞANTİYE GÜNLÜK KAYIT FORMU", `${projectName} — ${dateStr}`);
@@ -219,7 +219,7 @@ export function exportSingleDayPDF(entry: DiaryEntry, projectName: string, photo
 
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateFile = entry.entry_date.replace(/-/g, "");
-  doc.save(`${safeName}_SantiyeGunlugu_${dateFile}.pdf`);
+  await savePdfDoc(doc, `${safeName}_SantiyeGunlugu_${dateFile}.pdf`);
 }
 
 // ── Period Report PDF ──
