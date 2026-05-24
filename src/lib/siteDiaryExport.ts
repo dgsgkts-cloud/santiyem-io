@@ -223,7 +223,7 @@ export async function exportSingleDayPDF(entry: DiaryEntry, projectName: string,
 }
 
 // ── Period Report PDF ──
-export function exportPeriodPDF(
+export async function exportPeriodPDF(
   entries: DiaryEntry[],
   projectName: string,
   photos: DiaryPhoto[],
