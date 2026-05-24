@@ -40,7 +40,7 @@ function fmtMoney(v: string | number | null | undefined): string {
   return formatCurrencyFull(raw);
 }
 
-export function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
+export async function exportProjectPDF(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
   const doc = createPdfDoc({ orientation: "portrait", format: "a4" });
 
   const pw = doc.internal.pageSize.getWidth();
