@@ -27,6 +27,7 @@ const ContractSignUpload = lazy(() => import("./pages/ContractSignUpload"));
 const HakedisApproval = lazy(() => import("./pages/HakedisApproval"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
