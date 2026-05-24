@@ -194,5 +194,5 @@ export async function exportCashExcel(data: CashReportData) {
   autoFitColumns(wsChk, chkAll);
   XLSX.utils.book_append_sheet(wb, wsChk, "Çekler");
 
-  XLSX.writeFile(wb, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.xlsx`);
+  await saveXlsxWorkbook(wb, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.xlsx`);
 }
