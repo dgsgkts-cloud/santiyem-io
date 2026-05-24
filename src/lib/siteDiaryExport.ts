@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { addPdfHeader, addPdfFooter } from "@/lib/pdfHeader";
 import { createPdfDoc, defaultTableTheme, nz } from "@/lib/reportUtils";
+import { savePdfDoc } from "@/lib/nativeDownload";
 import type { DiaryEntry, CrewRow, DiaryPhoto } from "@/hooks/useSiteDiary";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
