@@ -86,7 +86,7 @@ export async function exportSubcontractorExcel(
   await saveXlsxWorkbook(wb, `${buildBaseName(sub)}.xlsx`);
 }
 
-export function exportSubcontractorPDF(
+export async function exportSubcontractorPDF(
   sub: Subcontractor,
   payments: SubcontractorPayment[],
   projectName: (id?: string | null) => string,
