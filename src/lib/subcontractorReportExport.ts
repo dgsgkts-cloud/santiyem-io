@@ -132,5 +132,5 @@ export async function exportSubcontractorPDF(
   });
 
   addPdfFooter(doc);
-  doc.save(`${buildBaseName(sub)}.pdf`);
+  await savePdfDoc(doc, `${buildBaseName(sub)}.pdf`);
 }
