@@ -320,5 +320,5 @@ export async function exportProjectExcel(project: Project, tasks: Task[], milest
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  XLSX.writeFile(wb, `${safeName}_ProjeRaporu_${dateStr}.xlsx`);
+  await saveXlsxWorkbook(wb, `${safeName}_ProjeRaporu_${dateStr}.xlsx`);
 }
