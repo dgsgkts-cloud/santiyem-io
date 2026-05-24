@@ -134,11 +134,11 @@ export async function exportCashPDF(data: CashReportData) {
 
   addPdfFooter(doc);
 
-  doc.save(`Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.pdf`);
+  await savePdfDoc(doc, `Santiyem_Kasa_Raporu_${now.toISOString().slice(0, 10)}.pdf`);
 }
 
 // ─── EXCEL ──────────────────────────────────────
-export function exportCashExcel(data: CashReportData) {
+export async function exportCashExcel(data: CashReportData) {
   const wb = XLSX.utils.book_new();
   const now = new Date();
 
