@@ -223,12 +223,12 @@ export async function exportProjectPDF(project: Project, tasks: Task[], mileston
 
   const safeName = project.name.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  doc.save(`${safeName}_DurumRaporu_${dateStr}.pdf`);
+  await savePdfDoc(doc, `${safeName}_DurumRaporu_${dateStr}.pdf`);
 }
 
 // ── Excel ──
 
-export function exportProjectExcel(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
+export async function exportProjectExcel(project: Project, tasks: Task[], milestones: { title: string; date: string; completed: boolean }[]) {
   const wb = XLSX.utils.book_new();
 
   const todoCount = tasks.filter(t => t.status === "todo").length;
