@@ -313,5 +313,5 @@ export async function exportPeriodPDF(
   const safeName = projectName.replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ ]/g, "").replace(/ /g, "_");
   const sd2 = startDate.replace(/-/g, "");
   const ed2 = endDate.replace(/-/g, "");
-  doc.save(`${safeName}_SantiyeRaporu_${sd2}-${ed2}.pdf`);
+  await savePdfDoc(doc, `${safeName}_SantiyeRaporu_${sd2}-${ed2}.pdf`);
 }
