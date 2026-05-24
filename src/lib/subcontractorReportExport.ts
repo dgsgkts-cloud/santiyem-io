@@ -83,7 +83,7 @@ export async function exportSubcontractorExcel(
   autoFitColumns(wsPay, payRows);
   XLSX.utils.book_append_sheet(wb, wsPay, "Ödemeler");
 
-  XLSX.writeFile(wb, `${buildBaseName(sub)}.xlsx`);
+  await saveXlsxWorkbook(wb, `${buildBaseName(sub)}.xlsx`);
 }
 
 export function exportSubcontractorPDF(
