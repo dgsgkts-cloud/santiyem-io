@@ -12,6 +12,7 @@ import {
   nz,
   EMPTY_CELL,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 import type { Subcontractor, SubcontractorPayment } from "@/hooks/useSubcontractors";
 
 const METHOD_LABELS: Record<string, string> = {
