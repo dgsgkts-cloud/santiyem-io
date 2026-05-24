@@ -40,7 +40,7 @@ function summary(sub: Subcontractor, payments: SubcontractorPayment[]) {
   };
 }
 
-export function exportSubcontractorExcel(
+export async function exportSubcontractorExcel(
   sub: Subcontractor,
   payments: SubcontractorPayment[],
   projectName: (id?: string | null) => string,
