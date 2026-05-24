@@ -38,7 +38,7 @@ interface CashReportData {
 }
 
 // ─── PDF ────────────────────────────────────────
-export function exportCashPDF(data: CashReportData) {
+export async function exportCashPDF(data: CashReportData) {
   const doc = createPdfDoc({ orientation: "landscape" });
 
   const now = new Date();
