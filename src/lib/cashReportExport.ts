@@ -13,6 +13,7 @@ import {
   styleExcelHeaderRow,
   nz,
 } from "@/lib/reportUtils";
+import { savePdfDoc, saveXlsxWorkbook } from "@/lib/nativeDownload";
 
 import { formatCurrencyFull as money } from "@/lib/formatCurrency";
 
