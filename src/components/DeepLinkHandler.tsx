@@ -22,18 +22,21 @@ const DeepLinkHandler = () => {
         try { await Browser.close(); } catch {}
 
         const u = new URL(url);
-        // Match: santiyem://odeme-sonucu?status=...&message=...
+        // Match: santiyem://odeme-sonucu... veya santiyem://payment-callback...
         const pathWithQuery = `${u.host || ""}${u.pathname || ""}`.replace(/^\/+/, "");
         const isPaymentResult =
-          pathWithQuery.includes("odeme-sonucu") || u.pathname.includes("odeme-sonucu");
+          pathWithQuery.includes("odeme-sonucu") ||
+          pathWithQuery.includes("payment-callback") ||
+          u.pathname.includes("odeme-sonucu") ||
+          u.pathname.includes("payment-callback");
 
         if (isPaymentResult) {
           const status = u.searchParams.get("status");
           const message = u.searchParams.get("message");
           if (status === "success") {
-            toast.success(message || "Ödeme başarılı");
-          } else if (status === "failed") {
-            toast.error(message || "Ödeme başarısız oldu, lütfen tekrar deneyin");
+            toast.success(message ? decodeURIComponent(message) : "Ödeme başarılı, aboneliğiniz aktif edildi");
+          } else {
+            toast.error(message ? decodeURIComponent(message) : "Ödeme başarısız oldu, lütfen tekrar deneyin");
           }
           const qs = u.search || "";
           navigate(`/odeme-sonucu${qs}`);

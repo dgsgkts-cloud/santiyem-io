@@ -27,6 +27,7 @@ const ContractSignUpload = lazy(() => import("./pages/ContractSignUpload"));
 const HakedisApproval = lazy(() => import("./pages/HakedisApproval"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/hakedis-onay/:token" element={<HakedisApproval />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/odeme-sonucu" element={<PaymentResult />} />
+              <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/santiye-giris/:token" element={<SantiyeGiris />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

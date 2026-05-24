@@ -198,18 +198,9 @@ Deno.serve(async (req) => {
 function redirectWithStatus(status: string, message?: string, native = false): Response {
   const params = new URLSearchParams({ status })
   if (message) params.set('message', message)
-  const location = native
-    ? `santiyem://odeme-sonucu?${params.toString()}`
-    : `https://santiyem.lovable.app/odeme-sonucu?${params.toString()}`
-  if (native) {
-    const html = `<!doctype html><meta charset="utf-8"><title>Yönlendiriliyor…</title>
-<script>window.location.href=${JSON.stringify(location)};</script>
-<body style="font-family:sans-serif;text-align:center;padding:40px;background:#0F1419;color:#fff">
-<p>Uygulamaya dönülüyor…</p>
-<p><a style="color:#FF6B2B" href="${location}">Buraya tıklayın</a></p>
-</body>`
-    return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-  }
+  if (native) params.set('native', '1')
+  // Back URL chain: edge function → https://santiyem.io/payment-callback
+  // Bridge page native flag varsa santiyem://payment-callback deep link'ine atar.
+  const location = `https://santiyem.io/payment-callback?${params.toString()}`
   return new Response(null, { status: 302, headers: { 'Location': location } })
-}
 }
