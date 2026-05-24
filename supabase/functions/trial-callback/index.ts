@@ -204,4 +204,3 @@ function redirectWithStatus(status: string, message?: string, native = false): R
   const location = `https://santiyem.io/payment-callback?${params.toString()}`
   return new Response(null, { status: 302, headers: { 'Location': location } })
 }
-}
