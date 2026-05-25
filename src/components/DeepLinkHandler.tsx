@@ -5,6 +5,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { toast } from "sonner";
 import { handleNativeBrowserClosed, markPaymentResultReceived } from "@/lib/iyzicoCheckout";
+import { parsePaymentCallback } from "@/lib/paymentCallbackSchema";
 
 /**
  * Listens for santiyem:// deep links opened from the iyzico checkout callback
@@ -22,7 +23,18 @@ const DeepLinkHandler = () => {
         console.log("[DeepLink] appUrlOpen:", url);
         try { await Browser.close(); } catch {}
 
-        const u = new URL(url);
+        // URL parse — bozuksa güvenli düşüş
+        let u: URL;
+        try {
+          u = new URL(url);
+        } catch (e) {
+          console.warn("[DeepLink] invalid URL", url, e);
+          markPaymentResultReceived();
+          toast.error("Geçersiz ödeme yanıtı alındı, lütfen tekrar deneyin");
+          navigate("/odeme-sonucu?status=failed");
+          return;
+        }
+
         const pathWithQuery = `${u.host || ""}${u.pathname || ""}`.replace(/^\/+/, "");
         const isPaymentResult =
           pathWithQuery.includes("odeme-sonucu") ||
@@ -30,24 +42,37 @@ const DeepLinkHandler = () => {
           u.pathname.includes("odeme-sonucu") ||
           u.pathname.includes("payment-callback");
 
-        if (isPaymentResult) {
-          markPaymentResultReceived();
-          const status = u.searchParams.get("status");
-          const message = u.searchParams.get("message");
-          if (status === "success") {
-            toast.success(message ? decodeURIComponent(message) : "Ödeme başarılı, aboneliğiniz aktif edildi");
-          } else {
-            toast.error(message ? decodeURIComponent(message) : "Ödeme başarısız oldu, lütfen tekrar deneyin");
-          }
-          const qs = u.search || "";
-          navigate(`/odeme-sonucu${qs}`);
+        if (!isPaymentResult) return;
+
+        markPaymentResultReceived();
+
+        const parsed = parsePaymentCallback(u.searchParams);
+
+        if (!parsed.valid) {
+          console.warn("[DeepLink] missing/invalid params", url);
+          toast.error("Ödeme yanıtı eksik veya bozuk geldi. Aboneliğiniz değişmedi, lütfen tekrar deneyin.");
+          navigate("/odeme-sonucu?status=failed");
+          return;
         }
+
+        if (parsed.status === "success") {
+          toast.success(parsed.message || "Ödeme başarılı, aboneliğiniz aktif edildi");
+        } else {
+          toast.error(parsed.message || "Ödeme başarısız oldu, lütfen tekrar deneyin");
+        }
+
+        // Sadece şemadan geçen güvenli parametreleri ilet
+        const safe = new URLSearchParams({ status: parsed.status });
+        if (parsed.message) safe.set("message", parsed.message);
+        navigate(`/odeme-sonucu?${safe.toString()}`);
       } catch (err) {
         console.error("[DeepLink] handler error", err);
+        markPaymentResultReceived();
+        toast.error("Ödeme yanıtı işlenemedi, lütfen tekrar deneyin");
+        navigate("/odeme-sonucu?status=failed");
       }
     });
 
-    // Detect user-cancelled checkout: system browser closed without a deep link.
     const browserSub = Browser.addListener("browserFinished", () => {
       console.log("[DeepLink] browserFinished");
       handleNativeBrowserClosed();

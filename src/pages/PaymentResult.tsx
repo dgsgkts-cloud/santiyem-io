@@ -1,13 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, XCircle } from "lucide-react";
 import { cleanupIyzicoOverlay } from "@/lib/iyzicoCleanup";
+import { parsePaymentCallback } from "@/lib/paymentCallbackSchema";
 
 const PaymentResult = () => {
   const [params] = useSearchParams();
-  const status = params.get("status");
-  const message = params.get("message");
-  const isSuccess = status === "success";
+  const parsed = useMemo(() => parsePaymentCallback(params), [params]);
+  const isSuccess = parsed.status === "success";
+  const message = parsed.valid
+    ? parsed.message
+    : "Ödeme yanıtı eksik veya bozuk geldi. Aboneliğiniz değişmedi.";
 
   useEffect(() => {
     cleanupIyzicoOverlay();
