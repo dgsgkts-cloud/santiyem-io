@@ -8,9 +8,18 @@ const config: CapacitorConfig = {
     url: 'https://75507a90-7e2b-421c-9e2d-6aa7effd7c93.lovableproject.com?forceHideBadge=true',
     cleartext: true,
   },
-  // Custom URL scheme used by iyzico deep-link callback (santiyem://odeme-sonucu?...)
+  // Custom URL scheme used by iyzico deep-link callback (santiyem://payment-callback?...)
   ios: {
     scheme: 'santiyem',
+  },
+  android: {
+    // Allow the custom scheme to be used inside the WebView
+  },
+  // Tell Capacitor to register santiyem:// as a handled scheme on Android
+  server: {
+    url: 'https://75507a90-7e2b-421c-9e2d-6aa7effd7c93.lovableproject.com?forceHideBadge=true',
+    cleartext: true,
+    androidScheme: 'santiyem',
   },
 };
 
