@@ -1,44 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { parsePaymentCallback } from "@/lib/paymentCallbackSchema";
 
 /**
  * iyzico → bu sayfa (Back URL bridge).
  * - Native: santiyem://payment-callback?... deep link'ine yönlendirir.
  * - Web: doğrudan /odeme-sonucu sayfasına yönlendirir.
+ *
+ * Parametreler doğrulanır; eksik/bozuk gelirse güvenli fallback ile
+ * status=failed olarak ödeme sonucu sayfasına yönlenir.
  */
 const PaymentCallback = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [bridging, setBridging] = useState(false);
 
-  const status = params.get("status") || "failed";
-  const message = params.get("message") || "";
-  const isNativeFlag = params.get("native") === "1";
+  const parsed = useMemo(() => parsePaymentCallback(params), [params]);
 
-  // Native uygulamadan açıldıysa (system browser içinde) deep link'i tetikle
-  const shouldDeepLink = isNativeFlag || Capacitor.isNativePlatform();
+  // Sadece doğrulanmış parametreleri yeni URL'e koy
+  const safeQs = useMemo(() => {
+    const s = new URLSearchParams({ status: parsed.status });
+    if (parsed.message) s.set("message", parsed.message);
+    if (parsed.native) s.set("native", "1");
+    return s.toString();
+  }, [parsed]);
+
+  const shouldDeepLink = parsed.native || Capacitor.isNativePlatform();
 
   useEffect(() => {
-    const qs = params.toString();
-
     if (shouldDeepLink) {
-      const deepLink = `santiyem://payment-callback?${qs}`;
+      const deepLink = `santiyem://payment-callback?${safeQs}`;
       setBridging(true);
-      // Hemen deep link'i tetikle
-      window.location.href = deepLink;
-      // Fallback: 2 sn sonra hâlâ buradaysak web rotasına geç
+      try {
+        window.location.href = deepLink;
+      } catch (e) {
+        console.error("[PaymentCallback] deep link failed", e);
+      }
       const t = setTimeout(() => {
-        navigate(`/odeme-sonucu?${qs}`, { replace: true });
+        navigate(`/odeme-sonucu?${safeQs}`, { replace: true });
       }, 2500);
       return () => clearTimeout(t);
     }
 
-    // Web: doğrudan ödeme sonucu sayfasına
-    navigate(`/odeme-sonucu?${qs}`, { replace: true });
-  }, [shouldDeepLink, navigate, params]);
+    navigate(`/odeme-sonucu?${safeQs}`, { replace: true });
+  }, [shouldDeepLink, navigate, safeQs]);
 
-  const success = status === "success";
+  const success = parsed.status === "success";
 
   return (
     <div
@@ -51,16 +59,19 @@ const PaymentCallback = () => {
           {success ? "Ödeme alındı" : "Ödeme tamamlanamadı"}
         </h1>
         <p className="text-sm text-white/70">
-          {bridging
-            ? "Uygulamaya dönülüyor…"
-            : "Yönlendiriliyorsunuz, lütfen bekleyin."}
+          {bridging ? "Uygulamaya dönülüyor…" : "Yönlendiriliyorsunuz, lütfen bekleyin."}
         </p>
-        {message && (
-          <p className="text-xs text-white/50">{decodeURIComponent(message)}</p>
+        {!parsed.valid && (
+          <p className="text-xs text-amber-400">
+            Ödeme yanıtı eksik veya bozuk geldi. Aboneliğiniz değişmedi.
+          </p>
+        )}
+        {parsed.message && (
+          <p className="text-xs text-white/50">{parsed.message}</p>
         )}
         {bridging && (
           <a
-            href={`santiyem://payment-callback?${params.toString()}`}
+            href={`santiyem://payment-callback?${safeQs}`}
             className="inline-block text-sm text-[#FF6B2B] underline"
           >
             Uygulama açılmadıysa buraya tıklayın
