@@ -4,10 +4,12 @@ import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { toast } from "sonner";
+import { handleNativeBrowserClosed, markPaymentResultReceived } from "@/lib/iyzicoCheckout";
 
 /**
  * Listens for santiyem:// deep links opened from the iyzico checkout callback
  * (system browser → app). Closes the in-app browser and routes to /odeme-sonucu.
+ * Also detects user-cancelled checkouts (browser closed without callback).
  */
 const DeepLinkHandler = () => {
   const navigate = useNavigate();
@@ -15,14 +17,12 @@ const DeepLinkHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const sub = CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
+    const urlSub = CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
       try {
         console.log("[DeepLink] appUrlOpen:", url);
-        // Close the system browser if still open
         try { await Browser.close(); } catch {}
 
         const u = new URL(url);
-        // Match: santiyem://odeme-sonucu... veya santiyem://payment-callback...
         const pathWithQuery = `${u.host || ""}${u.pathname || ""}`.replace(/^\/+/, "");
         const isPaymentResult =
           pathWithQuery.includes("odeme-sonucu") ||
@@ -31,6 +31,7 @@ const DeepLinkHandler = () => {
           u.pathname.includes("payment-callback");
 
         if (isPaymentResult) {
+          markPaymentResultReceived();
           const status = u.searchParams.get("status");
           const message = u.searchParams.get("message");
           if (status === "success") {
@@ -46,8 +47,15 @@ const DeepLinkHandler = () => {
       }
     });
 
+    // Detect user-cancelled checkout: system browser closed without a deep link.
+    const browserSub = Browser.addListener("browserFinished", () => {
+      console.log("[DeepLink] browserFinished");
+      handleNativeBrowserClosed();
+    });
+
     return () => {
-      sub.then((s) => s.remove()).catch(() => {});
+      urlSub.then((s) => s.remove()).catch(() => {});
+      browserSub.then((s) => s.remove()).catch(() => {});
     };
   }, [navigate]);
 
