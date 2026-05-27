@@ -10,6 +10,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects, UserProject } from "@/hooks/useProjects";
 import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
+import PullToRefresh from "@/components/PullToRefresh";
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
