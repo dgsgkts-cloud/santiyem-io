@@ -1,0 +1,14 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.lovable.75507a907e2b421c9e2d6aa7effd7c93",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_DEBUG_SHA256_FINGERPRINT",
+        "REPLACE_WITH_RELEASE_SHA256_FINGERPRINT",
+        "REPLACE_WITH_PLAY_APP_SIGNING_SHA256_FINGERPRINT"
+      ]
+    }
+  }
+]
