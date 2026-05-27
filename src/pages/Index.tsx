@@ -421,7 +421,7 @@ const Index = () => {
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => goToTab("dashboard")}>
           <img src={logo} alt="Şantiyem" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
         </div>
