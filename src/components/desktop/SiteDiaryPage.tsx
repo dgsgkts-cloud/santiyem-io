@@ -271,7 +271,7 @@ const SiteDiaryPage = () => {
                 className="w-full h-10 rounded-lg text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: "#FF6B2B" }}
               >
-                PDF Oluştur
+                {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "PDF Oluştur"}
               </button>
             </div>
           </div>
@@ -633,7 +633,7 @@ const SiteDiaryPage = () => {
               className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5"
               style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
             >
-              <FileDown className="w-3.5 h-3.5" /> PDF İndir
+              <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
             </button>
             <button onClick={() => {
               setEditingEntry(selectedEntry);
