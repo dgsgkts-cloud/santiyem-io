@@ -316,15 +316,24 @@ const Index = () => {
     setIsTyping(false);
   };
 
+  const goToTab = useCallback((tab: Tab) => {
+    const path = TAB_TO_PATH[tab];
+    if (path && location.pathname !== path) {
+      navigate(path);
+    } else {
+      setActiveTab(tab);
+    }
+  }, [navigate, location.pathname]);
+
   const handleDrawerNav = (id: string) => {
     if (NAVIGABLE_TABS.includes(id as Tab)) {
-      setActiveTab(id as Tab);
+      goToTab(id as Tab);
     }
     setDrawerOpen(false);
   };
 
   const handleDesktopTabChange = (tab: Tab) => {
-    setActiveTab(tab);
+    goToTab(tab);
   };
 
   // Desktop layout
