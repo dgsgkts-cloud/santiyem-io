@@ -314,7 +314,16 @@ const Index = () => {
     );
   }
 
-  // Mobile/Tablet layout (unchanged)
+  // Bottom tab bar items (mobile only)
+  const BOTTOM_TABS: { id: Tab | "more"; label: string; icon: React.ElementType }[] = [
+    { id: "dashboard", label: "Ana Sayfa", icon: Home },
+    { id: "projects", label: "Projeler", icon: FolderOpen },
+    { id: "hakedis", label: "Hakediş", icon: FileText },
+    { id: "site-diary", label: "Günlük", icon: BookOpen },
+    { id: "more", label: "Daha Fazla", icon: Menu },
+  ];
+  const PRIMARY_TAB_IDS = new Set(["dashboard", "projects", "hakedis", "site-diary"]);
+
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* ── MOBILE HEADER ── */}
