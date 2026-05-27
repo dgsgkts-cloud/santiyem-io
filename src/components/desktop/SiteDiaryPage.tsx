@@ -325,6 +325,7 @@ const SiteDiaryPage = () => {
         )}
 
         {selectedProjectId && (
+          <PullToRefresh onRefresh={refetch}>
           <>
             {/* Worker Attendance Section */}
             <div className="rounded-xl p-4 bg-card border border-border">
