@@ -111,6 +111,21 @@ const TAB_TITLES: Record<string, string> = {
   hakkimizda: "Hakkımızda",
 };
 
+const ACTIVE_TAB_KEY = "santiyem_active_tab";
+
+const getInitialTab = (): Tab => {
+  if (typeof window === "undefined") return "dashboard";
+  try {
+    const stored = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (stored && NAVIGABLE_TABS.includes(stored as Tab)) {
+      return stored as Tab;
+    }
+  } catch (e) {
+    console.warn("Failed to read active tab from localStorage", e);
+  }
+  return "dashboard";
+};
+
 const Index = () => {
   const { user, plan, signOut, incrementUsage, canUse, isAdmin } = useUser();
   const navigate = useNavigate();
