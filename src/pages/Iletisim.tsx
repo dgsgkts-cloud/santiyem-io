@@ -195,7 +195,7 @@ const Iletisim = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      {!Capacitor.isNativePlatform() && <Footer />}
     </div>
   );
 };

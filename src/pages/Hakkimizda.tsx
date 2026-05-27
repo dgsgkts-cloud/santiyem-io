@@ -92,7 +92,7 @@ const Hakkimizda = () => {
         </div>
       </main>
 
-      <Footer />
+      {!Capacitor.isNativePlatform() && <Footer />}
     </div>
   );
 };

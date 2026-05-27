@@ -41,7 +41,7 @@ const LegalPage = ({ title, sections }: LegalPageProps) => {
         </div>
       </main>
 
-      <Footer />
+      {!Capacitor.isNativePlatform() && <Footer />}
     </div>
   );
 };
