@@ -25,11 +25,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- 
+            <!--
               Custom scheme deep link: santiyem://payment-callback
               Uses android:host="payment-callback" for strict matching.
               This ensures ONLY santiyem://payment-callback?... is caught,
               not every santiyem:// URL.
+
+              Test with adb:
+                adb shell am start -a android.intent.action.VIEW \
+                  -d "santiyem://payment-callback?status=success&message=Test"
+              See android/DEEP_LINK_TESTING.md for full test matrix.
             -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
