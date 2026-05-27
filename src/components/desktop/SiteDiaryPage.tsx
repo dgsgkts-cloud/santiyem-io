@@ -7,6 +7,7 @@ import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/ho
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
+import { Capacitor } from "@capacitor/core";
 import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays, startOfWeek, endOfWeek, isYesterday, isThisWeek, isWithinInterval } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -270,7 +271,7 @@ const SiteDiaryPage = () => {
                 className="w-full h-10 rounded-lg text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: "#FF6B2B" }}
               >
-                PDF Oluştur
+                {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "PDF Oluştur"}
               </button>
             </div>
           </div>
@@ -632,7 +633,7 @@ const SiteDiaryPage = () => {
               className="h-8 px-3 rounded-lg text-xs flex items-center gap-1.5"
               style={{ backgroundColor: "#1E2732", border: "1px solid #334155" }}
             >
-              <FileDown className="w-3.5 h-3.5" /> PDF İndir
+              <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
             </button>
             <button onClick={() => {
               setEditingEntry(selectedEntry);
