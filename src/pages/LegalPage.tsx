@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 
 interface Section {

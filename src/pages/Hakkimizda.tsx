@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, Bot, Flag, Mail } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
+import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 
 const reasons = [
