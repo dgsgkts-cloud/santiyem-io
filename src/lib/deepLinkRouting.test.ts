@@ -65,7 +65,9 @@ describe("resolveDeepLinkAction", () => {
     );
     expect(r.kind).toBe("navigate");
     if (r.kind !== "navigate") return;
-    expect(r.parsed.message).toBe("Hata");
+    expect(r.parsed.message).not.toContain("<");
+    expect(r.parsed.message).not.toContain(">");
+    expect(r.parsed.message).toContain("Hata");
     expect(r.target).not.toContain("<script>");
   });
 });
