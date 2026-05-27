@@ -143,6 +143,22 @@ const Index = () => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
 
+  // Persist active tab
+  useEffect(() => {
+    try {
+      localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+    } catch (e) {
+      console.warn("Failed to save active tab to localStorage", e);
+    }
+  }, [activeTab]);
+
+  // Handle direct navigation to /settings
+  useEffect(() => {
+    if (location.pathname === "/settings") {
+      setActiveTab("settings");
+    }
+  }, [location.pathname]);
+
   // Show onboarding for new users
   useEffect(() => {
     if (user?.created_at && shouldShowOnboarding(user.created_at)) {
