@@ -326,10 +326,6 @@ const Index = () => {
           <img src={logo} alt="Şantiyem" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
         </div>
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
-          <img src={logo} alt="Şantiyem" className="w-7 h-7" />
-          <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
-        </div>
         <div className="flex items-center gap-1">
           {/* Mobile notification bell */}
           <div className="relative">
