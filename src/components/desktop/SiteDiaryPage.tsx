@@ -11,6 +11,7 @@ import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
+import { takePhoto, pickFromGallery } from "@/lib/capturePhoto";
 
 const WEATHER_OPTIONS = [
   { icon: "☀️", label: "Güneşli", lucide: Sun },
