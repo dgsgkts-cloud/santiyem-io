@@ -456,6 +456,11 @@ const SiteDiaryPage = () => {
                           <p className="text-xs truncate text-muted-foreground">
                             {selectedProject?.name ? `${selectedProject.name} · ` : ""}{totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} · ` : ""}{entry.work_done?.slice(0, 50) || "Açıklama yok"}
                           </p>
+                          {entry.updated_at && entry.created_at && new Date(entry.updated_at).getTime() - new Date(entry.created_at).getTime() > 60000 && (
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                              Son düzenlenme: {format(parseISO(entry.updated_at), "d MMM yyyy HH:mm", { locale: tr })}
+                            </p>
+                          )}
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
                           backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
