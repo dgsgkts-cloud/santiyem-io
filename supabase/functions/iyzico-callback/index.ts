@@ -153,12 +153,6 @@ Deno.serve(async (req) => {
   }
 })
 
-function redirectWithStatus(status: string, message?: string, native = false): Response {
-  const params = new URLSearchParams({ status })
-  if (message) params.set('message', message)
-  if (native) params.set('native', '1')
-  // iyzico Back URL chain: edge function → https://santiyem.io/payment-callback
-  // Bridge page native flag varsa santiyem://payment-callback deep link'ine atar.
-  const location = `https://santiyem.io/payment-callback?${params.toString()}`
-  return new Response(null, { status: 302, headers: { 'Location': location } })
-}
+import { redirectWithStatus } from "./redirect.ts"
+// re-export for the closure above
+export { redirectWithStatus }
