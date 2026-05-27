@@ -180,7 +180,7 @@ const SiteDiaryPage = () => {
 
   // Calendar view
   if (view === "list") {
-    const recent = [...entries].sort((a, b) => b.entry_date.localeCompare(a.entry_date)).slice(0, 5);
+    const recent = [...entries].sort((a, b) => b.entry_date.localeCompare(a.entry_date));
     const startDayOfWeek = (startOfMonth(currentMonth).getDay() + 6) % 7; // Monday = 0
 
     return (
@@ -386,35 +386,96 @@ const SiteDiaryPage = () => {
               </div>
             </div>
 
-            {/* Recent entries */}
+            {/* Past entries */}
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">Son Kayıtlar</h3>
-              {recent.map(entry => (
-                <button
-                  key={entry.id}
-                  onClick={() => { setSelectedEntry(entry); setView("detail"); }}
-                  className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors hover:bg-white/5 bg-card border border-border"
-                >
-                  <span className="text-xl">{entry.weather_icon}</span>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-foreground">{format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}</p>
-                    <p className="text-xs truncate text-muted-foreground">
-                      {totalWorkers(entry.crews)} işçi · {entryPhotos(entry.id).length > 0 ? `📷 ${entryPhotos(entry.id).length} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Kayıt yok"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs px-2 py-0.5 rounded-full" style={{
-                      backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
-                      color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
-                    }}>
-                      {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
-                    </span>
-                    <Eye className="w-4 h-4" style={{ color: "#475569" }} />
-                  </div>
-                </button>
-              ))}
-              {recent.length === 0 && (
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-muted-foreground">
+                  Geçmiş Kayıtlar {recent.length > 0 && <span className="text-xs">({recent.length})</span>}
+                </h3>
+              </div>
+              {isLoading ? (
+                <p className="text-sm text-center py-6 text-muted-foreground">Yükleniyor…</p>
+              ) : recent.length === 0 ? (
                 <p className="text-sm text-center py-6" style={{ color: "#475569" }}>Bu proje için henüz kayıt yok</p>
+              ) : (
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
+                  {recent.map(entry => {
+                    const epCount = entryPhotos(entry.id).length;
+                    return (
+                      <div
+                        key={entry.id}
+                        className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedEntry(entry); setView("detail"); }}
+                          className="flex-1 flex items-center gap-3 text-left min-w-0"
+                          style={{ minHeight: 48 }}
+                          aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
+                        >
+                          <span className="text-xl shrink-0">{entry.weather_icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}
+                            </p>
+                            <p className="text-xs truncate text-muted-foreground">
+                              {totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Açıklama yok"}
+                            </p>
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
+                            backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
+                            color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
+                          }}>
+                            {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingEntry(entry);
+                              setFormDate(entry.entry_date);
+                              setFormWeather(entry.weather_icon);
+                              setFormTemp(entry.weather_temp?.toString() || "");
+                              setFormWorkStatus(entry.work_status);
+                              setFormStopReason(entry.work_stopped_reason || "");
+                              setFormCrews(entry.crews.length > 0 ? entry.crews : [{ team: "", count: 0, hours: 8, note: "" }]);
+                              setFormWorkDone(entry.work_done);
+                              setFormMaterials(entry.materials);
+                              setFormMachines(entry.machines);
+                              setFormSpecialEvents(entry.special_events);
+                              setFormGeneralNote(entry.general_note);
+                              setView("form");
+                            }}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
+                            aria-label="Düzenle"
+                            title="Düzenle"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget({
+                                id: entry.id,
+                                name: format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr }),
+                                type: "Günlük Kaydı",
+                              });
+                            }}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                            style={{ color: "#EF4444" }}
+                            aria-label="Sil"
+                            title="Sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </>
