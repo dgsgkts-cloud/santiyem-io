@@ -1044,7 +1044,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                   }
                 }}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-50" style={{ backgroundColor: "#FF6B2B" }}>
-                📄 PDF Oluştur
+                {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "📄 PDF Oluştur"}
               </button>
               <button onClick={() => setShowPdfModal(false)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>İptal</button>
             </div>
