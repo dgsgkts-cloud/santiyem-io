@@ -326,161 +326,162 @@ const SiteDiaryPage = () => {
 
         {selectedProjectId && (
           <PullToRefresh onRefresh={refetch}>
-          <>
-            {/* Worker Attendance Section */}
-            <div className="rounded-xl p-4 bg-card border border-border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <HardHat className="w-4 h-4 text-primary" /> İşçi Devam Takibi
-                </h3>
-                <button
-                  onClick={() => setShowQrModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <QrCode className="w-3.5 h-3.5" /> QR Kod
-                </button>
+            <>
+              {/* Worker Attendance Section */}
+              <div className="rounded-xl p-4 bg-card border border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <HardHat className="w-4 h-4 text-primary" /> İşçi Devam Takibi
+                  </h3>
+                  <button
+                    onClick={() => setShowQrModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <QrCode className="w-3.5 h-3.5" /> QR Kod
+                  </button>
+                </div>
+                <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
               </div>
-              <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
-            </div>
 
-            {showQrModal && selectedProject && (
-              <QrCodeModal
-                projectId={selectedProjectId}
-                projectName={selectedProject.name}
-                onClose={() => setShowQrModal(false)}
-              />
-            )}
+              {showQrModal && selectedProject && (
+                <QrCodeModal
+                  projectId={selectedProjectId}
+                  projectName={selectedProject.name}
+                  onClose={() => setShowQrModal(false)}
+                />
+              )}
 
-            {/* Calendar */}
-            <div className="rounded-xl p-4 bg-card border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">← Önceki</button>
-                <h3 className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
-                <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">Sonraki →</button>
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map(d => (
-                  <div key={d} className="text-[10px] font-semibold py-1" style={{ color: "#475569" }}>{d}</div>
-                ))}
-                {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`pad-${i}`} />)}
-                {calendarDays.map(day => {
-                  const entry = getEntryForDay(day);
-                  const hasPhotos = entry ? entryPhotos(entry.id).length > 0 || entry.id.startsWith("mock-") : false;
-                  return (
-                    <button
-                      key={day.toISOString()}
-                      onClick={() => { if (entry) { setSelectedEntry(entry); setView("detail"); } }}
-                      className="relative p-1.5 rounded-lg text-center transition-colors hover:bg-white/5"
-                      style={{ minHeight: 44 }}
-                    >
-                      <span className="text-xs" style={{ color: isToday(day) ? "#FF6B2B" : isSameMonth(day, currentMonth) ? "#94A3B8" : "#334155", fontWeight: isToday(day) ? 700 : 400 }}>
-                        {format(day, "d")}
-                      </span>
-                      {entry && (
-                        <div className="flex items-center justify-center gap-0.5 mt-0.5">
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E" }} />
-                          {hasPhotos && <Camera className="w-2.5 h-2.5 text-muted-foreground" />}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Past entries */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-muted-foreground">
-                  Geçmiş Kayıtlar {recent.length > 0 && <span className="text-xs">({recent.length})</span>}
-                </h3>
-              </div>
-              {isLoading ? (
-                <p className="text-sm text-center py-6 text-muted-foreground">Yükleniyor…</p>
-              ) : recent.length === 0 ? (
-                <p className="text-sm text-center py-6" style={{ color: "#475569" }}>Bu proje için henüz kayıt yok</p>
-              ) : (
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
-                  {recent.map(entry => {
-                    const epCount = entryPhotos(entry.id).length;
+              {/* Calendar */}
+              <div className="rounded-xl p-4 bg-card border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">← Önceki</button>
+                  <h3 className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
+                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">Sonraki →</button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map(d => (
+                    <div key={d} className="text-[10px] font-semibold py-1" style={{ color: "#475569" }}>{d}</div>
+                  ))}
+                  {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`pad-${i}`} />)}
+                  {calendarDays.map(day => {
+                    const entry = getEntryForDay(day);
+                    const hasPhotos = entry ? entryPhotos(entry.id).length > 0 || entry.id.startsWith("mock-") : false;
                     return (
-                      <div
-                        key={entry.id}
-                        className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => { if (entry) { setSelectedEntry(entry); setView("detail"); } }}
+                        className="relative p-1.5 rounded-lg text-center transition-colors hover:bg-white/5"
+                        style={{ minHeight: 44 }}
                       >
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedEntry(entry); setView("detail"); }}
-                          className="flex-1 flex items-center gap-3 text-left min-w-0"
-                          style={{ minHeight: 48 }}
-                          aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
-                        >
-                          <span className="text-xl shrink-0">{entry.weather_icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}
-                            </p>
-                            <p className="text-xs truncate text-muted-foreground">
-                              {totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Açıklama yok"}
-                            </p>
+                        <span className="text-xs" style={{ color: isToday(day) ? "#FF6B2B" : isSameMonth(day, currentMonth) ? "#94A3B8" : "#334155", fontWeight: isToday(day) ? 700 : 400 }}>
+                          {format(day, "d")}
+                        </span>
+                        {entry && (
+                          <div className="flex items-center justify-center gap-0.5 mt-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E" }} />
+                            {hasPhotos && <Camera className="w-2.5 h-2.5 text-muted-foreground" />}
                           </div>
-                          <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
-                            backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
-                            color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
-                          }}>
-                            {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
-                          </span>
-                        </button>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingEntry(entry);
-                              setFormDate(entry.entry_date);
-                              setFormWeather(entry.weather_icon);
-                              setFormTemp(entry.weather_temp?.toString() || "");
-                              setFormWorkStatus(entry.work_status);
-                              setFormStopReason(entry.work_stopped_reason || "");
-                              setFormCrews(entry.crews.length > 0 ? entry.crews : [{ team: "", count: 0, hours: 8, note: "" }]);
-                              setFormWorkDone(entry.work_done);
-                              setFormMaterials(entry.materials);
-                              setFormMachines(entry.machines);
-                              setFormSpecialEvents(entry.special_events);
-                              setFormGeneralNote(entry.general_note);
-                              setView("form");
-                            }}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
-                            aria-label="Düzenle"
-                            title="Düzenle"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteTarget({
-                                id: entry.id,
-                                name: format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr }),
-                                type: "Günlük Kaydı",
-                              });
-                            }}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                            style={{ color: "#EF4444" }}
-                            aria-label="Sil"
-                            title="Sil"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+                        )}
+                      </button>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </>
+              </div>
+
+              {/* Past entries */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    Geçmiş Kayıtlar {recent.length > 0 && <span className="text-xs">({recent.length})</span>}
+                  </h3>
+                </div>
+                {isLoading ? (
+                  <p className="text-sm text-center py-6 text-muted-foreground">Yükleniyor…</p>
+                ) : recent.length === 0 ? (
+                  <p className="text-sm text-center py-6" style={{ color: "#475569" }}>Bu proje için henüz kayıt yok</p>
+                ) : (
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
+                    {recent.map(entry => {
+                      const epCount = entryPhotos(entry.id).length;
+                      return (
+                        <div
+                          key={entry.id}
+                          className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedEntry(entry); setView("detail"); }}
+                            className="flex-1 flex items-center gap-3 text-left min-w-0"
+                            style={{ minHeight: 48 }}
+                            aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
+                          >
+                            <span className="text-xl shrink-0">{entry.weather_icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}
+                              </p>
+                              <p className="text-xs truncate text-muted-foreground">
+                                {totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Açıklama yok"}
+                              </p>
+                            </div>
+                            <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
+                              backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
+                              color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
+                            }}>
+                              {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
+                            </span>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingEntry(entry);
+                                setFormDate(entry.entry_date);
+                                setFormWeather(entry.weather_icon);
+                                setFormTemp(entry.weather_temp?.toString() || "");
+                                setFormWorkStatus(entry.work_status);
+                                setFormStopReason(entry.work_stopped_reason || "");
+                                setFormCrews(entry.crews.length > 0 ? entry.crews : [{ team: "", count: 0, hours: 8, note: "" }]);
+                                setFormWorkDone(entry.work_done);
+                                setFormMaterials(entry.materials);
+                                setFormMachines(entry.machines);
+                                setFormSpecialEvents(entry.special_events);
+                                setFormGeneralNote(entry.general_note);
+                                setView("form");
+                              }}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
+                              aria-label="Düzenle"
+                              title="Düzenle"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget({
+                                  id: entry.id,
+                                  name: format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr }),
+                                  type: "Günlük Kaydı",
+                                });
+                              }}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                              style={{ color: "#EF4444" }}
+                              aria-label="Sil"
+                              title="Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          </PullToRefresh>
         )}
       </div>
     );
