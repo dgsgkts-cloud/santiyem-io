@@ -23,7 +23,7 @@ export const useProjectExpenses = (projectId?: string) => {
   const { user } = useUser();
   const queryClient = useQueryClient();
 
-  const { data: expenses = [], isLoading } = useQuery({
+  const { data: expenses = [], isLoading, refetch } = useQuery({
     queryKey: ["project_expenses", projectId],
     queryFn: async () => {
       let query = supabase.from("project_expenses" as any).select("*").order("expense_date", { ascending: false });
@@ -59,5 +59,5 @@ export const useProjectExpenses = (projectId?: string) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
   });
 
-  return { expenses, isLoading, addExpense, updateExpense, deleteExpense };
+  return { expenses, isLoading, addExpense, updateExpense, deleteExpense, refetch };
 };

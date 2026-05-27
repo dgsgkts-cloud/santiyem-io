@@ -10,6 +10,7 @@ import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfil
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import PullToRefresh from "@/components/PullToRefresh";
 import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
 import HakedisWizard from "./HakedisWizard";
@@ -62,8 +63,8 @@ const getEnrichedStatus = (h: ProjectHakedis) => {
 };
 
 const DesktopHakedisPage = () => {
-  const { projects, loading: projectsLoading } = useProjects();
-  const { allHakedisler } = useAllHakedis();
+  const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
+  const { allHakedisler, refetch: refetchAllHakedis } = useAllHakedis();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   if (projectsLoading) return <div className="p-6 text-center text-muted-foreground">Yükleniyor...</div>;
@@ -72,11 +73,15 @@ const DesktopHakedisPage = () => {
     return <ProjectDetailView projectId={selectedProjectId} projects={projects} allHakedisler={allHakedisler} onBack={() => setSelectedProjectId(null)} />;
   }
 
-  return <ProjectListView projects={projects} allHakedisler={allHakedisler} onSelectProject={setSelectedProjectId} />;
+  const handleRefresh = async () => {
+    await Promise.all([refetchProjects(), refetchAllHakedis()]);
+  };
+
+  return <ProjectListView projects={projects} allHakedisler={allHakedisler} onSelectProject={setSelectedProjectId} onRefresh={handleRefresh} />;
 };
 
 // ─── LEVEL 1: Project List ───────────────────────────────────
-const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void }) => {
+const ProjectListView = ({ projects, allHakedisler, onSelectProject, onRefresh }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void; onRefresh?: () => Promise<void> }) => {
   const projectCards = useMemo(() => {
     return projects.map(p => {
       const hakedisler = allHakedisler.filter(h => h.project_id === p.id);
@@ -125,60 +130,62 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { project
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4">
       <h2 className="text-base md:text-lg font-bold text-foreground">Hakediş Yönetimi</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {projectCards.map(p => (
-          <div key={p.id} className="rounded-xl overflow-hidden relative bg-card border border-border">
-            {p.maxOverdueDays > 0 && (
-              <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
-                <AlertTriangle className="w-3 h-3" /> {p.maxOverdueDays} gündür ödeme bekliyor
-              </div>
-            )}
-            <div className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold truncate text-foreground">{p.name}</p>
-                  <p className="text-[12px] mt-0.5 text-muted-foreground">{p.client}</p>
-                </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}>
-                  {p.status}
-                </span>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-muted-foreground">Sözleşme Tutarı:</span>
-                  <span className="text-muted-foreground">{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
-                </div>
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-muted-foreground">Toplam Hakediş:</span>
-                  <span className="font-semibold text-foreground">{fmt(p.totalHakedis)}</span>
-                </div>
-                {p.contract > 0 && (
-                  <div className="flex justify-between text-[12px]">
-                    <span className="text-muted-foreground">Kalan:</span>
-                    <span className="font-semibold" style={{ color: p.remaining >= 0 ? "#22C55E" : "#EF4444" }}>{fmt(p.remaining)}</span>
-                  </div>
-                )}
-              </div>
-              {p.contract > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                    <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
-                  </div>
-                  <span className="text-[11px] font-mono font-semibold text-muted-foreground">%{p.pct}</span>
+      <PullToRefresh onRefresh={onRefresh}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {projectCards.map(p => (
+            <div key={p.id} className="rounded-xl overflow-hidden relative bg-card border border-border">
+              {p.maxOverdueDays > 0 && (
+                <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
+                  <AlertTriangle className="w-3 h-3" /> {p.maxOverdueDays} gündür ödeme bekliyor
                 </div>
               )}
-              <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
-                <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><MetricTooltip full={formatCurrencyFull(p.collected)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></MetricTooltip></div>
-                <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><MetricTooltip full={formatCurrencyFull(p.pending)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></MetricTooltip></div>
-                <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><MetricTooltip full={formatCurrencyFull(p.overdueAmount)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></MetricTooltip></div>
+              <div className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-semibold truncate text-foreground">{p.name}</p>
+                    <p className="text-[12px] mt-0.5 text-muted-foreground">{p.client}</p>
+                  </div>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}>
+                    {p.status}
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[12px]">
+                    <span className="text-muted-foreground">Sözleşme Tutarı:</span>
+                    <span className="text-muted-foreground">{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
+                  </div>
+                  <div className="flex justify-between text-[12px]">
+                    <span className="text-muted-foreground">Toplam Hakediş:</span>
+                    <span className="font-semibold text-foreground">{fmt(p.totalHakedis)}</span>
+                  </div>
+                  {p.contract > 0 && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground">Kalan:</span>
+                      <span className="font-semibold" style={{ color: p.remaining >= 0 ? "#22C55E" : "#EF4444" }}>{fmt(p.remaining)}</span>
+                    </div>
+                  )}
+                </div>
+                {p.contract > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                      <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
+                    </div>
+                    <span className="text-[11px] font-mono font-semibold text-muted-foreground">%{p.pct}</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
+                  <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><MetricTooltip full={formatCurrencyFull(p.collected)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></MetricTooltip></div>
+                  <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><MetricTooltip full={formatCurrencyFull(p.pending)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></MetricTooltip></div>
+                  <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><MetricTooltip full={formatCurrencyFull(p.overdueAmount)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></MetricTooltip></div>
+                </div>
+                <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
+                  Detay →
+                </button>
               </div>
-              <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
-                Detay →
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </PullToRefresh>
     </div>
   );
 };

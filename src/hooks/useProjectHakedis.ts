@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
@@ -218,17 +218,18 @@ export function useAllHakedis() {
   const [allHakedisler, setAllHakedisler] = useState<ProjectHakedis[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAll = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    supabase
+    setLoading(true);
+    const { data } = await supabase
       .from("project_hakedis")
       .select("*")
-      .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        if (data) setAllHakedisler(data as ProjectHakedis[]);
-        setLoading(false);
-      });
+      .order("created_at", { ascending: true });
+    if (data) setAllHakedisler(data as ProjectHakedis[]);
+    setLoading(false);
   }, [user]);
 
-  return { allHakedisler, loading };
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  return { allHakedisler, loading, refetch: fetchAll };
 }

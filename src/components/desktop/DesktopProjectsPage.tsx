@@ -10,6 +10,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useProjects, UserProject } from "@/hooks/useProjects";
 import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
+import PullToRefresh from "@/components/PullToRefresh";
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
@@ -38,7 +39,7 @@ const dbToProject = (p: UserProject): Project => ({
 
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
-  const { projects: dbProjects, loading, addProject, deleteProject, updateProject, updateProjectStatus } = useProjects();
+  const { projects: dbProjects, loading, addProject, deleteProject, updateProject, updateProjectStatus, refetch } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -132,111 +133,113 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         </div>
       </div>
 
-      {allProjects.length === 0 ? (
-        <EmptyState
-          icon="🏗️"
-          title="Henüz proje yok"
-          description="İlk projenizi ekleyerek şantiye takibine başlayın."
-          buttonText="+ Yeni Proje Ekle"
-          onButtonClick={() => setShowAddModal(true)}
-        />
-      ) : viewMode === "list" ? (
-        <div className="rounded-xl overflow-hidden bg-card border border-border">
-          {/* Desktop table */}
-          <table className="w-full text-[13px] hidden lg:table">
-            <thead>
-              <tr className="bg-background">
-                {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum", ""].map((h) => (
-                  <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {allProjects.map((p) => (
-                <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
-                  <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
-                  <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
-                  <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.end}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-muted">
-                        <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                      </div>
-                      <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400 text-muted-foreground">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                  </td>
+      <PullToRefresh onRefresh={refetch}>
+        {allProjects.length === 0 ? (
+          <EmptyState
+            icon="🏗️"
+            title="Henüz proje yok"
+            description="İlk projenizi ekleyerek şantiye takibine başlayın."
+            buttonText="+ Yeni Proje Ekle"
+            onButtonClick={() => setShowAddModal(true)}
+          />
+        ) : viewMode === "list" ? (
+          <div className="rounded-xl overflow-hidden bg-card border border-border">
+            {/* Desktop table */}
+            <table className="w-full text-[13px] hidden lg:table">
+              <thead>
+                <tr className="bg-background">
+                  {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum", ""].map((h) => (
+                    <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {allProjects.map((p) => (
+                  <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
+                    <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
+                    <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
+                    <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
+                    <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.end}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full bg-muted">
+                          <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                        </div>
+                        <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                    </td>
+                    <td className="px-5 py-3">
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400 text-muted-foreground">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {/* Mobile/Tablet card list */}
-          <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+            {/* Mobile/Tablet card list */}
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+              {allProjects.map((p) => (
+                <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                    <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <h4 className="text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
+                  <p className="text-[13px] mb-3 text-muted-foreground">{p.client}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 rounded-full bg-muted">
+                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                    </div>
+                    <span className="text-[13px] font-mono font-semibold shrink-0 text-foreground">{p.progress}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 text-[12px] text-muted-foreground">
+                    <span>{p.start}</span>
+                    <span>→</span>
+                    <span>{p.end}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
             {allProjects.map((p) => (
-              <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+              <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
+                className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                  <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
-                    <Trash2 className="w-4 h-4" />
+                  <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
+                  <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <h4 className="text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-                <p className="text-[13px] mb-3 text-muted-foreground">{p.client}</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 rounded-full bg-muted">
-                    <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
+                <p className="text-[11px] lg:text-[12px] mb-3 text-muted-foreground">{p.client}</p>
+                <div className="flex items-center justify-center mb-3">
+                  <div className="relative w-14 h-14">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${p.progress}, 100`} />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold font-mono text-foreground">{p.progress}%</span>
                   </div>
-                  <span className="text-[13px] font-mono font-semibold shrink-0 text-foreground">{p.progress}%</span>
                 </div>
-                <div className="flex items-center justify-between mt-3 text-[12px] text-muted-foreground">
-                  <span>{p.start}</span>
-                  <span>→</span>
-                  <span>{p.end}</span>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span style={{ color: "#22C55E" }}>✅ {p.done}</span>
+                  <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
+                  <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-          {allProjects.map((p) => (
-            <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
-              className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-              <p className="text-[11px] lg:text-[12px] mb-3 text-muted-foreground">{p.client}</p>
-              <div className="flex items-center justify-center mb-3">
-                <div className="relative w-14 h-14">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${p.progress}, 100`} />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold font-mono text-foreground">{p.progress}%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span style={{ color: "#22C55E" }}>✅ {p.done}</span>
-                <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
-                <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        )}
+      </PullToRefresh>
 
       <AddProjectModal
         open={showAddModal}

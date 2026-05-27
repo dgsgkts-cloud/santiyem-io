@@ -68,5 +68,5 @@ export const useCashPayments = () => {
     onError: () => toast.error("Silme başarısız"),
   });
 
-  return { payments: query.data || [], isLoading: query.isLoading, addPayment, updatePayment, deletePayment };
+  return { payments: query.data || [], isLoading: query.isLoading, addPayment, updatePayment, deletePayment, refetch: query.refetch };
 };

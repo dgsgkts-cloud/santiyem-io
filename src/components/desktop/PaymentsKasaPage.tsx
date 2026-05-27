@@ -26,6 +26,7 @@ import { useSubcontractors, useSubcontractorPayments } from "@/hooks/useSubcontr
 import { differenceInDays, parseISO, format } from "date-fns";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSection";
+import PullToRefresh from "@/components/PullToRefresh";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
 const EXPENSE_CATEGORIES = ["Malzeme", "Taşeron Ödemesi", "Ekipman/Kira", "Genel Gider", "Diğer"];
@@ -52,6 +53,18 @@ const PaymentsKasaPage = () => {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [addModal, setAddModal] = useState(false);
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_accounts"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_payments"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_collections"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_checks"] }),
+      queryClient.invalidateQueries({ queryKey: ["all_hakedis_payments_kasa"] }),
+      queryClient.invalidateQueries({ queryKey: ["subcontractors"] }),
+    ]);
+  };
   const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
@@ -437,65 +450,67 @@ const PaymentsKasaPage = () => {
 
         {/* ═══ TAB 2: GELİR & GİDERLER ═══ */}
         <TabsContent value="transactions">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <select
-                value={selectedProjectFilter}
-                onChange={e => setSelectedProjectFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg text-xs bg-card border border-border text-foreground"
-              >
-                <option value="all">Tüm Projeler</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
-                className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4" /> Kayıt Ekle
-              </button>
-            </div>
+          <PullToRefresh onRefresh={handleRefresh}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={selectedProjectFilter}
+                  onChange={e => setSelectedProjectFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-xs bg-card border border-border text-foreground"
+                >
+                  <option value="all">Tüm Projeler</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
+                  className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
+                  <Plus className="w-4 h-4" /> Kayıt Ekle
+                </button>
+              </div>
 
-            <div className="rounded-xl bg-card border border-border overflow-hidden">
-              {filteredExpenses.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-12 text-center">Henüz kayıt yok</p>
-              ) : (
-                <div className="divide-y divide-border">
-                  {filteredExpenses.map(e => {
-                    const proj = projects.find(p => p.id === e.project_id);
-                    const isIncome = INCOME_CATEGORIES.includes(e.category);
-                    return (
-                      <div key={e.id} className="flex items-center justify-between px-4 py-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: isIncome ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
-                            {isIncome
-                              ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} />
-                              : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />
-                            }
+              <div className="rounded-xl bg-card border border-border overflow-hidden">
+                {filteredExpenses.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-12 text-center">Henüz kayıt yok</p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredExpenses.map(e => {
+                      const proj = projects.find(p => p.id === e.project_id);
+                      const isIncome = INCOME_CATEGORIES.includes(e.category);
+                      return (
+                        <div key={e.id} className="flex items-center justify-between px-4 py-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: isIncome ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
+                              {isIncome
+                                ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} />
+                                : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />
+                              }
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
+                              <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
-                            <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="text-sm font-semibold" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
+                              {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
+                            </span>
+                            <button onClick={() => openEditModal(e)}
+                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
+                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-sm font-semibold" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
-                            {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
-                          </span>
-                          <button onClick={() => openEditModal(e)}
-                            className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                          <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
-                            className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </PullToRefresh>
         </TabsContent>
 
         {/* ═══ TAB 3: KASA & ÖDEMELER ═══ */}
