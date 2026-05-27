@@ -10,6 +10,7 @@ import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfil
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import PullToRefresh from "@/components/PullToRefresh";
 import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
 import HakedisWizard from "./HakedisWizard";
