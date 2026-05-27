@@ -235,7 +235,11 @@ const Index = () => {
   useEffect(() => {
     const handler = (e: Event) => {
       const tab = (e as CustomEvent).detail;
-      if (NAVIGABLE_TABS.includes(tab as Tab)) setActiveTab(tab as Tab);
+      if (NAVIGABLE_TABS.includes(tab as Tab)) {
+        const path = TAB_TO_PATH[tab as Tab];
+        if (path) navigate(path);
+        else setActiveTab(tab as Tab);
+      }
     };
     window.addEventListener("navigate-tab", handler);
     return () => window.removeEventListener("navigate-tab", handler);
