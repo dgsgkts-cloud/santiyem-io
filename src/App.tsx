@@ -53,6 +53,18 @@ const App = () => (
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/settings" element={<HomePage />} />
+              <Route path="/dashboard" element={<HomePage />} />
+              <Route path="/projeler" element={<HomePage />} />
+              <Route path="/hakedis" element={<HomePage />} />
+              <Route path="/gunluk" element={<HomePage />} />
+              <Route path="/ai-asistan" element={<HomePage />} />
+              <Route path="/odemeler-kasa" element={<HomePage />} />
+              <Route path="/sozlesmeler" element={<HomePage />} />
+              <Route path="/malzemeler" element={<HomePage />} />
+              <Route path="/e-fatura" element={<HomePage />} />
+              <Route path="/hatirlatici" element={<HomePage />} />
+              <Route path="/planlar" element={<HomePage />} />
+              <Route path="/gunluk-bilgi" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
