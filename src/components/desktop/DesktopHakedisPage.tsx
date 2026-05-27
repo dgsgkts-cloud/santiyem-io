@@ -403,7 +403,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
           {hakedisler.length > 0 && (
             <>
               <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold bg-muted text-foreground">
-                <FileDown className="w-3.5 h-3.5" /> PDF
+                <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
               </button>
               <button
                 onClick={async () => {
@@ -421,7 +421,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold"
                 style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#22C55E" }}
               >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+                <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
               </button>
             </>
           )}
@@ -640,7 +640,7 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
                         const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
                         exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
                       }} className="text-[10px] font-medium flex items-center gap-1 text-muted-foreground">
-                        <FileDown className="w-3 h-3" /> PDF
+                        <FileDown className="w-3 h-3" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
                       </button>
 
                       {/* Send for approval button */}
