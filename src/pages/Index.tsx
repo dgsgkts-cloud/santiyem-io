@@ -243,7 +243,7 @@ const Index = () => {
     };
     window.addEventListener("navigate-tab", handler);
     return () => window.removeEventListener("navigate-tab", handler);
-  }, []);
+  }, [navigate]);
 
 
   const scrollToBottom = useCallback(() => {
