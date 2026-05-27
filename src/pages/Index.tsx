@@ -350,7 +350,7 @@ const Index = () => {
     <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
       {/* ── MOBILE HEADER ── */}
       <header
-        className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
+        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
