@@ -47,6 +47,12 @@ const PaymentCallback = () => {
   }, [shouldDeepLink, navigate, safeQs]);
 
   const success = parsed.status === "success";
+  const canceled = parsed.status === "canceled";
+  const title = success
+    ? "Ödeme alındı"
+    : canceled
+    ? "Ödeme iptal edildi"
+    : "Ödeme tamamlanamadı";
 
   return (
     <div
@@ -55,9 +61,7 @@ const PaymentCallback = () => {
     >
       <div className="max-w-md w-full text-center space-y-4">
         <div className="mx-auto w-12 h-12 border-2 border-t-[#FF6B2B] border-[#1E2732] rounded-full animate-spin" />
-        <h1 className="text-xl font-semibold">
-          {success ? "Ödeme alındı" : "Ödeme tamamlanamadı"}
-        </h1>
+        <h1 className="text-xl font-semibold">{title}</h1>
         <p className="text-sm text-white/70">
           {bridging ? "Uygulamaya dönülüyor…" : "Yönlendiriliyorsunuz, lütfen bekleyin."}
         </p>
