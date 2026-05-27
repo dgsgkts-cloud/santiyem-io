@@ -30,6 +30,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
+const EkipTakip = lazy(() => import("./pages/EkipTakip"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/odeme-sonucu" element={<PaymentResult />} />
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/santiye-giris/:token" element={<SantiyeGiris />} />
+              <Route path="/ekip/:token" element={<EkipTakip />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
