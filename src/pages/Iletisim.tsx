@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Clock, Building2, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
 
@@ -194,7 +195,7 @@ const Iletisim = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      {!Capacitor.isNativePlatform() && <Footer />}
     </div>
   );
 };

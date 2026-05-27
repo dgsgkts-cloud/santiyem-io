@@ -38,6 +38,7 @@ import {
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -327,7 +328,7 @@ const Index = () => {
                 )}
                 </div>
               </div>
-              <Footer />
+              {!Capacitor.isNativePlatform() && <Footer />}
             </div>
           )}
         </div>
@@ -595,7 +596,7 @@ const Index = () => {
           )}
         </div>
         </div>
-        {activeTab !== "chat" && <Footer />}
+        {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer />}
       </div>
 
       {activeTab === "chat" && (
