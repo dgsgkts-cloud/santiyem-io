@@ -815,7 +815,20 @@ const SiteDiaryPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs mb-1 block text-muted-foreground">Tarih</label>
-            <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} className="w-full h-9 rounded-lg px-3 text-sm" />
+            <input
+              type="date"
+              value={formDate}
+              max={format(new Date(), "yyyy-MM-dd")}
+              onChange={e => {
+                const val = e.target.value;
+                if (val > format(new Date(), "yyyy-MM-dd")) {
+                  toast.error("Gelecek tarih seçilemez");
+                  return;
+                }
+                setFormDate(val);
+              }}
+              className="w-full h-9 rounded-lg px-3 text-sm"
+            />
           </div>
           <div>
             <label className="text-xs mb-1 block text-muted-foreground">Sıcaklık (°C)</label>
