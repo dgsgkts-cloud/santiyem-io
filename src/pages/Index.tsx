@@ -113,8 +113,34 @@ const TAB_TITLES: Record<string, string> = {
 
 const ACTIVE_TAB_KEY = "santiyem_active_tab";
 
+const TAB_TO_PATH: Record<string, string> = {
+  dashboard: "/dashboard",
+  projects: "/projeler",
+  hakedis: "/hakedis",
+  "site-diary": "/gunluk",
+  chat: "/ai-asistan",
+  "payments-kasa": "/odemeler-kasa",
+  contracts: "/sozlesmeler",
+  materials: "/malzemeler",
+  "e-invoices": "/e-fatura",
+  reminders: "/hatirlatici",
+  pricing: "/planlar",
+  daily: "/gunluk-bilgi",
+  settings: "/settings",
+};
+
+const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
+  (acc, [tab, path]) => {
+    acc[path] = tab as Tab;
+    return acc;
+  },
+  {} as Record<string, Tab>
+);
+
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "dashboard";
+  const pathTab = PATH_TO_TAB[window.location.pathname];
+  if (pathTab) return pathTab;
   try {
     const stored = localStorage.getItem(ACTIVE_TAB_KEY);
     if (stored && NAVIGABLE_TABS.includes(stored as Tab)) {
