@@ -5,7 +5,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { toast } from "sonner";
 import { handleNativeBrowserClosed, markPaymentResultReceived } from "@/lib/iyzicoCheckout";
-import { parsePaymentCallback } from "@/lib/paymentCallbackSchema";
+import { resolveDeepLinkAction } from "@/lib/deepLinkRouting";
 
 /**
  * Listens for santiyem:// deep links opened from the iyzico checkout callback
