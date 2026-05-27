@@ -150,6 +150,18 @@ export function useProjectHakedis(projectId: string) {
       },
     });
 
+    // Send push notification to project owner / team
+    supabase.functions.invoke("send-push-notification", {
+      body: {
+        mode: "send",
+        user_id: user.id,
+        title: "Hakediş Onay Talebi Gönderildi",
+        body: `${projectName} — ${h.period} dönemi için ${clientEmail} adresine onay talebi gönderildi.`,
+        data: { route: "hakedis", hakedis_id: hakedisId },
+        pref_key: "push_hakedis_approval_request",
+      },
+    }).catch(() => {});
+
     toast.success("Hakediş onay talebi gönderildi! 📧");
     fetchHakedisler();
     return true;
