@@ -325,7 +325,7 @@ const Index = () => {
   const PRIMARY_TAB_IDS = new Set(["dashboard", "projects", "hakedis", "site-diary"]);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
