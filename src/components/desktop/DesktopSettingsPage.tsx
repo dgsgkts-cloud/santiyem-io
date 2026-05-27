@@ -328,6 +328,10 @@ const NotificationsTab = () => {
     weekly_summary: true,
     whatsapp_enabled: false,
     whatsapp_number: "",
+    push_enabled: true,
+    push_hakedis_approval_request: true,
+    push_check_due_soon: true,
+    push_payment_overdue: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -347,6 +351,10 @@ const NotificationsTab = () => {
           weekly_summary: data.weekly_summary,
           whatsapp_enabled: data.whatsapp_enabled,
           whatsapp_number: data.whatsapp_number || "",
+          push_enabled: (data as any).push_enabled ?? true,
+          push_hakedis_approval_request: (data as any).push_hakedis_approval_request ?? true,
+          push_check_due_soon: (data as any).push_check_due_soon ?? true,
+          push_payment_overdue: (data as any).push_payment_overdue ?? true,
         });
       } else {
         await supabase.from("notification_preferences").insert({ user_id: user.id });
@@ -368,11 +376,30 @@ const NotificationsTab = () => {
         weekly_summary: newPrefs.weekly_summary,
         whatsapp_enabled: newPrefs.whatsapp_enabled,
         whatsapp_number: newPrefs.whatsapp_number || null,
-      })
+        push_enabled: newPrefs.push_enabled,
+        push_hakedis_approval_request: newPrefs.push_hakedis_approval_request,
+        push_check_due_soon: newPrefs.push_check_due_soon,
+        push_payment_overdue: newPrefs.push_payment_overdue,
+      } as any)
       .eq("user_id", user.id);
     setSaving(false);
-    if (error) toast.error("Tercihler kaydedilemedi");
-    else toast.success("Bildirim tercihleri güncellendi");
+    if (error) { toast.error("Tercihler kaydedilemedi"); return; }
+    toast.success("Bildirim tercihleri güncellendi");
+
+    // Toggle native push registration on/off
+    if ("push_enabled" in updates) {
+      try {
+        if (updates.push_enabled) {
+          const { initPushNotifications } = await import("@/lib/pushNotifications");
+          await initPushNotifications(user.id);
+        } else {
+          const { disablePushNotifications } = await import("@/lib/pushNotifications");
+          await disablePushNotifications(user.id);
+        }
+      } catch (e) {
+        console.warn("[push] toggle failed", e);
+      }
+    }
   };
 
   if (loading) return <p className="text-[13px] py-8 text-center text-muted-foreground">Yükleniyor...</p>;
@@ -410,6 +437,38 @@ const NotificationsTab = () => {
           on={prefs.weekly_summary}
           onChange={v => save({ weekly_summary: v })}
         />
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">MOBİL PUSH BİLDİRİMLERİ</p>
+        <ToggleRow
+          label="Push Bildirimlerini Aç"
+          desc="Mobil uygulamada anlık bildirim almak için. Kapatınca cihazınız bildirim listesinden çıkar."
+          on={prefs.push_enabled}
+          onChange={v => save({ push_enabled: v })}
+        />
+        {prefs.push_enabled && (
+          <>
+            <ToggleRow
+              label="Hakediş Onay Talebi"
+              desc="Bir hakediş onayınıza gönderildiğinde bildirim"
+              on={prefs.push_hakedis_approval_request}
+              onChange={v => save({ push_hakedis_approval_request: v })}
+            />
+            <ToggleRow
+              label="Yaklaşan Çek Vadesi"
+              desc="Çek vadesine 3 gün kala hatırlatma"
+              on={prefs.push_check_due_soon}
+              onChange={v => save({ push_check_due_soon: v })}
+            />
+            <ToggleRow
+              label="Gecikmiş Ödeme"
+              desc="Vadesi geçmiş ödemeler için uyarı"
+              on={prefs.push_payment_overdue}
+              onChange={v => save({ push_payment_overdue: v })}
+            />
+          </>
+        )}
       </div>
 
       <div>

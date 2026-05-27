@@ -190,12 +190,14 @@ export type Database = {
           check_bank: string | null
           check_due_date: string | null
           check_no: string | null
+          check_reminder_sent_at: string | null
           created_at: string
           description: string | null
           iban: string | null
           id: string
           invoice_url: string | null
           is_recurring: boolean
+          overdue_reminder_sent_at: string | null
           payment_date: string
           payment_type: string
           project_id: string | null
@@ -215,12 +217,14 @@ export type Database = {
           check_bank?: string | null
           check_due_date?: string | null
           check_no?: string | null
+          check_reminder_sent_at?: string | null
           created_at?: string
           description?: string | null
           iban?: string | null
           id?: string
           invoice_url?: string | null
           is_recurring?: boolean
+          overdue_reminder_sent_at?: string | null
           payment_date?: string
           payment_type?: string
           project_id?: string | null
@@ -240,12 +244,14 @@ export type Database = {
           check_bank?: string | null
           check_due_date?: string | null
           check_no?: string | null
+          check_reminder_sent_at?: string | null
           created_at?: string
           description?: string | null
           iban?: string | null
           id?: string
           invoice_url?: string | null
           is_recurring?: boolean
+          overdue_reminder_sent_at?: string | null
           payment_date?: string
           payment_type?: string
           project_id?: string | null
@@ -582,6 +588,33 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      device_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
           user_id?: string
         }
         Relationships: []
@@ -1402,7 +1435,10 @@ export type Database = {
           notify_subcontractor_payment: boolean
           payment_due_reminder: boolean
           payment_overdue_reminder: boolean
+          push_check_due_soon: boolean
           push_enabled: boolean
+          push_hakedis_approval_request: boolean
+          push_payment_overdue: boolean
           quiet_hours_end: string | null
           quiet_hours_start: string | null
           updated_at: string
@@ -1421,7 +1457,10 @@ export type Database = {
           notify_subcontractor_payment?: boolean
           payment_due_reminder?: boolean
           payment_overdue_reminder?: boolean
+          push_check_due_soon?: boolean
           push_enabled?: boolean
+          push_hakedis_approval_request?: boolean
+          push_payment_overdue?: boolean
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           updated_at?: string
@@ -1440,7 +1479,10 @@ export type Database = {
           notify_subcontractor_payment?: boolean
           payment_due_reminder?: boolean
           payment_overdue_reminder?: boolean
+          push_check_due_soon?: boolean
           push_enabled?: boolean
+          push_hakedis_approval_request?: boolean
+          push_payment_overdue?: boolean
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           updated_at?: string
