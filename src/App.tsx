@@ -10,7 +10,7 @@ import { Capacitor } from "@capacitor/core";
 import HomePage from "./pages/HomePage";
 import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import PwaInstallBanner from "@/components/PwaInstallBanner";
+
 import DeepLinkHandler from "@/components/DeepLinkHandler";
 
 const Login = lazy(() => import("./pages/Login"));
@@ -75,7 +75,7 @@ const App = () => (
           </Suspense>
           {!Capacitor.isNativePlatform() && <CookieBanner />}
           <WhatsAppButton />
-          <PwaInstallBanner />
+          
           <DeepLinkHandler />
         </BrowserRouter>
         </ThemeProvider>
