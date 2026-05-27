@@ -847,22 +847,50 @@ const SiteDiaryPage = () => {
         )}
 
         {formPhotos.length < 10 && (
-          <div
-            className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50"
-            style={{ borderColor: "#1E2732" }}
-            onClick={() => document.getElementById("photo-input")?.click()}
-          >
-            <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: "#475569" }} />
-            <p className="text-xs text-muted-foreground">Tıklayın veya sürükleyin · Kameradan çekim desteklenir (max 10)</p>
-            <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple capture="environment" className="hidden"
-              onChange={e => {
-                if (e.target.files) {
-                  const newFiles = Array.from(e.target.files).slice(0, 10 - formPhotos.length);
-                  setFormPhotos(prev => [...prev, ...newFiles]);
-                  setFormPhotoDescs(prev => [...prev, ...newFiles.map(() => "")]);
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const file = await takePhoto();
+                  if (!file) return;
+                  const remaining = 10 - formPhotos.length;
+                  if (remaining <= 0) return;
+                  setFormPhotos(prev => [...prev, file]);
+                  setFormPhotoDescs(prev => [...prev, ""]);
+                } catch (err) {
+                  console.error(err);
+                  alert("Kamera açılamadı");
                 }
               }}
-            />
+              className="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50 flex flex-col items-center justify-center"
+              style={{ borderColor: "#1E2732" }}
+            >
+              <Camera className="w-7 h-7 mb-2" style={{ color: "#FF6B2B" }} />
+              <p className="text-xs font-medium text-foreground">Kamera ile Çek</p>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const remaining = 10 - formPhotos.length;
+                  if (remaining <= 0) return;
+                  const files = await pickFromGallery(remaining);
+                  if (!files.length) return;
+                  const newFiles = files.slice(0, remaining);
+                  setFormPhotos(prev => [...prev, ...newFiles]);
+                  setFormPhotoDescs(prev => [...prev, ...newFiles.map(() => "")]);
+                } catch (err) {
+                  console.error(err);
+                  alert("Galeri açılamadı");
+                }
+              }}
+              className="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors hover:border-[#FF6B2B]/50 flex flex-col items-center justify-center"
+              style={{ borderColor: "#1E2732" }}
+            >
+              <FileText className="w-7 h-7 mb-2" style={{ color: "#FF6B2B" }} />
+              <p className="text-xs font-medium text-foreground">Galeriden Seç</p>
+            </button>
           </div>
         )}
 
