@@ -178,10 +178,11 @@ const Index = () => {
     }
   }, [activeTab]);
 
-  // Handle direct navigation to /settings
+  // Sync URL → active tab
   useEffect(() => {
-    if (location.pathname === "/settings") {
-      setActiveTab("settings");
+    const pathTab = PATH_TO_TAB[location.pathname];
+    if (pathTab && pathTab !== activeTab) {
+      setActiveTab(pathTab);
     }
   }, [location.pathname]);
 
