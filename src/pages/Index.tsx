@@ -314,21 +314,23 @@ const Index = () => {
     );
   }
 
-  // Mobile/Tablet layout (unchanged)
+  // Bottom tab bar items (mobile only)
+  const BOTTOM_TABS: { id: Tab | "more"; label: string; icon: React.ElementType }[] = [
+    { id: "dashboard", label: "Ana Sayfa", icon: Home },
+    { id: "projects", label: "Projeler", icon: FolderOpen },
+    { id: "hakedis", label: "Hakediş", icon: FileText },
+    { id: "site-diary", label: "Günlük", icon: BookOpen },
+    { id: "more", label: "Daha Fazla", icon: Menu },
+  ];
+  const PRIMARY_TAB_IDS = new Set(["dashboard", "projects", "hakedis", "site-diary"]);
+
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center justify-center transition-colors relative z-[50]"
-          style={{ backgroundColor: "#FF6B2B", color: "#FFFFFF", minWidth: 44, minHeight: 44, borderRadius: 8, padding: 8 }}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
           <img src={logo} alt="Şantiyem" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
@@ -581,6 +583,49 @@ const Index = () => {
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
       )}
+
+      {/* ── MOBILE BOTTOM TAB BAR ── */}
+      <nav
+        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-sm"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        aria-label="Alt navigasyon"
+      >
+        <div className="flex items-stretch">
+          {BOTTOM_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive =
+              tab.id === "more"
+                ? drawerOpen || !PRIMARY_TAB_IDS.has(activeTab as string)
+                : activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  if (tab.id === "more") {
+                    setDrawerOpen(true);
+                  } else {
+                    setDrawerOpen(false);
+                    setActiveTab(tab.id as Tab);
+                  }
+                }}
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors"
+                style={{
+                  minHeight: 56,
+                  color: isActive ? "#FF6B2B" : "#94A3B8",
+                }}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={tab.label}
+              >
+                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.4 : 2} />
+                <span className="text-[11px] leading-tight" style={{ fontWeight: isActive ? 600 : 500 }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
