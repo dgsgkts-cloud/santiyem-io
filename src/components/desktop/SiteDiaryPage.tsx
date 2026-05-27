@@ -42,7 +42,7 @@ const SiteDiaryPage = () => {
   const { user } = useUser();
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const { entries: dbEntries, photos, isLoading, createEntry, updateEntry, deleteEntry, uploadPhoto, deletePhoto } = useSiteDiary(selectedProjectId || undefined);
+  const { entries: dbEntries, photos, isLoading, createEntry, updateEntry, deleteEntry, uploadPhoto, deletePhoto, refetch } = useSiteDiary(selectedProjectId || undefined);
   const { attendance: attendanceRecords } = useWorkerAttendance(selectedProjectId || undefined);
   const [view, setView] = useState<View>("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
