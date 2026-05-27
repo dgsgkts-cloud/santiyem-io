@@ -5,7 +5,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { toast } from "sonner";
 import { handleNativeBrowserClosed, markPaymentResultReceived } from "@/lib/iyzicoCheckout";
-import { resolveDeepLinkAction } from "@/lib/deepLinkRouting";
+import { resolveDeepLinkAction, SAFE_FAILED_TARGET } from "@/lib/deepLinkRouting";
 
 /**
  * Listens for santiyem:// deep links opened from the iyzico checkout callback
@@ -18,6 +18,20 @@ const DeepLinkHandler = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
+    /** Navigate hata verirse bile /odeme-sonucu?status=failed sayfasına düşmeyi garanti eder. */
+    const safeNavigate = (target: string) => {
+      try {
+        navigate(target);
+      } catch (e) {
+        console.error("[DeepLink] navigate failed, hard redirect", e);
+        try {
+          window.location.assign(target);
+        } catch {
+          window.location.href = SAFE_FAILED_TARGET;
+        }
+      }
+    };
+
     const urlSub = CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
       try {
         console.log("[DeepLink] appUrlOpen:", url);
@@ -25,22 +39,22 @@ const DeepLinkHandler = () => {
 
         const action = resolveDeepLinkAction(url);
 
+        if (action.kind === "ignore") return;
+
         if (action.kind === "invalid-url") {
           console.warn("[DeepLink] invalid URL", url);
           markPaymentResultReceived();
           toast.error("Geçersiz ödeme yanıtı alındı, lütfen tekrar deneyin");
-          navigate("/odeme-sonucu?status=failed");
+          safeNavigate(action.target);
           return;
         }
-
-        if (action.kind === "ignore") return;
 
         markPaymentResultReceived();
 
         if (action.kind === "invalid-params") {
           console.warn("[DeepLink] missing/invalid params", url);
           toast.error("Ödeme yanıtı eksik veya bozuk geldi. Aboneliğiniz değişmedi, lütfen tekrar deneyin.");
-          navigate(action.target);
+          safeNavigate(action.target);
           return;
         }
 
@@ -52,12 +66,12 @@ const DeepLinkHandler = () => {
         } else {
           toast.error(parsed.message || "Ödeme başarısız oldu, lütfen tekrar deneyin");
         }
-        navigate(target);
+        safeNavigate(target);
       } catch (err) {
         console.error("[DeepLink] handler error", err);
         markPaymentResultReceived();
         toast.error("Ödeme yanıtı işlenemedi, lütfen tekrar deneyin");
-        navigate("/odeme-sonucu?status=failed");
+        safeNavigate(SAFE_FAILED_TARGET);
       }
     });
 

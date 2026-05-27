@@ -2,9 +2,47 @@ import { describe, it, expect } from "vitest";
 import { resolveDeepLinkAction } from "./deepLinkRouting";
 
 describe("resolveDeepLinkAction", () => {
-  it("invalid URL → invalid-url", () => {
+  it("invalid URL → invalid-url with safe failed target", () => {
     const r = resolveDeepLinkAction("not a url");
     expect(r.kind).toBe("invalid-url");
+    if (r.kind !== "invalid-url") return;
+    expect(r.target).toBe("/odeme-sonucu?status=failed");
+  });
+
+  it.each([null, undefined, "", "   ", 42, {}])(
+    "non-string / empty input %p → invalid-url with safe failed target",
+    (input) => {
+      const r = resolveDeepLinkAction(input as unknown as string);
+      expect(r.kind).toBe("invalid-url");
+      if (r.kind !== "invalid-url") return;
+      expect(r.target).toBe("/odeme-sonucu?status=failed");
+    }
+  );
+
+  it("single-slash santiyem:/payment-callback is normalized and routed", () => {
+    const r = resolveDeepLinkAction("santiyem:/payment-callback?status=success");
+    expect(r.kind).toBe("navigate");
+    if (r.kind !== "navigate") return;
+    expect(r.target).toBe("/odeme-sonucu?status=success");
+  });
+
+  it("URL with raw spaces is normalized instead of throwing", () => {
+    const r = resolveDeepLinkAction("santiyem://payment-callback?status=failed&message=Kart reddedildi");
+    expect(r.kind).toBe("navigate");
+    if (r.kind !== "navigate") return;
+    expect(r.parsed.status).toBe("failed");
+  });
+
+  it("uppercase host PAYMENT-CALLBACK still matches", () => {
+    const r = resolveDeepLinkAction("santiyem://PAYMENT-CALLBACK?status=success");
+    expect(r.kind).toBe("navigate");
+  });
+
+  it("payment-callback with empty query → invalid-params /odeme-sonucu?status=failed", () => {
+    const r = resolveDeepLinkAction("santiyem://payment-callback");
+    expect(r.kind).toBe("invalid-params");
+    if (r.kind !== "invalid-params") return;
+    expect(r.target).toBe("/odeme-sonucu?status=failed");
   });
 
   it("unrelated deep link → ignore", () => {
