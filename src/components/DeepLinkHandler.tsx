@@ -23,38 +23,28 @@ const DeepLinkHandler = () => {
         console.log("[DeepLink] appUrlOpen:", url);
         try { await Browser.close(); } catch {}
 
-        // URL parse — bozuksa güvenli düşüş
-        let u: URL;
-        try {
-          u = new URL(url);
-        } catch (e) {
-          console.warn("[DeepLink] invalid URL", url, e);
+        const action = resolveDeepLinkAction(url);
+
+        if (action.kind === "invalid-url") {
+          console.warn("[DeepLink] invalid URL", url);
           markPaymentResultReceived();
           toast.error("Geçersiz ödeme yanıtı alındı, lütfen tekrar deneyin");
           navigate("/odeme-sonucu?status=failed");
           return;
         }
 
-        const pathWithQuery = `${u.host || ""}${u.pathname || ""}`.replace(/^\/+/, "");
-        const isPaymentResult =
-          pathWithQuery.includes("odeme-sonucu") ||
-          pathWithQuery.includes("payment-callback") ||
-          u.pathname.includes("odeme-sonucu") ||
-          u.pathname.includes("payment-callback");
-
-        if (!isPaymentResult) return;
+        if (action.kind === "ignore") return;
 
         markPaymentResultReceived();
 
-        const parsed = parsePaymentCallback(u.searchParams);
-
-        if (!parsed.valid) {
+        if (action.kind === "invalid-params") {
           console.warn("[DeepLink] missing/invalid params", url);
           toast.error("Ödeme yanıtı eksik veya bozuk geldi. Aboneliğiniz değişmedi, lütfen tekrar deneyin.");
-          navigate("/odeme-sonucu?status=failed");
+          navigate(action.target);
           return;
         }
 
+        const { parsed, target } = action;
         if (parsed.status === "success") {
           toast.success(parsed.message || "Ödeme başarılı, aboneliğiniz aktif edildi");
         } else if (parsed.status === "canceled") {
@@ -62,11 +52,7 @@ const DeepLinkHandler = () => {
         } else {
           toast.error(parsed.message || "Ödeme başarısız oldu, lütfen tekrar deneyin");
         }
-
-        // Sadece şemadan geçen güvenli parametreleri ilet
-        const safe = new URLSearchParams({ status: parsed.status });
-        if (parsed.message) safe.set("message", parsed.message);
-        navigate(`/odeme-sonucu?${safe.toString()}`);
+        navigate(target);
       } catch (err) {
         console.error("[DeepLink] handler error", err);
         markPaymentResultReceived();
