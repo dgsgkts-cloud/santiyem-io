@@ -58,5 +58,5 @@ export const useCashAccounts = () => {
     onError: () => toast.error("Silme başarısız"),
   });
 
-  return { accounts: query.data || [], isLoading: query.isLoading, addAccount, updateAccount, deleteAccount };
+  return { accounts: query.data || [], isLoading: query.isLoading, addAccount, updateAccount, deleteAccount, refetch: query.refetch };
 };

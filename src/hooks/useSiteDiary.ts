@@ -170,6 +170,13 @@ export function useSiteDiary(projectId?: string) {
     qc.invalidateQueries({ queryKey: ["site-diary-photos"] });
   };
 
+  const refetch = useCallback(async () => {
+    await Promise.all([
+      entriesQuery.refetch(),
+      photosQuery.refetch(),
+    ]);
+  }, [entriesQuery, photosQuery]);
+
   return {
     entries: entriesQuery.data || [],
     photos: photosQuery.data || [],
@@ -179,5 +186,6 @@ export function useSiteDiary(projectId?: string) {
     deleteEntry,
     uploadPhoto,
     deletePhoto,
+    refetch,
   };
 }
