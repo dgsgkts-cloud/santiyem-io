@@ -63,8 +63,8 @@ const getEnrichedStatus = (h: ProjectHakedis) => {
 };
 
 const DesktopHakedisPage = () => {
-  const { projects, loading: projectsLoading } = useProjects();
-  const { allHakedisler } = useAllHakedis();
+  const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
+  const { allHakedisler, refetch: refetchAllHakedis } = useAllHakedis();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   if (projectsLoading) return <div className="p-6 text-center text-muted-foreground">Yükleniyor...</div>;
@@ -73,7 +73,11 @@ const DesktopHakedisPage = () => {
     return <ProjectDetailView projectId={selectedProjectId} projects={projects} allHakedisler={allHakedisler} onBack={() => setSelectedProjectId(null)} />;
   }
 
-  return <ProjectListView projects={projects} allHakedisler={allHakedisler} onSelectProject={setSelectedProjectId} />;
+  const handleRefresh = async () => {
+    await Promise.all([refetchProjects(), refetchAllHakedis()]);
+  };
+
+  return <ProjectListView projects={projects} allHakedisler={allHakedisler} onSelectProject={setSelectedProjectId} onRefresh={handleRefresh} />;
 };
 
 // ─── LEVEL 1: Project List ───────────────────────────────────
