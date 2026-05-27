@@ -1,8 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useWorkerAttendance, WorkerAttendance } from "@/hooks/useWorkerAttendance";
-import { Users, User, Clock, RefreshCw, Calendar, HardHat, FileDown } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Users, User, Clock, RefreshCw, Calendar, HardHat, FileDown, FileText, Link as LinkIcon, Check } from "lucide-react";
+import { format, parseISO, differenceInMinutes } from "date-fns";
 import { tr } from "date-fns/locale";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
 
 interface AttendancePanelProps {
   projectId: string;
@@ -10,8 +13,26 @@ interface AttendancePanelProps {
 }
 
 const AttendancePanel = ({ projectId, projectName }: AttendancePanelProps) => {
-  const { attendance, loading, refreshAttendance } = useWorkerAttendance(projectId);
+  const { attendance, qrCode, loading, refreshAttendance } = useWorkerAttendance(projectId);
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [pdfFrom, setPdfFrom] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [pdfTo, setPdfTo] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [showPdfDialog, setShowPdfDialog] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const teamLink = qrCode ? `${window.location.origin}/ekip/${qrCode.token}` : "";
+
+  const copyTeamLink = async () => {
+    if (!teamLink) return;
+    try {
+      await navigator.clipboard.writeText(teamLink);
+      setLinkCopied(true);
+      toast.success("Ekip takip linki kopyalandı");
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error("Kopyalanamadı");
+    }
+  };
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
