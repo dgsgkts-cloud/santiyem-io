@@ -256,7 +256,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
                 style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
               >
-                <FileDown className="w-3.5 h-3.5" /> PDF
+                <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
               </button>
               <button
                 onClick={() => {
@@ -269,7 +269,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
                 style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
               >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+                <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
               </button>
               <div className="relative w-14 h-14 lg:w-16 lg:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -428,14 +428,14 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
                   style={{ backgroundColor: "#1E2732", color: "#E2E8F0" }}
                 >
-                  <FileDown className="w-3 h-3" /> PDF
+                  <FileDown className="w-3 h-3" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
                 </button>
                 <button
                   onClick={() => { import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name)); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
                   style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
                 >
-                  <FileSpreadsheet className="w-3 h-3" /> Excel
+                  <FileSpreadsheet className="w-3 h-3" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
                 </button>
               </>
             )}
