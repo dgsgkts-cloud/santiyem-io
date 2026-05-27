@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { Capacitor } from "@capacitor/core";
 import EmptyState from "./EmptyState";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
