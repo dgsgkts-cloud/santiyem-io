@@ -440,6 +440,38 @@ const NotificationsTab = () => {
       </div>
 
       <div>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">MOBİL PUSH BİLDİRİMLERİ</p>
+        <ToggleRow
+          label="Push Bildirimlerini Aç"
+          desc="Mobil uygulamada anlık bildirim almak için. Kapatınca cihazınız bildirim listesinden çıkar."
+          on={prefs.push_enabled}
+          onChange={v => save({ push_enabled: v })}
+        />
+        {prefs.push_enabled && (
+          <>
+            <ToggleRow
+              label="Hakediş Onay Talebi"
+              desc="Bir hakediş onayınıza gönderildiğinde bildirim"
+              on={prefs.push_hakedis_approval_request}
+              onChange={v => save({ push_hakedis_approval_request: v })}
+            />
+            <ToggleRow
+              label="Yaklaşan Çek Vadesi"
+              desc="Çek vadesine 3 gün kala hatırlatma"
+              on={prefs.push_check_due_soon}
+              onChange={v => save({ push_check_due_soon: v })}
+            />
+            <ToggleRow
+              label="Gecikmiş Ödeme"
+              desc="Vadesi geçmiş ödemeler için uyarı"
+              on={prefs.push_payment_overdue}
+              onChange={v => save({ push_payment_overdue: v })}
+            />
+          </>
+        )}
+      </div>
+
+      <div>
         <p className="text-[11px] font-semibold mb-2 text-muted-foreground">WHATSAPP BİLDİRİMLERİ</p>
         <ToggleRow
           label="WhatsApp Bildirimi"
