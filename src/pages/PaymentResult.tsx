@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, AlertTriangle, Ban } from "lucide-react";
 import { cleanupIyzicoOverlay } from "@/lib/iyzicoCleanup";
 import { parsePaymentCallback } from "@/lib/paymentCallbackSchema";
 import {
@@ -9,12 +9,13 @@ import {
   type SubscriptionVerification,
 } from "@/lib/verifySubscription";
 
-type View = "success" | "failed" | "pending" | "mismatch";
+type View = "success" | "failed" | "pending" | "mismatch" | "canceled";
 
 const PaymentResult = () => {
   const [params] = useSearchParams();
   const parsed = useMemo(() => parsePaymentCallback(params), [params]);
   const callbackSuccess = parsed.status === "success";
+  const callbackCanceled = parsed.status === "canceled";
 
   const [verification, setVerification] = useState<SubscriptionVerification>({ state: "verifying" });
 
@@ -24,6 +25,11 @@ const PaymentResult = () => {
 
   useEffect(() => {
     let cancelled = false;
+    // İptal akışında abonelik doğrulamayı atla — kullanıcı bilinçli iptal etti.
+    if (callbackCanceled) {
+      setVerification({ state: "inactive", plan: "free" });
+      return;
+    }
     (async () => {
       const result = await verifySubscriptionActivation({ timeoutMs: callbackSuccess ? 15000 : 4000 });
       if (!cancelled) setVerification(result);
@@ -31,15 +37,16 @@ const PaymentResult = () => {
     return () => {
       cancelled = true;
     };
-  }, [callbackSuccess]);
+  }, [callbackSuccess, callbackCanceled]);
 
   // Görünüm kararı: gerçek abonelik durumu birincil otoritedir.
   const view: View = useMemo(() => {
     if (verification.state === "verifying") return "pending";
     if (verification.state === "active") return "success";
+    if (callbackCanceled) return "canceled";
     if (callbackSuccess) return "mismatch"; // iyzico OK dedi ama DB henüz aktif değil
     return "failed";
-  }, [verification, callbackSuccess]);
+  }, [verification, callbackSuccess, callbackCanceled]);
 
   const message = parsed.valid
     ? parsed.message
@@ -58,6 +65,7 @@ const PaymentResult = () => {
           />
         )}
         {view === "mismatch" && <MismatchView />}
+        {view === "canceled" && <CanceledView message={parsed.message} />}
         {view === "failed" && <FailedView message={message} />}
 
         <Link
@@ -65,7 +73,13 @@ const PaymentResult = () => {
           className="inline-block px-6 py-3 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
           style={{ background: "#FF6B2B" }}
         >
-          {view === "success" ? "Uygulamaya Dön" : view === "pending" ? "Bekleyin…" : "Tekrar Dene"}
+          {view === "success"
+            ? "Uygulamaya Dön"
+            : view === "pending"
+            ? "Bekleyin…"
+            : view === "canceled"
+            ? "Planlara Dön"
+            : "Tekrar Dene"}
         </Link>
 
         {view === "mismatch" && (
@@ -123,6 +137,26 @@ const MismatchView = () => (
     >
       Sistem birkaç dakika içinde otomatik güncellenir. Lütfen sayfayı yenileyin veya tekrar giriş yapın.
     </p>
+  </>
+);
+
+const CanceledView = ({ message }: { message?: string }) => (
+  <>
+    <Ban size={64} className="mx-auto mb-4" style={{ color: "#94A3B8" }} />
+    <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+      Ödeme İptal Edildi
+    </h1>
+    <p className="mb-2" style={{ color: "#94A3B8" }}>
+      İşlemi iptal ettiniz. Aboneliğiniz değişmedi, dilediğiniz zaman tekrar deneyebilirsiniz.
+    </p>
+    {message && (
+      <p
+        className="text-sm mb-6 px-4 py-2 rounded-lg"
+        style={{ background: "rgba(148,163,184,0.1)", color: "#CBD5E1" }}
+      >
+        {message}
+      </p>
+    )}
   </>
 );
 

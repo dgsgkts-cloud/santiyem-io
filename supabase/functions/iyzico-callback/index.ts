@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       const formData = await req.formData()
       token = formData.get('token')?.toString() || ''
     }
-    if (!token) return redirectWithStatus('failed', 'Token bulunamadi', isNative)
+    if (!token) return redirectWithStatus('canceled', 'Ödeme iptal edildi', isNative)
 
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
@@ -134,10 +134,18 @@ Deno.serve(async (req) => {
       return redirectWithStatus('success', undefined, isNative)
     } else {
       const errorMsg = iyzicoData.errorMessage || 'Odeme basarisiz'
+      // iyzico iptal sinyalleri: paymentStatus=CALLBACK_THREEDS / CANCELED,
+      // errorCode 10051 (kullanıcı vazgeçti) → canceled olarak işaretle
+      const isCanceled =
+        iyzicoData.paymentStatus === 'CANCELED' ||
+        iyzicoData.errorCode === '10051' ||
+        /iptal|cancel/i.test(errorMsg)
+      const finalStatus = isCanceled ? 'canceled' : 'failed'
+
       await supabaseAdmin.from('payment_transactions').update({
-        status: 'failed', error_message: errorMsg, iyzico_token: token, updated_at: new Date().toISOString(),
+        status: finalStatus, error_message: errorMsg, iyzico_token: token, updated_at: new Date().toISOString(),
       }).eq('id', txnId)
-      return redirectWithStatus('failed', errorMsg, isNative)
+      return redirectWithStatus(finalStatus, errorMsg, isNative)
     }
   } catch (err) {
     console.error('Callback error:', err)

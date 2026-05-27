@@ -57,6 +57,8 @@ const DeepLinkHandler = () => {
 
         if (parsed.status === "success") {
           toast.success(parsed.message || "Ödeme başarılı, aboneliğiniz aktif edildi");
+        } else if (parsed.status === "canceled") {
+          toast.info(parsed.message || "Ödeme iptal edildi. Aboneliğiniz değişmedi.");
         } else {
           toast.error(parsed.message || "Ödeme başarısız oldu, lütfen tekrar deneyin");
         }

@@ -4,15 +4,19 @@ import { z } from "zod";
  * iyzico → /payment-callback (web bridge) ve santiyem://payment-callback
  * (native deep link) için ortak parametre doğrulama şeması.
  *
- * - status: yalnızca "success" | "failure" | "failed" kabul edilir.
+ * - status: success | failed | canceled (failure→failed, cancel→canceled mapping).
  * - message: opsiyonel, maks. 500 karakter, kontrol karakterleri temizlenir.
  * - native: "1" veya yok.
  */
 export const PaymentCallbackParamsSchema = z.object({
   status: z
-    .enum(["success", "failure", "failed"])
+    .enum(["success", "failure", "failed", "cancel", "canceled", "cancelled"])
     .catch("failed")
-    .transform((s) => (s === "failure" ? "failed" : s)),
+    .transform((s) => {
+      if (s === "failure") return "failed" as const;
+      if (s === "cancel" || s === "cancelled") return "canceled" as const;
+      return s as "success" | "failed" | "canceled";
+    }),
   message: z
     .string()
     .max(500)
@@ -38,8 +42,10 @@ function sanitizeMessage(raw: string): string {
     .slice(0, 300);
 }
 
+export type PaymentCallbackStatus = "success" | "failed" | "canceled";
+
 export interface ParsedPaymentCallback {
-  status: "success" | "failed";
+  status: PaymentCallbackStatus;
   message?: string;
   native: boolean;
   /** Şema doğrulamadan geçti mi (false ise bozuk/eksik parametre vardı). */
@@ -70,9 +76,9 @@ export function parsePaymentCallback(
   }
   const { status, message, native } = result.data;
   return {
-    status: status === "success" ? "success" : "failed",
+    status,
     message,
     native: native === "1",
-    valid: Boolean(obj.status), // status hiç yoksa eksik kabul et
+    valid: Boolean(obj.status),
   };
 }
