@@ -111,16 +111,28 @@ const TAB_TITLES: Record<string, string> = {
   hakkimizda: "Hakkımızda",
 };
 
+const ACTIVE_TAB_KEY = "santiyem_active_tab";
+
+const getInitialTab = (): Tab => {
+  if (typeof window === "undefined") return "dashboard";
+  try {
+    const stored = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (stored && NAVIGABLE_TABS.includes(stored as Tab)) {
+      return stored as Tab;
+    }
+  } catch (e) {
+    console.warn("Failed to read active tab from localStorage", e);
+  }
+  return "dashboard";
+};
+
 const Index = () => {
   const { user, plan, signOut, incrementUsage, canUse, isAdmin } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>(() => {
-    if (location.pathname === "/settings") return "settings";
-    return "dashboard";
-  });
+  const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,6 +142,22 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+
+  // Persist active tab
+  useEffect(() => {
+    try {
+      localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+    } catch (e) {
+      console.warn("Failed to save active tab to localStorage", e);
+    }
+  }, [activeTab]);
+
+  // Handle direct navigation to /settings
+  useEffect(() => {
+    if (location.pathname === "/settings") {
+      setActiveTab("settings");
+    }
+  }, [location.pathname]);
 
   // Show onboarding for new users
   useEffect(() => {
