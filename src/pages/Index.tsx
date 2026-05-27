@@ -26,6 +26,7 @@ import EInvoicesPage from "@/components/desktop/EInvoicesPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 
 import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/muhendis-logo.png";
 import {
