@@ -113,8 +113,34 @@ const TAB_TITLES: Record<string, string> = {
 
 const ACTIVE_TAB_KEY = "santiyem_active_tab";
 
+const TAB_TO_PATH: Record<string, string> = {
+  dashboard: "/dashboard",
+  projects: "/projeler",
+  hakedis: "/hakedis",
+  "site-diary": "/gunluk",
+  chat: "/ai-asistan",
+  "payments-kasa": "/odemeler-kasa",
+  contracts: "/sozlesmeler",
+  materials: "/malzemeler",
+  "e-invoices": "/e-fatura",
+  reminders: "/hatirlatici",
+  pricing: "/planlar",
+  daily: "/gunluk-bilgi",
+  settings: "/settings",
+};
+
+const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
+  (acc, [tab, path]) => {
+    acc[path] = tab as Tab;
+    return acc;
+  },
+  {} as Record<string, Tab>
+);
+
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "dashboard";
+  const pathTab = PATH_TO_TAB[window.location.pathname];
+  if (pathTab) return pathTab;
   try {
     const stored = localStorage.getItem(ACTIVE_TAB_KEY);
     if (stored && NAVIGABLE_TABS.includes(stored as Tab)) {
@@ -152,10 +178,11 @@ const Index = () => {
     }
   }, [activeTab]);
 
-  // Handle direct navigation to /settings
+  // Sync URL → active tab
   useEffect(() => {
-    if (location.pathname === "/settings") {
-      setActiveTab("settings");
+    const pathTab = PATH_TO_TAB[location.pathname];
+    if (pathTab && pathTab !== activeTab) {
+      setActiveTab(pathTab);
     }
   }, [location.pathname]);
 
@@ -208,11 +235,15 @@ const Index = () => {
   useEffect(() => {
     const handler = (e: Event) => {
       const tab = (e as CustomEvent).detail;
-      if (NAVIGABLE_TABS.includes(tab as Tab)) setActiveTab(tab as Tab);
+      if (NAVIGABLE_TABS.includes(tab as Tab)) {
+        const path = TAB_TO_PATH[tab as Tab];
+        if (path) navigate(path);
+        else setActiveTab(tab as Tab);
+      }
     };
     window.addEventListener("navigate-tab", handler);
     return () => window.removeEventListener("navigate-tab", handler);
-  }, []);
+  }, [navigate]);
 
 
   const scrollToBottom = useCallback(() => {
@@ -289,15 +320,24 @@ const Index = () => {
     setIsTyping(false);
   };
 
+  const goToTab = useCallback((tab: Tab) => {
+    const path = TAB_TO_PATH[tab];
+    if (path && location.pathname !== path) {
+      navigate(path);
+    } else {
+      setActiveTab(tab);
+    }
+  }, [navigate, location.pathname]);
+
   const handleDrawerNav = (id: string) => {
     if (NAVIGABLE_TABS.includes(id as Tab)) {
-      setActiveTab(id as Tab);
+      goToTab(id as Tab);
     }
     setDrawerOpen(false);
   };
 
   const handleDesktopTabChange = (tab: Tab) => {
-    setActiveTab(tab);
+    goToTab(tab);
   };
 
   // Desktop layout
@@ -381,7 +421,7 @@ const Index = () => {
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => goToTab("dashboard")}>
           <img src={logo} alt="Şantiyem" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
         </div>
@@ -465,7 +505,7 @@ const Index = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => goToTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                   isActive
                     ? "bg-primary text-primary-foreground"
@@ -656,7 +696,7 @@ const Index = () => {
                     setDrawerOpen(true);
                   } else {
                     setDrawerOpen(false);
-                    setActiveTab(tab.id as Tab);
+                    goToTab(tab.id as Tab);
                   }
                 }}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors"
