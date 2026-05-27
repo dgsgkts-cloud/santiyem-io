@@ -75,7 +75,7 @@ const App = () => (
           </Suspense>
           {!Capacitor.isNativePlatform() && <CookieBanner />}
           <WhatsAppButton />
-          <PwaInstallBanner />
+          
           <DeepLinkHandler />
         </BrowserRouter>
         </ThemeProvider>
