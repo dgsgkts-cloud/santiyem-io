@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { redirectWithStatus } from "./redirect.ts"
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
@@ -153,12 +154,3 @@ Deno.serve(async (req) => {
   }
 })
 
-function redirectWithStatus(status: string, message?: string, native = false): Response {
-  const params = new URLSearchParams({ status })
-  if (message) params.set('message', message)
-  if (native) params.set('native', '1')
-  // iyzico Back URL chain: edge function → https://santiyem.io/payment-callback
-  // Bridge page native flag varsa santiyem://payment-callback deep link'ine atar.
-  const location = `https://santiyem.io/payment-callback?${params.toString()}`
-  return new Response(null, { status: 302, headers: { 'Location': location } })
-}
