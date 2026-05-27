@@ -73,7 +73,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <CookieBanner />
+          {!Capacitor.isNativePlatform() && <CookieBanner />}
           <WhatsAppButton />
           <PwaInstallBanner />
           <DeepLinkHandler />

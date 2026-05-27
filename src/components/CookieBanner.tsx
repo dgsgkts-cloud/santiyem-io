@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 
 const CookieBanner = () => {
+  if (Capacitor.isNativePlatform()) return null;
+
   const [visible, setVisible] = useState(false);
   const [hiding, setHiding] = useState(false);
 
