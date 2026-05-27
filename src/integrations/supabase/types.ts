@@ -2653,6 +2653,24 @@ export type Database = {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
       }
+      list_attendance_by_qr_range: {
+        Args: { _from_date: string; _to_date: string; _token: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          duration_minutes: number
+          entry_type: string
+          foreman_name: string
+          full_name: string
+          id: string
+          occupation: string
+          phone: string
+          project_id: string
+          project_name: string
+          team_size: number
+          title: string
+        }[]
+      }
       list_signed_uploads_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2744,18 +2762,32 @@ export type Database = {
           user_id: string
         }[]
       }
-      worker_check_in: {
-        Args: {
-          _entry_type: string
-          _foreman_name: string
-          _full_name: string
-          _occupation: string
-          _team_size: number
-          _title: string
-          _token: string
-        }
-        Returns: string
-      }
+      worker_check_in:
+        | {
+            Args: {
+              _entry_type: string
+              _foreman_name: string
+              _full_name: string
+              _occupation: string
+              _team_size: number
+              _title: string
+              _token: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _entry_type: string
+              _foreman_name: string
+              _full_name: string
+              _occupation: string
+              _phone?: string
+              _team_size: number
+              _title: string
+              _token: string
+            }
+            Returns: string
+          }
       worker_check_out: {
         Args: { _attendance_id: string; _token: string }
         Returns: boolean

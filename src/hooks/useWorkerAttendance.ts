@@ -130,16 +130,17 @@ export const usePublicAttendance = (token: string) => {
     validate();
   }, [token]);
 
-  const checkInIndividual = async (data: { full_name: string; title: string }) => {
+  const checkInIndividual = async (data: { full_name: string; title?: string; phone?: string }) => {
     if (!projectInfo) return false;
     const { error } = await (supabase as any).rpc("worker_check_in", {
       _token: token,
       _entry_type: "individual",
       _full_name: data.full_name,
-      _title: data.title,
-      _occupation: data.title,
+      _title: data.title || "İşçi",
+      _occupation: data.title || "İşçi",
       _foreman_name: null,
       _team_size: 1,
+      _phone: data.phone || null,
     });
     if (error) {
       const msg = error.message || "";

@@ -22,7 +22,9 @@ const SantiyeGiris = () => {
 
   // Individual form
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [title, setTitle] = useState("İşçi");
+  const [action, setAction] = useState<"in" | "out">("in");
 
   // Team form
   const [foremanName, setForemanName] = useState("");
@@ -39,6 +41,8 @@ const SantiyeGiris = () => {
       setMode("select");
       setSuccessMsg("");
       setFullName("");
+      setPhone("");
+      setAction("in");
       setForemanName("");
       setTeamSize(1);
     }, 3000);
@@ -50,33 +54,43 @@ const SantiyeGiris = () => {
     return h > 0 ? `${h} saat ${m} dakika` : `${m} dakika`;
   };
 
+  const normalizePhone = (p: string) => p.replace(/\s+/g, "");
+
   const handleIndividualSubmit = async () => {
     const name = fullName.trim();
     if (!name) return;
     setSubmitting(true);
+    const np = normalizePhone(phone);
 
-    // Find today's record for this name+title
+    // Find today's record for this name + phone
     const existing = todayWorkers.find(
       w => w.entry_type === "individual" &&
         w.full_name.toLowerCase() === name.toLowerCase() &&
-        (w.title || w.occupation) === title
+        normalizePhone(w.phone || "") === np
     );
 
-    if (!existing) {
-      // No record → check in
-      const ok = await checkInIndividual({ full_name: name, title });
-      if (ok) resetAndReturn(`Günaydın ${name}!\nGiriş saati: ${format(new Date(), "HH:mm")} ✅`);
-    } else if (!existing.check_out) {
-      // Has check-in, no check-out → check out
-      const ok = await checkOut(existing.id);
-      if (ok) {
-        const checkInTime = new Date(existing.check_in);
-        const durationMin = Math.round((Date.now() - checkInTime.getTime()) / 60000);
-        resetAndReturn(`İyi çalışmalar ${name}!\nÇıkış saati: ${format(new Date(), "HH:mm")}\nToplam çalışma: ${formatDuration(durationMin)} ✅`);
+    if (action === "out") {
+      if (existing && !existing.check_out) {
+        const ok = await checkOut(existing.id);
+        if (ok) {
+          const dur = Math.round((Date.now() - new Date(existing.check_in).getTime()) / 60000);
+          resetAndReturn(`İyi çalışmalar ${name}!\nÇıkış saati: ${format(new Date(), "HH:mm")}\nToplam çalışma: ${formatDuration(dur)} ✅`);
+        }
+      } else if (existing?.check_out) {
+        resetAndReturn(`Bugünkü çıkışınız zaten kayıtlı.\nÇıkış: ${format(new Date(existing.check_out), "HH:mm")} ✅`);
+      } else {
+        resetAndReturn(`Önce giriş kaydı bulunamadı.\nLütfen "Giriş" seçeneğiyle deneyin.`);
       }
     } else {
-      // Both done
-      resetAndReturn(`Bugünkü kaydınız tamamlandı.\nGiriş: ${format(new Date(existing.check_in), "HH:mm")} / Çıkış: ${format(new Date(existing.check_out), "HH:mm")} ✅`);
+      // action === "in"
+      if (!existing) {
+        const ok = await checkInIndividual({ full_name: name, title, phone: np || undefined });
+        if (ok) resetAndReturn(`✅ Giriş kaydedildi — ${format(new Date(), "HH:mm")}\nHoşgeldin ${name}!`);
+      } else if (!existing.check_out) {
+        resetAndReturn(`Bugün zaten giriş yaptınız.\nGiriş: ${format(new Date(existing.check_in), "HH:mm")} ✅`);
+      } else {
+        resetAndReturn(`Bugünkü kaydınız tamamlandı.\nGiriş: ${format(new Date(existing.check_in), "HH:mm")} / Çıkış: ${format(new Date(existing.check_out), "HH:mm")} ✅`);
+      }
     }
     setSubmitting(false);
   };
@@ -223,9 +237,26 @@ const SantiyeGiris = () => {
               <User className="w-5 h-5 text-blue-500" /> Bireysel Giriş / Çıkış
             </h2>
             <p className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg px-3 py-2">
-              Bilgilerinizi girin, sistem giriş veya çıkış kaydını otomatik oluşturur.
+              Bilgilerinizi girin ve giriş mi çıkış mı yaptığınızı seçin.
             </p>
             <div className="space-y-4">
+              {/* Giriş / Çıkış toggle */}
+              <div className="grid grid-cols-2 gap-2 bg-gray-100 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => setAction("in")}
+                  className={`py-3 rounded-lg text-sm font-bold transition-all ${action === "in" ? "bg-green-500 text-white shadow" : "text-gray-600"}`}
+                >
+                  ✅ Giriş
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAction("out")}
+                  className={`py-3 rounded-lg text-sm font-bold transition-all ${action === "out" ? "bg-orange-500 text-white shadow" : "text-gray-600"}`}
+                >
+                  🏁 Çıkış
+                </button>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Ad Soyad *</label>
                 <input
@@ -237,7 +268,18 @@ const SantiyeGiris = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Unvan *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefon (opsiyonel)</label>
+                <input
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  type="tel"
+                  inputMode="tel"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="05XX XXX XX XX"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Unvan</label>
                 <select
                   value={title}
                   onChange={e => setTitle(e.target.value)}
