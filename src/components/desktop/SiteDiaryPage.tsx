@@ -8,7 +8,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays, startOfWeek, endOfWeek, isYesterday, isThisWeek, isWithinInterval } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
 import { takePhoto, pickFromGallery } from "@/lib/capturePhoto";
@@ -77,6 +77,12 @@ const SiteDiaryPage = () => {
   const [periodStart, setPeriodStart] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [periodEnd, setPeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
   const [includePhotos, setIncludePhotos] = useState(true);
+
+  // Past entries filters
+  type DateFilter = "today" | "week" | "month" | "all" | "custom";
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [customStart, setCustomStart] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [customEnd, setCustomEnd] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const getAttendanceCrews = (date: string): { team: string; count: number; hours: number; note: string }[] => {
     const dayRecords = attendanceRecords.filter(a => {
@@ -389,98 +395,208 @@ const SiteDiaryPage = () => {
                 </div>
               </div>
 
-              {/* Past entries */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-muted-foreground">
-                    Geçmiş Kayıtlar {recent.length > 0 && <span className="text-xs">({recent.length})</span>}
-                  </h3>
-                </div>
-                {isLoading ? (
-                  <p className="text-sm text-center py-6 text-muted-foreground">Yükleniyor…</p>
-                ) : recent.length === 0 ? (
-                  <p className="text-sm text-center py-6" style={{ color: "#475569" }}>Bu proje için henüz kayıt yok</p>
-                ) : (
-                  <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
-                    {recent.map(entry => {
-                      const epCount = entryPhotos(entry.id).length;
-                      return (
-                        <div
-                          key={entry.id}
-                          className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => { setSelectedEntry(entry); setView("detail"); }}
-                            className="flex-1 flex items-center gap-3 text-left min-w-0"
-                            style={{ minHeight: 48 }}
-                            aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
-                          >
-                            <span className="text-xl shrink-0">{entry.weather_icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}
-                              </p>
-                              <p className="text-xs truncate text-muted-foreground">
-                                {totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} fotoğraf · ` : ""}{entry.work_done?.slice(0, 60) || "Açıklama yok"}
-                              </p>
-                            </div>
-                            <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
-                              backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
-                              color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
-                            }}>
-                              {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
+              {/* Past entries with filters */}
+              {(() => {
+                const now = new Date();
+                const filtered = recent.filter(e => {
+                  const d = parseISO(e.entry_date);
+                  if (dateFilter === "today") return isToday(d);
+                  if (dateFilter === "week") return isWithinInterval(d, { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) });
+                  if (dateFilter === "month") return isWithinInterval(d, { start: startOfMonth(now), end: endOfMonth(now) });
+                  if (dateFilter === "custom") {
+                    try { return e.entry_date >= customStart && e.entry_date <= customEnd; } catch { return true; }
+                  }
+                  return true;
+                });
+
+                const groups: { key: string; label: string; items: typeof filtered }[] = [
+                  { key: "today", label: "Bugün", items: [] },
+                  { key: "yesterday", label: "Dün", items: [] },
+                  { key: "week", label: "Bu Hafta", items: [] },
+                  { key: "older", label: "Daha Eski", items: [] },
+                ];
+                filtered.forEach(e => {
+                  const d = parseISO(e.entry_date);
+                  if (isToday(d)) groups[0].items.push(e);
+                  else if (isYesterday(d)) groups[1].items.push(e);
+                  else if (isThisWeek(d, { weekStartsOn: 1 })) groups[2].items.push(e);
+                  else groups[3].items.push(e);
+                });
+
+                const filterChips: { value: DateFilter; label: string }[] = [
+                  { value: "today", label: "Bugün" },
+                  { value: "week", label: "Bu Hafta" },
+                  { value: "month", label: "Bu Ay" },
+                  { value: "all", label: "Tümü" },
+                  { value: "custom", label: "Özel" },
+                ];
+
+                const renderEntry = (entry: DiaryEntry) => {
+                  const epCount = entryPhotos(entry.id).length;
+                  return (
+                    <div
+                      key={entry.id}
+                      className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedEntry(entry); setView("detail"); }}
+                        className="flex-1 flex items-center gap-3 text-left min-w-0"
+                        style={{ minHeight: 48 }}
+                        aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
+                      >
+                        <span className="text-xl shrink-0">{entry.weather_icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {format(parseISO(entry.created_at), "HH:mm")}
                             </span>
-                          </button>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingEntry(entry);
-                                setFormDate(entry.entry_date);
-                                setFormWeather(entry.weather_icon);
-                                setFormTemp(entry.weather_temp?.toString() || "");
-                                setFormWorkStatus(entry.work_status);
-                                setFormStopReason(entry.work_stopped_reason || "");
-                                setFormCrews(entry.crews.length > 0 ? entry.crews : [{ team: "", count: 0, hours: 8, note: "" }]);
-                                setFormWorkDone(entry.work_done);
-                                setFormMaterials(entry.materials);
-                                setFormMachines(entry.machines);
-                                setFormSpecialEvents(entry.special_events);
-                                setFormGeneralNote(entry.general_note);
-                                setView("form");
-                              }}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
-                              aria-label="Düzenle"
-                              title="Düzenle"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTarget({
-                                  id: entry.id,
-                                  name: format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr }),
-                                  type: "Günlük Kaydı",
-                                });
-                              }}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                              style={{ color: "#EF4444" }}
-                              aria-label="Sil"
-                              title="Sil"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                          </p>
+                          <p className="text-xs truncate text-muted-foreground">
+                            {selectedProject?.name ? `${selectedProject.name} · ` : ""}{totalWorkers(entry.crews)} işçi · {epCount > 0 ? `📷 ${epCount} · ` : ""}{entry.work_done?.slice(0, 50) || "Açıklama yok"}
+                          </p>
                         </div>
-                      );
-                    })}
+                        <span className="text-xs px-2 py-0.5 rounded-full shrink-0" style={{
+                          backgroundColor: entry.work_status === "stopped" ? "rgba(239,68,68,0.15)" : entry.work_status === "partial" ? "rgba(245,158,11,0.15)" : "rgba(34,197,94,0.15)",
+                          color: entry.work_status === "stopped" ? "#EF4444" : entry.work_status === "partial" ? "#F59E0B" : "#22C55E",
+                        }}>
+                          {WORK_STATUS.find(w => w.value === entry.work_status)?.label}
+                        </span>
+                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingEntry(entry);
+                            setFormDate(entry.entry_date);
+                            setFormWeather(entry.weather_icon);
+                            setFormTemp(entry.weather_temp?.toString() || "");
+                            setFormWorkStatus(entry.work_status);
+                            setFormStopReason(entry.work_stopped_reason || "");
+                            setFormCrews(entry.crews.length > 0 ? entry.crews : [{ team: "", count: 0, hours: 8, note: "" }]);
+                            setFormWorkDone(entry.work_done);
+                            setFormMaterials(entry.materials);
+                            setFormMachines(entry.machines);
+                            setFormSpecialEvents(entry.special_events);
+                            setFormGeneralNote(entry.general_note);
+                            setView("form");
+                          }}
+                          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
+                          aria-label="Düzenle"
+                          title="Düzenle"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget({
+                              id: entry.id,
+                              name: format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr }),
+                              type: "Günlük Kaydı",
+                            });
+                          }}
+                          className="w-9 h-9 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                          style={{ color: "#EF4444" }}
+                          aria-label="Sil"
+                          title="Sil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                };
+
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Geçmiş Kayıtlar</h3>
+                      {!isLoading && (
+                        <span className="text-xs text-muted-foreground">
+                          {filtered.length} kayıt bulundu
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Filter chips */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {filterChips.map(c => (
+                        <button
+                          key={c.value}
+                          onClick={() => setDateFilter(c.value)}
+                          className="h-8 px-3 rounded-full text-xs font-medium transition-colors border"
+                          style={{
+                            backgroundColor: dateFilter === c.value ? "#FF6B2B" : "transparent",
+                            color: dateFilter === c.value ? "#FFF" : "hsl(var(--muted-foreground))",
+                            borderColor: dateFilter === c.value ? "#FF6B2B" : "hsl(var(--border))",
+                          }}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {dateFilter === "custom" && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <input
+                          type="date"
+                          value={customStart}
+                          onChange={e => setCustomStart(e.target.value)}
+                          className="h-9 rounded-lg px-3 text-sm bg-card border border-border text-foreground"
+                          style={{ minHeight: 36 }}
+                        />
+                        <span className="text-xs text-muted-foreground">—</span>
+                        <input
+                          type="date"
+                          value={customEnd}
+                          onChange={e => setCustomEnd(e.target.value)}
+                          className="h-9 rounded-lg px-3 text-sm bg-card border border-border text-foreground"
+                          style={{ minHeight: 36 }}
+                        />
+                      </div>
+                    )}
+
+                    {isLoading ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} className="rounded-xl p-3 bg-card border border-border animate-pulse">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-muted/40" />
+                              <div className="flex-1 space-y-2">
+                                <div className="h-3 bg-muted/40 rounded w-2/3" />
+                                <div className="h-2.5 bg-muted/30 rounded w-1/2" />
+                              </div>
+                              <div className="h-5 w-16 rounded-full bg-muted/30" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : filtered.length === 0 ? (
+                      <p className="text-sm text-center py-6" style={{ color: "#475569" }}>
+                        {recent.length === 0 ? "Bu proje için henüz kayıt yok" : "Seçili filtrede kayıt bulunamadı"}
+                      </p>
+                    ) : (
+                      <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
+                        {groups.filter(g => g.items.length > 0).map(g => (
+                          <div key={g.key} className="space-y-2">
+                            <div className="flex items-center gap-2 sticky top-0 bg-background/80 backdrop-blur-sm py-1 z-10">
+                              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</h4>
+                              <span className="text-xs text-muted-foreground">({g.items.length})</span>
+                            </div>
+                            <div className="space-y-2">
+                              {g.items.map(renderEntry)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </>
           </PullToRefresh>
         )}
