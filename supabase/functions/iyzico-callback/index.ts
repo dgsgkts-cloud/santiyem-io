@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { redirectWithStatus } from "./redirect.ts"
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
@@ -153,6 +154,3 @@ Deno.serve(async (req) => {
   }
 })
 
-import { redirectWithStatus } from "./redirect.ts"
-// re-export for the closure above
-export { redirectWithStatus }
