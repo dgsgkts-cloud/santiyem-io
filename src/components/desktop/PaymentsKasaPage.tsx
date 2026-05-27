@@ -53,6 +53,18 @@ const PaymentsKasaPage = () => {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [addModal, setAddModal] = useState(false);
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["project_expenses"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_accounts"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_payments"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_collections"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash_checks"] }),
+      queryClient.invalidateQueries({ queryKey: ["all_hakedis_payments_kasa"] }),
+      queryClient.invalidateQueries({ queryKey: ["subcontractors"] }),
+    ]);
+  };
   const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
