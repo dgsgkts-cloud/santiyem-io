@@ -78,6 +78,12 @@ const SiteDiaryPage = () => {
   const [periodEnd, setPeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
   const [includePhotos, setIncludePhotos] = useState(true);
 
+  // Past entries filters
+  type DateFilter = "today" | "week" | "month" | "all" | "custom";
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [customStart, setCustomStart] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [customEnd, setCustomEnd] = useState(format(new Date(), "yyyy-MM-dd"));
+
   const getAttendanceCrews = (date: string): { team: string; count: number; hours: number; note: string }[] => {
     const dayRecords = attendanceRecords.filter(a => {
       try { return format(parseISO(a.check_in), "yyyy-MM-dd") === date; } catch { return false; }
