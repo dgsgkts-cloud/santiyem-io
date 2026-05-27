@@ -138,6 +138,26 @@ const Index = () => {
     }
   }, [user]);
 
+  // Initialize push notifications (native only, respects user preference)
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("notification_preferences")
+          .select("push_enabled")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data?.push_enabled !== false) {
+          const { initPushNotifications } = await import("@/lib/pushNotifications");
+          await initPushNotifications(user.id);
+        }
+      } catch (e) {
+        console.warn("[push] init skipped", e);
+      }
+    })();
+  }, [user?.id]);
+
   const handleOnboardingClose = () => {
     setShowOnboarding(false);
     // After onboarding, show theme modal if not yet shown
