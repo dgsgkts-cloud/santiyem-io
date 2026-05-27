@@ -81,7 +81,7 @@ const DesktopHakedisPage = () => {
 };
 
 // ─── LEVEL 1: Project List ───────────────────────────────────
-const ProjectListView = ({ projects, allHakedisler, onSelectProject }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void }) => {
+const ProjectListView = ({ projects, allHakedisler, onSelectProject, onRefresh }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void; onRefresh?: () => Promise<void> }) => {
   const projectCards = useMemo(() => {
     return projects.map(p => {
       const hakedisler = allHakedisler.filter(h => h.project_id === p.id);
