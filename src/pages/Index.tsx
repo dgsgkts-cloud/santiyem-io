@@ -583,6 +583,49 @@ const Index = () => {
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
       )}
+
+      {/* ── MOBILE BOTTOM TAB BAR ── */}
+      <nav
+        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-sm"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        aria-label="Alt navigasyon"
+      >
+        <div className="flex items-stretch">
+          {BOTTOM_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive =
+              tab.id === "more"
+                ? drawerOpen || !PRIMARY_TAB_IDS.has(activeTab as string)
+                : activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  if (tab.id === "more") {
+                    setDrawerOpen(true);
+                  } else {
+                    setDrawerOpen(false);
+                    setActiveTab(tab.id as Tab);
+                  }
+                }}
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors"
+                style={{
+                  minHeight: 56,
+                  color: isActive ? "#FF6B2B" : "#94A3B8",
+                }}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={tab.label}
+              >
+                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.4 : 2} />
+                <span className="text-[11px] leading-tight" style={{ fontWeight: isActive ? 600 : 500 }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
