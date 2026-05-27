@@ -322,13 +322,10 @@ const Index = () => {
         className="lg:hidden border-b border-border bg-card/60 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center justify-center transition-colors relative z-[50]"
-          style={{ backgroundColor: "#FF6B2B", color: "#FFFFFF", minWidth: 44, minHeight: 44, borderRadius: 8, padding: 8 }}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
+          <img src={logo} alt="Şantiyem" className="w-7 h-7" />
+          <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
+        </div>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab("dashboard")}>
           <img src={logo} alt="Şantiyem" className="w-7 h-7" />
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
