@@ -412,15 +412,11 @@ const Index = () => {
     );
   }
 
-  // Bottom tab bar items (mobile only)
-  const BOTTOM_TABS: { id: Tab | "more"; label: string; icon: React.ElementType }[] = [
-    { id: "dashboard", label: "Ana Sayfa", icon: Home },
-    { id: "projects", label: "Projeler", icon: FolderOpen },
-    { id: "hakedis", label: "Hakediş", icon: FileText },
-    { id: "site-diary", label: "Günlük", icon: BookOpen },
-    { id: "more", label: "Daha Fazla", icon: Menu },
-  ];
-  const PRIMARY_TAB_IDS = new Set(["dashboard", "projects", "hakedis", "site-diary"]);
+  // Bottom tab bar — role-aware on native (mobile RBAC)
+  const BOTTOM_TABS = getMobileTabsForRole(primaryRole);
+  const PRIMARY_TAB_IDS = new Set(
+    BOTTOM_TABS.filter((t) => t.id !== "more").map((t) => t.id as string),
+  );
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
