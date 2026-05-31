@@ -54,6 +54,29 @@ export default function InviteAccept() {
     })();
   }, [token]);
 
+  const mobileOs = useMemo(() => detectMobileOs(), []);
+  const isInNativeApp = Capacitor.isNativePlatform();
+  const showOpenInApp = !!mobileOs && !isInNativeApp;
+
+  const openInApp = () => {
+    if (!token) return;
+    // Try the custom scheme first; if the app isn't installed the browser
+    // will simply do nothing — after a short delay we send the user to
+    // the store. Universal link (https) opens the app directly when
+    // installed; we use the scheme to handle the not-installed fallback.
+    const scheme = `santiyem://proje-davet/${token}`;
+    const storeUrl = mobileOs === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL;
+    const startedAt = Date.now();
+    window.location.href = scheme;
+    setTimeout(() => {
+      // If the app opened, the page is hidden and this won't run reliably;
+      // when it does run, redirect to the store.
+      if (Date.now() - startedAt < 2500 && document.visibilityState === "visible") {
+        window.location.href = storeUrl;
+      }
+    }, 1500);
+  };
+
   const accept = async () => {
     if (!token) return;
     setBusy(true);
