@@ -131,6 +131,28 @@ export default function InviteAccept() {
           <span className="font-medium text-foreground">{ROLE_LABELS[invitation.role]}</span> rolüyle davet edildiniz.
         </p>
 
+        {showOpenInApp && !expired && invitation.status === "pending" && (
+          <div className="rounded-lg border border-border bg-background/40 p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Daha iyi deneyim için Şantiyem uygulamasında açın.
+            </p>
+            <button
+              onClick={openInApp}
+              className="w-full px-4 py-2 rounded-lg bg-[#FF6B2B] text-white text-sm font-medium"
+            >
+              Uygulamada aç
+            </button>
+            <a
+              href={mobileOs === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL}
+              className="block text-center text-xs text-muted-foreground underline"
+            >
+              Uygulamayı indir
+            </a>
+          </div>
+        )}
+
+
+
         {expired || invitation.status !== "pending" ? (
           <p className="text-sm text-red-500">Bu davetin süresi dolmuş veya kullanılmış.</p>
         ) : !user ? (
