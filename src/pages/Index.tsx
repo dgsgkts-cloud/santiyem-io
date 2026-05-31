@@ -42,6 +42,8 @@ import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNativeApp } from "@/lib/nativeGuards";
+import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
+import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
 type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
