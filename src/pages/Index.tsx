@@ -87,6 +87,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
+  { id: "personnel", label: "Puantaj & Personel", emoji: "👷", icon: User },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", emoji: "🧾", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   
