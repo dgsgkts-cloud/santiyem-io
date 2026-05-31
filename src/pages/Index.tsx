@@ -130,6 +130,7 @@ const TAB_TO_PATH: Record<string, string> = {
   contracts: "/sozlesmeler",
   materials: "/malzemeler",
   "e-invoices": "/e-fatura",
+  personnel: "/personel",
   reminders: "/hatirlatici",
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
