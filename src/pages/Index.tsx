@@ -579,7 +579,7 @@ const Index = () => {
         <div className="mx-5 h-px bg-white/10" />
 
         <nav className="flex-1 overflow-y-auto px-3 py-3">
-          {DRAWER_ITEMS.map((item) => {
+          {visibleDrawerItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
