@@ -47,7 +47,7 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
