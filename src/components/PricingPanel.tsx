@@ -8,10 +8,15 @@ import { PaymentLogos } from "@/components/PaymentLogos";
 import { useUser } from "@/contexts/UserContext";
 import { formatNumber0 } from "@/lib/formatCurrency";
 import { isNativePlatform, openIyzicoCheckoutNative } from "@/lib/iyzicoCheckout";
+import { isNativeApp } from "@/lib/nativeGuards";
+import NativeSubscriptionNotice from "@/components/NativeSubscriptionNotice";
 
 const PAYMENT_DISABLED = false;
 
 const PricingPanel = () => {
+  // Apple/Google IAP rules: no in-app links to external payment.
+  if (isNativeApp()) return <NativeSubscriptionNotice variant="panel" />;
+
   const [yearly, setYearly] = useState(false);
   const [showEnterpriseForm, setShowEnterpriseForm] = useState(false);
   const [showPaymentDisabled, setShowPaymentDisabled] = useState(false);

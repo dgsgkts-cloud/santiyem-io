@@ -6,6 +6,8 @@ import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { cleanupIyzicoOverlay, listenForIyzicoClose } from "@/lib/iyzicoCleanup";
 import { isNativePlatform, openIyzicoCheckoutNative } from "@/lib/iyzicoCheckout";
+import { isNativeApp } from "@/lib/nativeGuards";
+import NativeSubscriptionNotice from "@/components/NativeSubscriptionNotice";
 
 const PAYMENT_DISABLED = false;
 
@@ -219,7 +221,11 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
             ))}
           </div>
           <div className="flex flex-col gap-2">
-            {trialCheckLoading ? (
+            {isNativeApp() ? (
+              <div className="rounded-lg border border-white/10 p-4" style={{ backgroundColor: "rgba(255,255,255,0.03)" }}>
+                <NativeSubscriptionNotice variant="inline" />
+              </div>
+            ) : trialCheckLoading ? (
               <div className="w-full h-11 rounded-md bg-white/5 flex items-center justify-center text-sm text-white/60">
                 <Loader2 size={16} className="animate-spin mr-2" /> Deneme durumu kontrol ediliyor…
               </div>
@@ -245,32 +251,33 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
                   {loadingPlan === `direct-${planKey}` && <Loader2 size={16} className="animate-spin mr-1" />}
                   Hemen Başla — {planPrice}₺/ay
                 </Button>
+                <button
+                  onClick={goToPlans}
+                  disabled={loadingPlan !== null}
+                  className="w-full h-11 sm:h-10 text-sm text-white/70 hover:text-white inline-flex items-center justify-center gap-1.5 transition rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50"
+                >
+                  Tüm Planları Gör <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <div className="mt-3 p-3 rounded-lg border border-white/10" style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
+                  <p className="text-xs text-white/70 text-center leading-relaxed">
+                    {!trialUsed ? (
+                      <>
+                        🔒 <strong className="text-white">Kartınızı doğrulamak için 1₺ tahsil edilecek, hemen iade edilecektir.</strong><br />
+                        14 gün sonra aylık ₺{planPrice} otomatik tahsil edilir.<br />
+                        İstediğiniz zaman iptal edebilirsiniz.<br />
+                        <strong className="text-orange-400">⚠️ Ödeme formunda "Kartımı Kaydet" kutucuğunu mutlaka işaretleyin — aksi halde deneme başlatılamaz.</strong>
+                      </>
+                    ) : (
+                      <>
+                        🔒 Aylık ₺{planPrice} tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
+                      </>
+                    )}
+                  </p>
+                </div>
               </>
             )}
-            <button
-              onClick={goToPlans}
-              disabled={loadingPlan !== null}
-              className="w-full h-11 sm:h-10 text-sm text-white/70 hover:text-white inline-flex items-center justify-center gap-1.5 transition rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50"
-            >
-              Tüm Planları Gör <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <div className="mt-3 p-3 rounded-lg border border-white/10" style={{ backgroundColor: "rgba(255,107,43,0.05)" }}>
-              <p className="text-xs text-white/70 text-center leading-relaxed">
-                {!trialUsed ? (
-                  <>
-                    🔒 <strong className="text-white">Kartınızı doğrulamak için 1₺ tahsil edilecek, hemen iade edilecektir.</strong><br />
-                    14 gün sonra aylık ₺{planPrice} otomatik tahsil edilir.<br />
-                    İstediğiniz zaman iptal edebilirsiniz.<br />
-                    <strong className="text-orange-400">⚠️ Ödeme formunda "Kartımı Kaydet" kutucuğunu mutlaka işaretleyin — aksi halde deneme başlatılamaz.</strong>
-                  </>
-                ) : (
-                  <>
-                    🔒 Aylık ₺{planPrice} tahsil edilir. İstediğiniz zaman iptal edebilirsiniz.
-                  </>
-                )}
-              </p>
-            </div>
           </div>
+
         </div>
       </div>
     </>
