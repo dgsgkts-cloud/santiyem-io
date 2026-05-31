@@ -28,10 +28,12 @@ export function useProjects() {
 
   const fetchProjects = async () => {
     if (!user) { setLoading(false); return; }
+    // RLS allows: own projects, team projects, and projects where the
+    // user is a member via project_members. Don't filter by user_id so
+    // invited members see projects they belong to.
     const { data, error } = await supabase
       .from("projects")
       .select("*")
-      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (!error && data) setProjects(data as UserProject[]);
     setLoading(false);
