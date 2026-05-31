@@ -15,7 +15,8 @@
  *      while it IS shown (with no clickable payment CTA) for inactive ones.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, act } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/dom";
 
 // --- Mock Capacitor as native ---
 vi.mock("@capacitor/core", () => ({
