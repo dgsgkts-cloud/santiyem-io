@@ -85,6 +85,7 @@ const App = () => (
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/santiye-giris/:token" element={<SantiyeGiris />} />
               <Route path="/ekip/:token" element={<EkipTakip />} />
+              <Route path="/proje-davet/:token" element={<InviteAccept />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
