@@ -662,6 +662,8 @@ const Index = () => {
             <MaterialsPage />
           ) : activeTab === "e-invoices" ? (
             <EInvoicesPage />
+          ) : activeTab === "personnel" ? (
+            <PersonnelPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (
