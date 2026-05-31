@@ -828,6 +828,13 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         </div>
       )}
 
+      {/* Proje Üyeleri (RBAC) */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <ProjectMembersManagement projectId={p.id} />
+        </div>
+      )}
+
       {isDeletable && onDelete && user && (
         <>
           <DeleteConfirmModal
