@@ -2,17 +2,20 @@ import { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Users, Calendar, Wallet } from "lucide-react";
+import { Users, Calendar, Wallet, Zap } from "lucide-react";
 import PersonnelList from "@/components/personnel/PersonnelList";
 import AttendanceGrid from "@/components/personnel/AttendanceGrid";
 import LaborCostSummary from "@/components/personnel/LaborCostSummary";
+import QuickAttendanceMobile from "@/components/personnel/QuickAttendanceMobile";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectRole } from "@/hooks/useProjectRole";
 import { hasPermission } from "@/lib/projectPermissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function PersonnelPage() {
   const { projects, loading } = useProjects();
-  const [tab, setTab] = useState("list");
+  const isMobile = useIsMobile();
+  const [tab, setTab] = useState(isMobile ? "quick" : "list");
   const [projectId, setProjectId] = useState<string>("");
 
   const selectedProject = useMemo(() => projects.find((p) => p.id === projectId), [projects, projectId]);
@@ -28,9 +31,9 @@ export default function PersonnelPage() {
           </h1>
           <p className="text-sm text-muted-foreground">Merkezi kişi listesi · QR ile otomatik eşleşme · Tipe göre maliyet</p>
         </div>
-        {(tab === "grid" || tab === "cost") && (
+        {(tab === "quick" || tab === "grid" || tab === "cost") && (
           <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger className="w-[240px]"><SelectValue placeholder="Proje seç" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Proje seç" /></SelectTrigger>
             <SelectContent>
               {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
             </SelectContent>
@@ -39,11 +42,20 @@ export default function PersonnelPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="quick"><Zap className="w-4 h-4 mr-1" /> Hızlı</TabsTrigger>
           <TabsTrigger value="list"><Users className="w-4 h-4 mr-1" /> Liste</TabsTrigger>
-          <TabsTrigger value="grid"><Calendar className="w-4 h-4 mr-1" /> Puantaj</TabsTrigger>
+          {!isMobile && <TabsTrigger value="grid"><Calendar className="w-4 h-4 mr-1" /> Aylık</TabsTrigger>}
           <TabsTrigger value="cost"><Wallet className="w-4 h-4 mr-1" /> Maliyet</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="quick" className="mt-4">
+          {!projectId ? (
+            <Card className="p-8 text-center text-muted-foreground">Hızlı yoklama için bir proje seçin.</Card>
+          ) : (
+            <QuickAttendanceMobile projectId={projectId} />
+          )}
+        </TabsContent>
 
         <TabsContent value="list" className="mt-4">
           <PersonnelList />
