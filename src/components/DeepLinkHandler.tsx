@@ -41,6 +41,15 @@ const DeepLinkHandler = () => {
 
         if (action.kind === "ignore") return;
 
+        // Project invitation deep link → land on /proje-davet/<token>.
+        // InviteAccept page handles auth gating and post-accept routing,
+        // so the invited user ends up in the role's dedicated screen.
+        if (action.kind === "invite") {
+          toast.success("Proje daveti açılıyor…");
+          safeNavigate(action.target);
+          return;
+        }
+
         if (action.kind === "invalid-url") {
           console.warn("[DeepLink] invalid URL", url);
           markPaymentResultReceived();

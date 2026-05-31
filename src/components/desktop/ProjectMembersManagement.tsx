@@ -131,7 +131,10 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
   };
 
   const copyInviteLink = (token: string) => {
-    const link = `${window.location.origin}/proje-davet/${token}`;
+    // Canonical universal-link domain so iOS/Android can open the link
+    // directly in the Şantiyem app (santiyem://proje-davet/<token>)
+    // when installed, and fall back to the web invite page otherwise.
+    const link = `https://santiyem.io/proje-davet/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Davet linki kopyalandı");
   };

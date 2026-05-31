@@ -42,6 +42,8 @@ import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNativeApp } from "@/lib/nativeGuards";
+import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
+import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
 type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
@@ -162,6 +164,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { role: primaryRole } = usePrimaryProjectRole();
+  const allowedDrawerIds = getAllowedDrawerIdsForRole(primaryRole);
+  const visibleDrawerItems = allowedDrawerIds
+    ? DRAWER_ITEMS.filter((it) => allowedDrawerIds.has(String(it.id)))
+    : DRAWER_ITEMS;
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
@@ -405,15 +412,11 @@ const Index = () => {
     );
   }
 
-  // Bottom tab bar items (mobile only)
-  const BOTTOM_TABS: { id: Tab | "more"; label: string; icon: React.ElementType }[] = [
-    { id: "dashboard", label: "Ana Sayfa", icon: Home },
-    { id: "projects", label: "Projeler", icon: FolderOpen },
-    { id: "hakedis", label: "Hakediş", icon: FileText },
-    { id: "site-diary", label: "Günlük", icon: BookOpen },
-    { id: "more", label: "Daha Fazla", icon: Menu },
-  ];
-  const PRIMARY_TAB_IDS = new Set(["dashboard", "projects", "hakedis", "site-diary"]);
+  // Bottom tab bar — role-aware on native (mobile RBAC)
+  const BOTTOM_TABS = getMobileTabsForRole(primaryRole);
+  const PRIMARY_TAB_IDS = new Set(
+    BOTTOM_TABS.filter((t) => t.id !== "more").map((t) => t.id as string),
+  );
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
@@ -576,7 +579,7 @@ const Index = () => {
         <div className="mx-5 h-px bg-white/10" />
 
         <nav className="flex-1 overflow-y-auto px-3 py-3">
-          {DRAWER_ITEMS.map((item) => {
+          {visibleDrawerItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button

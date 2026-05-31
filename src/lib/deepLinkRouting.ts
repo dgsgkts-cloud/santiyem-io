@@ -4,7 +4,8 @@ export type DeepLinkAction =
   | { kind: "ignore" }
   | { kind: "invalid-url"; target: string }
   | { kind: "invalid-params"; target: string }
-  | { kind: "navigate"; target: string; parsed: ParsedPaymentCallback };
+  | { kind: "navigate"; target: string; parsed: ParsedPaymentCallback }
+  | { kind: "invite"; target: string; token: string };
 
 /** Güvenli fallback hedefi — her zaman /odeme-sonucu?status=failed. */
 export const SAFE_FAILED_TARGET = "/odeme-sonucu?status=failed";
@@ -58,6 +59,16 @@ export function resolveDeepLinkAction(rawUrl: unknown): DeepLinkAction {
     .replace(/^\/+/, "")
     .toLowerCase();
   const lowerPath = (u.pathname || "").toLowerCase();
+
+  // Project invitation deep link: santiyem://proje-davet/<token>
+  // or universal link https://santiyem.io/proje-davet/<token>
+  const inviteMatch = lowerPath.match(/\/?proje-davet\/([a-z0-9-]+)/i)
+    || pathWithQuery.match(/proje-davet\/([a-z0-9-]+)/i);
+  if (inviteMatch) {
+    const token = inviteMatch[1];
+    return { kind: "invite", target: `/proje-davet/${token}`, token };
+  }
+
   const isPaymentResult =
     pathWithQuery.includes("odeme-sonucu") ||
     pathWithQuery.includes("payment-callback") ||

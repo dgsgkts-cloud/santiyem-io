@@ -1,9 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_LABELS, type ProjectRole } from "@/lib/projectPermissions";
 import { toast } from "sonner";
+
+const IOS_STORE_URL = "https://apps.apple.com/app/id0000000000"; // TODO: replace with real App Store ID
+const ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=app.lovable.75507a907e2b421c9e2d6aa7effd7c93";
+
+function detectMobileOs(): "ios" | "android" | null {
+  if (typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return null;
+}
 
 export default function InviteAccept() {
   const { token } = useParams<{ token: string }>();
@@ -41,6 +53,29 @@ export default function InviteAccept() {
       if (p?.name) setProjectName(p.name);
     })();
   }, [token]);
+
+  const mobileOs = useMemo(() => detectMobileOs(), []);
+  const isInNativeApp = Capacitor.isNativePlatform();
+  const showOpenInApp = !!mobileOs && !isInNativeApp;
+
+  const openInApp = () => {
+    if (!token) return;
+    // Try the custom scheme first; if the app isn't installed the browser
+    // will simply do nothing — after a short delay we send the user to
+    // the store. Universal link (https) opens the app directly when
+    // installed; we use the scheme to handle the not-installed fallback.
+    const scheme = `santiyem://proje-davet/${token}`;
+    const storeUrl = mobileOs === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL;
+    const startedAt = Date.now();
+    window.location.href = scheme;
+    setTimeout(() => {
+      // If the app opened, the page is hidden and this won't run reliably;
+      // when it does run, redirect to the store.
+      if (Date.now() - startedAt < 2500 && document.visibilityState === "visible") {
+        window.location.href = storeUrl;
+      }
+    }, 1500);
+  };
 
   const accept = async () => {
     if (!token) return;
@@ -95,6 +130,28 @@ export default function InviteAccept() {
           <span className="font-medium text-foreground">{projectName || "Bir proje"}</span> projesine{" "}
           <span className="font-medium text-foreground">{ROLE_LABELS[invitation.role]}</span> rolüyle davet edildiniz.
         </p>
+
+        {showOpenInApp && !expired && invitation.status === "pending" && (
+          <div className="rounded-lg border border-border bg-background/40 p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Daha iyi deneyim için Şantiyem uygulamasında açın.
+            </p>
+            <button
+              onClick={openInApp}
+              className="w-full px-4 py-2 rounded-lg bg-[#FF6B2B] text-white text-sm font-medium"
+            >
+              Uygulamada aç
+            </button>
+            <a
+              href={mobileOs === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL}
+              className="block text-center text-xs text-muted-foreground underline"
+            >
+              Uygulamayı indir
+            </a>
+          </div>
+        )}
+
+
 
         {expired || invitation.status !== "pending" ? (
           <p className="text-sm text-red-500">Bu davetin süresi dolmuş veya kullanılmış.</p>
