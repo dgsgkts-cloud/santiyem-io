@@ -13,6 +13,22 @@ const config: CapacitorConfig = {
     cleartext: true,
     androidScheme: 'santiyem',
   },
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: '#0F1419',
+      showSpinner: false,
+    },
+    Keyboard: {
+      resize: 'body' as any,
+      resizeOnFullScreen: true,
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#0F1419',
+      overlaysWebView: false,
+    },
+  },
 };
 
 export default config;
