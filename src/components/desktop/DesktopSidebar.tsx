@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { isNativeApp } from "@/lib/nativeGuards";
 
 type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
 
@@ -41,7 +42,8 @@ const NAV_SECTIONS = [
     label: "İÇERİK",
     items: [
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
-      { id: "pricing" as Tab, label: "Planlar", icon: Crown },
+      // "pricing" intentionally omitted on native (Apple/Google IAP rules)
+      ...(isNativeApp() ? [] : [{ id: "pricing" as Tab, label: "Planlar", icon: Crown }]),
     ],
   },
 ];
@@ -192,7 +194,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               >
                 {isAdmin ? "Admin 🔧" : plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
-              {!isAdmin && plan === "free" && (
+              {!isAdmin && plan === "free" && !isNativeApp() && (
                 <button
                   onClick={() => onTabChange("pricing")}
                   className="text-[11px] font-medium hover-upgrade-link"

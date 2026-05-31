@@ -15,6 +15,7 @@ const NativeSetup = () => {
 
     let backSub: { remove: () => void } | null = null;
     let kbShowSub: { remove: () => void } | null = null;
+    let appStateSub: { remove: () => void } | null = null;
 
     (async () => {
       // Status bar
@@ -49,6 +50,16 @@ const NativeSetup = () => {
           }
         });
         backSub = sub;
+
+        // Refresh subscription/profile state when app returns to foreground.
+        // Subscription state is server-authoritative — re-fetch on every resume
+        // so changes made on web (e.g. iyzico payment) reflect immediately.
+        const stateSub = await CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+          if (isActive) {
+            window.dispatchEvent(new CustomEvent("refresh-profile"));
+          }
+        });
+        appStateSub = stateSub;
       } catch (e) {
         console.warn("[native] back button setup failed", e);
       }
@@ -75,6 +86,7 @@ const NativeSetup = () => {
     return () => {
       try { backSub?.remove(); } catch {}
       try { kbShowSub?.remove(); } catch {}
+      try { appStateSub?.remove(); } catch {}
     };
   }, [navigate]);
 

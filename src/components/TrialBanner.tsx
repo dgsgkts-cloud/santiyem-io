@@ -4,6 +4,8 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Sparkles } from "lucide-react";
 import UpgradeModal from "@/components/UpgradeModal";
+import { isNativeApp } from "@/lib/nativeGuards";
+import { NATIVE_SUB_NOTICE } from "@/lib/nativeGuards";
 
 const PAID_STATUSES = new Set(["active", "cancelled"]);
 
@@ -102,23 +104,31 @@ const TrialBanner = () => {
             )}
           </div>
         </div>
-        <Button
-          size="sm"
-          className="w-full sm:w-auto shrink-0 min-h-[44px] sm:min-h-0"
-          variant={expired ? "default" : tone === "danger" ? "default" : "outline"}
-          onClick={() => setShowUpgrade(true)}
-        >
-          <Sparkles className="w-3.5 h-3.5 mr-1" />
-          {expired ? "Planı Yükselt" : "Planımı Yükselt"}
-        </Button>
+        {isNativeApp() ? (
+          <p className="text-[12px] text-muted-foreground sm:max-w-xs select-text shrink-0">
+            {NATIVE_SUB_NOTICE}
+          </p>
+        ) : (
+          <Button
+            size="sm"
+            className="w-full sm:w-auto shrink-0 min-h-[44px] sm:min-h-0"
+            variant={expired ? "default" : tone === "danger" ? "default" : "outline"}
+            onClick={() => setShowUpgrade(true)}
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1" />
+            {expired ? "Planı Yükselt" : "Planımı Yükselt"}
+          </Button>
+        )}
       </div>
 
-      <UpgradeModal
-        open={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        feature="Aboneliğinizi başlatmak için bir plan seçin"
-        requiresOffice={false}
-      />
+      {!isNativeApp() && (
+        <UpgradeModal
+          open={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          feature="Aboneliğinizi başlatmak için bir plan seçin"
+          requiresOffice={false}
+        />
+      )}
     </>
   );
 };

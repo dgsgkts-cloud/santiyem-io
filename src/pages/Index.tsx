@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isNativeApp } from "@/lib/nativeGuards";
 
 
 type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
@@ -87,7 +88,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   
   
   { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
-  { id: "pricing", label: "Planlar", emoji: "💎", icon: Zap },
+  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", emoji: "💎", icon: Zap } as const]),
   { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
 ];
 

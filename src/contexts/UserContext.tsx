@@ -117,6 +117,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
+  // Refresh server-authoritative profile/plan on demand
+  // (e.g. native app resume → catches subscriptions changed on web).
+  useEffect(() => {
+    const handler = () => {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user) fetchProfile(data.user.id);
+      });
+    };
+    window.addEventListener("refresh-profile", handler);
+    return () => window.removeEventListener("refresh-profile", handler);
+  }, [fetchProfile]);
+
   // Load usage from localStorage daily
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
