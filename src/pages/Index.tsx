@@ -23,6 +23,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import EInvoicesPage from "@/components/desktop/EInvoicesPage";
+import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 
 import { useUser } from "@/contexts/UserContext";
