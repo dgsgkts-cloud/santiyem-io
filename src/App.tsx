@@ -12,6 +12,7 @@ import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
 import DeepLinkHandler from "@/components/DeepLinkHandler";
+import NativeSetup from "@/components/NativeSetup";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -91,6 +92,7 @@ const App = () => (
           <WhatsAppButton />
           
           <DeepLinkHandler />
+          <NativeSetup />
         </BrowserRouter>
         </ThemeProvider>
       </UserProvider>
