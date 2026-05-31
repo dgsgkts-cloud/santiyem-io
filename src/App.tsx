@@ -33,6 +33,7 @@ const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
 const EkipTakip = lazy(() => import("./pages/EkipTakip"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 
 const queryClient = new QueryClient();
 
