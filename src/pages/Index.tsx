@@ -23,6 +23,7 @@ import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
 import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
 import MaterialsPage from "@/components/desktop/MaterialsPage";
 import EInvoicesPage from "@/components/desktop/EInvoicesPage";
+import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 
 import { useUser } from "@/contexts/UserContext";
@@ -46,7 +47,7 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -73,6 +74,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "contracts",
   "materials",
   "e-invoices",
+  "personnel",
 ];
 
 // Mobile drawer menu items
@@ -85,6 +87,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: Reac
   { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
   { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
   { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
+  { id: "personnel", label: "Puantaj & Personel", emoji: "👷", icon: User },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", emoji: "🧾", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
   
@@ -109,6 +112,7 @@ const TAB_TITLES: Record<string, string> = {
   "payments-kasa": "Ödemeler & Kasa",
   materials: "Malzeme Takibi",
   "e-invoices": "E-Fatura / E-Arşiv",
+  personnel: "Puantaj & Personel",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
@@ -126,6 +130,7 @@ const TAB_TO_PATH: Record<string, string> = {
   contracts: "/sozlesmeler",
   materials: "/malzemeler",
   "e-invoices": "/e-fatura",
+  personnel: "/personel",
   reminders: "/hatirlatici",
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
@@ -391,6 +396,8 @@ const Index = () => {
                   <MaterialsPage />
                 ) : activeTab === "e-invoices" ? (
                   <EInvoicesPage />
+                ) : activeTab === "personnel" ? (
+                  <PersonnelPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
@@ -655,6 +662,8 @@ const Index = () => {
             <MaterialsPage />
           ) : activeTab === "e-invoices" ? (
             <EInvoicesPage />
+          ) : activeTab === "personnel" ? (
+            <PersonnelPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (

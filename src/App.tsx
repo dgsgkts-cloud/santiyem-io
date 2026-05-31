@@ -64,6 +64,7 @@ const App = () => (
               <Route path="/sozlesmeler" element={<HomePage />} />
               <Route path="/malzemeler" element={<HomePage />} />
               <Route path="/e-fatura" element={<HomePage />} />
+              <Route path="/personel" element={<HomePage />} />
               <Route path="/hatirlatici" element={<HomePage />} />
               <Route path="/planlar" element={<HomePage />} />
               <Route path="/gunluk-bilgi" element={<HomePage />} />

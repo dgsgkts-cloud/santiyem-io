@@ -1,92 +1,113 @@
-## Şantiyem RBAC Sistemi — Uygulama Planı
+# Puantaj & Personel Modülü Planı
 
-Tek proje–çok kullanıcı için rol & yetki sistemi. Sahip aboneliği öder, davet ettiği kişiler altında çalışır. Her kullanıcı yalnızca yetkili olduğu veriyi görür.
+Hedef: Tek merkezi personel listesi üzerinden hem QR yoklama hem aylık puantaj. Maliyet, kişinin çalışma tipine göre hesaplansın.
 
----
+## 1. Veritabanı (tek migration)
 
-### 1. Veritabanı Değişiklikleri (Migration)
+### Yeni tablolar
 
-**Yeni enum:** `project_role` → `owner | manager | site_engineer | accountant | subcontractor | worker | landowner`
+**`personnel`** (merkezi kişi kaydı — TEK KAYNAK)
+- `id`, `user_id` (sahip), `full_name`, `phone` (unique within owner, eşleştirme anahtarı), `occupation`, `title`, `is_active`
+- `employment_type` enum: `daily_wage` | `monthly_salary` | `subcontractor_crew`
+- `daily_wage` numeric (yevmiyeli için)
+- `monthly_salary` numeric (maktu aylık için)
+- `subcontractor_id` uuid (taşeron ekibi için → mevcut `subcontractors`)
 
-**Yeni tablolar:**
+**`personnel_project_assignments`** (aynı kişi birden fazla projede)
+- `personnel_id`, `project_id`, `salary_share_percent` (maktu için, varsayılan 100), `salary_share_amount` (alternatif), `is_active`
+- UNIQUE(personnel_id, project_id)
 
-- `project_members` — bir kullanıcının bir projedeki rolü
-  - `project_id`, `user_id`, `role`, `invited_by`, `joined_at`
-  - UNIQUE(project_id, user_id) — çoklu projede farklı rol mümkün
-  - `owner` rolü projede tek olur (partial unique index)
+**`attendance_records`** (aylık puantaj ızgarası)
+- `id`, `user_id`, `personnel_id`, `project_id`, `work_date`, `status` enum: `full_day` | `half_day` | `absent` | `leave`
+- `source` enum: `manual` | `qr` (QR'dan otomatik gelirse)
+- `qr_attendance_id` uuid nullable (worker_attendance referansı)
+- UNIQUE(personnel_id, project_id, work_date)
 
-- `project_member_permissions` — kişi-bazı ince ayar (varsayılan şablonun üzerine yazar)
-  - `project_id`, `user_id`, `permission_key`, `granted boolean`
-  - Anahtarlar: `view_financials`, `view_costs`, `view_payments`, `view_diary`, `view_photos`, `view_attendance_all`, `view_progress`, `manage_members`, `manage_finance`...
+**`unmatched_qr_checkins`** (telefon eşleşmeyen QR girişleri — uyarı listesi)
+- View ya da tablo: `worker_attendance` içinden `personnel`'le eşleşmeyen kayıtlar. View olarak yapacağım.
 
-- `project_invitations` — telefon veya e-posta ile davet
-  - `project_id`, `invited_by`, `email`, `phone`, `role`, `token`, `status` (pending/accepted/cancelled), `expires_at`
+### Mevcut tablolarda değişiklik
+- `worker_attendance`: zaten `phone` var. Trigger ekle → INSERT olduğunda `personnel` ile telefondan eşleş, eşleşirse `attendance_records`'a otomatik `full_day` yaz, `source='qr'`.
 
-**Güvenlik fonksiyonları (SECURITY DEFINER, search_path=public):**
-- `get_project_role(_user, _project) → project_role`
-- `has_project_permission(_user, _project, _key) → boolean` — rol şablonunu + kişi-bazı override'ı birleştirir
-- `can_access_project(_user, _project) → boolean` — owner VEYA member VEYA mevcut takım sahibi
-- `is_project_owner(_user, _project) → boolean`
-- `is_project_manager_or_owner(_user, _project) → boolean`
+### RPC / fonksiyonlar
+- `bulk_upsert_attendance(records jsonb)` — mobil hızlı giriş
+- `compute_project_labor_cost(_project, _month)` — projenin yevmiyeli + maktu aylık maliyeti
+- `set_personnel_attendance(personnel, project, date, status)` — tek hücre güncelleme
+- Trigger: `on_worker_attendance_insert_match_personnel`
 
-**Davet RPC'leri:**
-- `accept_project_invitation(_token)` — kullanıcının e-posta/telefonuyla davet eşleşirse member ekler
-- `set_member_role(_project, _user, _role)` — yalnızca owner; manager kendisini owner yapamaz, kimseyi owner atayamaz
-- `set_member_permission(_project, _user, _key, _granted)` — `view_financials` gibi finansal anahtarları YALNIZCA owner değiştirebilir; diğerlerini manager da değiştirebilir
-- `remove_project_member(_project, _user)` — owner çıkarılamaz
+### RLS
+- `personnel`, `assignments`, `attendance_records`: SELECT `can_access_team_resource(auth.uid(), user_id) OR can_access_project(auth.uid(), project_id)`
+- INSERT/UPDATE/DELETE: owner / manager / site_engineer / accountant rollerine göre `has_project_permission`
 
-**RLS — Yeni Erişim Modeli:**
-Mevcut `can_access_team_resource` aynen kalır (ofis paylaşımı). Buna ek olarak proje-bağlamlı tablolarda (`project_expenses`, `project_hakedis`, `worker_attendance`, `site_diary`, `materials`, `project_files`, `subcontractor_payments`, vb.) policy'ler güncellenir:
+### GRANT
+- Her yeni tabloya `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated; GRANT ALL ... TO service_role;` (anon yok)
 
-- SELECT: `can_access_team_resource(auth.uid(), user_id) OR can_access_project(auth.uid(), project_id)`
-- INSERT/UPDATE/DELETE: rol şablonuna göre (örn. `worker` sadece kendi `worker_attendance` satırını oluşturabilir; `accountant` `site_diary`'yi yazamaz).
+### projectPermissions (frontend)
+Yeni anahtarlar: `manage_personnel`, `view_personnel_costs`, `edit_attendance`. Şablonlara işle:
+- owner/accountant: full
+- manager: manage + view costs
+- site_engineer: edit_attendance (maliyet yok)
+- worker: sadece `view_attendance_own`
+- subcontractor: `view_attendance_own_team`
 
-Hassas finansal sütunlar (proje kâr/zarar widget'larında kullanılır) için `has_project_permission(uid, pid, 'view_financials')` ek koşulu eklenir.
+## 2. Frontend
 
-### 2. Rol Şablonları (frontend + RPC)
+### Yeni dosyalar
+- `src/hooks/usePersonnel.ts` — CRUD + projeye atama
+- `src/hooks/useAttendanceGrid.ts` — ay+proje → ızgara verisi
+- `src/lib/laborCost.ts` — tipe göre maliyet hesabı
+- `src/components/personnel/PersonnelList.tsx` — merkezi liste, tip filtresi, "tanımsız kişi" uyarı badge
+- `src/components/personnel/PersonnelForm.tsx` — ad/telefon/tip seç, tipe göre alan göster (yevmiye | maaş + dağıtım | taşeron seç)
+- `src/components/personnel/AttendanceGrid.tsx` — ay × kişi ızgarası, hücre tıkla→durum döngüsü, mobilde "bugün" tek ekran
+- `src/components/personnel/AttendanceMobileDaily.tsx` — şef için günün yoklaması
+- `src/components/personnel/LaborCostSummary.tsx` — proje aylık toplam, tip kırılımı
+- `src/components/personnel/UnmatchedQRBanner.tsx` — telefon eşleşmemiş QR girişleri için CTA "listeye ekle"
+- `src/pages/PersonnelPage.tsx` — sekmeli sayfa: Liste / Puantaj / Maliyet
+- `src/lib/attendanceExport.ts` — PDF (jspdf+autotable, TR karakter) ve Excel (xlsx) export
 
-Tek bir kaynak: `src/lib/projectPermissions.ts` (DB tarafında `has_project_permission` aynı tabloyu okur).
+### Mevcut dosyalarda
+- `src/lib/mobileTabs.ts` — "Yoklama" sekmesi `personnel` rotasına bağlansın; worker için sadece kendi puantajını gösteren read-only view
+- `src/lib/projectPermissions.ts` — yeni anahtarlar
+- `src/App.tsx` — `/personel`, `/puantaj` rotaları
+- Kasa/gider entegrasyonu: `compute_project_labor_cost` çıktısı `project_expenses`'a kategori `"Personel Maliyeti"` olarak SADECE rapor amaçlı görüntülensin — çift kayıt olmaması için ayrı view, INSERT yok. Onaylanmış aya manuel "Kasaya yansıt" butonu (idempotent: source='personnel_payroll', source_id=personnel_id+month)
 
-| Rol | view_financials | view_costs | view_payments | view_diary | view_photos | view_attendance_all | manage_members | manage_finance |
-|---|---|---|---|---|---|---|---|---|
-| owner | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| manager | ✗ (varsayılan) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ |
-| site_engineer | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✗ | ✗ |
-| accountant | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| subcontractor | ✗ | ✗ | own | ✗ | ✗ | own_team | ✗ | ✗ |
-| worker | ✗ | ✗ | ✗ | ✗ | ✗ | own_only | ✗ | ✗ |
-| landowner | ✗ | ✗ | ✗ | ✗ | ✓ (read) | ✗ | ✗ | ✗ |
+### Taşeron sözleşme tipi
+- `subcontractor_contracts` tablosuna `contract_type` enum: `lump_sum` | `unit_price` | `daily_wage` + ilgili alanlar (`total_amount`, `advance_paid`, `unit_price`, `quantity`). Mevcut tabloyu kontrol edeceğim; yoksa oluşturacağım.
 
-`view_financials` ve `manage_finance` yalnızca **owner tarafından** override edilebilir (DB içinde RPC zorlar).
+## 3. QR Entegrasyon Akışı
 
-### 3. Frontend
+```text
+QR check-in (worker_attendance INSERT)
+   │
+   ▼ trigger
+   personnel WHERE phone = normalize(NEW.phone) AND user_id = NEW.user_id
+   │
+   ├── match → attendance_records UPSERT (status=full_day, source=qr)
+   │
+   └── no match → unmatched_qr view'da görünür
+                  → PersonnelPage'de banner "X tanımsız giriş, kişiyi ekle"
+```
 
-**Yeni:**
-- `src/hooks/useProjectRole.ts` — aktif proje için rol + permission seti döner
-- `src/lib/projectPermissions.ts` — rol şablon sabitleri, `can(role, permKey, overrides)` helper
-- `src/components/desktop/ProjectMembersManagement.tsx` — proje üyeleri ekranı (davet, rol değiştir, çıkar, ince ayar toggle)
-- `src/pages/InviteAccept.tsx` — `/proje-davet/:token` linki ile katılım
+## 4. RBAC görünürlüğü
 
-**Güncellenen:**
-- `useProjects` — kullanıcının üye olduğu projeleri de listeler (sadece sahip olduklarını değil)
-- Mali widget'lar (kâr/zarar, maliyet özeti, ödemeler, taşeron cari): `useProjectRole().can('view_financials')` ile guard
-- Şantiye günlüğü, fotoğraf, puantaj panelleri rol bazlı görünürlük
-- `TeamManagement` ve yeni proje üyeleri ekranı yan yana çalışır (ofis ekibi ≠ proje üyeleri)
+| Rol | Liste | Puantaj giriş | Maliyet |
+|---|---|---|---|
+| owner | ✓ | ✓ | ✓ |
+| manager | ✓ | ✓ | ✓ (override ile kapatılabilir) |
+| accountant | ✓ | ✗ | ✓ |
+| site_engineer | ✓ | ✓ | ✗ |
+| subcontractor | sadece kendi ekibi | ✗ | ✗ |
+| worker | sadece kendisi | ✗ | ✗ |
 
-### 4. Faturalama
-Mevcut `profiles.plan` Sahibe bağlı kalır. Davet edilen kullanıcı `accept_project_invitation` ile bağlandığında abonelik kontrolü Sahibin `plan`'ı üzerinden yapılır → `useProjectRole` aktif projenin sahibinin planını döner; davetli kullanıcıda upgrade modal/iyzico butonu gizlenir (mevcut `NativeSubscriptionNotice` mantığıyla uyumlu).
+## 5. Uygulama Sırası
 
-### 5. Test Senaryoları
-- Worker giriş → sadece kendi yoklaması görünür, kâr/zarar ve diğer işçiler gizli
-- Subcontractor → kendi ekibi ve kendisiyle ödemeler
-- Manager → üye ekleyebilir, ama kimseyi owner yapamaz; `view_financials` toggle'ı disabled
-- Owner → bir manager'a tek tıkla `view_financials` açabilir
+1. **Migration** (onay bekle): tablolar + enum + trigger + RPC + RLS + GRANT + projectPermissions seed
+2. Hook'lar + lib (`usePersonnel`, `useAttendanceGrid`, `laborCost`)
+3. Personel listesi + form (çalışma tipine göre dinamik alan)
+4. Aylık ızgara (desktop) + mobil günlük giriş
+5. Maliyet özeti + Kasa entegrasyonu (idempotent buton)
+6. PDF/Excel export
+7. QR trigger testi + unmatched banner
+8. Route/mobil tab güncellemesi
 
-### Teknik Notlar
-- Tüm yeni tablolarda GRANT + RLS + policy aynı migration'da
-- Davet kabulü `auth.email()` veya `auth.jwt()->>phone` ile eşleşmeli
-- Mevcut tüm policy'ler bozulmamak için sadece "OR" ile genişletilir, var olan ofis ekibi davranışı korunur
-
----
-
-Bu büyük bir değişiklik (DB + 20+ dosya). Onaylarsanız migration'la başlayıp adım adım uygulayacağım.
+Onay verirsen migration ile başlıyorum.

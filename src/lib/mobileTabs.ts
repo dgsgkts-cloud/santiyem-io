@@ -6,7 +6,7 @@ import type { ProjectRole } from "@/lib/projectPermissions";
 
 export type MobileTabId =
   | "dashboard" | "projects" | "hakedis" | "site-diary"
-  | "payments-kasa" | "settings" | "more";
+  | "payments-kasa" | "settings" | "more" | "personnel";
 
 export interface MobileTab {
   id: MobileTabId;
@@ -32,6 +32,7 @@ const ROLE_TABS: Record<ProjectRole, MobileTab[]> = {
   manager: FULL_TABS,
   site_engineer: [
     { id: "projects", label: "Şantiye", icon: FolderOpen },
+    { id: "personnel", label: "Puantaj", icon: CheckSquare },
     { id: "site-diary", label: "Günlük", icon: BookOpen },
     { id: "settings", label: "Profil", icon: Settings },
   ],
@@ -46,7 +47,7 @@ const ROLE_TABS: Record<ProjectRole, MobileTab[]> = {
     { id: "settings", label: "Profil", icon: Settings },
   ],
   worker: [
-    { id: "site-diary", label: "Yoklama", icon: CheckSquare },
+    { id: "personnel", label: "Yoklama", icon: CheckSquare },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   landowner: [
