@@ -1,9 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_LABELS, type ProjectRole } from "@/lib/projectPermissions";
 import { toast } from "sonner";
+
+const IOS_STORE_URL = "https://apps.apple.com/app/id0000000000"; // TODO: replace with real App Store ID
+const ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=app.lovable.75507a907e2b421c9e2d6aa7effd7c93";
+
+function detectMobileOs(): "ios" | "android" | null {
+  if (typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return null;
+}
 
 export default function InviteAccept() {
   const { token } = useParams<{ token: string }>();
