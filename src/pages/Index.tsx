@@ -112,6 +112,7 @@ const TAB_TITLES: Record<string, string> = {
   "payments-kasa": "Ödemeler & Kasa",
   materials: "Malzeme Takibi",
   "e-invoices": "E-Fatura / E-Arşiv",
+  personnel: "Puantaj & Personel",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
