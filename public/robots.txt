@@ -22,5 +22,6 @@ Disallow: /odeme-sonucu
 Disallow: /sozlesme-imza/
 Disallow: /hakedis-onay/
 Disallow: /santiye-giris/
+Disallow: /proje-davet/
 
 Sitemap: https://santiyem.io/sitemap.xml
