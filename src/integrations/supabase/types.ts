@@ -1844,6 +1844,108 @@ export type Database = {
           },
         ]
       }
+      project_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string | null
+          expires_at: string
+          id: string
+          invited_by: string
+          phone: string | null
+          project_id: string
+          role: Database["public"]["Enums"]["project_role"]
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          invited_by: string
+          phone?: string | null
+          project_id: string
+          role?: Database["public"]["Enums"]["project_role"]
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          phone?: string | null
+          project_id?: string
+          role?: Database["public"]["Enums"]["project_role"]
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      project_member_permissions: {
+        Row: {
+          granted: boolean
+          id: string
+          permission_key: string
+          project_id: string
+          set_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          granted?: boolean
+          id?: string
+          permission_key: string
+          project_id: string
+          set_by?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          granted?: boolean
+          id?: string
+          permission_key?: string
+          project_id?: string
+          set_by?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          joined_at: string
+          project_id: string
+          role: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          project_id: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          project_id?: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       project_milestones: {
         Row: {
           completed: boolean
@@ -2605,6 +2707,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_project_invitation: { Args: { _token: string }; Returns: string }
+      can_access_project: {
+        Args: { _project: string; _user: string }
+        Returns: boolean
+      }
       can_access_team_resource: {
         Args: { _accessor_id: string; _owner_id: string }
         Returns: boolean
@@ -2630,6 +2737,10 @@ export type Database = {
         Args: { _token: string }
         Returns: string
       }
+      get_project_role: {
+        Args: { _project: string; _user: string }
+        Returns: Database["public"]["Enums"]["project_role"]
+      }
       get_signature_request_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2649,6 +2760,18 @@ export type Database = {
         }[]
       }
       get_user_team_id: { Args: { _user_id: string }; Returns: string }
+      has_project_permission: {
+        Args: { _key: string; _project: string; _user: string }
+        Returns: boolean
+      }
+      is_project_manager_or_owner: {
+        Args: { _project: string; _user: string }
+        Returns: boolean
+      }
+      is_project_owner: {
+        Args: { _project: string; _user: string }
+        Returns: boolean
+      }
       is_same_team: {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
@@ -2728,6 +2851,17 @@ export type Database = {
         }
         Returns: string
       }
+      remove_project_member: {
+        Args: { _project: string; _user: string }
+        Returns: undefined
+      }
+      role_default_permission: {
+        Args: {
+          _key: string
+          _role: Database["public"]["Enums"]["project_role"]
+        }
+        Returns: boolean
+      }
       save_subcontractor_payment_with_cash: {
         Args: {
           _account_no: string
@@ -2744,6 +2878,23 @@ export type Database = {
           _subcontractor_id: string
         }
         Returns: string
+      }
+      set_project_member_permission: {
+        Args: {
+          _granted: boolean
+          _key: string
+          _project: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      set_project_member_role: {
+        Args: {
+          _project: string
+          _role: Database["public"]["Enums"]["project_role"]
+          _user: string
+        }
+        Returns: undefined
       }
       update_hakedis_approval: {
         Args: {
@@ -2794,7 +2945,14 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      project_role:
+        | "owner"
+        | "manager"
+        | "site_engineer"
+        | "accountant"
+        | "subcontractor"
+        | "worker"
+        | "landowner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2921,6 +3079,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_role: [
+        "owner",
+        "manager",
+        "site_engineer",
+        "accountant",
+        "subcontractor",
+        "worker",
+        "landowner",
+      ],
+    },
   },
 } as const

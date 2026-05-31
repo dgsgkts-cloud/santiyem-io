@@ -33,6 +33,7 @@ const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
 const EkipTakip = lazy(() => import("./pages/EkipTakip"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/santiye-giris/:token" element={<SantiyeGiris />} />
               <Route path="/ekip/:token" element={<EkipTakip />} />
+              <Route path="/proje-davet/:token" element={<InviteAccept />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

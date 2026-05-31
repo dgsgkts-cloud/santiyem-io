@@ -17,6 +17,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
+import ProjectMembersManagement from "./ProjectMembersManagement";
 import { formatCurrency, formatNumber0 } from "@/lib/formatCurrency";
 
 const STATUS_OPTIONS = [
@@ -824,6 +825,13 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
             <h3 className="text-sm lg:text-[15px] font-semibold" style={textStyle}>İşçi Devam Takibi</h3>
           </div>
           <AttendancePanel projectId={p.id} projectName={p.name} />
+        </div>
+      )}
+
+      {/* Proje Üyeleri (RBAC) */}
+      {user && (
+        <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
+          <ProjectMembersManagement projectId={p.id} />
         </div>
       )}
 
