@@ -59,6 +59,16 @@ export function resolveDeepLinkAction(rawUrl: unknown): DeepLinkAction {
     .replace(/^\/+/, "")
     .toLowerCase();
   const lowerPath = (u.pathname || "").toLowerCase();
+
+  // Project invitation deep link: santiyem://proje-davet/<token>
+  // or universal link https://santiyem.io/proje-davet/<token>
+  const inviteMatch = lowerPath.match(/\/?proje-davet\/([a-z0-9-]+)/i)
+    || pathWithQuery.match(/proje-davet\/([a-z0-9-]+)/i);
+  if (inviteMatch) {
+    const token = inviteMatch[1];
+    return { kind: "invite", target: `/proje-davet/${token}`, token };
+  }
+
   const isPaymentResult =
     pathWithQuery.includes("odeme-sonucu") ||
     pathWithQuery.includes("payment-callback") ||
