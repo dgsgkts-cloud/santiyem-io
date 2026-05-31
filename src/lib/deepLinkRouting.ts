@@ -4,7 +4,8 @@ export type DeepLinkAction =
   | { kind: "ignore" }
   | { kind: "invalid-url"; target: string }
   | { kind: "invalid-params"; target: string }
-  | { kind: "navigate"; target: string; parsed: ParsedPaymentCallback };
+  | { kind: "navigate"; target: string; parsed: ParsedPaymentCallback }
+  | { kind: "invite"; target: string; token: string };
 
 /** Güvenli fallback hedefi — her zaman /odeme-sonucu?status=failed. */
 export const SAFE_FAILED_TARGET = "/odeme-sonucu?status=failed";
