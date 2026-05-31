@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_records: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          personnel_id: string
+          project_id: string
+          qr_attendance_id: string | null
+          source: Database["public"]["Enums"]["attendance_source"]
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          personnel_id: string
+          project_id: string
+          qr_attendance_id?: string | null
+          source?: Database["public"]["Enums"]["attendance_source"]
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          personnel_id?: string
+          project_id?: string
+          qr_attendance_id?: string | null
+          source?: Database["public"]["Enums"]["attendance_source"]
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_personnel_id_fkey"
+            columns: ["personnel_id"]
+            isOneToOne: false
+            referencedRelation: "personnel"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_qr_attendance_id_fkey"
+            columns: ["qr_attendance_id"]
+            isOneToOne: false
+            referencedRelation: "unmatched_qr_checkins"
+            referencedColumns: ["worker_attendance_id"]
+          },
+          {
+            foreignKeyName: "attendance_records_qr_attendance_id_fkey"
+            columns: ["qr_attendance_id"]
+            isOneToOne: false
+            referencedRelation: "worker_attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_accounts: {
         Row: {
           account_no: string | null
@@ -1632,6 +1696,112 @@ export type Database = {
         }
         Relationships: []
       }
+      personnel: {
+        Row: {
+          created_at: string
+          daily_wage: number | null
+          employment_type: Database["public"]["Enums"]["employment_type"]
+          full_name: string
+          id: string
+          is_active: boolean
+          monthly_salary: number | null
+          note: string | null
+          occupation: string | null
+          phone: string | null
+          phone_normalized: string | null
+          subcontractor_id: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_wage?: number | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_name: string
+          id?: string
+          is_active?: boolean
+          monthly_salary?: number | null
+          note?: string | null
+          occupation?: string | null
+          phone?: string | null
+          phone_normalized?: string | null
+          subcontractor_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_wage?: number | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          monthly_salary?: number | null
+          note?: string | null
+          occupation?: string | null
+          phone?: string | null
+          phone_normalized?: string | null
+          subcontractor_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personnel_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personnel_project_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          personnel_id: string
+          project_id: string
+          salary_share_amount: number | null
+          salary_share_percent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          personnel_id: string
+          project_id: string
+          salary_share_amount?: number | null
+          salary_share_percent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          personnel_id?: string
+          project_id?: string
+          salary_share_amount?: number | null
+          salary_share_percent?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personnel_project_assignments_personnel_id_fkey"
+            columns: ["personnel_id"]
+            isOneToOne: false
+            referencedRelation: "personnel"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           city: string | null
@@ -2704,10 +2874,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      unmatched_qr_checkins: {
+        Row: {
+          check_in: string | null
+          entry_type: string | null
+          full_name: string | null
+          occupation: string | null
+          phone: string | null
+          project_id: string | null
+          title: string | null
+          user_id: string | null
+          worker_attendance_id: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          entry_type?: string | null
+          full_name?: string | null
+          occupation?: string | null
+          phone?: string | null
+          project_id?: string | null
+          title?: string | null
+          user_id?: string | null
+          worker_attendance_id?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          entry_type?: string | null
+          full_name?: string | null
+          occupation?: string | null
+          phone?: string | null
+          project_id?: string | null
+          title?: string | null
+          user_id?: string | null
+          worker_attendance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_attendance_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_project_invitation: { Args: { _token: string }; Returns: string }
+      bulk_upsert_attendance: { Args: { _records: Json }; Returns: number }
       can_access_project: {
         Args: { _project: string; _user: string }
         Returns: boolean
@@ -2719,6 +2933,10 @@ export type Database = {
       check_pending_invitations: {
         Args: { _email: string; _user_id: string }
         Returns: undefined
+      }
+      compute_project_labor_cost: {
+        Args: { _month: string; _project: string }
+        Returns: Json
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -2832,6 +3050,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_phone: { Args: { _p: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -2945,6 +3164,9 @@ export type Database = {
       }
     }
     Enums: {
+      attendance_source: "manual" | "qr"
+      attendance_status: "full_day" | "half_day" | "absent" | "leave"
+      employment_type: "daily_wage" | "monthly_salary" | "subcontractor_crew"
       project_role:
         | "owner"
         | "manager"
@@ -3080,6 +3302,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      attendance_source: ["manual", "qr"],
+      attendance_status: ["full_day", "half_day", "absent", "leave"],
+      employment_type: ["daily_wage", "monthly_salary", "subcontractor_crew"],
       project_role: [
         "owner",
         "manager",
