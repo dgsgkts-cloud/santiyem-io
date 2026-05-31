@@ -74,6 +74,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "contracts",
   "materials",
   "e-invoices",
+  "personnel",
 ];
 
 // Mobile drawer menu items
