@@ -17,6 +17,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 import { toast } from "sonner";
 import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
+import ProjectMembersManagement from "./ProjectMembersManagement";
 import { formatCurrency, formatNumber0 } from "@/lib/formatCurrency";
 
 const STATUS_OPTIONS = [
