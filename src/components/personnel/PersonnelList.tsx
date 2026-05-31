@@ -118,10 +118,11 @@ export default function PersonnelList() {
 
       <DeleteConfirmModal
         open={!!deleteId}
+        onClose={() => setDeleteId(null)}
         onConfirm={async () => { if (deleteId) { await deletePerson(deleteId); } setDeleteId(null); }}
-        onCancel={() => setDeleteId(null)}
         title="Kişiyi sil"
-        description="Bu kişinin puantaj kayıtları da silinecek. Devam edilsin mi?"
+        itemName={personnel.find((p) => p.id === deleteId)?.full_name ?? ""}
+        extraWarning="Bu kişinin puantaj kayıtları da silinecek."
       />
     </div>
   );
