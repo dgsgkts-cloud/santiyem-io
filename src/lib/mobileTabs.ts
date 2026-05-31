@@ -6,7 +6,7 @@ import type { ProjectRole } from "@/lib/projectPermissions";
 
 export type MobileTabId =
   | "dashboard" | "projects" | "hakedis" | "site-diary"
-  | "payments-kasa" | "settings" | "more";
+  | "payments-kasa" | "settings" | "more" | "personnel";
 
 export interface MobileTab {
   id: MobileTabId;
