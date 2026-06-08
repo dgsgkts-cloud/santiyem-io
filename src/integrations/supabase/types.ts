@@ -2821,7 +2821,6 @@ export type Database = {
           phone: string | null
           project_id: string
           qr_token: string
-          tc_no: string | null
           team_size: number | null
           title: string | null
           user_id: string
@@ -2839,7 +2838,6 @@ export type Database = {
           phone?: string | null
           project_id: string
           qr_token: string
-          tc_no?: string | null
           team_size?: number | null
           title?: string | null
           user_id: string
@@ -2857,7 +2855,6 @@ export type Database = {
           phone?: string | null
           project_id?: string
           qr_token?: string
-          tc_no?: string | null
           team_size?: number | null
           title?: string | null
           user_id?: string
