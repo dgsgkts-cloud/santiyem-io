@@ -30,14 +30,41 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: verify_jwt = true in config.toml so the gateway rejects calls
+// without a Bearer token. We additionally require an authenticated user
+// (or service-role) here — anonymous JWTs are not allowed to send branded mail.
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
+  }
+
+  // Require an authenticated (non-anonymous) caller. Service-role calls
+  // from other edge functions pass this check (role = 'service_role').
+  const authHeader = req.headers.get('Authorization') || ''
+  if (!authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+  try {
+    const jwt = authHeader.slice('Bearer '.length)
+    const payloadPart = jwt.split('.')[1]
+    const claims = JSON.parse(
+      atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'))
+    )
+    const role = claims?.role
+    // Reject anon — only authenticated users or service role may send mail.
+    if (role !== 'authenticated' && role !== 'service_role') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')

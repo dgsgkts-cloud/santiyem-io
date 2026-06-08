@@ -9,7 +9,7 @@ export interface WorkerAttendance {
   user_id: string;
   qr_token: string;
   full_name: string;
-  tc_no: string | null;
+  
   phone: string | null;
   occupation: string;
   check_in: string;
