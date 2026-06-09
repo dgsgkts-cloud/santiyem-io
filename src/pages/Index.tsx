@@ -635,7 +635,7 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex min-h-full flex-col">
           <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
@@ -692,7 +692,7 @@ const Index = () => {
 
       {/* ── MOBILE BOTTOM TAB BAR ── */}
       <nav
-        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-sm"
+        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-md shadow-lg"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         aria-label="Alt navigasyon"
       >
