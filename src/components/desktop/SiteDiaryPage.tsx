@@ -8,7 +8,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Capacitor } from "@capacitor/core";
-import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
+import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat, BookOpen } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays, startOfWeek, endOfWeek, isYesterday, isThisWeek, isWithinInterval } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -176,6 +176,7 @@ const SiteDiaryPage = () => {
 
   const totalWorkers = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count, 0);
   const totalManHours = (crews: CrewRow[]) => crews.reduce((s, c) => s + c.count * c.hours, 0);
+  const weatherOption = (icon: string) => WEATHER_OPTIONS.find(w => w.icon === icon) || WEATHER_OPTIONS[0];
 
   const deleteModal = (
     <DeleteConfirmModal
@@ -198,7 +199,7 @@ const SiteDiaryPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-foreground">📔 Şantiye Günlüğü</h1>
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2"><BookOpen className="w-5 h-5 text-primary" /> Şantiye Günlüğü</h1>
             <p className="text-sm mt-0.5 text-muted-foreground">Günlük şantiye kayıtlarınızı yönetin</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap">
@@ -446,7 +447,10 @@ const SiteDiaryPage = () => {
                         style={{ minHeight: 48 }}
                         aria-label={`${format(parseISO(entry.entry_date), "d MMMM yyyy", { locale: tr })} kaydını aç`}
                       >
-                        <span className="text-xl shrink-0">{entry.weather_icon}</span>
+                        {(() => {
+                          const WeatherIcon = weatherOption(entry.weather_icon).lucide;
+                          return <WeatherIcon className="w-5 h-5 shrink-0 text-primary" />;
+                        })()}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">
                             {format(parseISO(entry.entry_date), "d MMMM yyyy, EEEE", { locale: tr })}

@@ -29,12 +29,11 @@ import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "@/assets/muhendis-logo.png";
 import {
   RotateCcw, MessageSquare,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, Settings, LogOut, User, Plus, Bell
+  Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
@@ -78,23 +77,23 @@ const NAVIGABLE_TABS: Tab[] = [
 ];
 
 // Mobile drawer menu items
-const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", emoji: "🏠", icon: Home },
-  { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
-  { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
-  { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
-  { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
-  { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
-  { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
-  { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
-  { id: "personnel", label: "Puantaj & Personel", emoji: "👷", icon: User },
-  { id: "e-invoices", label: "E-Fatura / E-Arşiv", emoji: "🧾", icon: FileText },
-  { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
+const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }[] = [
+  { id: "dashboard", label: "Dashboard", icon: Home },
+  { id: "chat", label: "AI Asistan", icon: MessageSquare },
+  { id: "projects", label: "Proje Yönetimi", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş Yönetimi", icon: FileText },
+  { id: "contracts", label: "Sözleşme Takibi", icon: FileText },
+  { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
+  { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
+  { id: "materials", label: "Malzeme Takibi", icon: Package },
+  { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
+  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
   
   
-  { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
-  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", emoji: "💎", icon: Zap } as const]),
-  { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
+  { id: "reminders", label: "Hatırlatıcı", icon: CalendarClock },
+  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", icon: Zap } as const]),
+  { id: "settings", label: "Ayarlar", icon: Settings },
 ];
 
 const TAB_TITLES: Record<string, string> = {
@@ -426,14 +425,16 @@ const Index = () => {
   );
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => goToTab("dashboard")}>
-          <img src={logo} alt="Şantiyem" className="w-7 h-7" />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <HardHat className="w-5 h-5 text-primary" />
+          </div>
           <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
         </div>
         <div className="flex items-center gap-1">
@@ -571,13 +572,14 @@ const Index = () => {
                 <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
                 {isAdmin && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ backgroundColor: "rgba(139,92,246,0.25)", color: "#A78BFA" }}>ADMIN</span>}
               </div>
-              <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+              <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                 isAdmin ? "bg-[#8B5CF6]/20 text-[#A78BFA]" :
                 plan === "pro" || plan === "plus" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
                 plan === "office_free" || plan === "office_pro" || plan === "office_custom" ? "bg-blue-500/20 text-blue-400" :
                 "bg-white/10 text-white/50"
               }`}>
-                {isAdmin ? "Tam Erişim ⚡" : plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
+                {isAdmin && <Zap className="w-3 h-3" />}
+                {isAdmin ? "Tam Erişim" : plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
               </span>
             </div>
           </div>
@@ -587,6 +589,7 @@ const Index = () => {
 
         <nav className="flex-1 overflow-y-auto px-3 py-3">
           {visibleDrawerItems.map((item) => {
+            const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
@@ -599,7 +602,7 @@ const Index = () => {
                 }`}
                 style={{ minHeight: "48px" }}
               >
-                <span className="text-lg w-6 text-center">{item.emoji}</span>
+                <Icon className="w-5 h-5 shrink-0" />
                 <span className={`text-sm ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
               </button>
             );
@@ -632,7 +635,7 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex min-h-full flex-col">
           <div className="flex-1 pb-8 md:pb-10">
           {activeTab === "dashboard" ? (
@@ -689,7 +692,7 @@ const Index = () => {
 
       {/* ── MOBILE BOTTOM TAB BAR ── */}
       <nav
-        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-sm"
+        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-md shadow-lg"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         aria-label="Alt navigasyon"
       >

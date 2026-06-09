@@ -1,11 +1,15 @@
+import { Capacitor } from "@capacitor/core";
+
 const WhatsAppButton = () => {
+  const nativeOffset = Capacitor.isNativePlatform() ? "calc(6rem + env(safe-area-inset-bottom, 0px))" : "1.5rem";
+
   return (
     <a
       href="https://wa.me/905427818181"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
-      style={{ backgroundColor: "#25D366" }}
+      className="fixed right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+      style={{ backgroundColor: "#25D366", bottom: nativeOffset }}
       aria-label="WhatsApp ile iletişime geç"
     >
       <svg viewBox="0 0 32 32" className="w-7 h-7 fill-white">

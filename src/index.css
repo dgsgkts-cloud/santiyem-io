@@ -145,13 +145,20 @@
   }
 
   html {
-    padding-top: env(safe-area-inset-top, 0px);
+    min-height: 100%;
+    height: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    min-height: 100%;
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100%;
   }
 }
 
