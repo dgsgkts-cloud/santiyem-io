@@ -29,12 +29,11 @@ import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "@/assets/muhendis-logo.png";
 import {
   RotateCcw, MessageSquare,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, Settings, LogOut, User, Plus, Bell
+  Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
@@ -78,23 +77,23 @@ const NAVIGABLE_TABS: Tab[] = [
 ];
 
 // Mobile drawer menu items
-const DRAWER_ITEMS: { id: Tab | string; label: string; emoji: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", emoji: "🏠", icon: Home },
-  { id: "chat", label: "AI Asistan", emoji: "💬", icon: MessageSquare },
-  { id: "projects", label: "Proje Yönetimi", emoji: "📁", icon: FolderOpen },
-  { id: "hakedis", label: "Hakediş Yönetimi", emoji: "🧾", icon: FileText },
-  { id: "contracts", label: "Sözleşme Takibi", emoji: "📑", icon: FileText },
-  { id: "payments-kasa", label: "Ödemeler & Kasa", emoji: "💰", icon: FileText },
-  { id: "site-diary", label: "Şantiye Günlüğü", emoji: "📔", icon: FileText },
-  { id: "materials", label: "Malzeme Takibi", emoji: "📦", icon: FileText },
-  { id: "personnel", label: "Puantaj & Personel", emoji: "👷", icon: User },
-  { id: "e-invoices", label: "E-Fatura / E-Arşiv", emoji: "🧾", icon: FileText },
-  { id: "daily", label: "Günlük Bilgi", emoji: "💡", icon: Lightbulb },
+const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }[] = [
+  { id: "dashboard", label: "Dashboard", icon: Home },
+  { id: "chat", label: "AI Asistan", icon: MessageSquare },
+  { id: "projects", label: "Proje Yönetimi", icon: FolderOpen },
+  { id: "hakedis", label: "Hakediş Yönetimi", icon: FileText },
+  { id: "contracts", label: "Sözleşme Takibi", icon: FileText },
+  { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
+  { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
+  { id: "materials", label: "Malzeme Takibi", icon: Package },
+  { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
+  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
   
   
-  { id: "reminders", label: "Hatırlatıcı", emoji: "📋", icon: CalendarClock },
-  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", emoji: "💎", icon: Zap } as const]),
-  { id: "settings", label: "Ayarlar", emoji: "⚙️", icon: Settings },
+  { id: "reminders", label: "Hatırlatıcı", icon: CalendarClock },
+  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", icon: Zap } as const]),
+  { id: "settings", label: "Ayarlar", icon: Settings },
 ];
 
 const TAB_TITLES: Record<string, string> = {
