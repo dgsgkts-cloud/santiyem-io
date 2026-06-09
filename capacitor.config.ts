@@ -9,7 +9,9 @@ const config: CapacitorConfig = {
     scheme: 'santiyem',
   },
   server: {
-    url: 'https://75507a90-7e2b-421c-9e2d-6aa7effd7c93.lovableproject.com?forceHideBadge=true',
+    // NOTE: For Lovable hot-reload during development, temporarily set:
+    //   url: 'https://75507a90-7e2b-421c-9e2d-6aa7effd7c93.lovableproject.com?forceHideBadge=true'
+    // Leave EMPTY for production / store builds so the app loads bundled dist/.
     cleartext: true,
     androidScheme: 'santiyem',
   },
