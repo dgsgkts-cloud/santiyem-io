@@ -8,7 +8,7 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Capacitor } from "@capacitor/core";
-import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat } from "lucide-react";
+import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat, BookOpen } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays, startOfWeek, endOfWeek, isYesterday, isThisWeek, isWithinInterval } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
