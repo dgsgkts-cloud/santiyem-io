@@ -55,8 +55,10 @@ export default function ContractSignUpload() {
 
     try {
       const ext = file.name.split(".").pop() || "pdf";
-      const path = `${request.id}/${Date.now()}.${ext}`;
-      
+      // Path begins with the signing token so storage RLS can verify the uploader
+      // possesses a valid, non-expired token (not just a known request id).
+      const path = `${token}/${Date.now()}.${ext}`;
+
       const { error: uploadErr } = await supabase.storage
         .from("signed-contracts")
         .upload(path, file);
