@@ -412,17 +412,17 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     const isActive = uiState !== "idle" && uiState !== "error";
     if (!isActive) return;
     if (muted) return; // user explicitly muted — respect it
-    if (siteMode && conversation.isSpeaking) {
+    if (shouldBlockBargeIn(settings) && conversation.isSpeaking) {
       setLocalTracksEnabled(false);
       return () => {
         // Small grace so tail-end TTS audio doesn't self-trigger VAD on re-open.
-        setTimeout(() => { if (!muted) setLocalTracksEnabled(true); }, 350);
+        setTimeout(() => { if (!muted && !settingsRef.current.pushToTalk) setLocalTracksEnabled(true); }, 350);
       };
-    } else {
+    } else if (!settings.pushToTalk) {
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, siteMode, uiState, muted]);
+  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted]);
 
 
 
