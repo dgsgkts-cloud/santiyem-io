@@ -784,20 +784,20 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     }, 250);
   };
 
-  // Enforce PTT mute state whenever the toggle changes or the session opens.
+  // Enforce PTT mute only when the PTT setting itself changes. Do NOT depend
+  // on `uiState` — that made the effect re-run on every SPEAKING/LISTENING
+  // transition and stomped mute mid-session (Sprint 3.2 regression).
   useEffect(() => {
     if (uiState === "idle" || uiState === "error") return;
     if (settings.pushToTalk) {
-      tl("setMuted(true)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
     } else {
-      tl("setMuted(false)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.pushToTalk, uiState]);
+  }, [settings.pushToTalk]);
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
