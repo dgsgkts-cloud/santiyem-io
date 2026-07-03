@@ -1,27 +1,136 @@
-/* Voice Copilot animations */
+/* ============================================================
+   Voice Copilot — Construction OS
+   Premium animations, blueprint textures, glassmorphism
+   ============================================================ */
+
+/* Core orb */
 @keyframes voice-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.15); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.06); opacity: 1; }
 }
 @keyframes voice-ring {
-  0% { transform: scale(1); opacity: 0.5; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
-@keyframes voice-thinking {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes voice-thinking-spin {
+  to { transform: rotate(360deg); }
 }
 @keyframes voice-wave {
-  0%, 100% { transform: scaleY(0.3); }
+  0%, 100% { transform: scaleY(0.25); }
   50% { transform: scaleY(1); }
 }
 @keyframes voice-card-in {
-  0% { transform: translateY(12px) scale(0.98); opacity: 0; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
+  0% { transform: translateY(14px) scale(0.97); opacity: 0; filter: blur(6px); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
+}
+@keyframes voice-bubble-in {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes voice-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes voice-online-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,211,153,0.6); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(52,211,153,0); }
+}
+@keyframes voice-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes voice-particle {
+  0% { transform: translate(0,0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx,40px), var(--dy,-60px)) scale(1); opacity: 0; }
+}
+@keyframes voice-neural-arc {
+  0% { stroke-dashoffset: 400; opacity: 0.2; }
+  50% { opacity: 0.9; }
+  100% { stroke-dashoffset: 0; opacity: 0.2; }
+}
+@keyframes voice-orb-breathe {
+  0%, 100% { box-shadow: 0 0 60px 8px rgba(255,107,43,0.35), 0 0 140px 20px rgba(255,107,43,0.18); }
+  50% { box-shadow: 0 0 80px 12px rgba(255,107,43,0.55), 0 0 180px 30px rgba(255,107,43,0.28); }
 }
 
-.voice-orb-pulse { animation: voice-pulse 1.6s ease-in-out infinite; }
-.voice-orb-ring { animation: voice-ring 1.8s ease-out infinite; }
-.voice-orb-thinking { animation: voice-thinking 1.2s linear infinite; }
-.voice-wave-bar { animation: voice-wave 0.8s ease-in-out infinite; transform-origin: center; }
-.voice-card-in { animation: voice-card-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.voice-orb-pulse { animation: voice-pulse 2.4s ease-in-out infinite, voice-orb-breathe 3s ease-in-out infinite; }
+.voice-orb-ring { animation: voice-ring 2.2s ease-out infinite; }
+.voice-orb-thinking { animation: voice-thinking-spin 4s linear infinite; }
+.voice-wave-bar { animation: voice-wave 0.9s ease-in-out infinite; transform-origin: center; }
+.voice-card-in { animation: voice-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.voice-bubble-in { animation: voice-bubble-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.voice-fade-in { animation: voice-fade-in 0.5s ease-out both; }
+.voice-online-dot { animation: voice-online-blink 2s ease-in-out infinite; }
+
+/* Blueprint grid background */
+.voice-blueprint {
+  background-color: #06090D;
+  background-image:
+    linear-gradient(rgba(255,107,43,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,107,43,0.05) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,107,43,0.10), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(30,80,140,0.12), transparent 70%);
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+}
+
+/* Glass surfaces */
+.voice-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.45), inset 0 1px 0 0 rgba(255,255,255,0.04);
+}
+.voice-glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.voice-glass-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.voice-glass-btn:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,107,43,0.4);
+  transform: translateY(-1px);
+}
+.voice-glass-btn:active { transform: translateY(0) scale(0.97); }
+
+/* Shimmer text (thinking state) */
+.voice-shimmer-text {
+  background: linear-gradient(90deg, rgba(255,255,255,0.35) 0%, #FF8F5A 50%, rgba(255,255,255,0.35) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: voice-shimmer 2.4s linear infinite;
+}
+
+/* Particle field (thinking) */
+.voice-particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #FFB58A 0%, rgba(255,107,43,0) 70%);
+  animation: voice-particle 2.6s ease-out infinite;
+}
+
+/* Neural arcs (thinking) */
+.voice-neural-arc {
+  fill: none;
+  stroke: url(#voiceArcGradient);
+  stroke-width: 1.2;
+  stroke-dasharray: 400;
+  animation: voice-neural-arc 3s ease-in-out infinite;
+}
+
+/* Waveform bars around orb */
+.voice-wave-ring {
+  animation: voice-wave 0.7s ease-in-out infinite;
+  transform-origin: bottom center;
+}
