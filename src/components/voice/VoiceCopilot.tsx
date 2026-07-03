@@ -191,23 +191,10 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         if (tlDumpTimerRef.current) window.clearTimeout(tlDumpTimerRef.current);
         tlDumpTimerRef.current = window.setTimeout(() => tlDump("first 5s"), 5500);
 
-        // === GREETING PROTECTION ================================
-        // Lock the mic & server-side VAD until the greeting has fully played.
-        // Released later in the SPEAKING → LISTENING transition below.
-        greetingProtectedRef.current = true;
-        setGreetingProtected(true);
-        console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
-        try {
-          conversation.setMuted(true);
-          tl("setMuted(true)", "onConnect / greeting protection");
-        } catch { /* noop */ }
-        try {
-          for (const t of micTracksRef.current) {
-            if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
-          }
-          tl("mic tracks OFF", "onConnect / greeting protection");
-        } catch { /* noop */ }
-        // ========================================================
+        // NOTE: No greeting is generated. The agent stays silent until the
+        // user speaks first (ChatGPT Voice style). Mic is live from the start.
+
+
 
         if (initialContext) {
           queueMicrotask(() => {
