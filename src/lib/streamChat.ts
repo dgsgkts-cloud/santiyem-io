@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 type Msg = { role: "user" | "assistant"; content: string; attachments?: { base64: string; type: string }[] };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -31,11 +33,23 @@ export async function streamChat({
   console.log("[AI] → POST", CHAT_URL, "msgs:", messages.length);
 
   try {
+    // The chat function verifies the caller's user JWT via auth.getUser().
+    // Sending the publishable (anon) key here fails that check with 401 —
+    // we must send the logged-in user's session access token.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) {
+      clearTimeout(timeoutId);
+      console.error("[AI] No active session — user must be logged in to use the AI assistant");
+      onError("AI asistanı kullanmak için lütfen giriş yapın");
+      return;
+    }
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ messages }),
       signal: controller.signal,
