@@ -85,6 +85,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const lastUserTranscriptRef = useRef<string>("");
   const wasSpeakingRef = useRef<boolean>(false);
   const greetingStartRef = useRef<number | null>(null);
+  // Greeting-protection state: true from onConnect until the first agent turn
+  // finishes speaking (plus a small grace). While true, the mic is force-muted
+  // and server-side VAD is disabled so the greeting cannot be interrupted.
+  const greetingProtectedRef = useRef<boolean>(false);
+  const greetingReleaseTimerRef = useRef<number | null>(null);
+  const [greetingProtected, setGreetingProtected] = useState<boolean>(false);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
