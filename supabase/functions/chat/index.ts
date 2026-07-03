@@ -530,64 +530,87 @@ serve(async (req) => {
         const userQuery = (lastUserMsg?.content || "").trim();
 
         if (userQuery && userQuery.length >= 3) {
-          // 1) Intent detection via fast JSON classifier
-          const now = new Date();
-          const intentResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
-              response_format: { type: "json_object" },
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
-                    `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                    `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
-                    `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. ` +
-                    `"Bu ay" → içinde bulunulan ay başı-sonu. "Geçen ay" → önceki ay. "Bu hafta" → pazartesi-pazar. ` +
-                    `"En son" / "son yüklenen" → limit=1, aggregate="latest". ` +
-                    `"Ne kadar / toplam / kaç ton / kaç m3" → aggregate="sum". ` +
-                    `"En çok ... yaptığımız" → aggregate="top_by_recipient". ` +
-                    `"Beton dökümü / kalıp / demir / hafriyat" gibi iş kalemi geçerse SITE_DIARY_QUERY için keyword'e yaz. ` +
-                    `"Bekleyen" → filters.name = "bekliyor". "Geciken" → filters.name = "gecikti". Sadece JSON döndür.`,
-                },
-                { role: "user", content: userQuery },
-              ],
-            }),
-          });
-
-          let intent = "GENERAL_CHAT";
-          let filters: any = {};
-          if (intentResp.ok) {
-            const j = await intentResp.json();
-            try {
-              const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
-              intent = parsed.intent || "GENERAL_CHAT";
-              filters = parsed.filters || {};
-            } catch { /* ignore */ }
-          }
-          console.log("[Brain] intent:", intent, "filters:", filters);
-
-          // 2) Query database based on intent (RLS bypassed via service key; always scope by user_id)
           const uid = user.id;
+          const normQ = normalizeQuery(userQuery);
+
+          // 0) Cache: exact query dedupe (per user + mode)
+          const cacheKey = `${uid}|${voiceMode ? "v" : "w"}|${normQ}`;
+          const cached = cacheGet(brainCache, cacheKey);
+          if (cached !== null) {
+            projectDataContext = cached;
+            console.log("[Brain] cache hit");
+            throw new Error("__CACHE_HIT__");
+          }
+
+          const now = new Date();
+          const brainStart = Date.now();
+
+          // 1) Cached project list for name resolution + heuristic matching
+          let projList = cacheGet(projectListCache, uid);
+          if (!projList) {
+            const { data: pl } = await sb.from("projects")
+              .select("id, name").eq("user_id", uid).limit(50);
+            projList = (pl || []) as any;
+            cacheSet(projectListCache, uid, projList!, 60_000);
+          }
+
+          // 2) Heuristic intent classifier (fast, no LLM)
+          const heur = classifyIntentHeuristic(userQuery, projList!);
+          let intent = heur.intent;
+          let filters: any = heur.filters;
+
+          // 3) Only fall back to LLM classifier in WEB mode when heuristic is uncertain
+          if (!voiceMode && !heur.confident) {
+            const intentResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash-lite",
+                response_format: { type: "json_object" },
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
+                      `Bugün: ${now.toISOString().slice(0, 10)}. ` +
+                      `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                      `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
+                  },
+                  { role: "user", content: userQuery },
+                ],
+              }),
+            });
+            if (intentResp.ok) {
+              const j = await intentResp.json();
+              try {
+                const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
+                intent = parsed.intent || intent;
+                filters = { ...filters, ...(parsed.filters || {}) };
+              } catch { /* ignore */ }
+            }
+          }
+          console.log("[Brain] intent:", intent, "filters:", filters, "voice:", voiceMode);
+
+          // 4) Query database based on intent
           const df = filters.date_from as string | null;
           const dt = filters.date_to as string | null;
           const nameFilter = (filters.name as string | null)?.toLowerCase() || null;
           const projectName = (filters.project_name as string | null) || null;
           const keyword = (filters.keyword as string | null) || null;
           const aggregate = (filters.aggregate as string | null) || null;
-          const limit = Math.min(Number(filters.limit) || 10, 25);
+          // Voice mode: keep result set tiny for fast spoken summary
+          const baseLimit = voiceMode ? 5 : 10;
+          const maxLimit = voiceMode ? 5 : 25;
+          const limit = Math.min(Number(filters.limit) || baseLimit, maxLimit);
 
-          // Helper: resolve project_id from name
+          // Resolve project_id from cached list first (no extra query)
           let projectIdFilter: string | null = null;
           if (projectName) {
-            const { data: proj } = await sb
-              .from("projects").select("id, name").eq("user_id", uid)
-              .ilike("name", `%${projectName}%`).limit(1).maybeSingle();
-            if (proj) projectIdFilter = proj.id;
+            const pn = projectName.toLowerCase();
+            const hit = projList!.find(p => (p.name || "").toLowerCase().includes(pn));
+            if (hit) projectIdFilter = hit.id;
           }
+
 
           const fmt = (n: any) =>
             typeof n === "number" ? new Intl.NumberFormat("tr-TR").format(n) + " ₺" : String(n ?? "");
