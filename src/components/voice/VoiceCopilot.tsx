@@ -91,6 +91,29 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const greetingProtectedRef = useRef<boolean>(false);
   const greetingReleaseTimerRef = useRef<number | null>(null);
   const [greetingProtected, setGreetingProtected] = useState<boolean>(false);
+  // ── SESSION TIMELINE (root-cause instrumentation) ──────────────────
+  // Every lifecycle event is stamped relative to startSession() so the
+  // first-5-seconds timeline can be read straight off the console.
+  const tlT0Ref = useRef<number | null>(null);
+  const tlLinesRef = useRef<string[]>([]);
+  const tlFirstAudioRef = useRef<boolean>(false);
+  const tlDumpTimerRef = useRef<number | null>(null);
+  const tl = (event: string, detail = "") => {
+    const t0 = tlT0Ref.current;
+    const dt = t0 == null ? 0 : performance.now() - t0;
+    const secs = Math.floor(dt / 1000);
+    const ms = Math.round(dt % 1000);
+    const stamp = `${String(secs).padStart(2, "0")}.${String(ms).padStart(3, "0")}`;
+    const line = `${stamp}  ${event}${detail ? `  — ${detail}` : ""}`;
+    tlLinesRef.current.push(line);
+    console.log("[voice][TL] " + line);
+  };
+  const tlDump = (label: string) => {
+    console.warn(
+      `[voice][TL] ═══ SESSION TIMELINE (${label}) ═══\n` +
+      tlLinesRef.current.join("\n")
+    );
+  };
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
