@@ -1,0 +1,899 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { useMeetingRecorder } from "@/hooks/useMeetingRecorder";
+import { generateMeetingPdf } from "@/lib/meetingPdf";
+import { toast } from "sonner";
+import {
+  Mic, Square, Pause, Play, Loader2, Calendar, Users, ListChecks, FileText,
+  Search, ChevronRight, AlertTriangle, CheckCircle2, Sparkles, Trash2, X,
+  Plus, Download, MessageSquare, Clock, HardHat,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+
+type Meeting = {
+  id: string;
+  title: string;
+  status: string;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number;
+  project_id: string | null;
+  meeting_type: string;
+  location: string | null;
+  tags: string[];
+};
+
+type ActionItem = {
+  id: string;
+  meeting_id: string;
+  title: string;
+  assignee_name: string | null;
+  due_date: string | null;
+  priority: string;
+  status: string;
+  description: string | null;
+};
+
+type Analysis = {
+  summary: string | null;
+  decisions: any[];
+  risks: any[];
+  action_items: any[];
+  questions: string[];
+  numbers: any[];
+  next_meeting: any;
+};
+
+type Participant = {
+  id?: string;
+  display_name: string;
+  company?: string | null;
+  role?: string | null;
+};
+
+const fmtTime = (s: number) => {
+  const mm = Math.floor(s / 60).toString().padStart(2, "0");
+  const ss = (s % 60).toString().padStart(2, "0");
+  return `${mm}:${ss}`;
+};
+
+const prioColor: Record<string, string> = {
+  urgent: "bg-red-500/15 text-red-500 border-red-500/30",
+  high: "bg-orange-500/15 text-orange-500 border-orange-500/30",
+  medium: "bg-yellow-500/15 text-yellow-500 border-yellow-500/30",
+  low: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+};
+
+export default function MeetingCenterPage() {
+  const { user } = useUser();
+  const [activeSection, setActiveSection] = useState<"dashboard" | "new" | "history" | "actions">("dashboard");
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [{ data: m }, { data: a }, { data: p }] = await Promise.all([
+      supabase.from("meetings").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("meeting_action_items").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("projects").select("id,name").order("created_at", { ascending: false }),
+    ]);
+    setMeetings((m as any) || []);
+    setActions((a as any) || []);
+    setProjects((p as any) || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  // Voice Copilot integration — respond to "Toplantıyı başlat" events
+  useEffect(() => {
+    const openHandler = () => setActiveSection("new");
+    window.addEventListener("meeting-center:start", openHandler);
+    return () => window.removeEventListener("meeting-center:start", openHandler);
+  }, []);
+
+  const filteredMeetings = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return meetings;
+    return meetings.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        (m.location || "").toLowerCase().includes(q) ||
+        (m.tags || []).some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [meetings, search]);
+
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const todaysMeetings = meetings.filter((m) => (m.started_at || "").slice(0, 10) === today).length;
+    const pending = actions.filter((a) => a.status === "pending").length;
+    const overdue = actions.filter(
+      (a) => a.due_date && a.due_date < today && !["done", "rejected"].includes(a.status),
+    ).length;
+    const completed = actions.filter((a) => a.status === "done").length;
+    const rate = actions.length ? Math.round((completed / actions.length) * 100) : 0;
+    return { todaysMeetings, pending, overdue, rate };
+  }, [meetings, actions]);
+
+  const projectName = (pid: string | null) => projects.find((p) => p.id === pid)?.name || null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Mic className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold">Toplantı Merkezi</h1>
+              <p className="text-xs text-muted-foreground">AI destekli toplantı asistanı</p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => setActiveSection("new")} className="gap-2">
+            <Plus className="w-4 h-4" /> Yeni Toplantı
+          </Button>
+        </div>
+        {/* Tabs */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto">
+          {([
+            ["dashboard", "Dashboard"],
+            ["new", "Canlı Toplantı"],
+            ["history", "Geçmiş"],
+            ["actions", "Aksiyonlar"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setActiveSection(id)}
+              className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === id
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Yükleniyor...
+          </div>
+        ) : activeSection === "dashboard" ? (
+          <Dashboard stats={stats} recent={meetings.slice(0, 5)} onOpen={setSelectedMeeting} projectName={projectName} />
+        ) : activeSection === "new" ? (
+          <NewMeeting projects={projects} onDone={(id) => { void load(); const m = meetings.find((x) => x.id === id); if (m) setSelectedMeeting(m); }} />
+        ) : activeSection === "history" ? (
+          <History
+            meetings={filteredMeetings}
+            search={search}
+            setSearch={setSearch}
+            onOpen={setSelectedMeeting}
+            projectName={projectName}
+            onDelete={async (id) => {
+              if (!confirm("Toplantıyı sil?")) return;
+              await supabase.from("meetings").delete().eq("id", id);
+              toast.success("Silindi");
+              void load();
+            }}
+          />
+        ) : (
+          <Actions
+            actions={actions}
+            meetings={meetings}
+            onRefresh={load}
+          />
+        )}
+      </div>
+
+      {selectedMeeting && (
+        <MeetingDetail
+          meeting={selectedMeeting}
+          projects={projects}
+          onClose={() => { setSelectedMeeting(null); void load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Dashboard
+// ─────────────────────────────────────────────────────────
+function Dashboard({
+  stats, recent, onOpen, projectName,
+}: {
+  stats: { todaysMeetings: number; pending: number; overdue: number; rate: number };
+  recent: Meeting[];
+  onOpen: (m: Meeting) => void;
+  projectName: (id: string | null) => string | null;
+}) {
+  const cards = [
+    { label: "Bugünkü Toplantılar", value: stats.todaysMeetings, icon: Calendar, tone: "primary" },
+    { label: "Bekleyen Aksiyonlar", value: stats.pending, icon: ListChecks, tone: "yellow" },
+    { label: "Geciken", value: stats.overdue, icon: AlertTriangle, tone: "red" },
+    { label: "Tamamlanma Oranı", value: `%${stats.rate}`, icon: CheckCircle2, tone: "emerald" },
+  ];
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {cards.map((c) => (
+          <Card key={c.label} className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+                <p className="text-2xl font-semibold mt-1">{c.value}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                <c.icon className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-sm">Son Toplantılar</h3>
+        </div>
+        {recent.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">Henüz toplantı yok.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {recent.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => onOpen(m)}
+                className="w-full flex items-center justify-between py-3 hover:bg-accent/50 rounded px-2 transition"
+              >
+                <div className="text-left">
+                  <p className="font-medium text-sm">{m.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {m.started_at ? new Date(m.started_at).toLocaleString("tr-TR") : "—"}
+                    {projectName(m.project_id) ? ` · ${projectName(m.project_id)}` : ""}
+                    {m.duration_seconds ? ` · ${fmtTime(m.duration_seconds)}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={m.status} />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    live: { label: "Canlı", cls: "bg-red-500/15 text-red-500" },
+    processing: { label: "İşleniyor", cls: "bg-blue-500/15 text-blue-500" },
+    completed: { label: "Tamamlandı", cls: "bg-emerald-500/15 text-emerald-500" },
+    failed: { label: "Hata", cls: "bg-red-500/15 text-red-500" },
+    scheduled: { label: "Planlandı", cls: "bg-muted text-muted-foreground" },
+  };
+  const s = map[status] || { label: status, cls: "bg-muted" };
+  return <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${s.cls}`}>{s.label}</span>;
+}
+
+// ─────────────────────────────────────────────────────────
+// New / Live Meeting
+// ─────────────────────────────────────────────────────────
+function NewMeeting({
+  projects, onDone,
+}: {
+  projects: Array<{ id: string; name: string }>;
+  onDone: (id: string) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [projectId, setProjectId] = useState<string>("");
+  const [location, setLocation] = useState("");
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participantDraft, setParticipantDraft] = useState("");
+  const [meetingId, setMeetingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [liveLines, setLiveLines] = useState<Array<{ seq: number; text: string }>>([]);
+
+  const recorder = useMeetingRecorder({
+    meetingId: meetingId || "",
+    language: "tr",
+    onTranscript: (text, seq) => setLiveLines((prev) => [...prev, { seq, text }]),
+  });
+
+  const addParticipant = () => {
+    const raw = participantDraft.trim();
+    if (!raw) return;
+    setParticipants((p) => [...p, { display_name: raw }]);
+    setParticipantDraft("");
+  };
+
+  const startMeeting = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const t = title.trim() || `Toplantı ${new Date().toLocaleString("tr-TR")}`;
+      const { data, error } = await supabase
+        .from("meetings")
+        .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          title: t,
+          project_id: projectId || null,
+          location: location || null,
+          status: "live",
+          started_at: new Date().toISOString(),
+          meeting_type: projectId ? "project" : "office",
+        } as any)
+        .select("id")
+        .single();
+      if (error) throw error;
+      const id = (data as any).id as string;
+      setMeetingId(id);
+      if (participants.length) {
+        await supabase.from("meeting_participants").insert(
+          participants.map((p) => ({
+            meeting_id: id,
+            user_id: (supabase.auth.getUser as any) ? undefined : undefined,
+            display_name: p.display_name,
+          })) as any,
+        );
+        // ensure user_id
+        const uid = (await supabase.auth.getUser()).data.user?.id;
+        if (uid) {
+          await supabase.from("meeting_participants").update({ user_id: uid }).eq("meeting_id", id);
+        }
+      }
+      await recorder.start();
+    } catch (e: any) {
+      toast.error(e?.message || "Toplantı başlatılamadı");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const finish = async () => {
+    if (!meetingId) return;
+    await recorder.stop();
+    setAnalyzing(true);
+    try {
+      await supabase
+        .from("meetings")
+        .update({
+          status: "processing",
+          ended_at: new Date().toISOString(),
+          duration_seconds: recorder.elapsed,
+        })
+        .eq("id", meetingId);
+      const { data: sess } = await supabase.auth.getSession();
+      const jwt = sess?.session?.access_token;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/meeting-analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt ?? ""}` },
+        body: JSON.stringify({ meeting_id: meetingId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.detail || json?.error || "AI analiz hatası");
+      toast.success(`Toplantı analiz edildi (${json?.action_item_count ?? 0} aksiyon önerildi)`);
+      onDone(meetingId);
+      setMeetingId(null);
+      setLiveLines([]);
+      setTitle(""); setLocation(""); setParticipants([]);
+    } catch (e: any) {
+      toast.error(e?.message || "Analiz başarısız");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // Live view
+  if (meetingId) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-5">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">{title || "Canlı Toplantı"}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {recorder.isPaused ? "Duraklatıldı" : recorder.isRecording ? "Kayıtta" : "Hazırlanıyor"}
+              </p>
+            </div>
+            <div className="text-2xl font-mono tabular-nums text-primary">{fmtTime(recorder.elapsed)}</div>
+          </div>
+
+          {/* Level meter */}
+          <div className="h-2 bg-muted rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${Math.min(100, Math.max(6, recorder.level * 100))}%` }}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {recorder.isPaused ? (
+              <Button onClick={recorder.resume} variant="secondary" className="gap-2">
+                <Play className="w-4 h-4" /> Devam Et
+              </Button>
+            ) : (
+              <Button onClick={recorder.pause} variant="secondary" className="gap-2">
+                <Pause className="w-4 h-4" /> Duraklat
+              </Button>
+            )}
+            <Button onClick={finish} variant="destructive" className="gap-2" disabled={analyzing}>
+              {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Square className="w-4 h-4" />}
+              {analyzing ? "Analiz ediliyor..." : "Toplantıyı Bitir"}
+            </Button>
+          </div>
+          {recorder.error && <p className="text-xs text-red-500 mt-3">{recorder.error}</p>}
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold">Canlı Transkript</h3>
+          </div>
+          {liveLines.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Konuşma bekleniyor...</p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {liveLines.map((l) => (
+                <div key={l.seq} className="text-sm leading-relaxed">
+                  <span className="text-xs text-muted-foreground mr-2">#{l.seq + 1}</span>
+                  {l.text}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // Pre-start form
+  return (
+    <div className="max-w-2xl mx-auto space-y-5">
+      <Card className="p-6 space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Toplantı Başlığı</label>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ör. Haftalık şantiye toplantısı" className="mt-1" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Proje (opsiyonel)</label>
+          <select
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">— Proje seçin —</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Konum</label>
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ör. Şantiye ofisi" className="mt-1" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Katılımcılar</label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              value={participantDraft}
+              onChange={(e) => setParticipantDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addParticipant(); } }}
+              placeholder="İsim yazıp Enter'a basın"
+            />
+            <Button variant="secondary" onClick={addParticipant}>Ekle</Button>
+          </div>
+          {participants.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {participants.map((p, i) => (
+                <Badge key={i} variant="secondary" className="gap-1">
+                  {p.display_name}
+                  <button onClick={() => setParticipants((arr) => arr.filter((_, x) => x !== i))} className="hover:text-red-500">
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+        <Button
+          size="lg"
+          className="w-full gap-2 h-14 text-base"
+          onClick={startMeeting}
+          disabled={creating}
+        >
+          {creating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+          {creating ? "Başlatılıyor..." : "Toplantıyı Başlat"}
+        </Button>
+        <p className="text-[11px] text-muted-foreground text-center">
+          Mikrofon erişimi istenecek. Konuşmanız canlı olarak metne dönüştürülür ve toplantı bittiğinde AI özet + aksiyon üretir.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// History
+// ─────────────────────────────────────────────────────────
+function History({
+  meetings, search, setSearch, onOpen, projectName, onDelete,
+}: {
+  meetings: Meeting[];
+  search: string;
+  setSearch: (s: string) => void;
+  onOpen: (m: Meeting) => void;
+  projectName: (id: string | null) => string | null;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Toplantı, etiket veya konum ara..."
+          className="pl-9"
+        />
+      </div>
+      {meetings.length === 0 ? (
+        <Card className="p-12 text-center text-muted-foreground text-sm">
+          <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-40" />
+          Toplantı bulunamadı.
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {meetings.map((m) => (
+            <Card key={m.id} className="p-4 flex items-center justify-between hover:border-primary/40 transition cursor-pointer group">
+              <button onClick={() => onOpen(m)} className="flex-1 text-left">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm">{m.title}</p>
+                  <StatusBadge status={m.status} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                  {m.started_at && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(m.started_at).toLocaleString("tr-TR")}</span>}
+                  {m.duration_seconds > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{fmtTime(m.duration_seconds)}</span>}
+                  {projectName(m.project_id) && <span className="flex items-center gap-1"><HardHat className="w-3 h-3" />{projectName(m.project_id)}</span>}
+                </p>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); void onDelete(m.id); }}
+                className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:text-red-500 transition"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Actions
+// ─────────────────────────────────────────────────────────
+function Actions({
+  actions, meetings, onRefresh,
+}: {
+  actions: ActionItem[];
+  meetings: Meeting[];
+  onRefresh: () => void | Promise<void>;
+}) {
+  const meetingTitle = (id: string) => meetings.find((m) => m.id === id)?.title || "—";
+
+  const approve = async (a: ActionItem, notify: boolean) => {
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      const meeting = meetings.find((m) => m.id === a.meeting_id);
+      const { data: task, error } = await supabase
+        .from("tasks")
+        .insert({
+          user_id: uid,
+          title: a.title,
+          description: a.description || `Toplantı: ${meeting?.title || ""}`,
+          project_id: meeting?.project_id || null,
+          due_date: a.due_date,
+          priority: a.priority,
+          status: "todo",
+          assigned_to_name: a.assignee_name,
+        } as any)
+        .select("id")
+        .single();
+      if (error) throw error;
+      await supabase
+        .from("meeting_action_items")
+        .update({ status: "converted", created_task_id: (task as any).id, notified_at: notify ? new Date().toISOString() : null })
+        .eq("id", a.id);
+      if (notify && a.assignee_name) {
+        // Best-effort WhatsApp link fallback (Communication Center dispatch TBD)
+        const msg = encodeURIComponent(`🏗️ Toplantı aksiyonu\n\n${a.title}${a.due_date ? `\nSon tarih: ${a.due_date}` : ""}${a.assignee_name ? `\nSorumlu: ${a.assignee_name}` : ""}`);
+        toast.info("Bildirim: WhatsApp bağlantısı hazırlandı", {
+          action: { label: "WhatsApp Aç", onClick: () => window.open(`https://wa.me/?text=${msg}`, "_blank") },
+        });
+      }
+      toast.success("Görev oluşturuldu");
+      await onRefresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Görev oluşturulamadı");
+    }
+  };
+
+  const reject = async (a: ActionItem) => {
+    await supabase.from("meeting_action_items").update({ status: "rejected" }).eq("id", a.id);
+    await onRefresh();
+  };
+
+  const groups = {
+    pending: actions.filter((a) => a.status === "pending"),
+    converted: actions.filter((a) => a.status === "converted"),
+    other: actions.filter((a) => !["pending", "converted"].includes(a.status)),
+  };
+
+  return (
+    <div className="space-y-6">
+      <Section title={`Onay Bekleyen (${groups.pending.length})`}>
+        {groups.pending.length === 0 ? (
+          <EmptyRow text="Bekleyen aksiyon yok." />
+        ) : (
+          groups.pending.map((a) => (
+            <Card key={a.id} className="p-4 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{a.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {meetingTitle(a.meeting_id)}
+                    {a.assignee_name ? ` · ${a.assignee_name}` : ""}
+                    {a.due_date ? ` · ${a.due_date}` : ""}
+                  </p>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${prioColor[a.priority] || ""}`}>
+                  {a.priority}
+                </span>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" onClick={() => approve(a, true)} className="gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Onayla & Bildir</Button>
+                <Button size="sm" variant="secondary" onClick={() => approve(a, false)}>Sadece Onayla</Button>
+                <Button size="sm" variant="ghost" onClick={() => reject(a)}>Reddet</Button>
+              </div>
+            </Card>
+          ))
+        )}
+      </Section>
+
+      <Section title={`Göreve Dönüştürüldü (${groups.converted.length})`}>
+        {groups.converted.length === 0 ? <EmptyRow text="Henüz göreve dönüştürülen aksiyon yok." /> : (
+          groups.converted.map((a) => (
+            <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+              <div>
+                <p className="text-sm">{a.title}</p>
+                <p className="text-xs text-muted-foreground">{meetingTitle(a.meeting_id)}</p>
+              </div>
+              <Badge variant="secondary" className="gap-1"><CheckCircle2 className="w-3 h-3" /> Görev</Badge>
+            </div>
+          ))
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+function EmptyRow({ text }: { text: string }) {
+  return <Card className="p-6 text-center text-sm text-muted-foreground">{text}</Card>;
+}
+
+// ─────────────────────────────────────────────────────────
+// Meeting Detail (drawer)
+// ─────────────────────────────────────────────────────────
+function MeetingDetail({
+  meeting, projects, onClose,
+}: {
+  meeting: Meeting;
+  projects: Array<{ id: string; name: string }>;
+  onClose: () => void;
+}) {
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [transcript, setTranscript] = useState<Array<{ id: string; seq: number; text: string; started_at_ms: number }>>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const [{ data: a }, { data: t }, { data: p }] = await Promise.all([
+        supabase.from("meeting_analyses").select("*").eq("meeting_id", meeting.id).maybeSingle(),
+        supabase.from("meeting_transcripts").select("id,seq,text,started_at_ms").eq("meeting_id", meeting.id).order("seq"),
+        supabase.from("meeting_participants").select("id,display_name,company,role").eq("meeting_id", meeting.id),
+      ]);
+      if (!alive) return;
+      setAnalysis((a as any) || null);
+      setTranscript((t as any) || []);
+      setParticipants((p as any) || []);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [meeting.id]);
+
+  const projectName = projects.find((p) => p.id === meeting.project_id)?.name || null;
+
+  const rerun = async () => {
+    toast.info("AI yeniden analiz ediyor...");
+    const { data: sess } = await supabase.auth.getSession();
+    const jwt = sess?.session?.access_token;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/meeting-analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt ?? ""}` },
+      body: JSON.stringify({ meeting_id: meeting.id }),
+    });
+    if (!res.ok) { toast.error("Analiz başarısız"); return; }
+    toast.success("Analiz güncellendi");
+    // reload
+    const { data: a } = await supabase.from("meeting_analyses").select("*").eq("meeting_id", meeting.id).maybeSingle();
+    setAnalysis((a as any) || null);
+  };
+
+  return (
+    <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="pr-6">{meeting.title}</SheetTitle>
+          <p className="text-xs text-muted-foreground">
+            {meeting.started_at && new Date(meeting.started_at).toLocaleString("tr-TR")}
+            {projectName ? ` · ${projectName}` : ""}
+            {meeting.duration_seconds ? ` · ${fmtTime(meeting.duration_seconds)}` : ""}
+          </p>
+        </SheetHeader>
+
+        <div className="flex gap-2 mt-4">
+          <Button size="sm" variant="secondary" onClick={rerun} className="gap-2">
+            <Sparkles className="w-3.5 h-3.5" /> Yeniden Analiz Et
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-2"
+            onClick={() => generateMeetingPdf({ meeting, analysis, participants, projectName })}
+          >
+            <Download className="w-3.5 h-3.5" /> PDF İndir
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="py-10 flex items-center justify-center text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" /> Yükleniyor...
+          </div>
+        ) : (
+          <div className="mt-6 space-y-6">
+            {participants.length > 0 && (
+              <DetailSection title="Katılımcılar" icon={Users}>
+                <div className="flex flex-wrap gap-1.5">
+                  {participants.map((p, i) => (
+                    <Badge key={i} variant="secondary">{p.display_name}</Badge>
+                  ))}
+                </div>
+              </DetailSection>
+            )}
+
+            {analysis?.summary && (
+              <DetailSection title="Özet" icon={FileText}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{analysis.summary}</p>
+              </DetailSection>
+            )}
+
+            {!!analysis?.decisions?.length && (
+              <DetailSection title="Kararlar" icon={CheckCircle2}>
+                <ul className="space-y-2">
+                  {analysis.decisions.map((d: any, i: number) => (
+                    <li key={i} className="text-sm">
+                      <p className="font-medium">{d.title}</p>
+                      {d.detail && <p className="text-xs text-muted-foreground mt-0.5">{d.detail}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </DetailSection>
+            )}
+
+            {!!analysis?.action_items?.length && (
+              <DetailSection title="Aksiyon Maddeleri" icon={ListChecks}>
+                <ul className="space-y-2">
+                  {analysis.action_items.map((a: any, i: number) => (
+                    <li key={i} className="text-sm border border-border rounded-md p-3">
+                      <p className="font-medium">{a.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {a.assignee ? `Sorumlu: ${a.assignee}` : "Sorumlu belirtilmedi"}
+                        {a.due_date ? ` · Son tarih: ${a.due_date}` : ""}
+                        {a.priority ? ` · ${a.priority}` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </DetailSection>
+            )}
+
+            {!!analysis?.risks?.length && (
+              <DetailSection title="Riskler" icon={AlertTriangle}>
+                <ul className="space-y-1.5">
+                  {analysis.risks.map((r: any, i: number) => (
+                    <li key={i} className="text-sm">
+                      • {r.title}
+                      {r.impact && <span className="text-xs text-muted-foreground ml-2">[{r.impact}]</span>}
+                    </li>
+                  ))}
+                </ul>
+              </DetailSection>
+            )}
+
+            {!!analysis?.questions?.length && (
+              <DetailSection title="Açık Sorular" icon={MessageSquare}>
+                <ul className="space-y-1 text-sm">
+                  {analysis.questions.map((q: string, i: number) => <li key={i}>• {q}</li>)}
+                </ul>
+              </DetailSection>
+            )}
+
+            {transcript.length > 0 && (
+              <DetailSection title={`Transkript (${transcript.length})`} icon={FileText}>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto text-sm">
+                  {transcript.map((t) => (
+                    <div key={t.id}>
+                      <span className="text-xs text-muted-foreground mr-2">
+                        {fmtTime(Math.round(t.started_at_ms / 1000))}
+                      </span>
+                      {t.text}
+                    </div>
+                  ))}
+                </div>
+              </DetailSection>
+            )}
+
+            {!analysis && transcript.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6">Bu toplantı için henüz analiz yok.</p>
+            )}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function DetailSection({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+      <div className="pl-6">{children}</div>
+    </div>
+  );
+}
