@@ -258,12 +258,21 @@ pdf, mail, whatsapp, call, report, detail
 <uzun açıklama, tam liste, tablo — kullanıcı "Detayları Göster" ile açar>
 ::/details
 
+::notfound
+query: <aranan isim/kriter>
+reasons: <neden 1> | <neden 2> | <neden 3>
+similar: <benzer isim 1>, <benzer isim 2>
+suggestions: <öneri sorgu 1> | <öneri sorgu 2> | <öneri sorgu 3>
+::/notfound
+
 FORMAT KARARI:
 - Finansal/rakamsal cevap → ::kpi ZORUNLU.
 - Risk/durum değerlendirmesi → ::summary ZORUNLU.
 - Aksiyon önerilebilen her cevap → ::recommendation + ::actions ekle.
 - 5'ten fazla kayıt listesi → özet ::kpi + tam liste ::details içinde.
+- Sorgulanan kayıt bulunamadıysa → ::notfound ZORUNLU, ::kpi/::recommendation KOYMA.
 - Veri kaynağı Lovable Cloud vb. teknik detay → ::source bloğuna, düz metne değil.`;
+
 
 
 serve(async (req) => {
