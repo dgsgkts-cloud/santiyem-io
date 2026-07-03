@@ -87,9 +87,12 @@ function classifyIntentHeuristic(
     intent = "LIVE_PERSONNEL";
   else if (/devamsız|devamsiz|geç kaldı|gec kaldi|(giriş|giris|çıkış|cikis)\s*(kayd|saat)|attendance|mesai/.test(q))
     intent = "ATTENDANCE";
+  else if (/(brifing|briefing|günaydın özet|gunaydin ozet|executive|yönetici özeti|yonetici ozeti)/.test(q)) intent = "EXECUTIVE_BRIEFING";
   else if (/hakediş|hakedis|progress payment/.test(q)) intent = "HAKEDIS_QUERY";
   else if (/taşeron|taseron|alt yüklenici|alt yuklenici|subcontractor/.test(q)) intent = "SUBCONTRACTOR";
   else if (/(nakit akış|nakit akis|finansal|mali durum|kar\s*zarar|karlılık|karlilik|gelir\s*gider|bilanço|bilanco|cash\s*flow|financial)/.test(q)) intent = "FINANCIAL_SUMMARY";
+  else if (/(gecik(en|miş|mis)|vadesi geç|vadesi gec|overdue).*(ödeme|odeme|payment|fatura|hakediş|hakedis)|(ödeme|odeme|payment|fatura).*(gecik|overdue)/.test(q)) intent = "OVERDUE_PAYMENTS";
+  else if (/(yaklaşan|yaklasan|önümüzdeki|onumuzdeki|gelecek|upcoming|bekleyen).*(ödeme|odeme|payment|fatura|vade)|vadesi\s+(yaklaş|yaklas|gelen)/.test(q)) intent = "UPCOMING_PAYMENTS";
   else if (/(ödeme|odeme|payment|nakit|havale|çek\b|cek\b|kasa|tahsilat)/.test(q)) intent = "PAYMENT_QUERY";
   else if (/görev|gorev|task|yapılacak|yapilacak|to-?do|termin|geciken|bekleyen/.test(q)) intent = "TASK_QUERY";
   else if (/şantiye günlüğü|santiye gunlugu|günlük|gunluk|beton döküm|beton dokum|kalıp|kalip|hafriyat|iş yapıldı|is yapildi/.test(q)) intent = "SITE_DIARY_QUERY";
