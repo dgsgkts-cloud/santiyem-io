@@ -149,10 +149,10 @@ const SectionHeader = ({
 /*                                  Skeleton                                  */
 /* -------------------------------------------------------------------------- */
 
-const Skeleton = ({ className = "" }: { className?: string }) => (
+const Skeleton = ({ className = "", style }: { className?: string; style?: React.CSSProperties }) => (
   <div
     className={`animate-pulse rounded-md bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] ${className}`}
-    style={{ animation: "shimmer 1.6s ease-in-out infinite" }}
+    style={{ animation: "shimmer 1.6s ease-in-out infinite", ...style }}
   />
 );
 
