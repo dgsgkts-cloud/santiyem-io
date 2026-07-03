@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useConversation } from "@elevenlabs/react";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { X, Mic, MicOff, Keyboard, Loader2, AlertCircle, ArrowRight, HardHat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,15 @@ type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
-export function VoiceCopilot({ onClose, access, compact = false, autoStart = false, initialContext }: Props) {
+export function VoiceCopilot(props: Props) {
+  return (
+    <ConversationProvider>
+      <VoiceCopilotInner {...props} />
+    </ConversationProvider>
+  );
+}
+
+function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false, initialContext }: Props) {
   const [uiState, setUiState] = useState<UiState>("idle");
   const [transcript, setTranscript] = useState<string>("");
   const [cards, setCards] = useState<Card[]>([]);
