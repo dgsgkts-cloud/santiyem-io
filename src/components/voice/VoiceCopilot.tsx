@@ -498,7 +498,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         try {
           console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
+          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
           console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
           console.log("[voice][start] ✅ WebSocket connected");
