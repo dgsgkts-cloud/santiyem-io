@@ -114,21 +114,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const conversation = useConversation({
     overrides: { agent: { language: "tr" } },
-    onConnect: (info?: unknown) => {
-      console.log("[voice][SDK] ✅ onConnect fired", info);
-      try {
-        connectWaiterRef.current?.resolve();
-        connectWaiterRef.current = null;
-        sessionStartRef.current = Date.now();
-        setUiState("listening");
-        if (initialContext) {
-          queueMicrotask(() => {
-            try { conversation.sendContextualUpdate(initialContext); }
-            catch (e) { console.warn("contextual update failed", e); }
-          });
-        }
-      } catch (e) { console.error("onConnect handler failed", e); }
-    },
+    // (original onConnect replaced by instrumented handler below)
+
     onConnect: (info?: unknown) => {
       console.log("[voice][SDK] ✅ onConnect fired", info);
       try {
