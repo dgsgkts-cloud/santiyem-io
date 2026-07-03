@@ -54,7 +54,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [muted, setMuted] = useState(false);
+  // `muted` is driven by the ElevenLabs SDK (conversation.isMuted) below.
   const [paused, setPaused] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
