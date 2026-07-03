@@ -21,10 +21,6 @@ Deno.serve(async (req) => {
         const { error } = await admin.auth.admin.deleteUser(u.id);
         return new Response(JSON.stringify({ deleted: !error, error: error?.message ?? null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-      const u = list?.users?.find((x: any) => x.email === "voice-audit-test@santiyem.io");
-      if (!u) return new Response(JSON.stringify({ error: "not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { error } = await admin.auth.admin.updateUserById(u.id, { email_confirm: true });
       return new Response(JSON.stringify({ confirmed: !error, error: error?.message ?? null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
