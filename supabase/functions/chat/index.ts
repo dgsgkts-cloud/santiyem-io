@@ -797,8 +797,12 @@ serve(async (req) => {
             projectDataContext =
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
               "KURAL: Kullanıcıya 'Bu bilgi sistemde bulunamadı.' şeklinde nazikçe bildir. Tahmini rakam verme.\n";
+          if (projectDataContext) {
+            cacheSet(brainCache, cacheKey, projectDataContext, 30_000);
           }
+          console.log(`[Brain] built in ${Date.now() - brainStart}ms`);
         }
+
       }
     } catch (brainErr) {
       if (!(brainErr instanceof Error && brainErr.message === "__CACHE_HIT__")) {
