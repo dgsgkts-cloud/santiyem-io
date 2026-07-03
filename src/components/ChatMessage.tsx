@@ -482,6 +482,7 @@ const AssistantContent = ({ content }: { content: string }) => {
               <div className="text-xs text-muted-foreground whitespace-pre-wrap">{b.content}</div>
             </Collapsible>
           );
+        if (b.kind === "notfound") return <NotFoundCard key={i} query={b.query} reasons={b.reasons} similar={b.similar} suggestions={b.suggestions} />;
         return null;
       })}
 
