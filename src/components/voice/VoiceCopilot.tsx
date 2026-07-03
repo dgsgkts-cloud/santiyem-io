@@ -446,6 +446,59 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     catch (e) { console.warn(e); }
   };
 
+  // ============ PUSH-TO-TALK ============
+  // While PTT is on, keep mic muted by default. Unmute only while pressed.
+  const pttReleaseTimer = useRef<number | null>(null);
+  const pttPress = () => {
+    if (!settings.pushToTalk) return;
+    if (pttReleaseTimer.current) { clearTimeout(pttReleaseTimer.current); pttReleaseTimer.current = null; }
+    setPtt(true);
+    try { conversation.setMuted(false); } catch { /* noop */ }
+    setLocalTracksEnabled(true);
+    try { conversation.sendUserActivity?.(); } catch { /* noop */ }
+  };
+  const pttRelease = () => {
+    if (!settings.pushToTalk) return;
+    setPtt(false);
+    // Small tail so a final syllable isn't clipped
+    pttReleaseTimer.current = window.setTimeout(() => {
+      try { conversation.setMuted(true); } catch { /* noop */ }
+      setLocalTracksEnabled(false);
+      pttReleaseTimer.current = null;
+    }, 250);
+  };
+
+  // Enforce PTT mute state whenever the toggle changes or the session opens.
+  useEffect(() => {
+    if (uiState === "idle" || uiState === "error") return;
+    if (settings.pushToTalk) {
+      try { conversation.setMuted(true); } catch { /* noop */ }
+      setLocalTracksEnabled(false);
+    } else {
+      try { conversation.setMuted(false); } catch { /* noop */ }
+      setLocalTracksEnabled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.pushToTalk, uiState]);
+
+  // Speaker volume follows setting (unless paused).
+  useEffect(() => {
+    if (paused) return;
+    try { conversation.setVolume({ volume: settings.speakerVolume }); } catch { /* noop */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.speakerVolume, paused]);
+
+  // Wake-phrase: only active in driving mode while a session is running.
+  useWakeWord({
+    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error",
+    onWake: () => {
+      try { conversation.setMuted(false); } catch { /* noop */ }
+      setLocalTracksEnabled(true);
+      try { conversation.sendUserActivity?.(); } catch { /* noop */ }
+      toast.success("Dinliyorum…", { duration: 1500 });
+    },
+  });
+
   const active = uiState !== "idle" && uiState !== "error";
 
   const statusLabel = useMemo(() => {
