@@ -314,6 +314,199 @@ serve(async (req) => {
       }
     }
 
+    // --- CONSTRUCTION BRAIN: Intent detection + database-first data retrieval ---
+    let projectDataContext = "";
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const anonClient = createClient(supabaseUrl, anonKey);
+      const token = authHeader!.replace("Bearer ", "");
+      const { data: { user } } = await anonClient.auth.getUser(token);
+
+      if (user) {
+        const sb = createClient(supabaseUrl, serviceKey);
+        const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
+        const userQuery = (lastUserMsg?.content || "").trim();
+
+        if (userQuery && userQuery.length >= 3) {
+          // 1) Intent detection via fast JSON classifier
+          const now = new Date();
+          const intentResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              response_format: { type: "json_object" },
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
+                    `Bugün: ${now.toISOString().slice(0, 10)}. ` +
+                    `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                    `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "limit": number | null}}. ` +
+                    `"Bu ay" → içinde bulunulan ay başı-sonu. "Geçen ay" → önceki ay. "Bu hafta" → pazartesi-pazar. "En son" / "son yüklenen" → limit=1. "Bekleyen" → status filter için ismi filters.name'e "bekliyor" koy. Sadece JSON döndür.`,
+                },
+                { role: "user", content: userQuery },
+              ],
+            }),
+          });
+
+          let intent = "GENERAL_CHAT";
+          let filters: any = {};
+          if (intentResp.ok) {
+            const j = await intentResp.json();
+            try {
+              const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
+              intent = parsed.intent || "GENERAL_CHAT";
+              filters = parsed.filters || {};
+            } catch { /* ignore */ }
+          }
+          console.log("[Brain] intent:", intent, "filters:", filters);
+
+          // 2) Query database based on intent (RLS bypassed via service key; always scope by user_id)
+          const uid = user.id;
+          const df = filters.date_from as string | null;
+          const dt = filters.date_to as string | null;
+          const nameFilter = (filters.name as string | null)?.toLowerCase() || null;
+          const projectName = (filters.project_name as string | null) || null;
+          const limit = Math.min(Number(filters.limit) || 10, 25);
+
+          // Helper: resolve project_id from name
+          let projectIdFilter: string | null = null;
+          if (projectName) {
+            const { data: proj } = await sb
+              .from("projects").select("id, name").eq("user_id", uid)
+              .ilike("name", `%${projectName}%`).limit(1).maybeSingle();
+            if (proj) projectIdFilter = proj.id;
+          }
+
+          const fmt = (n: any) =>
+            typeof n === "number" ? new Intl.NumberFormat("tr-TR").format(n) + " ₺" : String(n ?? "");
+          const lines: string[] = [];
+
+          if (intent === "PAYMENT_QUERY") {
+            let q = sb.from("subcontractor_payments")
+              .select("amount, payment_date, description, payment_method, project_id, subcontractor_id, subcontractors(name)")
+              .eq("user_id", uid).order("payment_date", { ascending: false }).limit(limit);
+            if (df) q = q.gte("payment_date", df);
+            if (dt) q = q.lte("payment_date", dt);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            const { data } = await q;
+            let rows = data || [];
+            if (nameFilter) rows = rows.filter((r: any) => (r.subcontractors?.name || "").toLowerCase().includes(nameFilter));
+            const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            lines.push(`ÖDEMELER (${rows.length} kayıt, toplam ${fmt(total)}):`);
+            rows.forEach((r: any) => lines.push(`- ${r.payment_date} · ${r.subcontractors?.name || "?"} · ${fmt(Number(r.amount))} · ${r.payment_method}${r.description ? " · " + r.description : ""}`));
+
+            // Also project_expenses if generic "ödeme" query
+            let eq = sb.from("project_expenses")
+              .select("amount, expense_date, description, category, project_id")
+              .eq("user_id", uid).order("expense_date", { ascending: false }).limit(limit);
+            if (df) eq = eq.gte("expense_date", df);
+            if (dt) eq = eq.lte("expense_date", dt);
+            if (projectIdFilter) eq = eq.eq("project_id", projectIdFilter);
+            const { data: exp } = await eq;
+            if (exp && exp.length) {
+              const et = exp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              lines.push(`\nDİĞER PROJE GİDERLERİ (${exp.length} kayıt, toplam ${fmt(et)}):`);
+              exp.slice(0, limit).forEach((r: any) => lines.push(`- ${r.expense_date} · ${r.category} · ${fmt(Number(r.amount))}${r.description ? " · " + r.description : ""}`));
+            }
+          } else if (intent === "HAKEDIS_QUERY") {
+            let q = sb.from("project_hakedis")
+              .select("period, amount, net_total, status, approval_status, created_at, payment_date, project_id")
+              .eq("user_id", uid).order("created_at", { ascending: false }).limit(limit);
+            if (df) q = q.gte("created_at", df);
+            if (dt) q = q.lte("created_at", dt);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            if (nameFilter && (nameFilter.includes("bekle") || nameFilter.includes("onay"))) q = q.eq("approval_status", "beklemede");
+            const { data } = await q;
+            lines.push(`HAKEDİŞLER (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.period} · ${fmt(Number(r.net_total || r.amount))} · durum: ${r.status}/${r.approval_status} · ${r.created_at.slice(0, 10)}`));
+          } else if (intent === "PROJECT_QUERY") {
+            let q = sb.from("projects").select("name, client, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(limit);
+            if (projectName) q = q.ilike("name", `%${projectName}%`);
+            const { data } = await q;
+            lines.push(`PROJELER (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.name} · müşteri: ${r.client || "-"} · durum: ${r.status} · ilerleme: %${r.progress} · sözleşme: ${fmt(Number(r.contract_amount || 0))}`));
+          } else if (intent === "TASK_QUERY") {
+            const today = now.toISOString().slice(0, 10);
+            let q = sb.from("tasks").select("title, status, priority, due_date, project_id").order("due_date", { ascending: true }).limit(limit);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            if (nameFilter && (nameFilter.includes("gecik") || nameFilter.includes("geç"))) q = q.lt("due_date", today).neq("status", "done");
+            if (df) q = q.gte("due_date", df);
+            if (dt) q = q.lte("due_date", dt);
+            const { data } = await q;
+            lines.push(`GÖREVLER (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.title} · durum: ${r.status} · öncelik: ${r.priority} · termin: ${r.due_date || "-"}`));
+          } else if (intent === "SITE_DIARY_QUERY") {
+            let q = sb.from("site_diary_entries")
+              .select("entry_date, work_status, work_done, weather_icon, project_id")
+              .eq("user_id", uid).order("entry_date", { ascending: false }).limit(limit);
+            if (df) q = q.gte("entry_date", df);
+            if (dt) q = q.lte("entry_date", dt);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            const { data } = await q;
+            lines.push(`ŞANTİYE GÜNLÜĞÜ (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.entry_date} ${r.weather_icon} · ${r.work_status} · ${(r.work_done || "").slice(0, 200)}`));
+          } else if (intent === "DOCUMENT_QUERY") {
+            const { data } = await sb.from("documents")
+              .select("name, page_count, status, created_at").eq("user_id", uid)
+              .order("created_at", { ascending: false }).limit(limit);
+            lines.push(`YÜKLÜ EVRAKLAR (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.name} · ${r.page_count} sayfa · ${r.status} · ${r.created_at.slice(0, 10)}`));
+          } else if (intent === "MATERIAL_QUERY") {
+            let mq = sb.from("materials").select("id, name, unit, project_id").eq("user_id", uid).limit(50);
+            if (projectIdFilter) mq = mq.eq("project_id", projectIdFilter);
+            if (nameFilter) mq = mq.ilike("name", `%${nameFilter}%`);
+            const { data: mats } = await mq;
+            const ids = (mats || []).map((m: any) => m.id);
+            let entries: any[] = [];
+            if (ids.length) {
+              let eq2 = sb.from("material_entries").select("material_id, quantity, entry_date, unit_price, total_amount").in("material_id", ids).order("entry_date", { ascending: false }).limit(200);
+              if (df) eq2 = eq2.gte("entry_date", df);
+              if (dt) eq2 = eq2.lte("entry_date", dt);
+              const { data: ed } = await eq2;
+              entries = ed || [];
+            }
+            const totals = new Map<string, number>();
+            entries.forEach((e: any) => totals.set(e.material_id, (totals.get(e.material_id) || 0) + Number(e.quantity || 0)));
+            lines.push(`MALZEMELER (${(mats || []).length} kayıt):`);
+            (mats || []).forEach((m: any) => lines.push(`- ${m.name} · toplam giriş: ${totals.get(m.id) || 0} ${m.unit}`));
+          } else if (intent === "CONTRACT_QUERY") {
+            let q = sb.from("contracts").select("name, counterparty, amount, status, start_date, end_date, contract_type").eq("user_id", uid).order("created_at", { ascending: false }).limit(limit);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            if (nameFilter) q = q.or(`name.ilike.%${nameFilter}%,counterparty.ilike.%${nameFilter}%`);
+            const { data } = await q;
+            lines.push(`SÖZLEŞMELER (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.name} · ${r.counterparty} · ${fmt(Number(r.amount))} · ${r.status} · ${r.start_date || "-"} → ${r.end_date || "-"}`));
+          } else if (intent === "PERSONNEL_QUERY") {
+            let q = sb.from("personnel").select("full_name, occupation, employment_type, daily_wage, monthly_salary, is_active").eq("user_id", uid).limit(limit);
+            if (nameFilter) q = q.ilike("full_name", `%${nameFilter}%`);
+            const { data } = await q;
+            lines.push(`PERSONEL (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.full_name} · ${r.occupation || "-"} · ${r.employment_type} · yevmiye ${fmt(Number(r.daily_wage || 0))} · maaş ${fmt(Number(r.monthly_salary || 0))} · aktif: ${r.is_active}`));
+          }
+
+          if (lines.length > 0) {
+            projectDataContext =
+              "\n\n=== KULLANICI PROJE VERİSİ (Lovable Cloud veritabanından çekildi) ===\n" +
+              `Intent: ${intent}\n` +
+              lines.join("\n") +
+              "\n=== VERİ SONU ===\n" +
+              "KURAL: Yukarıdaki gerçek proje verisine dayanarak cevap ver. Rakam uydurma. Veri yoksa 'Bu bilgi sistemde bulunamadı.' de. SQL veya JSON gösterme; deneyimli proje yöneticisi gibi kısa, profesyonel Türkçe özetle.\n";
+          } else if (intent !== "GENERAL_CHAT") {
+            projectDataContext =
+              "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
+              "KURAL: Kullanıcıya 'Bu bilgi sistemde bulunamadı.' şeklinde nazikçe bildir. Tahmini rakam verme.\n";
+          }
+        }
+      }
+    } catch (brainErr) {
+      console.error("Construction Brain error (non-fatal):", brainErr);
+    }
+
     // Build messages with multimodal support
     const formattedMessages = messages.map((m: { role: string; content: string; attachments?: { base64: string; type: string }[] }) => {
       if (m.attachments && m.attachments.length > 0) {
@@ -330,7 +523,7 @@ serve(async (req) => {
       return { role: m.role, content: m.content };
     });
 
-    const systemPrompt = SYSTEM_PROMPT + ragContext;
+    const systemPrompt = SYSTEM_PROMPT + ragContext + projectDataContext;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
