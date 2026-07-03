@@ -39,34 +39,52 @@ export function VoiceCopilot({ onClose, access, compact = false, autoStart = fal
 
   const conversation = useConversation({
     onConnect: () => {
-      sessionStartRef.current = Date.now();
-      setUiState("listening");
-      if (initialContext) {
-        try {
-          conversation.sendContextualUpdate(initialContext);
-        } catch (e) {
-          console.warn("contextual update failed", e);
+      try {
+        sessionStartRef.current = Date.now();
+        setUiState("listening");
+        if (initialContext) {
+          queueMicrotask(() => {
+            try {
+              conversation.sendContextualUpdate(initialContext);
+            } catch (e) {
+              console.warn("contextual update failed", e);
+            }
+          });
         }
+      } catch (e) {
+        console.error("onConnect handler failed", e);
       }
     },
     onDisconnect: () => {
-      setUiState("idle");
-      const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
-      sessionStartRef.current = null;
-      if (secs > 0) trackUsage(secs);
+      try {
+        setUiState("idle");
+        const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
+        sessionStartRef.current = null;
+        if (secs > 0) trackUsage(secs);
+      } catch (e) {
+        console.error("onDisconnect handler failed", e);
+      }
     },
     onMessage: (msg: { source?: string; message?: string }) => {
-      if (msg?.source === "user" && typeof msg.message === "string") {
-        setTranscript(msg.message);
-      }
-      if (msg?.source === "ai" && typeof msg.message === "string") {
-        setTranscript(msg.message);
+      try {
+        if (msg?.source === "user" && typeof msg.message === "string") {
+          setTranscript(msg.message);
+        }
+        if (msg?.source === "ai" && typeof msg.message === "string") {
+          setTranscript(msg.message);
+        }
+      } catch (e) {
+        console.error("onMessage handler failed", e);
       }
     },
     onError: (e: unknown) => {
-      console.error("Voice error", e);
-      setError(typeof e === "string" ? e : "Ses bağlantısında hata.");
-      setUiState("error");
+      try {
+        console.error("Voice error", e);
+        setError(typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata."));
+        setUiState("error");
+      } catch (err) {
+        console.error("onError handler failed", err);
+      }
     },
     clientTools: {
       render_dashboard_card: (params: Partial<Card>) => {
