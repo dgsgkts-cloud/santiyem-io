@@ -329,7 +329,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, voice_mode: voiceMode = false } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -1249,6 +1249,66 @@ KURALLAR:
       }
     } catch (actionErr) {
       console.error("Action Assistant error (falling back to chat):", actionErr);
+    }
+
+    // ============================================================
+    // Voice mode: non-streaming, natural spoken JSON reply
+    // ============================================================
+    if (voiceMode) {
+      const voiceSystem = systemPrompt + `
+
+SESLİ MOD KURALLARI (ZORUNLU):
+- Yanıtın sesli okunacak, doğal ve akıcı Türkçe konuş.
+- Markdown, tablo, madde işareti, başlık, emoji KULLANMA.
+- En fazla 2-3 kısa paragraf. Kısa cümleler kur.
+- Sayıları doğal söyle ("1.250.000 TL" yerine "bir milyon iki yüz elli bin lira").
+- Tarihleri doğal söyle ("15/11/2026" yerine "on beş Kasım").
+- Yanıtı mutlaka kısa bir takip sorusuyla bitir (ör. "Detayları listeleyeyim mi?").
+- Veri yoksa spekülasyon yapma, yokluğu doğal biçimde söyle.`;
+
+      const vResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: voiceSystem },
+            ...formattedMessages,
+          ],
+          stream: false,
+          max_tokens: 400,
+        }),
+      });
+
+      if (!vResp.ok) {
+        const errTxt = await vResp.text();
+        console.error("Voice AI gateway error:", vResp.status, errTxt);
+        const status = vResp.status === 429 ? 429 : vResp.status === 402 ? 402 : 500;
+        const msg = status === 429 ? "Rate limit aşıldı."
+                  : status === 402 ? "AI kredisi yetersiz."
+                  : "AI servisi hatası";
+        return new Response(JSON.stringify({ error: msg }), {
+          status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const vJson = await vResp.json();
+      const text: string = vJson?.choices?.[0]?.message?.content ?? "";
+      // Strip any residual markdown to keep TTS clean
+      const spoken = text
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/[*_`#>]+/g, "")
+        .replace(/^\s*[-•]\s+/gm, "")
+        .replace(/\|/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+      return new Response(JSON.stringify({ text: spoken, voice_mode: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ============================================================
