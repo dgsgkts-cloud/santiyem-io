@@ -682,10 +682,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (!isActive) return;
     if (muted) return; // user explicitly muted — respect it
     if (shouldBlockBargeIn(settings) && conversation.isSpeaking) {
+      console.log("[voice][DIAG] 🎙️→OFF anti-barge-in disabled local mic while agent speaks");
       setLocalTracksEnabled(false);
       return () => {
         // Small grace so tail-end TTS audio doesn't self-trigger VAD on re-open.
-        setTimeout(() => { if (!muted && !settingsRef.current.pushToTalk) setLocalTracksEnabled(true); }, 350);
+        setTimeout(() => {
+          if (!muted && !settingsRef.current.pushToTalk) {
+            console.log("[voice][DIAG] 🎙️→ON  re-enabled local mic after agent finished");
+            setLocalTracksEnabled(true);
+          }
+        }, 350);
       };
     } else if (!settings.pushToTalk) {
       setLocalTracksEnabled(true);
