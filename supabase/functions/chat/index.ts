@@ -981,6 +981,68 @@ serve(async (req) => {
                 return { status: "OK", id: data?.id, summary };
               }
 
+              if (name === "save_personnel") {
+                const missing: string[] = [];
+                if (!args.full_name) missing.push("ad soyad");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const empType = args.employment_type || "daily_wage";
+                const summary = {
+                  action: "Yeni Personel",
+                  ad_soyad: args.full_name,
+                  meslek: args.occupation || "-",
+                  telefon: args.phone || "-",
+                  çalışma_türü: empType,
+                  yevmiye: args.daily_wage ? fmtTRY(Number(args.daily_wage)) : "-",
+                  maaş: args.monthly_salary ? fmtTRY(Number(args.monthly_salary)) : "-",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("personnel").insert({
+                  user_id: uid,
+                  full_name: args.full_name,
+                  occupation: args.occupation || null,
+                  phone: args.phone || null,
+                  employment_type: empType,
+                  daily_wage: args.daily_wage || 0,
+                  monthly_salary: args.monthly_salary || 0,
+                  is_active: true,
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_contract") {
+                const missing: string[] = [];
+                if (!args.name) missing.push("sözleşme adı");
+                if (!args.counterparty) missing.push("karşı taraf");
+                if (!(args.amount > 0)) missing.push("tutar");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const summary = {
+                  action: "Sözleşme",
+                  ad: args.name,
+                  karşı_taraf: args.counterparty,
+                  tutar: fmtTRY(Number(args.amount)),
+                  tür: args.contract_type || "yapim_isleri",
+                  başlangıç: args.start_date || "-",
+                  bitiş: args.end_date || "-",
+                  proje_id: args.project_id || "-",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("contracts").insert({
+                  user_id: uid,
+                  name: args.name,
+                  counterparty: args.counterparty,
+                  amount: args.amount,
+                  contract_type: args.contract_type || "yapim_isleri",
+                  project_id: args.project_id || null,
+                  start_date: args.start_date || null,
+                  end_date: args.end_date || null,
+                  notes: args.notes || "",
+                  status: "aktif",
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
               return { status: "ERROR", error: "Unknown tool" };
             } catch (e) {
               return { status: "ERROR", error: e instanceof Error ? e.message : "tool failed" };
