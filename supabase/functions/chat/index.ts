@@ -82,14 +82,22 @@ function classifyIntentHeuristic(
 
   let intent = "GENERAL_CHAT";
   let confident = true;
-  if (/hakediş|hakedis|progress payment/.test(q)) intent = "HAKEDIS_QUERY";
-  else if (/taşeron|taseron|ödeme|odeme|payment|nakit|havale|çek\b|cek\b|kasa/.test(q)) intent = "PAYMENT_QUERY";
+  // Order matters — more specific patterns first.
+  if (/(kaç|kac|ne kadar|kimler)\s+(kişi|kisi|işçi|isci|adam|personel).*(şantiye|santiye|sahada|iş\s*başı|is\s*basi|giriş yaptı|giris yapti|check[- ]?in)|şu an.*(sahada|şantiyede|santiyede)|(sahada|şantiyede|santiyede).*(şu an|bugün|bugun|kim|kaç|kac)|puantaj|yoklama|(check[- ]?in|check[- ]?out)/.test(q))
+    intent = "LIVE_PERSONNEL";
+  else if (/devamsız|devamsiz|geç kaldı|gec kaldi|(giriş|giris|çıkış|cikis)\s*(kayd|saat)|attendance|mesai/.test(q))
+    intent = "ATTENDANCE";
+  else if (/hakediş|hakedis|progress payment/.test(q)) intent = "HAKEDIS_QUERY";
+  else if (/taşeron|taseron|alt yüklenici|alt yuklenici|subcontractor/.test(q)) intent = "SUBCONTRACTOR";
+  else if (/(nakit akış|nakit akis|finansal|mali durum|kar\s*zarar|karlılık|karlilik|gelir\s*gider|bilanço|bilanco|cash\s*flow|financial)/.test(q)) intent = "FINANCIAL_SUMMARY";
+  else if (/(ödeme|odeme|payment|nakit|havale|çek\b|cek\b|kasa|tahsilat)/.test(q)) intent = "PAYMENT_QUERY";
   else if (/görev|gorev|task|yapılacak|yapilacak|to-?do|termin|geciken|bekleyen/.test(q)) intent = "TASK_QUERY";
-  else if (/şantiye günlüğü|santiye gunlugu|günlük|gunluk|beton döküm|beton dokum|kalıp|kalip|demir|hafriyat|iş yapıldı|is yapildi/.test(q)) intent = "SITE_DIARY_QUERY";
+  else if (/şantiye günlüğü|santiye gunlugu|günlük|gunluk|beton döküm|beton dokum|kalıp|kalip|hafriyat|iş yapıldı|is yapildi/.test(q)) intent = "SITE_DIARY_QUERY";
   else if (/belge|evrak|döküman|dokuman|document|dosya|pdf/.test(q)) intent = "DOCUMENT_QUERY";
   else if (/malzeme|stok|çimento|cimento|beton|demir\b|kum|çakıl|cakil|material/.test(q)) intent = "MATERIAL_QUERY";
   else if (/sözleşme|sozlesme|kontrat|contract/.test(q)) intent = "CONTRACT_QUERY";
   else if (/personel|işçi|isci|çalışan|calisan|usta|kalfa|maaş|maas|yevmiye|foreman|worker/.test(q)) intent = "PERSONNEL_QUERY";
+  else if (/(genel durum|özet|ozet|overview|proje durumu|nasıl gidiyor|nasil gidiyor)/.test(q)) intent = "PROJECT_OVERVIEW";
   else if (/proje|inşaat|insaat|şantiye|santiye|villa|bina|site/.test(q)) intent = "PROJECT_QUERY";
   else { intent = "GENERAL_CHAT"; confident = false; }
 
@@ -104,19 +112,31 @@ const SYSTEM_PROMPT = `Sen Şantiyem'sın — Türk müteahhit, mühendis ve mim
 
 =================================================== KİMLİĞİN VE TEMEL KURALLAR
 
-Türkiye inşaat sektörüne özel, deneyimli bir proje yöneticisi gibi konuşursun
+Sen deneyimli bir inşaat PROJE DİREKTÖRÜsün — bir chatbot değilsin. Kullanıcının şirketinde çalışan bir yönetici gibi konuşursun.
 
-Her zaman Türkçe cevap verirsin
+DOĞAL YÖNETİCİ İLETİŞİMİ:
+- Robotik ifadeler kullanma ("Merhaba, size nasıl yardımcı olabilirim" tarzı klişelerden kaçın).
+- Veritabanı değerini olduğu gibi tekrar etme. Önce YORUMLA, sonra ne anlama geldiğini söyle.
+- Kısa, net, yönetici üslubuyla konuş. Gereksiz giriş yapma.
 
-Direkt, net ve pratik cevaplar verirsin — gereksiz giriş cümleleri kurmazsın
+CEVAP YAPISI — HER YANITTA:
+1. Durum tespiti (verinin ne söylediği)
+2. Bu ne anlama geliyor (yorum, risk, fırsat)
+3. Önerilen sonraki adım (somut)
+4. Tek bir kısa takip sorusu
 
-Rakamlarla konuşursun: yüzde, gün, tutar, madde numarası
+VERİ DÜRÜSTLÜĞÜ (KATİ):
+- Sorulan bilgi VERİ bloğunda yoksa UYDURMA, alakasız veriye kayma.
+- Neden bilginin bulunmadığını açıkla ve hangi verinin gerekli olduğunu söyle.
+- Örnek: "Bu proje için canlı puantaj kaydı yok, bu yüzden sahadaki personel sayısını söyleyemem. QR ile giriş yapıldığında bu bilgi anlık gelir."
+- Emin değilsen "güven düşük" olduğunu açıkça belirt. Kesinlik uydurma.
 
-"Bence", "sanırım" yerine "şu kurala göre", "formül şu şekilde" dersin
+BAĞLAM FARKINDALIĞI:
+- Önceki konuşmayı hatırla. Konu ödemelerse aynı girişleri tekrar etme, doğal devam et.
+- "Merhaba" veya "Size nasıl yardımcı olabilirim" gibi cümlelerle BAŞLAMA.
 
-Bilmediğin bir konuda tahmin yürütmek yerine "Bu konuda hukuki/teknik danışman görüşü alınız" dersin
+Türkçe cevap ver. Rakamlarla konuş. Bilmediğin hukuki konuda "avukat görüşü alınız" de.
 
-Cevapların sonunda her zaman uyarı eklersin
 
 =================================================== HAKEDİŞ HESAPLAMA VE KDV/STOPAJ
 
@@ -573,7 +593,7 @@ serve(async (req) => {
                     content:
                       `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
                       `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                      `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                      `Şema: {"intent": one of ["LIVE_PERSONNEL","ATTENDANCE","PAYMENT_QUERY","SUBCONTRACTOR","FINANCIAL_SUMMARY","PROJECT_QUERY","PROJECT_OVERVIEW","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
                       `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
                   },
                   { role: "user", content: userQuery },
@@ -784,6 +804,85 @@ serve(async (req) => {
             const { data } = await q;
             lines.push(`PERSONEL (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.full_name} · ${r.occupation || "-"} · ${r.employment_type} · yevmiye ${fmt(Number(r.daily_wage || 0))} · maaş ${fmt(Number(r.monthly_salary || 0))} · aktif: ${r.is_active}`));
+          } else if (intent === "LIVE_PERSONNEL" || intent === "ATTENDANCE") {
+            const today = now.toISOString().slice(0, 10);
+            const fromDate = df || today;
+            const toDate = dt || today;
+            let waq = sb.from("worker_attendance")
+              .select("worker_name, check_in, check_out, work_date, project_id, status")
+              .eq("user_id", uid)
+              .gte("work_date", fromDate)
+              .lte("work_date", toDate)
+              .order("check_in", { ascending: false }).limit(200);
+            if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
+            const { data: wa, error: waErr } = await waq;
+            const rows = wa || [];
+            if (intent === "LIVE_PERSONNEL") {
+              const onSite = rows.filter((r: any) => r.check_in && !r.check_out);
+              lines.push(`CANLI SAHA DURUMU (${today}):`);
+              lines.push(`- Bugün giriş yapan: ${rows.length}`);
+              lines.push(`- Şu an sahada (çıkış yapılmamış): ${onSite.length}`);
+              onSite.slice(0, 15).forEach((r: any) => lines.push(`  · ${r.worker_name} · giriş ${String(r.check_in).slice(11, 16)}`));
+              if (rows.length === 0 && !waErr) {
+                lines.push(`NOT: Bu proje için bugün QR/puantaj kaydı yok — canlı personel sayısı belirlenemez.`);
+              }
+            } else {
+              lines.push(`YOKLAMA (${fromDate} → ${toDate}, ${rows.length} kayıt):`);
+              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status || "-"}`));
+            }
+          } else if (intent === "SUBCONTRACTOR") {
+            let sq = sb.from("subcontractors").select("id, name, trade, contact_person, phone, is_active").eq("user_id", uid).limit(limit);
+            if (nameFilter) sq = sq.ilike("name", `%${nameFilter}%`);
+            const { data: subs } = await sq;
+            const subRows = subs || [];
+            lines.push(`TAŞERONLAR (${subRows.length} kayıt):`);
+            const ids = subRows.map((s: any) => s.id);
+            let payMap = new Map<string, { paid: number; count: number }>();
+            if (ids.length) {
+              const { data: pays } = await sb.from("subcontractor_payments")
+                .select("subcontractor_id, amount, payment_date")
+                .in("subcontractor_id", ids);
+              (pays || []).forEach((p: any) => {
+                const cur = payMap.get(p.subcontractor_id) || { paid: 0, count: 0 };
+                cur.paid += Number(p.amount || 0); cur.count += 1;
+                payMap.set(p.subcontractor_id, cur);
+              });
+            }
+            subRows.forEach((s: any) => {
+              const st = payMap.get(s.id) || { paid: 0, count: 0 };
+              lines.push(`- ${s.name} · ${s.trade || "-"} · ödeme adedi: ${st.count} · toplam ödenen: ${fmt(st.paid)} · aktif: ${s.is_active}`);
+            });
+          } else if (intent === "FINANCIAL_SUMMARY" || intent === "PROJECT_OVERVIEW") {
+            let pq = sb.from("projects").select("id, name, status, progress, contract_amount, start_date, end_date").eq("user_id", uid).limit(20);
+            if (projectIdFilter) pq = pq.eq("id", projectIdFilter);
+            const { data: projs } = await pq;
+            const projRows = projs || [];
+            const pids = projRows.map((p: any) => p.id);
+            let hakedis = 0, expenses = 0, subPaid = 0, cashPaid = 0, cashCollected = 0;
+            if (pids.length) {
+              const [h, e, sp, cp, cc] = await Promise.all([
+                sb.from("project_hakedis").select("net_total, amount, project_id").in("project_id", pids),
+                sb.from("project_expenses").select("amount, project_id").in("project_id", pids),
+                sb.from("subcontractor_payments").select("amount, project_id").in("project_id", pids),
+                sb.from("cash_payments").select("amount, project_id").in("project_id", pids),
+                sb.from("cash_collections").select("amount, project_id").in("project_id", pids),
+              ]);
+              hakedis = (h.data || []).reduce((s: number, r: any) => s + Number(r.net_total || r.amount || 0), 0);
+              expenses = (e.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              subPaid = (sp.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              cashPaid = (cp.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              cashCollected = (cc.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            }
+            const contractTotal = projRows.reduce((s: number, r: any) => s + Number(r.contract_amount || 0), 0);
+            lines.push(`${intent === "FINANCIAL_SUMMARY" ? "FİNANSAL ÖZET" : "PROJE GENEL DURUMU"} (${projRows.length} proje):`);
+            projRows.forEach((p: any) => lines.push(`- ${p.name} · durum: ${p.status} · ilerleme: %${p.progress} · sözleşme: ${fmt(Number(p.contract_amount || 0))}`));
+            lines.push(``);
+            lines.push(`TOPLAM SÖZLEŞME: ${fmt(contractTotal)}`);
+            lines.push(`TOPLAM HAKEDİŞ (net): ${fmt(hakedis)}`);
+            lines.push(`TOPLAM GİDER: ${fmt(expenses)}`);
+            lines.push(`TAŞERON ÖDEMESİ: ${fmt(subPaid)}`);
+            lines.push(`KASA TAHSİLAT: ${fmt(cashCollected)} · KASA ÖDEME: ${fmt(cashPaid)}`);
+            lines.push(`NET NAKİT (tahsilat - ödeme): ${fmt(cashCollected - cashPaid)}`);
           }
 
           if (lines.length > 0) {
@@ -792,11 +891,31 @@ serve(async (req) => {
               `Intent: ${intent}\n` +
               lines.join("\n") +
               "\n=== VERİ SONU ===\n" +
-              "KURAL: Yukarıdaki gerçek proje verisine dayanarak cevap ver. Rakam uydurma. Veri yoksa 'Bu bilgi sistemde bulunamadı.' de. SQL veya JSON gösterme; deneyimli proje yöneticisi gibi kısa, profesyonel Türkçe özetle.\n";
+              "KURAL: SADECE yukarıdaki gerçek veriye dayanarak konuş. Rakam uydurma, verileri yorumla. " +
+              "Cevap formatı: (1) Durum tespiti, (2) Bunun ne anlama geldiği, (3) Önerilen sonraki adım, (4) Tek bir kısa takip sorusu. " +
+              "Aynı sohbette daha önce geçen konuyu tekrar etme; giriş cümlesi kurma. Deneyimli proje müdürü gibi konuş.\n";
           } else if (intent !== "GENERAL_CHAT") {
+            const missingMap: Record<string, string> = {
+              LIVE_PERSONNEL: "Bu proje için bugün QR/puantaj girişi yok. Sahadaki canlı personel sayısını görebilmem için işçilerin QR kodu ile giriş-çıkış yapması gerekiyor.",
+              ATTENDANCE: "Seçili tarih aralığı için yoklama kaydı yok. Puantaj modülünden giriş yapıldığında bu bilgi hazır olur.",
+              SUBCONTRACTOR: "Bu proje için taşeron kaydı yok. Taşeron modülünden firmayı ve ödemeleri girmen gerekiyor.",
+              HAKEDIS_QUERY: "Bu sorguya uyan hakediş kaydı yok. Hakediş modülünden ilgili dönemi oluşturman gerekiyor.",
+              PAYMENT_QUERY: "Bu sorguya uyan ödeme/kasa kaydı yok. Kasa & Ödeme modülünden işlemleri girmen gerekiyor.",
+              TASK_QUERY: "Bu sorguya uyan görev yok. Görev modülünden görev açman gerekiyor.",
+              SITE_DIARY_QUERY: "Seçili aralık için şantiye günlüğü kaydı yok. Günlük modülünden kayıt eklenmesi gerekiyor.",
+              MATERIAL_QUERY: "Bu proje için malzeme kaydı yok. Malzeme modülünden giriş yapman gerekiyor.",
+              CONTRACT_QUERY: "Bu sorguya uyan sözleşme yok.",
+              PERSONNEL_QUERY: "Bu sorguya uyan personel kaydı yok.",
+              FINANCIAL_SUMMARY: "Finansal özet için yeterli veri yok. Hakediş, kasa ve gider modüllerinde kayıt olmalı.",
+              PROJECT_OVERVIEW: "Henüz proje kaydı yok. Önce Projeler modülünden bir proje oluşturman gerekiyor.",
+              DOCUMENT_QUERY: "Yüklü evrak yok.",
+              PROJECT_QUERY: "Bu sorguya uyan proje yok.",
+            };
+            const reason = missingMap[intent] || "İstenen bilgi sistemde bulunamadı.";
             projectDataContext =
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
-              "KURAL: Kullanıcıya 'Bu bilgi sistemde bulunamadı.' şeklinde nazikçe bildir. Tahmini rakam verme.\n";
+              `AÇIKLAMA: ${reason}\n` +
+              "KURAL: Kullanıcıya bilginin neden mevcut olmadığını açıkla ve hangi verinin gerekli olduğunu söyle. Rakam uydurma, alakasız veriye geçme. Kısa bir öneri ile bitir.\n";
           }
           if (projectDataContext) {
             cacheSet(brainCache, cacheKey, projectDataContext, 30_000);
@@ -1383,14 +1502,17 @@ KURALLAR:
       // Voice: use a lean system prompt (skip the heavy SYSTEM_PROMPT with dashboard rules)
       // and pass only text messages — no attachments, no markdown scaffolding.
       const voiceSystem =
-        `Sen Şantiyem AI'sın — deneyimli bir inşaat proje müdürü. Türkçe sesli asistan modundasın.\n` +
-        `KURALLAR:\n` +
-        `- Markdown, tablo, madde işareti, başlık, emoji YOK.\n` +
-        `- En fazla 2 kısa paragraf, kısa cümleler.\n` +
+        `Sen Şantiyem AI'sın — deneyimli bir inşaat PROJE DİREKTÖRÜ. Türkçe sesli asistan modundasın. Chatbot gibi konuşma; şirket içi bir yönetici gibi konuş.\n` +
+        `ÜSLUP:\n` +
+        `- "Merhaba", "size nasıl yardımcı olabilirim" ile BAŞLAMA. Doğrudan konuya gir.\n` +
+        `- Veritabanı rakamını olduğu gibi tekrar etme; yorumla ve ne anlama geldiğini söyle.\n` +
         `- Sayı ve tarihleri doğal söyle (ör. "bir milyon iki yüz bin lira", "on beş Kasım").\n` +
-        `- Yanıtı kısa bir takip sorusuyla bitir.\n` +
-        `- Aşağıdaki VERİ bloğunda bilgi varsa sadece ona dayan; yoksa "sistemde bulamadım" de. Rakam uydurma.` +
+        `- Markdown, tablo, madde, emoji YOK. En fazla 2 kısa paragraf.\n` +
+        `YAPI: Kısa durum → bunun anlamı → önerilen adım → tek kısa takip sorusu.\n` +
+        `VERİ DÜRÜSTLÜĞÜ: Aşağıdaki VERİ bloğunda bilgi yoksa uydurma; neden olmadığını açıkla ve hangi verinin gerekli olduğunu söyle. Alakasız veriye geçme.\n` +
+        `BAĞLAM: Aynı sohbette daha önce geçen konuya doğal devam et, giriş cümlesi tekrarlama.` +
         projectDataContext;
+
 
       // Keep only last 6 turns for voice to reduce token cost & latency
       const voiceMessages = messages
