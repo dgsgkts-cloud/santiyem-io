@@ -391,7 +391,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 - Kartı konuşurken çağır — kullanıcı istemesini beklemeden.
 
 ## CEVAP YAPISI
-Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullanıcı "detay/aç/göster" derse \`navigate_to\` ile ilgili sayfaya yönlendir.`;
+Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullanıcı "detay/aç/göster" derse \`navigate_to\` ile ilgili sayfaya yönlendir.
+
+## KESİNTİ / DİNLEME DAVRANIŞI (ÇOK ÖNEMLİ)
+- Konuşurken duyduğun kısa sesleri (öksürük, "hı-hı", "evet", "tamam", "ok", "aha", nefes, arka plan gürültüsü, telefon sesi, kısa mırıltılar) KESİNTİ SAYMA. Cümleni bitir.
+- Sadece kullanıcı NET, TAM ve YENİ bir cümleye başlarsa (en az 2–3 kelime, açık bir soru veya komut) kendini durdur.
+- Emin değilsen konuşmaya devam et; cümleyi yarıda bırakma. Kullanıcı bir sonraki nefeste tekrar deneyecektir.
+- Kullanıcı seni yanlışlıkla kestiğini düşünürsen ("devam et", "bitir cümleni" derse) kaldığın yerden devam et.`;
 
 
       const overrides = {
@@ -400,7 +406,20 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?",
           prompt: { prompt: SYSTEM_PROMPT },
         },
-      } as const;
+        // Reduce accidental barge-in from short sounds / brief utterances.
+        // Forwarded to server-side turn detection when agent overrides are
+        // enabled in the ElevenLabs dashboard.
+        conversation: {
+          turn_detection: {
+            type: "server_vad",
+            threshold: 0.75,              // higher = less sensitive to noise
+            prefix_padding_ms: 400,
+            silence_duration_ms: 900,
+            min_speech_duration_ms: 700,  // ignore utterances shorter than this
+            interrupt_response: true,
+          },
+        },
+      } as any;
 
       const waitForConnect = (ms: number) =>
         withTimeout(
