@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
+import {
+  resolveEntity,
+  normalizeTr,
+  buildClarification,
+  type EntityCandidate,
+} from "../_shared/entityResolver.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,10 +80,16 @@ function classifyIntentHeuristic(
   else if (/\ben\s+(çok|cok)\b/.test(q)) filters.aggregate = "top_by_recipient";
   else if (/\ben son\b|\bson\s+(yüklenen|yuklenen|eklenen)\b/.test(q)) { filters.aggregate = "latest"; filters.limit = 1; }
 
-  // Project name match against cached list
-  for (const p of projectNames) {
-    const pn = (p.name || "").toLowerCase().trim();
-    if (pn && pn.length >= 3 && q.includes(pn)) { filters.project_name = p.name; break; }
+  // Project name match — normalized + fuzzy (Turkish char folding, voice corrections)
+  {
+    const candidates: EntityCandidate[] = projectNames.map(p => ({ id: p.id, name: p.name }));
+    const outcome = resolveEntity(rawQuery, candidates, { autoSelectThreshold: 0.85, suggestThreshold: 0.62 });
+    if (outcome.status === "auto") {
+      filters.project_name = outcome.match.name;
+    } else if (outcome.status === "ambiguous") {
+      filters.project_name = outcome.matches[0].candidate.name;
+      filters.project_ambiguous = outcome.matches.map(m => m.candidate.name);
+    }
   }
 
   let intent = "GENERAL_CHAT";
@@ -642,13 +654,33 @@ serve(async (req) => {
           const maxLimit = voiceMode ? 5 : 25;
           const limit = Math.min(Number(filters.limit) || baseLimit, maxLimit);
 
-          // Resolve project_id from cached list first (no extra query)
+          // Resolve project_id from cached list using fuzzy resolver.
+          // If the user's mention is ambiguous across multiple projects, short-circuit
+          // with a clarification question instead of guessing.
           let projectIdFilter: string | null = null;
+          let projectClarification: string | null = null;
           if (projectName) {
-            const pn = projectName.toLowerCase();
-            const hit = projList!.find(p => (p.name || "").toLowerCase().includes(pn));
-            if (hit) projectIdFilter = hit.id;
+            const outcome = resolveEntity(
+              projectName,
+              (projList || []).map(p => ({ id: p.id, name: p.name }) as EntityCandidate),
+              { autoSelectThreshold: 0.85, suggestThreshold: 0.62 },
+            );
+            if (outcome.status === "auto") {
+              projectIdFilter = outcome.match.id;
+            } else if (outcome.status === "ambiguous") {
+              projectClarification = buildClarification("proje", outcome.matches);
+            }
           }
+
+          // If we hit an ambiguous project mention, ask the user to disambiguate
+          // rather than returning data that might be from the wrong project.
+          if (projectClarification) {
+            projectDataContext = `AÇIKLAMA GEREKLİ: ${projectClarification}`;
+            cacheSet(brainCache, cacheKey, projectDataContext, 10_000);
+            throw new Error("__CACHE_HIT__");
+          }
+
+
 
 
           const fmt = (n: any) =>
@@ -677,7 +709,8 @@ serve(async (req) => {
             const { data } = await q;
             let rows = (data || []).filter((r: any) => r.subcontractor_id); // ignore anything not confidently classified
             if (nameFilter && !subcontractorScope) {
-              rows = rows.filter((r: any) => (r.subcontractors?.name || "").toLowerCase().includes(nameFilter));
+              const nf = normalizeTr(nameFilter);
+              rows = rows.filter((r: any) => normalizeTr(r.subcontractors?.name || "").includes(nf));
             }
             const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
             lines.push(`TAŞERON ÖDEMELERİ (${rows.length} kayıt, toplam ${fmt(total)}):`);
