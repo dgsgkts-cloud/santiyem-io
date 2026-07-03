@@ -87,6 +87,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     } catch { /* noop */ }
   }, []);
 
+  // Honor "siteModeDefault" the first time the panel opens.
+  useEffect(() => {
+    const s = settingsRef.current;
+    if (s.siteModeDefault && s.mode !== "site") setSettings(applyModePreset(s, "site"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const conversation = useConversation({
     overrides: { agent: { language: "tr" } },
     onConnect: () => {
