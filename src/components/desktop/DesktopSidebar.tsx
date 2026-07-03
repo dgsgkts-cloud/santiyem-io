@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
-  Bell, Crown, FileSignature, Wallet,
+  Bell, Crown, FileSignature, Wallet, Mic,
   Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, FileSpreadsheet
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -36,6 +36,7 @@ const NAV_SECTIONS = [
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
       { id: "materials" as Tab, label: "Malzeme Takibi", icon: Package },
       { id: "e-invoices" as Tab, label: "E-Fatura / E-Arşiv", icon: FileSpreadsheet },
+      { id: "meetings" as Tab, label: "Toplantı Merkezi", icon: Mic },
     ],
   },
   {

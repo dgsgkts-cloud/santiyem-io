@@ -25,6 +25,8 @@ import MaterialsPage from "@/components/desktop/MaterialsPage";
 import EInvoicesPage from "@/components/desktop/EInvoicesPage";
 import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
+import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
+
 
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +48,7 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -74,6 +76,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "materials",
   "e-invoices",
   "personnel",
+  "meetings",
 ];
 
 // Mobile drawer menu items
@@ -87,6 +90,7 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }
   { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
   { id: "materials", label: "Malzeme Takibi", icon: Package },
   { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
+  { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
   
@@ -112,6 +116,7 @@ const TAB_TITLES: Record<string, string> = {
   materials: "Malzeme Takibi",
   "e-invoices": "E-Fatura / E-Arşiv",
   personnel: "Puantaj & Personel",
+  meetings: "Toplantı Merkezi",
   settings: "Ayarlar",
   
   hakkimizda: "Hakkımızda",
@@ -397,6 +402,8 @@ const Index = () => {
                   <EInvoicesPage />
                 ) : activeTab === "personnel" ? (
                   <PersonnelPage />
+                ) : activeTab === "meetings" ? (
+                  <MeetingCenterPage />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (

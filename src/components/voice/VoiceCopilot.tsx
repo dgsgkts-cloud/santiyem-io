@@ -212,6 +212,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           return `Bir hata oluştu: ${String(e).slice(0, 200)}`;
         }
       },
+      start_meeting: (_p: { title?: string; project_id?: string }) => {
+        try {
+          window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "meetings" }));
+          setTimeout(() => window.dispatchEvent(new CustomEvent("meeting-center:start")), 250);
+          return "Toplantı Merkezi açıldı — kayıt için 'Toplantıyı Başlat' düğmesine dokunun.";
+        } catch { return "Toplantı Merkezi açılamadı."; }
+      },
     },
   });
 
