@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
+import {
+  resolveEntity,
+  applyVoiceCorrections,
+  normalizeTr,
+  buildClarification,
+  type EntityCandidate,
+} from "../_shared/entityResolver.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
