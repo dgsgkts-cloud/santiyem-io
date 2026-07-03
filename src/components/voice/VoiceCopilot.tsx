@@ -809,44 +809,74 @@ function StartButton({ onStart, disabled }: { onStart: () => void; disabled: boo
    ACTION BAR — glass buttons (Mute / Pause / Stop / Keyboard / Repeat / History)
    ===================================================== */
 function ActionBar({
-  muted, paused, siteMode, onSiteMode, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
+  muted, paused, pushToTalk, ptt,
+  onPttDown, onPttUp, onSettings,
+  onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
 }: {
-  muted: boolean; paused: boolean; siteMode: boolean;
-  onSiteMode: () => void;
+  muted: boolean; paused: boolean; pushToTalk: boolean; ptt: boolean;
+  onPttDown: () => void; onPttUp: () => void; onSettings: () => void;
   onMute: () => void; onPause: () => void; onStop: () => void;
   onKeyboard: () => void; onRepeat: () => void; onHistory: () => void;
 }) {
   return (
-    <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
-      <ActionBtn onClick={onSiteMode} label={siteMode ? "Şantiye Modu: Açık" : "Şantiye Modu: Kapalı"} active={siteMode}>
-        <HardHat className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
-        {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-      </ActionBtn>
-      <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
-        {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-      </ActionBtn>
-      <ActionBtn onClick={onRepeat} label="Tekrarla">
-        <RotateCw className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onHistory} label="Geçmiş">
-        <MessageSquare className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onKeyboard} label="Klavye">
-        <Keyboard className="w-4 h-4" />
-      </ActionBtn>
-      <button
-        onClick={onStop}
-        className="ml-1 h-11 px-4 rounded-xl flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
-        style={{
-          background: "linear-gradient(135deg, #E5484D, #B4272B)",
-          boxShadow: "0 6px 20px -4px rgba(229,72,77,0.5)",
-        }}
-      >
-        <Square className="w-3.5 h-3.5 fill-white" />
-        <span>Bitir</span>
-      </button>
+    <div className="flex flex-col items-center gap-3 voice-fade-in">
+      {pushToTalk && (
+        <button
+          onPointerDown={(e) => { e.preventDefault(); onPttDown(); }}
+          onPointerUp={(e) => { e.preventDefault(); onPttUp(); }}
+          onPointerCancel={onPttUp}
+          onPointerLeave={ptt ? onPttUp : undefined}
+          onContextMenu={(e) => e.preventDefault()}
+          className={`select-none touch-none h-16 min-w-[220px] px-8 rounded-2xl flex items-center justify-center gap-3 text-white text-base font-semibold transition-all active:scale-[0.97] ${
+            ptt ? "ring-2 ring-white/40" : ""
+          }`}
+          style={{
+            background: ptt
+              ? "linear-gradient(135deg, #FF8F5A, #FF6B2B)"
+              : "linear-gradient(135deg, #FF6B2B, #C13A00)",
+            boxShadow: ptt
+              ? "0 0 40px 6px rgba(255,143,90,0.6)"
+              : "0 8px 24px -6px rgba(255,107,43,0.55)",
+          }}
+        >
+          <Mic className="w-6 h-6" />
+          <span>{ptt ? "Konuşuyorum…" : "Bas & Konuş"}</span>
+        </button>
+      )}
+
+      <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5">
+        {!pushToTalk && (
+          <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
+            {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </ActionBtn>
+        )}
+        <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
+          {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+        </ActionBtn>
+        <ActionBtn onClick={onRepeat} label="Tekrarla">
+          <RotateCw className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onHistory} label="Geçmiş">
+          <MessageSquare className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onKeyboard} label="Klavye">
+          <Keyboard className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onSettings} label="Ayarlar">
+          <Settings className="w-4 h-4" />
+        </ActionBtn>
+        <button
+          onClick={onStop}
+          className="ml-1 h-11 px-4 rounded-xl flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, #E5484D, #B4272B)",
+            boxShadow: "0 6px 20px -4px rgba(229,72,77,0.5)",
+          }}
+        >
+          <Square className="w-3.5 h-3.5 fill-white" />
+          <span>Bitir</span>
+        </button>
+      </div>
     </div>
   );
 }
