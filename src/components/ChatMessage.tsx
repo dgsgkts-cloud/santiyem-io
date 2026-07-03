@@ -132,6 +132,18 @@ const parseBlocks = (raw: string): Block[] => {
       blocks.push({ kind: "source", content: inner });
     } else if (kind === "details") {
       blocks.push({ kind: "details", content: inner });
+    } else if (kind === "notfound") {
+      const nf: any = { kind: "notfound", reasons: [], similar: [], suggestions: [] };
+      inner.split("\n").forEach((ln) => {
+        const mm = ln.match(/^\s*(query|reasons|similar|suggestions)\s*:\s*(.+)$/i);
+        if (!mm) return;
+        const key = mm[1].toLowerCase();
+        const val = mm[2].trim();
+        if (key === "query") nf.query = val;
+        else if (key === "similar") nf.similar = val.split(",").map((s) => s.trim()).filter(Boolean);
+        else nf[key] = val.split("|").map((s) => s.trim()).filter(Boolean);
+      });
+      blocks.push(nf);
     }
     last = m.index + m[0].length;
   }
