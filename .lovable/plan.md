@@ -1,113 +1,121 @@
-# Puantaj & Personel Modülü Planı
+# Şantiyem AI Construction Copilot — Faz 1
 
-Hedef: Tek merkezi personel listesi üzerinden hem QR yoklama hem aylık puantaj. Maliyet, kişinin çalışma tipine göre hesaplansın.
+Chat'i "AI Construction Copilot" deneyimine dönüştüreceğiz. Üç yapı taşı:
+**Voice Copilot** (ElevenLabs), **Morning Briefing**, **Hands-Free Mode**.
+Meeting Mode sonraki sprint.
 
-## 1. Veritabanı (tek migration)
+---
 
-### Yeni tablolar
+## 1. ElevenLabs Voice Copilot
 
-**`personnel`** (merkezi kişi kaydı — TEK KAYNAK)
-- `id`, `user_id` (sahip), `full_name`, `phone` (unique within owner, eşleştirme anahtarı), `occupation`, `title`, `is_active`
-- `employment_type` enum: `daily_wage` | `monthly_salary` | `subcontractor_crew`
-- `daily_wage` numeric (yevmiyeli için)
-- `monthly_salary` numeric (maktu aylık için)
-- `subcontractor_id` uuid (taşeron ekibi için → mevcut `subcontractors`)
+ElevenLabs Conversational AI (WebRTC) kullanılacak — doğal kesme, düşük gecikme,
+premium ses. Agent, ElevenLabs Dashboard'da yaratılıp `agent_id` bir secret olarak
+saklanacak (`ELEVENLABS_AGENT_ID`).
 
-**`personnel_project_assignments`** (aynı kişi birden fazla projede)
-- `personnel_id`, `project_id`, `salary_share_percent` (maktu için, varsayılan 100), `salary_share_amount` (alternatif), `is_active`
-- UNIQUE(personnel_id, project_id)
+**Backend**
+- `standard_connectors--connect` ile ElevenLabs bağlanır → `ELEVENLABS_API_KEY` gelir.
+- Yeni edge function `elevenlabs-conversation-token`:
+  - JWT doğrular (getClaims), premium/trial + günlük kota kontrolü.
+  - `/v1/convai/conversation/token?agent_id=...` çağırır, tek kullanımlık token döner.
+- Yeni edge function `voice-usage-track`: her session sonunda saniye ekler.
+- Yeni tablo `voice_usage`: `user_id, date, seconds_used`. RLS + GRANT.
+  - Free: 600 sn/gün, Premium: sınırsız.
 
-**`attendance_records`** (aylık puantaj ızgarası)
-- `id`, `user_id`, `personnel_id`, `project_id`, `work_date`, `status` enum: `full_day` | `half_day` | `absent` | `leave`
-- `source` enum: `manual` | `qr` (QR'dan otomatik gelirse)
-- `qr_attendance_id` uuid nullable (worker_attendance referansı)
-- UNIQUE(personnel_id, project_id, work_date)
+**Client tools (agent → app)**
+ElevenLabs agent web UI'da şu client tool'lar tanımlanacak (kullanıcı manuel yapacak
+— talimat vereceğim), `useConversation` ile handler bağlanacak:
+- `query_project_data({intent, keyword})` → mevcut `chat` edge function'ına proxy.
+- `render_dashboard_card({type, payload})` → UI'da kart üretir.
+- `create_task`, `create_payment`, `notify_contractor` → confirmation flow.
+- `navigate_to(page)` → in-app router.
 
-**`unmatched_qr_checkins`** (telefon eşleşmeyen QR girişleri — uyarı listesi)
-- View ya da tablo: `worker_attendance` içinden `personnel`'le eşleşmeyen kayıtlar. View olarak yapacağım.
+**UI**
+- `src/components/voice/VoiceCopilot.tsx`: fullscreen overlay.
+  - Durum halkası: idle / listening (nabız) / thinking (spinner) / speaking (waveform).
+  - Kesme: kullanıcı konuşmaya başlayınca ElevenLabs VAD otomatik keser.
+  - Sağda canlı **Dashboard Rail**: agent konuşurken KPI kartları, uyarılar,
+    quick action butonları belirir (fade-in + scale animasyonu).
+  - Alt: mic toggle, kapat, "Yazmaya geç" butonu (mevcut ChatInput'a döner).
+- `src/components/voice/VoiceOrb.tsx`: her sayfada sağ altta (WhatsApp butonunun
+  üstünde) yeni büyük mic FAB — tap → VoiceCopilot açar.
 
-### Mevcut tablolarda değişiklik
-- `worker_attendance`: zaten `phone` var. Trigger ekle → INSERT olduğunda `personnel` ile telefondan eşleş, eşleşirse `attendance_records`'a otomatik `full_day` yaz, `source='qr'`.
+## 2. Morning Briefing
 
-### RPC / fonksiyonlar
-- `bulk_upsert_attendance(records jsonb)` — mobil hızlı giriş
-- `compute_project_labor_cost(_project, _month)` — projenin yevmiyeli + maktu aylık maliyeti
-- `set_personnel_attendance(personnel, project, date, status)` — tek hücre güncelleme
-- Trigger: `on_worker_attendance_insert_match_personnel`
+- Edge function `morning-briefing`:
+  - Kullanıcının aktif projeleri için: geciken ödemeler, kritik stok, bugünkü
+    task'lar, işgücü, hava, ilerleme yüzdesi.
+  - Basit "health score" (0-100) hesaplar.
+  - Gemini flash ile 3-4 cümlelik konuşma metni üretir.
+- Dashboard'a `MorningBriefingCard`: günde ilk giriş sonrası açılır (localStorage
+  `briefing_shown_YYYY-MM-DD`).
+- "Sesli dinle" butonu → VoiceCopilot'u brifing metniyle açar (agent
+  `sendContextualUpdate` ile başlar), "Hangisini incelemek istersin?" ile biter.
 
-### RLS
-- `personnel`, `assignments`, `attendance_records`: SELECT `can_access_team_resource(auth.uid(), user_id) OR can_access_project(auth.uid(), project_id)`
-- INSERT/UPDATE/DELETE: owner / manager / site_engineer / accountant rollerine göre `has_project_permission`
+## 3. Hands-Free (Construction) Mode
 
-### GRANT
-- Her yeni tabloya `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated; GRANT ALL ... TO service_role;` (anon yok)
+- `src/pages/ConstructionMode.tsx` route: `/saha`.
+- Siyah zemin, tek büyük mikrofon (60vh), çok büyük yanıt tipografisi (28-36px).
+- Sadece VoiceCopilot mantığı — dashboard rail gizli, tam ekran ses.
+- Wake-lock API (ekran kapanmasın).
+- VoiceOrb'a uzun basınca veya menüden "🦺 Saha Modu" ile açılır.
 
-### projectPermissions (frontend)
-Yeni anahtarlar: `manage_personnel`, `view_personnel_costs`, `edit_attendance`. Şablonlara işle:
-- owner/accountant: full
-- manager: manage + view costs
-- site_engineer: edit_attendance (maliyet yok)
-- worker: sadece `view_attendance_own`
-- subcontractor: `view_attendance_own_team`
+## 4. Premium AI OS Yeniden Tasarım (odaklı)
 
-## 2. Frontend
+Full redesign yerine copilot yüzeylerini premium'a çekiyoruz:
+- `ChatMessage` kart sistemine yeni ikon seti + daha yumuşak shadow'lar (mevcut
+  yapıyı korur, sadece token güncellemeleri).
+- Global `VoiceOrb` her sayfada.
+- Landing chat başlığı "AI Construction Copilot" olur.
+- Motion: `framer-motion` yerine mevcut Tailwind animate + minimal CSS
+  keyframes (listening pulse, thinking shimmer, speaking waveform).
 
-### Yeni dosyalar
-- `src/hooks/usePersonnel.ts` — CRUD + projeye atama
-- `src/hooks/useAttendanceGrid.ts` — ay+proje → ızgara verisi
-- `src/lib/laborCost.ts` — tipe göre maliyet hesabı
-- `src/components/personnel/PersonnelList.tsx` — merkezi liste, tip filtresi, "tanımsız kişi" uyarı badge
-- `src/components/personnel/PersonnelForm.tsx` — ad/telefon/tip seç, tipe göre alan göster (yevmiye | maaş + dağıtım | taşeron seç)
-- `src/components/personnel/AttendanceGrid.tsx` — ay × kişi ızgarası, hücre tıkla→durum döngüsü, mobilde "bugün" tek ekran
-- `src/components/personnel/AttendanceMobileDaily.tsx` — şef için günün yoklaması
-- `src/components/personnel/LaborCostSummary.tsx` — proje aylık toplam, tip kırılımı
-- `src/components/personnel/UnmatchedQRBanner.tsx` — telefon eşleşmemiş QR girişleri için CTA "listeye ekle"
-- `src/pages/PersonnelPage.tsx` — sekmeli sayfa: Liste / Puantaj / Maliyet
-- `src/lib/attendanceExport.ts` — PDF (jspdf+autotable, TR karakter) ve Excel (xlsx) export
+## 5. Kota & Erişim
 
-### Mevcut dosyalarda
-- `src/lib/mobileTabs.ts` — "Yoklama" sekmesi `personnel` rotasına bağlansın; worker için sadece kendi puantajını gösteren read-only view
-- `src/lib/projectPermissions.ts` — yeni anahtarlar
-- `src/App.tsx` — `/personel`, `/puantaj` rotaları
-- Kasa/gider entegrasyonu: `compute_project_labor_cost` çıktısı `project_expenses`'a kategori `"Personel Maliyeti"` olarak SADECE rapor amaçlı görüntülensin — çift kayıt olmaması için ayrı view, INSERT yok. Onaylanmış aya manuel "Kasaya yansıt" butonu (idempotent: source='personnel_payroll', source_id=personnel_id+month)
+- `src/hooks/useVoiceAccess.ts`:
+  - `is_premium || in_trial` → sınırsız.
+  - Free → günlük 10 dk. Bittiğinde upgrade modal.
+- VoiceOrb kilitliyse mic üstünde küçük 🔒 rozet.
 
-### Taşeron sözleşme tipi
-- `subcontractor_contracts` tablosuna `contract_type` enum: `lump_sum` | `unit_price` | `daily_wage` + ilgili alanlar (`total_amount`, `advance_paid`, `unit_price`, `quantity`). Mevcut tabloyu kontrol edeceğim; yoksa oluşturacağım.
+---
 
-## 3. QR Entegrasyon Akışı
+## Teknik Sıra
 
-```text
-QR check-in (worker_attendance INSERT)
-   │
-   ▼ trigger
-   personnel WHERE phone = normalize(NEW.phone) AND user_id = NEW.user_id
-   │
-   ├── match → attendance_records UPSERT (status=full_day, source=qr)
-   │
-   └── no match → unmatched_qr view'da görünür
-                  → PersonnelPage'de banner "X tanımsız giriş, kişiyi ekle"
-```
+1. **Setup**: `bun add @elevenlabs/react`; ElevenLabs connector bağla; agent_id
+   secret'ı iste; `voice_usage` migration.
+2. **Backend**: `elevenlabs-conversation-token`, `voice-usage-track`,
+   `morning-briefing` edge fonksiyonları.
+3. **Hooks**: `useVoiceAccess`, `useVoiceConversation` (useConversation wrapper +
+   client tools + kota).
+4. **UI**: `VoiceOrb`, `VoiceCopilot` (orb + dashboard rail), `ConstructionMode`
+   sayfası + route, `MorningBriefingCard`.
+5. **Integration**: `App.tsx`'e global `<VoiceOrb />`; Dashboard'a briefing kartı.
+6. **QA**: Playwright ile orb açılıyor mu, kota engeli çalışıyor mu, hands-free
+   route render oluyor mu.
 
-## 4. RBAC görünürlüğü
+## Kullanıcıdan İstenecekler
 
-| Rol | Liste | Puantaj giriş | Maliyet |
-|---|---|---|---|
-| owner | ✓ | ✓ | ✓ |
-| manager | ✓ | ✓ | ✓ (override ile kapatılabilir) |
-| accountant | ✓ | ✗ | ✓ |
-| site_engineer | ✓ | ✓ | ✗ |
-| subcontractor | sadece kendi ekibi | ✗ | ✗ |
-| worker | sadece kendisi | ✗ | ✗ |
+Uygulama başlamadan **senin yapman gerekenler**:
+1. ElevenLabs hesabı → **Conversational AI → Create Agent**.
+2. Agent sistem prompt'u: "Sen Şantiyem AI, deneyimli bir proje direktörüsün.
+   Kısa, profesyonel, Türkçe cevap ver. Veri sorularında `query_project_data`
+   client tool'unu kullan." (final metni ben vereceğim.)
+3. Agent'ta şu **client tool'ları** tanımlaman gerekecek (isim + parametre şeması
+   ben vereceğim): `query_project_data`, `render_dashboard_card`, `create_task`,
+   `notify_contractor`, `navigate_to`.
+4. Agent'ı ElevenLabs UI'da **"Authentication: Required"** yap, `agent_id`'yi
+   bana ver → ben `ELEVENLABS_AGENT_ID` secret'ı olarak kaydedeceğim.
+5. ElevenLabs connector'ını Lovable'a bağlaman gerekecek — `connect` tool'u
+   sana açıp bekleyecek.
 
-## 5. Uygulama Sırası
+## Kapsam Dışı (bu sprint)
 
-1. **Migration** (onay bekle): tablolar + enum + trigger + RPC + RLS + GRANT + projectPermissions seed
-2. Hook'lar + lib (`usePersonnel`, `useAttendanceGrid`, `laborCost`)
-3. Personel listesi + form (çalışma tipine göre dinamik alan)
-4. Aylık ızgara (desktop) + mobil günlük giriş
-5. Maliyet özeti + Kasa entegrasyonu (idempotent buton)
-6. PDF/Excel export
-7. QR trigger testi + unmatched banner
-8. Route/mobil tab güncellemesi
+- Meeting Mode (kayıt, özet, PDF).
+- Voice tabanlı kart oluşturma dışında full "voice + typing" thread hafızası
+  (agent kendi conversation state'ini tutuyor; ayrı DB entegrasyonu sonra).
+- Landing sayfası veya sidebar'ın topyekün redesign'ı — mevcut sistemi
+  koruyup copilot yüzeylerini üstüne koyuyoruz.
 
-Onay verirsen migration ile başlıyorum.
+## Tahmin
+
+Bu plan 1 uzun iterasyonda tamamlanabilir. Onaylarsan ElevenLabs bağlantısı ve
+agent kurulumu ile başlıyorum.
