@@ -607,24 +607,29 @@ function Actions({
       const { data: userRes } = await supabase.auth.getUser();
       const uid = userRes?.user?.id;
       const meeting = meetings.find((m) => m.id === a.meeting_id);
-      const { data: task, error } = await supabase
-        .from("tasks")
-        .insert({
-          user_id: uid,
-          title: a.title,
-          description: a.description || `Toplantı: ${meeting?.title || ""}`,
-          project_id: meeting?.project_id || null,
-          due_date: a.due_date,
-          priority: a.priority,
-          status: "todo",
-          assigned_to_name: a.assignee_name,
-        } as any)
-        .select("id")
-        .single();
-      if (error) throw error;
+      let taskId: string | null = null;
+      if (meeting?.project_id && uid) {
+        const { data: task, error } = await supabase
+          .from("tasks")
+          .insert({
+            created_by: uid,
+            title: a.title,
+            description: a.description || `Toplantı: ${meeting?.title || ""}${a.assignee_name ? ` · Sorumlu: ${a.assignee_name}` : ""}`,
+            project_id: meeting.project_id,
+            due_date: a.due_date,
+            priority: a.priority,
+            status: "todo",
+          } as any)
+          .select("id")
+          .single();
+        if (error) throw error;
+        taskId = (task as any).id;
+      } else {
+        toast.warning("Bu toplantıya proje bağlı değil — aksiyon onaylandı ama görev oluşturulmadı.");
+      }
       await supabase
         .from("meeting_action_items")
-        .update({ status: "converted", created_task_id: (task as any).id, notified_at: notify ? new Date().toISOString() : null })
+        .update({ status: taskId ? "converted" : "approved", created_task_id: taskId, notified_at: notify ? new Date().toISOString() : null })
         .eq("id", a.id);
       if (notify && a.assignee_name) {
         // Best-effort WhatsApp link fallback (Communication Center dispatch TBD)
