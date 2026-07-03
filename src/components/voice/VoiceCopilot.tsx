@@ -737,11 +737,13 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           }
         }, 350);
       };
-    } else if (!settings.pushToTalk) {
+    } else if (!settings.pushToTalk && !greetingProtectedRef.current) {
+      // Don't re-enable while the greeting is still protected — the
+      // greeting-release timer owns un-muting in that case.
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted]);
+  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted, greetingProtected]);
 
 
 
