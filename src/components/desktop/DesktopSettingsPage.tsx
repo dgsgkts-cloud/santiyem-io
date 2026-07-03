@@ -501,6 +501,30 @@ const NotificationsTab = () => {
           📧 Gönderen adres: <strong>noreply@santiyem.io</strong>
         </p>
       </div>
+
+      <div>
+        <p className="text-[11px] font-semibold mb-2 text-muted-foreground">DESTEK</p>
+        <a
+          href="https://wa.me/905427818181"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-white/5"
+          style={{ border: "1px solid rgba(37,211,102,0.25)", backgroundColor: "rgba(37,211,102,0.08)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#25D366" }}>
+              <svg viewBox="0 0 32 32" className="w-5 h-5 fill-white">
+                <path d="M16.004 2.667A13.26 13.26 0 0 0 2.667 15.89a13.16 13.16 0 0 0 1.795 6.64L2.667 29.333l7.048-1.846A13.3 13.3 0 0 0 16.004 29.2 13.27 13.27 0 0 0 29.333 15.89 13.27 13.27 0 0 0 16.004 2.667Zm6.064 16.264c-.333-.166-1.97-.972-2.275-1.083-.305-.11-.527-.166-.75.167s-.86 1.083-1.054 1.305c-.194.222-.389.25-.722.083a9.1 9.1 0 0 1-2.68-1.654 10.04 10.04 0 0 1-1.853-2.31c-.194-.333-.02-.514.146-.68.15-.149.333-.389.5-.583.166-.194.222-.333.333-.555.111-.222.056-.417-.028-.583-.083-.167-.75-1.806-1.027-2.472-.271-.65-.546-.562-.75-.573l-.639-.01a1.22 1.22 0 0 0-.888.416c-.306.333-1.166 1.139-1.166 2.778s1.194 3.222 1.36 3.444c.167.222 2.35 3.59 5.695 5.034.796.344 1.417.55 1.902.703.799.254 1.526.218 2.1.132.641-.095 1.971-.806 2.249-1.583.277-.778.277-1.444.194-1.583-.083-.14-.305-.222-.638-.389Z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[13px] font-medium">WhatsApp Destek</p>
+              <p className="text-[11px] text-muted-foreground">+90 542 781 81 81</p>
+            </div>
+          </div>
+          <span className="text-[11px] text-muted-foreground">Aç →</span>
+        </a>
+      </div>
     </div>
   );
 };
