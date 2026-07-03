@@ -106,6 +106,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     } catch { /* noop */ }
   }, []);
 
+  // Auto-scroll the transcript window so the newest spoken line is visible.
+  useEffect(() => {
+    const el = transcriptScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [transcript]);
+
   // Honor "siteModeDefault" the first time the panel opens.
   useEffect(() => {
     const s = settingsRef.current;
