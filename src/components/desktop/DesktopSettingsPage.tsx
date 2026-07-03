@@ -3,7 +3,8 @@ import { useUser, PlanType } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette } from "lucide-react";
+import DemoDataTab from "./DemoDataTab";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ const TABS = [
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "team", label: "Ekip", icon: Users },
   { id: "security", label: "Güvenlik", icon: Shield },
+  { id: "demo", label: "Demo Veri", icon: Sparkles },
 ];
 
 const DesktopSettingsPage = () => {
@@ -81,6 +83,7 @@ const DesktopSettingsPage = () => {
               <p className="text-[13px] lg:text-[14px] text-muted-foreground">Bu bölüm yakında aktif olacaktır.</p>
             </div>
           )}
+          {activeTab === "demo" && <DemoDataTab />}
         </div>
       </div>
     </div>
