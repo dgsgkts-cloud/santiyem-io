@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Capacitor } from "@capacitor/core";
 import HomePage from "./pages/HomePage";
 import CookieBanner from "@/components/CookieBanner";
-import WhatsAppButton from "@/components/WhatsAppButton";
+
 
 import DeepLinkHandler from "@/components/DeepLinkHandler";
 import NativeSetup from "@/components/NativeSetup";
@@ -96,7 +96,6 @@ const App = () => (
             </Routes>
           </Suspense>
           {!Capacitor.isNativePlatform() && <CookieBanner />}
-          <WhatsAppButton />
           <VoiceOrb />
           <DeepLinkHandler />
           <NativeSetup />
