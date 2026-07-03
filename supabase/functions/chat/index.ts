@@ -546,7 +546,8 @@ serve(async (req) => {
         const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
         const anon = createClient(supabaseUrl, anonKey);
         const token = authHeader!.replace("Bearer ", "");
-        const { data: { user } } = await anon.auth.getUser(token);
+        const { data: claimsData3 } = await anon.auth.getClaims(token);
+        const user = claimsData3?.claims?.sub ? { id: claimsData3.claims.sub as string } : null;
 
         if (user) {
           const sb = createClient(supabaseUrl, serviceKey);
