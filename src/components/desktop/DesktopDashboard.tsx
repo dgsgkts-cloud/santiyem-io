@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { MorningBriefingCard } from "@/components/voice/MorningBriefingCard";
 import {
   useUser,
   canAccessProjects,
@@ -446,6 +447,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
+
+      <MorningBriefingCard />
+
+
 
       {/* ─────────────────────────  GREETING  ───────────────────────── */}
       <header className="flex flex-col gap-6">
