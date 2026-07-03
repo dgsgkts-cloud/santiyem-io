@@ -424,6 +424,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const start = async () => {
     console.log("[voice][start] ➊ Initializing session...");
+    // Reset the session timeline — T0 = user pressed start.
+    tlT0Ref.current = performance.now();
+    tlLinesRef.current = [];
+    tlFirstAudioRef.current = false;
+    tl("startSession requested (user)");
     connectStartRef.current = Date.now();
     setDebug((d) => ({ ...d, lastError: "", lastEvent: "start", connectLatencyMs: 0, firstReplyLatencyMs: 0, toolCalls: 0 }));
     setError(null);
