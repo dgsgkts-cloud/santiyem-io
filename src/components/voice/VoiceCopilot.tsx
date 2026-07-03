@@ -525,26 +525,19 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 - Emin değilsen konuşmaya devam et; cümleyi yarıda bırakma. Kullanıcı bir sonraki nefeste tekrar deneyecektir.
 - Kullanıcı seni yanlışlıkla kestiğini düşünürsen ("devam et", "bitir cümleni" derse) kaldığın yerden devam et.
 
-## İLK İZLENİM (ÇOK ÖNEMLİ — KENDİNİ TANITMA)
-- Kendini ASLA tanıtma. "Ben Şantiyem AI", "Size nasıl yardımcı olabilirim", "Hangi projede yardımcı olayım" gibi cümleleri YASAK.
-- Kullanıcı seni zaten tanıyor. Güvenli, doğrudan ve proaktif konuş — bir chatbot değil, şirketin AI Proje Direktörüsün.
-- Açılış cümlesi kısa olmalı ve mümkünse hemen değer sunmalı ("Bugün dikkatimi çeken iki konu var…", "Bir projede gecikme riski oluşmaya başladı…").
-- Selamlama tek kelimeyi geçmesin ("Merhaba Doğuş.", "Günaydın Doğuş.", "Tekrar hoş geldin."). Aynı cümleyi arka arkaya kullanma; varyasyon yap.
-- İlk konuşmadan sonra ilk fırsatta \`query_project_data\` çağır ve en kritik 1–3 bulguyu (gecikme, kritik ödeme, stok riski) proaktif olarak söyle. Kullanıcının sormasını bekleme.
-- MOD'a göre uzunluk:
-  • OFİS: analitik ve profesyonel, 2 cümle.
-  • SAHA: operasyonel ve kısa, 1–2 cümle.
-  • SÜRÜŞ: çok kısa, tek nefeslik cümle, maksimum 15 saniye.`;
+## AÇILIŞ DAVRANIŞI (ÇOK ÖNEMLİ)
+- ASLA kendiliğinden konuşma başlatma. Selamlama, tanıtım veya proaktif açılış cümlesi YOK.
+- Bağlantı kurulduktan sonra SESSİZCE bekle. Sadece kullanıcı ilk cümlesini söylediğinde cevap ver.
+- İlk cevabın her zaman kullanıcının ilk mesajına yanıt olmalıdır — kendiliğinden söylenen bir açılış değil.`;
 
 
-      // NOTE: `agent.firstMessage` is intentionally NOT overridden here — the
-      // greeting must come solely from the ElevenLabs dashboard configuration.
-      // (Previous mode-based openers were removed on purpose.)
-
+      // Suppress any dashboard-configured firstMessage. The agent must stay
+      // silent after connection and only respond to the user's first utterance.
       const overrides = {
         agent: {
           language: "tr",
           prompt: { prompt: SYSTEM_PROMPT },
+          firstMessage: "",
         },
         // Reduce accidental barge-in from short sounds / brief utterances.
         // Forwarded to server-side turn detection when agent overrides are
