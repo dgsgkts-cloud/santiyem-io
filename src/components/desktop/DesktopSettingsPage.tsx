@@ -83,6 +83,7 @@ const DesktopSettingsPage = () => {
               <p className="text-[13px] lg:text-[14px] text-muted-foreground">Bu bölüm yakında aktif olacaktır.</p>
             </div>
           )}
+          {activeTab === "demo" && <DemoDataTab />}
         </div>
       </div>
     </div>
