@@ -78,9 +78,10 @@ type Block =
   | { kind: "recommendation"; title?: string; impact?: string; priority?: string; gain?: string; duration?: string; detail?: string }
   | { kind: "actions"; items: string[] }
   | { kind: "source"; content: string }
-  | { kind: "details"; content: string };
+  | { kind: "details"; content: string }
+  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] };
 
-const BLOCK_RE = /::(summary|kpi|recommendation|actions|source|details|answer)\s*\n([\s\S]*?)\n?::\/\1/g;
+const BLOCK_RE = /::(summary|kpi|recommendation|actions|source|details|answer|notfound)\s*\n([\s\S]*?)\n?::\/\1/g;
 
 const parseBlocks = (raw: string): Block[] => {
   const blocks: Block[] = [];
