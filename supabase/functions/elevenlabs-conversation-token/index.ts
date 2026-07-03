@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     const [{ data: sub }, { data: usage }] = await Promise.all([
       admin
         .from("user_subscriptions")
-        .select("status, trial_ends_at, plan_id")
+        .select("status, trial_end, plan_id")
         .eq("user_id", userId)
         .maybeSingle(),
       admin
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     ]);
 
     const now = Date.now();
-    const trialActive = sub?.trial_ends_at && new Date(sub.trial_ends_at as string).getTime() > now;
+    const trialActive = sub?.trial_end && new Date(sub.trial_end as string).getTime() > now;
     const isPremium = sub?.status === "active" || sub?.status === "trialing" || Boolean(trialActive);
     const secondsUsed = (usage?.seconds_used as number | undefined) ?? 0;
     const remaining = isPremium ? Infinity : Math.max(0, FREE_DAILY_LIMIT_SECONDS - secondsUsed);
