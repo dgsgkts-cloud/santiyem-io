@@ -42,11 +42,11 @@ export function useVoiceAccess(): VoiceAccess {
       // Also treat trial as premium via user_subscriptions if present
       const { data: sub } = await supabase
         .from("user_subscriptions")
-        .select("status, trial_ends_at")
+        .select("status, trial_end")
         .eq("user_id", user.id)
         .maybeSingle();
       const trialActive =
-        sub?.trial_ends_at && new Date(sub.trial_ends_at as string).getTime() > Date.now();
+        sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now();
       const premium = isActivePlan(plan) || sub?.status === "active" || sub?.status === "trialing" || !!trialActive;
       setIsPremium(premium);
       setSeconds((usage?.seconds_used as number | undefined) ?? 0);
