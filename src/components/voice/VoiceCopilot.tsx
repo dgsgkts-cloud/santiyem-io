@@ -68,6 +68,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [showSummary, setShowSummary] = useState(false);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
   const [firstName, setFirstName] = useState<string>("");
+  const [userRole, setUserRole] = useState<string>("");
   // Voice settings (mode + tuning knobs) — client-side only.
   const [settings, setSettings] = useState<VoiceSettings>(() => loadSettings());
   const [showSettings, setShowSettings] = useState(false);
