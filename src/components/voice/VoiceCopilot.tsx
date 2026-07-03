@@ -331,9 +331,33 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ============ MIC MUTE ============
+  // Primary: ElevenLabs SDK (conversation.setMuted → conversation.setMicMuted → InputController.setMuted).
+  // Fallback: flip every local audio MediaStreamTrack's `enabled` flag so iOS Safari stops
+  // sending mic audio even if the SDK's mute call is a no-op on a given transport.
+  const muted = conversation.isMuted;
+  const setLocalTracksEnabled = (enabled: boolean) => {
+    try {
+      const anyNav = navigator as any;
+      // Track all live mic streams we requested; the SDK owns its own stream but we also toggle
+      // any streams the browser currently exposes to us via getUserMedia cache.
+      const tracks: MediaStreamTrack[] = [];
+      // Walk global registry if the SDK exposed it (best-effort, never throws).
+      if (anyNav.__voiceMicTracks && Array.isArray(anyNav.__voiceMicTracks)) {
+        for (const t of anyNav.__voiceMicTracks) if (t?.kind === "audio") tracks.push(t);
+      }
+      for (const t of tracks) t.enabled = enabled;
+    } catch (e) { console.warn("[voice] track toggle failed", e); }
+  };
   const toggleMute = async () => {
-    try { await conversation.setVolume({ volume: muted ? 1 : 0 }); setMuted(!muted); }
-    catch (e) { console.warn(e); }
+    const next = !muted;
+    console.log("[voice] toggleMute →", next);
+    try {
+      // 1) SDK path — updates ElevenLabs InputController and stops uplink audio + VAD.
+      conversation.setMuted(next);
+    } catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
+    // 2) Belt-and-suspenders: also disable local tracks so iOS Safari definitely stops streaming.
+    setLocalTracksEnabled(!next);
   };
   const togglePause = async () => {
     // Best-effort pause via volume (SDK has no native pause for realtime).
