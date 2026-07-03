@@ -711,15 +711,25 @@ function ActionBar({
     </div>
   );
 }
-function ActionBtn({ onClick, label, active, children }: {
-  onClick: () => void; label: string; active?: boolean; children: React.ReactNode;
+function ActionBtn({ onClick, label, active, danger, children }: {
+  onClick: () => void; label: string; active?: boolean; danger?: boolean; children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`h-11 w-11 rounded-xl flex items-center justify-center text-white/85 voice-glass-btn ${active ? "ring-1 ring-[#FF6B2B]/60 text-[#FFB58A]" : ""}`}
+      className={`h-11 w-11 rounded-xl flex items-center justify-center voice-glass-btn transition-colors ${
+        danger
+          ? "text-white ring-1 ring-[#FF6B6B]/70"
+          : active
+            ? "ring-1 ring-[#FF6B2B]/60 text-[#FFB58A]"
+            : "text-white/85"
+      }`}
+      style={danger ? {
+        background: "linear-gradient(135deg, #E5484D, #B4272B)",
+        boxShadow: "0 6px 20px -4px rgba(229,72,77,0.55)",
+      } : undefined}
     >
       {children}
     </button>
