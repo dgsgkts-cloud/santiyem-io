@@ -672,8 +672,27 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             )}
           </div>
 
-          {/* Action bar / Start button */}
-          {uiState === "idle" || uiState === "error" ? (
+          {/* Action bar / Start / Retry button */}
+          {uiState === "error" ? (
+            <div className="flex flex-col items-center gap-2 voice-fade-in">
+              <button
+                onClick={start}
+                disabled={!access.hasAccess}
+                className="group relative h-16 px-8 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+                  boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
+                }}
+              >
+                <RefreshCw className="w-5 h-5" strokeWidth={2} />
+                <span className="text-base">Yeniden Dene</span>
+              </button>
+              <button onClick={() => { setError(null); setUiState("idle"); }}
+                className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
+                Vazgeç
+              </button>
+            </div>
+          ) : uiState === "idle" ? (
             <StartButton onStart={start} disabled={!access.hasAccess} />
           ) : (
             <ActionBar
