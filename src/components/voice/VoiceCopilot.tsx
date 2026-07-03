@@ -682,7 +682,7 @@ function ActionBar({
 }) {
   return (
     <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
-      <ActionBtn onClick={onMute} label={muted ? "Aç" : "Sustur"} active={muted}>
+      <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
         {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </ActionBtn>
       <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
