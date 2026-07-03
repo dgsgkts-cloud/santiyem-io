@@ -370,15 +370,16 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   };
 
   const statusLabel = useMemo(() => {
+    if (muted && active) return "Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
-      case "listening": return "Dinliyorum…";
+      case "listening": return "Dinleniyor";
       case "thinking": return "Şantiye kayıtları inceleniyor…";
       case "speaking": return "Cevap veriliyor";
       case "error": return "Hata";
       default: return access.hasAccess ? "Dokun ve konuş" : "Kota doldu";
     }
-  }, [uiState, access.hasAccess]);
+  }, [uiState, access.hasAccess, muted, active]);
 
   const active = uiState !== "idle" && uiState !== "error";
 
