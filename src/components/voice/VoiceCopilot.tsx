@@ -612,6 +612,15 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           <SummarySheet bubbles={bubbles} cards={cards} onClose={() => setShowSummary(false)} />
         )}
       </div>
+
+      {/* Settings sheet */}
+      {showSettings && (
+        <SettingsSheet
+          settings={settings}
+          onChange={updateSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }
