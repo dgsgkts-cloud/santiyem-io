@@ -886,6 +886,61 @@ serve(async (req) => {
             lines.push(`TAŞERON ÖDEMESİ: ${fmt(subPaid)}`);
             lines.push(`KASA TAHSİLAT: ${fmt(cashCollected)} · KASA ÖDEME: ${fmt(cashPaid)}`);
             lines.push(`NET NAKİT (tahsilat - ödeme): ${fmt(cashCollected - cashPaid)}`);
+          } else if (intent === "OVERDUE_PAYMENTS" || intent === "UPCOMING_PAYMENTS") {
+            const today = now.toISOString().slice(0, 10);
+            const in14 = new Date(now); in14.setDate(in14.getDate() + 14);
+            const in14s = in14.toISOString().slice(0, 10);
+            const isOverdue = intent === "OVERDUE_PAYMENTS";
+            // Cash checks with due_date
+            let ck = sb.from("cash_checks").select("counterparty, amount, due_date, status, project_id").eq("user_id", uid).order("due_date", { ascending: true }).limit(50);
+            if (projectIdFilter) ck = ck.eq("project_id", projectIdFilter);
+            if (isOverdue) ck = ck.lt("due_date", today).neq("status", "paid");
+            else ck = ck.gte("due_date", today).lte("due_date", in14s);
+            const { data: checks } = await ck;
+            // Subcontractor planned payments
+            let spq = sb.from("subcontractor_payments").select("amount, planned_date, payment_date, status, project_id, description").eq("user_id", uid).order("planned_date", { ascending: true }).limit(50);
+            if (projectIdFilter) spq = spq.eq("project_id", projectIdFilter);
+            if (isOverdue) spq = spq.lt("planned_date", today).is("payment_date", null);
+            else spq = spq.gte("planned_date", today).lte("planned_date", in14s);
+            const { data: subPlans } = await spq;
+            // E-invoices (incoming/outgoing)
+            let inv = sb.from("e_invoices").select("counterparty_name, grand_total, due_date, status, direction, project_id").eq("user_id", uid).order("due_date", { ascending: true }).limit(50);
+            if (projectIdFilter) inv = inv.eq("project_id", projectIdFilter);
+            if (isOverdue) inv = inv.lt("due_date", today).neq("status", "paid");
+            else inv = inv.gte("due_date", today).lte("due_date", in14s);
+            const { data: invoices } = await inv;
+
+            const chk = checks || [], sps = subPlans || [], invs = invoices || [];
+            const totalCheck = chk.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            const totalSub = sps.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            const totalInv = invs.reduce((s: number, r: any) => s + Number(r.grand_total || 0), 0);
+            lines.push(`${isOverdue ? "GECİKMİŞ ÖDEMELER" : "YAKLAŞAN ÖDEMELER (14 gün)"} — bugün: ${today}`);
+            lines.push(`ÇEKLER (${chk.length}): toplam ${fmt(totalCheck)}`);
+            chk.slice(0, 15).forEach((r: any) => lines.push(`- ${r.counterparty || "-"} · ${fmt(Number(r.amount))} · vade ${r.due_date} · ${r.status}`));
+            lines.push(`TAŞERON PLANI (${sps.length}): toplam ${fmt(totalSub)}`);
+            sps.slice(0, 15).forEach((r: any) => lines.push(`- ${(r.description || "").slice(0, 40)} · ${fmt(Number(r.amount))} · plan ${r.planned_date} · ${r.status}`));
+            lines.push(`E-FATURA (${invs.length}): toplam ${fmt(totalInv)}`);
+            invs.slice(0, 15).forEach((r: any) => lines.push(`- ${r.counterparty_name} · ${r.direction} · ${fmt(Number(r.grand_total))} · vade ${r.due_date} · ${r.status}`));
+            lines.push(``);
+            lines.push(`GENEL TOPLAM: ${fmt(totalCheck + totalSub + totalInv)}`);
+          } else if (intent === "EXECUTIVE_BRIEFING") {
+            const today = now.toISOString().slice(0, 10);
+            const [projs, tasksOverdue, tasksToday, checksSoon, hakedisPending] = await Promise.all([
+              sb.from("projects").select("name, status, progress, contract_amount").eq("user_id", uid).limit(20),
+              sb.from("tasks").select("title, due_date").eq("user_id", uid).lt("due_date", today).neq("status", "done").limit(20),
+              sb.from("tasks").select("title").eq("user_id", uid).eq("due_date", today).limit(20),
+              sb.from("cash_checks").select("counterparty, amount, due_date").eq("user_id", uid).gte("due_date", today).order("due_date", { ascending: true }).limit(10),
+              sb.from("project_hakedis").select("period, net_total, approval_status").eq("user_id", uid).eq("approval_status", "beklemede").limit(10),
+            ]);
+            const pr = projs.data || [];
+            const activePr = pr.filter((p: any) => p.status !== "done" && p.status !== "completed");
+            lines.push(`YÖNETİCİ BRİFİNGİ — ${today}`);
+            lines.push(`AKTİF PROJE: ${activePr.length} / Toplam ${pr.length}`);
+            lines.push(`Sözleşme toplamı: ${fmt(pr.reduce((s: number, p: any) => s + Number(p.contract_amount || 0), 0))}`);
+            lines.push(`GECİKEN GÖREV: ${(tasksOverdue.data || []).length} · BUGÜN VADESİ: ${(tasksToday.data || []).length}`);
+            lines.push(`YAKLAŞAN ÇEK (10): toplam ${fmt((checksSoon.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0))}`);
+            lines.push(`ONAY BEKLEYEN HAKEDİŞ: ${(hakedisPending.data || []).length}`);
+            pr.slice(0, 5).forEach((p: any) => lines.push(`- ${p.name} · durum ${p.status} · %${p.progress}`));
           }
 
           if (lines.length > 0) {
@@ -894,31 +949,39 @@ serve(async (req) => {
               `Intent: ${intent}\n` +
               lines.join("\n") +
               "\n=== VERİ SONU ===\n" +
-              "KURAL: SADECE yukarıdaki gerçek veriye dayanarak konuş. Rakam uydurma, verileri yorumla. " +
-              "Cevap formatı: (1) Durum tespiti, (2) Bunun ne anlama geldiği, (3) Önerilen sonraki adım, (4) Tek bir kısa takip sorusu. " +
-              "Aynı sohbette daha önce geçen konuyu tekrar etme; giriş cümlesi kurma. Deneyimli proje müdürü gibi konuş.\n";
+              "GÜVEN: " + (heur.confident ? "YÜKSEK (kural tabanlı intent eşleşti)" : "ORTA (LLM sınıflandırıcı kullanıldı)") + "\n" +
+              "KURAL: SADECE yukarıdaki gerçek veriye dayanarak konuş. Rakam uydurma. " +
+              "Cevap yapısı: (1) Durum tespiti, (2) Analiz — ne anlama geliyor, neden önemli, (3) Somut sonraki adım önerisi, (4) Tek eyleme yönelik takip sorusu (\"Detayını açayım mı?\", \"Geciken kalemleri listeleyeyim mi?\"). " +
+              "Değerleri sadece tekrar etme; yorumla. Uygunsa forward-looking bir içgörü ekle (ör. yaklaşan risk, sonraki hafta beklenen tutar). " +
+              "Değişik açılışlar kullan: \"Mevcut kayıtlara göre...\", \"Sistemde görünen son duruma göre...\", \"Şu anki verilere baktığımda...\". " +
+              "GÜVEN düşükse bunu açıkça belirt (\"Bu konuda kesin konuşamam, kayıtlar sınırlı\"). " +
+              "Aynı sohbette daha önce geçen konuya doğal devam et; giriş cümlesi tekrarlama.\n";
           } else if (intent !== "GENERAL_CHAT") {
-            const missingMap: Record<string, string> = {
-              LIVE_PERSONNEL: "Bu proje için bugün QR/puantaj girişi yok. Sahadaki canlı personel sayısını görebilmem için işçilerin QR kodu ile giriş-çıkış yapması gerekiyor.",
-              ATTENDANCE: "Seçili tarih aralığı için yoklama kaydı yok. Puantaj modülünden giriş yapıldığında bu bilgi hazır olur.",
-              SUBCONTRACTOR: "Bu proje için taşeron kaydı yok. Taşeron modülünden firmayı ve ödemeleri girmen gerekiyor.",
-              HAKEDIS_QUERY: "Bu sorguya uyan hakediş kaydı yok. Hakediş modülünden ilgili dönemi oluşturman gerekiyor.",
-              PAYMENT_QUERY: "Bu sorguya uyan ödeme/kasa kaydı yok. Kasa & Ödeme modülünden işlemleri girmen gerekiyor.",
-              TASK_QUERY: "Bu sorguya uyan görev yok. Görev modülünden görev açman gerekiyor.",
-              SITE_DIARY_QUERY: "Seçili aralık için şantiye günlüğü kaydı yok. Günlük modülünden kayıt eklenmesi gerekiyor.",
-              MATERIAL_QUERY: "Bu proje için malzeme kaydı yok. Malzeme modülünden giriş yapman gerekiyor.",
-              CONTRACT_QUERY: "Bu sorguya uyan sözleşme yok.",
-              PERSONNEL_QUERY: "Bu sorguya uyan personel kaydı yok.",
-              FINANCIAL_SUMMARY: "Finansal özet için yeterli veri yok. Hakediş, kasa ve gider modüllerinde kayıt olmalı.",
-              PROJECT_OVERVIEW: "Henüz proje kaydı yok. Önce Projeler modülünden bir proje oluşturman gerekiyor.",
-              DOCUMENT_QUERY: "Yüklü evrak yok.",
-              PROJECT_QUERY: "Bu sorguya uyan proje yok.",
+            const missingMap: Record<string, { reason: string; alt: string }> = {
+              LIVE_PERSONNEL: { reason: "Bu proje için bugün QR/puantaj girişi bulunmuyor; sahadaki canlı personel sayısı belirlenemez.", alt: "İstersen kayıtlı toplam personel listesini veya son puantaj gününün özetini gösterebilirim." },
+              ATTENDANCE: { reason: "Seçili tarih aralığı için yoklama kaydı yok.", alt: "Farklı bir tarih aralığına bakabilirim ya da personel listesini çıkarabilirim." },
+              SUBCONTRACTOR: { reason: "Bu proje için taşeron kaydı yok.", alt: "Diğer projelerdeki taşeron listesini veya taşeron ödeme özetini paylaşabilirim." },
+              HAKEDIS_QUERY: { reason: "Bu sorguya uyan hakediş kaydı yok.", alt: "Onay bekleyen tüm hakedişleri veya son onaylanan hakedişi gösterebilirim." },
+              PAYMENT_QUERY: { reason: "Bu sorguya uyan ödeme/kasa kaydı yok.", alt: "Bu ay yapılan toplam ödemeleri veya yaklaşan çekleri listeleyebilirim." },
+              OVERDUE_PAYMENTS: { reason: "Şu anda geciken ödeme kaydı yok.", alt: "Yaklaşan 14 günün ödeme planını gösterebilirim." },
+              UPCOMING_PAYMENTS: { reason: "Önümüzdeki 14 gün için planlı ödeme yok.", alt: "Geciken ödemeleri veya bu ayki ödeme geçmişini çıkarabilirim." },
+              TASK_QUERY: { reason: "Bu sorguya uyan görev yok.", alt: "Tüm açık görevleri veya bu haftaki termini gelen işleri listeleyebilirim." },
+              SITE_DIARY_QUERY: { reason: "Seçili aralık için şantiye günlüğü kaydı yok.", alt: "Son eklenen günlük kaydını veya bu ayın özetini gösterebilirim." },
+              MATERIAL_QUERY: { reason: "Bu proje için malzeme kaydı yok.", alt: "Diğer projelerdeki stok durumunu veya malzeme normlarını paylaşabilirim." },
+              CONTRACT_QUERY: { reason: "Bu sorguya uyan sözleşme yok.", alt: "Aktif sözleşmelerin listesini çıkarabilirim." },
+              PERSONNEL_QUERY: { reason: "Bu sorguya uyan personel kaydı yok.", alt: "Aktif personel listesini gösterebilirim." },
+              FINANCIAL_SUMMARY: { reason: "Finansal özet için yeterli veri yok.", alt: "Var olan hakediş, kasa veya gider modüllerinden birine odaklanabilirim." },
+              PROJECT_OVERVIEW: { reason: "Henüz proje kaydı yok.", alt: "İlk projeni oluşturduktan sonra özet çıkarabilirim." },
+              EXECUTIVE_BRIEFING: { reason: "Brifing için yeterli veri yok.", alt: "Var olan modüllerden biri (görev, ödeme, hakediş) için ayrı özet hazırlayabilirim." },
+              DOCUMENT_QUERY: { reason: "Yüklü evrak yok.", alt: "Belge Merkezi'nden PDF yüklediğinde içeriği analiz edebilirim." },
+              PROJECT_QUERY: { reason: "Bu sorguya uyan proje yok.", alt: "Tüm projelerin özetini gösterebilirim." },
             };
-            const reason = missingMap[intent] || "İstenen bilgi sistemde bulunamadı.";
+            const m = missingMap[intent] || { reason: "İstenen bilgi sistemde bulunamadı.", alt: "Farklı bir konuda yardımcı olabilirim." };
             projectDataContext =
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
-              `AÇIKLAMA: ${reason}\n` +
-              "KURAL: Kullanıcıya bilginin neden mevcut olmadığını açıkla ve hangi verinin gerekli olduğunu söyle. Rakam uydurma, alakasız veriye geçme. Kısa bir öneri ile bitir.\n";
+              `AÇIKLAMA: ${m.reason}\n` +
+              `ALTERNATİF: ${m.alt}\n` +
+              "KURAL: Kullanıcıya (1) bilginin neden mevcut olmadığını açıkla, (2) hangi verinin gerektiğini kısaca söyle, (3) yukarıdaki ALTERNATİFİ eyleme yönelik bir soru olarak sun (\"...göstermemi ister misiniz?\"). Rakam uydurma, alakasız veriye geçme, dead-end bırakma.\n";
           }
           if (projectDataContext) {
             cacheSet(brainCache, cacheKey, projectDataContext, 30_000);
