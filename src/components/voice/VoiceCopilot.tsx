@@ -85,6 +85,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const lastUserTranscriptRef = useRef<string>("");
   const wasSpeakingRef = useRef<boolean>(false);
   const greetingStartRef = useRef<number | null>(null);
+  // Greeting-protection state: true from onConnect until the first agent turn
+  // finishes speaking (plus a small grace). While true, the mic is force-muted
+  // and server-side VAD is disabled so the greeting cannot be interrupted.
+  const greetingProtectedRef = useRef<boolean>(false);
+  const greetingReleaseTimerRef = useRef<number | null>(null);
+  const [greetingProtected, setGreetingProtected] = useState<boolean>(false);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
@@ -162,6 +168,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
         firstReplyPendingRef.current = Date.now();
         setUiState("listening");
+
+        // === GREETING PROTECTION ================================
+        // Lock the mic & server-side VAD until the greeting has fully played.
+        // Released later in the SPEAKING → LISTENING transition below.
+        greetingProtectedRef.current = true;
+        setGreetingProtected(true);
+        console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
+        try { conversation.setMuted(true); console.log("[voice][DIAG] 🎙️→OFF (greeting) SDK.setMuted(true)"); } catch { /* noop */ }
+        try {
+          for (const t of micTracksRef.current) {
+            if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
+          }
+          console.log("[voice][DIAG] 🎙️→OFF (greeting) local tracks disabled");
+        } catch { /* noop */ }
+        // ========================================================
+
         if (initialContext) {
           queueMicrotask(() => {
             try { conversation.sendContextualUpdate(initialContext); }
@@ -499,10 +521,14 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         conversation: {
           turn_detection: {
             type: "server_vad",
-            threshold: 0.75,              // higher = less sensitive to noise
-            prefix_padding_ms: 400,
-            silence_duration_ms: 900,
-            min_speech_duration_ms: 700,  // ignore utterances shorter than this
+            // Higher threshold → ignores breaths, taps, keyboard, echo.
+            threshold: 0.85,
+            prefix_padding_ms: 500,
+            // Wait ~1s of silence before ending the user's turn.
+            silence_duration_ms: 1000,
+            // Ignore utterances shorter than this (hmm, ıı, evet, öksürük).
+            min_speech_duration_ms: 900,
+            // Interruptions still allowed after greeting (protected via mic-mute).
             interrupt_response: true,
           },
         },
@@ -593,9 +619,31 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
       console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
         "\n         last AI text  :", lastAiMessageRef.current,
-        "\n         last user text:", lastUserTranscriptRef.current,
-        "\n         (if last user text is non-empty and this happened <5s in, the greeting was BARGE-IN interrupted)");
+        "\n         last user text:", lastUserTranscriptRef.current);
       greetingStartRef.current = null;
+
+      // === GREETING PROTECTION — release ===============================
+      // First time the agent finishes speaking, un-mute after a small grace
+      // so that tail-end TTS audio doesn't self-trigger VAD on re-open.
+      if (greetingProtectedRef.current) {
+        if (greetingReleaseTimerRef.current) window.clearTimeout(greetingReleaseTimerRef.current);
+        greetingReleaseTimerRef.current = window.setTimeout(() => {
+          greetingProtectedRef.current = false;
+          setGreetingProtected(false);
+          try {
+            if (!settingsRef.current.pushToTalk) {
+              conversation.setMuted(false);
+              console.log("[voice][DIAG] 🎙️→ON  (greeting released) SDK.setMuted(false)");
+              for (const t of micTracksRef.current) {
+                if (t.readyState === "live" && t.kind === "audio") t.enabled = true;
+              }
+              console.log("[voice][DIAG] 🎙️→ON  (greeting released) local tracks enabled");
+            }
+          } catch { /* noop */ }
+          console.log("[voice][DIAG] 🛡️  GREETING PROTECTION released — VAD active");
+        }, 450);
+      }
+      // =================================================================
     }
     wasSpeakingRef.current = nowSpeaking;
     // ======================================================================
@@ -693,11 +741,13 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           }
         }, 350);
       };
-    } else if (!settings.pushToTalk) {
+    } else if (!settings.pushToTalk && !greetingProtectedRef.current) {
+      // Don't re-enable while the greeting is still protected — the
+      // greeting-release timer owns un-muting in that case.
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted]);
+  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted, greetingProtected]);
 
 
 
