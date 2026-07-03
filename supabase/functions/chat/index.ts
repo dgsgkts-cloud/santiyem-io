@@ -380,6 +380,8 @@ serve(async (req) => {
           const dt = filters.date_to as string | null;
           const nameFilter = (filters.name as string | null)?.toLowerCase() || null;
           const projectName = (filters.project_name as string | null) || null;
+          const keyword = (filters.keyword as string | null) || null;
+          const aggregate = (filters.aggregate as string | null) || null;
           const limit = Math.min(Number(filters.limit) || 10, 25);
 
           // Helper: resolve project_id from name
