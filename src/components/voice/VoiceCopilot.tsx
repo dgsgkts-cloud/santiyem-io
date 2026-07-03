@@ -369,6 +369,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     catch (e) { console.warn(e); }
   };
 
+  const active = uiState !== "idle" && uiState !== "error";
+
   const statusLabel = useMemo(() => {
     if (muted && active) return "Mikrofon kapalı";
     switch (uiState) {
@@ -380,8 +382,6 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       default: return access.hasAccess ? "Dokun ve konuş" : "Kota doldu";
     }
   }, [uiState, access.hasAccess, muted, active]);
-
-  const active = uiState !== "idle" && uiState !== "error";
 
   return (
     <div
