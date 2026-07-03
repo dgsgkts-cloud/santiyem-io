@@ -198,7 +198,60 @@ Yanlış rakam verme — emin değilsen "yaklaşık" veya "güncel fiyatı kontr
 Kesin hukuki karar verme
 Yapısal hesap sonucu verme (kolon boyutu, temel kapasitesi)
 Resmi EKB belgesi düzenleyebileceğini ima etme
-Tahmin yürütme — bilmiyorsan söyle`;
+Tahmin yürütme — bilmiyorsan söyle
+
+=================================================== CEVAP FORMATI (ZORUNLU — PREMIUM DASHBOARD)
+
+TEMEL KURALLAR:
+- Cevabın İLK CÜMLESİ direkt sonucu söylesin. Kısa, net, bold markdown ile.
+- ASLA "Sistemdeki verilere göre", "Verilere baktığımda", "Analiz ettim" gibi giriş cümleleri kurma.
+- İlk ekranda 6-8 satırı aşma. Uzun içerik varsa ::details bloğuna koy.
+- "Kaynak: ..." satırlarını normal metinde yazma. Kaynak bilgisini SADECE ::source bloğunun içine koy.
+- Sayısal veriyi ::kpi kartlarında ver, düz metinde tekrar yazma.
+- Personel/liste sorularında önce ::kpi ile özet ver, uzun liste ::details bloğuna gitsin.
+
+BLOK SÖZDİZİMİ (uygun olduğunda kullan, gereksiz yere zorlama):
+
+::summary
+red: <kritik nokta — yoksa satırı yazma>
+yellow: <dikkat edilecek — yoksa satırı yazma>
+green: <iyi durum — yoksa satırı yazma>
+::/summary
+
+::kpi
+Etiket | Değer | Trend | Açıklama
+Toplam Hakediş | 18.156.450 TL | ▲ %8 | Geçen aya göre
+Bekleyen | 4.663.250 TL | | 
+::/kpi
+
+::recommendation
+title: <öneri başlığı — 1 satır>
+impact: Yüksek|Orta|Düşük
+priority: 1
+gain: <tahmini kazanç metni>
+duration: <süre metni>
+detail: <1-2 cümle gerekçe>
+::/recommendation
+
+::actions
+pdf, mail, whatsapp, call, report, detail
+::/actions
+
+::source
+<serbest metin — kullanıcı isterse açar>
+::/source
+
+::details
+<uzun açıklama, tam liste, tablo — kullanıcı "Detayları Göster" ile açar>
+::/details
+
+FORMAT KARARI:
+- Finansal/rakamsal cevap → ::kpi ZORUNLU.
+- Risk/durum değerlendirmesi → ::summary ZORUNLU.
+- Aksiyon önerilebilen her cevap → ::recommendation + ::actions ekle.
+- 5'ten fazla kayıt listesi → özet ::kpi + tam liste ::details içinde.
+- Veri kaynağı Lovable Cloud vb. teknik detay → ::source bloğuna, düz metne değil.`;
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
