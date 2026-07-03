@@ -49,7 +49,13 @@ type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 export function VoiceCopilot(props: Props) {
-  console.log("[voice][mount] VoiceCopilot → ConversationProvider mounted");
+  useEffect(() => {
+    console.log("[voice][mount] ⬆️ VoiceCopilot (ConversationProvider wrapper) MOUNTED @", new Date().toISOString());
+    return () => {
+      console.trace("VOICE TERMINATION (ConversationProvider wrapper UNMOUNT)");
+      console.warn("[voice][mount] ⬇️ VoiceCopilot (ConversationProvider wrapper) UNMOUNTED @", new Date().toISOString());
+    };
+  }, []);
   return (
     <ConversationProvider>
       <VoiceCopilotInner {...props} />
@@ -92,6 +98,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const tlLinesRef = useRef<string[]>([]);
   const tlFirstAudioRef = useRef<boolean>(false);
   const tlDumpTimerRef = useRef<number | null>(null);
+  // How many times conversation.startSession() has actually been invoked
+  // this component lifetime. >1 without an intervening user stop = bug.
+  const startSessionCallCountRef = useRef<number>(0);
   const tl = (event: string, detail = "") => {
     const t0 = tlT0Ref.current;
     const dt = t0 == null ? 0 : performance.now() - t0;
@@ -205,13 +214,27 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       } catch (e) { console.error("onConnect handler failed", e); }
     },
     onStatusChange: (v: unknown) => {
-      console.log("[voice][SDK] onStatusChange →", v);
+      console.log("[voice][SDK] onStatusChange →", v, "@", new Date().toISOString());
       tl("onStatusChange", String((v as any)?.status ?? v));
       setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
+    onModeChange: (m: unknown) => {
+      console.log("[voice][SDK] onModeChange →", m, "@", new Date().toISOString());
+      tl("onModeChange", String((m as any)?.mode ?? m));
+    },
     onDisconnect: (details?: unknown) => {
-      console.log("[voice][SDK] 🔌 onDisconnect", details);
-      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 120));
+      const d = details as any;
+      console.error("[voice][SDK] 🔌 onDisconnect @", new Date().toISOString(), {
+        reason: d?.reason ?? "(none)",
+        closeCode: d?.closeCode ?? d?.code ?? "(none)",
+        closeReason: d?.closeReason ?? "(none)",
+        message: d?.message ?? "(none)",
+        error: d?.error ?? "(none)",
+        context: d?.context ?? "(none)",
+        raw: details,
+      });
+      console.trace("VOICE TERMINATION (onDisconnect fired)");
+      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 300));
       tlDump("on disconnect");
       try {
         setUiState("idle");
@@ -579,7 +602,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         try {
           console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-          tl("startSession() called", "websocket");
+          startSessionCallCountRef.current += 1;
+          if (startSessionCallCountRef.current > 1) {
+            console.warn(`[voice][DIAG] ⚠️ startSession() invoked ${startSessionCallCountRef.current} times this component lifetime`);
+            console.trace("MULTIPLE startSession() CALLS");
+          }
+          tl("startSession() called", `websocket (call #${startSessionCallCountRef.current})`);
           conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
           console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
@@ -587,6 +615,8 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           return;
         } catch (e) {
           console.warn("[voice][start] ⚠️ WebSocket failed, trying WebRTC fallback:", e);
+          console.trace("VOICE TERMINATION (endSession: ws connect failed → cleanup before webrtc fallback)");
+          tl("endSession() called", "ws connect failed, cleaning up before webrtc fallback");
           try { conversation.endSession(); } catch { /* noop */ }
           await waitForDisconnected(3000);
         }
@@ -595,7 +625,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       if (token) {
         console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-        tl("startSession() called", "webrtc fallback");
+        startSessionCallCountRef.current += 1;
+        if (startSessionCallCountRef.current > 1) {
+          console.warn(`[voice][DIAG] ⚠️ startSession() invoked ${startSessionCallCountRef.current} times this component lifetime`);
+          console.trace("MULTIPLE startSession() CALLS");
+        }
+        tl("startSession() called", `webrtc fallback (call #${startSessionCallCountRef.current})`);
         conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
         console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
@@ -612,7 +647,8 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   const stop = async () => {
-    console.log("[voice] endSession() called by user");
+    console.log("[voice] endSession() called by user @", new Date().toISOString());
+    console.trace("VOICE TERMINATION (endSession: user pressed stop)");
     tl("endSession() called (user pressed stop)");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
@@ -646,9 +682,18 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   }, [conversation.status, conversation.isSpeaking]);
 
   useEffect(() => {
+    const mountedAt = performance.now();
+    console.log("[voice][mount] ⬆️ VoiceCopilotInner MOUNTED @", new Date().toISOString());
     if (autoStart && uiState === "idle" && access.hasAccess) start();
     return () => {
+      console.trace("VOICE TERMINATION (VoiceCopilotInner UNMOUNT)");
+      console.warn(
+        "[voice][mount] ⬇️ VoiceCopilotInner UNMOUNTED after",
+        Math.round(performance.now() - mountedAt), "ms — SDK status:", conversation.status
+      );
       if (conversation.status === "connected") {
+        console.trace("VOICE TERMINATION (endSession: unmount cleanup)");
+        tl("endSession() called", "component unmount cleanup");
         try { conversation.endSession(); } catch { /* noop */ }
       }
     };
