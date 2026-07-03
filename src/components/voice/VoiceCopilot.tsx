@@ -18,6 +18,7 @@ import {
 import { useWakeWord } from "./useWakeWord";
 import { ModeSelector, ModeHint, SettingsSheet } from "./VoiceModeUI";
 import "@/styles/voice.css";
+import { getCompanyProfile } from "@/lib/companyProfile";
 
 interface Card {
   id: string;
@@ -68,6 +69,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [showSummary, setShowSummary] = useState(false);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
   const [firstName, setFirstName] = useState<string>("");
+  const [userRole, setUserRole] = useState<string>("");
   // Voice settings (mode + tuning knobs) — client-side only.
   const [settings, setSettings] = useState<VoiceSettings>(() => loadSettings());
   const [showSettings, setShowSettings] = useState(false);
@@ -115,7 +117,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         if (!uid) return;
         const { data } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, role, title")
           .eq("user_id", uid)
           .maybeSingle();
         const full = (data?.full_name || "").trim();
@@ -124,6 +126,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           setFirstName(first);
           try { localStorage.setItem("voice_first_name", first); } catch { /* noop */ }
         }
+        const role = (data?.role || data?.title || "").trim();
+        if (role) setUserRole(role);
       } catch { /* noop */ }
     })();
   }, []);
@@ -457,6 +461,19 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         },
       } as any;
 
+      // ---- Dynamic variables sent to the ElevenLabs agent -----------------
+      // The dashboard greeting can reference these via {{user_name}} etc.
+      // Only include values we actually have — omit missing ones gracefully.
+      const dynamicVariables: Record<string, string> = {};
+      if (firstName) dynamicVariables.user_name = firstName;
+      try {
+        const cp = getCompanyProfile();
+        const company = (cp?.companyName || "").trim();
+        if (company) dynamicVariables.company_name = company;
+      } catch { /* noop */ }
+      if (userRole) dynamicVariables.user_role = userRole;
+      console.log("[voice][start] dynamicVariables →", dynamicVariables);
+
       const waitForConnect = (ms: number) =>
         withTimeout(
           new Promise<void>((resolve, reject) => { connectWaiterRef.current = { resolve, reject }; }),
@@ -481,7 +498,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         try {
           console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
+          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
           console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
           console.log("[voice][start] ✅ WebSocket connected");
@@ -496,7 +513,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       if (token) {
         console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-        conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
+        conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
         console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
         console.log("[voice][start] ✅ WebRTC connected");
