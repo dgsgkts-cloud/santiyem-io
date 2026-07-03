@@ -612,7 +612,7 @@ serve(async (req) => {
       const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
       const rawText = (lastUserMsg?.content || "").toString().toLowerCase();
       const ACTION_RE =
-        /\b(kaydet|ekle|oluştur|olustur|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|gir(?:iş|is)?|ata(?:y[ıi]m)?|başlat|baslat|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not))\b/;
+        /\b(kaydet|ekle|oluştur|olustur|aç(?:al[ıi]m)?|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|ödeme yap|odeme yap|gir(?:iş|is)?|ata(?:y[ıi]m|n[ıi]r)?|görev\s+ver|başlat|baslat|düzenle|duzenle|not düş|not dus|sözleşme|sozlesme|hakediş(?:\s+oluştur|\s+olustur)?|hakedis|beton döküm|beton dokum|malzeme (girişi|girisi|ekle)|personel (ekle|kaydet)|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not|personel|sözleşme|sozlesme))\b/;
       const CONFIRM_RE = /\b(evet|onayl[ıi]yorum|onayla|onay|tamam|kaydet|geç|gec|ilerle|olur|hadi)\b/;
       const isAction = ACTION_RE.test(rawText) || (CONFIRM_RE.test(rawText) && messages.length >= 3);
 
