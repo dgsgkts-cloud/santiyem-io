@@ -79,8 +79,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.error("onDisconnect handler failed", e);
       }
     },
-    onMessage: (msg: { source?: string; message?: string }) => {
+    onMessage: (msg: any) => {
       try {
+        console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
         }
@@ -129,9 +130,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         return "no_page";
       },
       query_project_data: async (params: { intent?: string; keyword?: string }) => {
+        const t0 = performance.now();
+        console.log("[voice][tool] query_project_data CALLED", params);
         try {
           const { data: sess } = await supabase.auth.getSession();
           const jwt = sess?.session?.access_token;
+          console.log("[voice][tool] fetching /chat, jwt?", Boolean(jwt));
           const res = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
             method: "POST",
             headers: {
@@ -143,12 +147,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
               voice_mode: true,
             }),
           });
-          if (!res.ok) return `error: HTTP ${res.status}`;
+          console.log("[voice][tool] /chat status:", res.status, "in", Math.round(performance.now() - t0), "ms");
+          if (!res.ok) {
+            const errText = await res.text().catch(() => "");
+            console.warn("[voice][tool] /chat error body:", errText);
+            const out = `Veriye ulaşılamadı (HTTP ${res.status}).`;
+            console.log("[voice][tool] RETURNING:", out);
+            return out;
+          }
           const json = await res.json().catch(() => null);
           const text = json?.text ?? json?.error ?? "";
-          return String(text).slice(0, 1200);
+          const out = String(text).slice(0, 1200) || "Bu konuda veri bulunamadı.";
+          console.log("[voice][tool] RETURNING (len " + out.length + "):", out.slice(0, 200));
+          return out;
         } catch (e) {
-          return `error: ${String(e)}`;
+          console.error("[voice][tool] query_project_data FAILED:", e);
+          return `Bir hata oluştu: ${String(e).slice(0, 200)}`;
         }
       },
     },
