@@ -2807,6 +2807,33 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_usage: {
+        Row: {
+          created_at: string
+          id: string
+          seconds_used: number
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seconds_used?: number
+          updated_at?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seconds_used?: number
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       worker_attendance: {
         Row: {
           check_in: string
@@ -2918,6 +2945,7 @@ export type Database = {
     }
     Functions: {
       accept_project_invitation: { Args: { _token: string }; Returns: string }
+      add_voice_usage_seconds: { Args: { _seconds: number }; Returns: number }
       bulk_upsert_attendance: { Args: { _records: Json }; Returns: number }
       can_access_project: {
         Args: { _project: string; _user: string }
