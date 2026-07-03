@@ -10,8 +10,17 @@ Deno.serve(async (req) => {
   try {
     // TEMP: confirm the dedicated audit test user so it can sign in.
     const url = new URL(req.url);
-    if (url.searchParams.get("op") === "confirm_test_user") {
+    const op = url.searchParams.get("op");
+    if (op === "confirm_test_user" || op === "delete_test_user") {
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.100.0");
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const u = list?.users?.find((x: any) => x.email === "voice-audit-test@santiyem.io");
+      if (!u) return new Response(JSON.stringify({ error: "not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (op === "delete_test_user") {
+        const { error } = await admin.auth.admin.deleteUser(u.id);
+        return new Response(JSON.stringify({ deleted: !error, error: error?.message ?? null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
       const u = list?.users?.find((x: any) => x.email === "voice-audit-test@santiyem.io");
