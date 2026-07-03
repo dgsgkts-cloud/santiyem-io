@@ -212,13 +212,17 @@ serve(async (req) => {
   }
   try {
     const _authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: _ad, error: _ae } = await _authClient.auth.getClaims(authHeader.replace("Bearer ", ""));
+    const _tok = authHeader.replace("Bearer ", "");
+    console.log("[chat/auth] token len:", _tok.length, "prefix:", _tok.slice(0, 12));
+    const { data: _ad, error: _ae } = await _authClient.auth.getClaims(_tok);
+    console.log("[chat/auth] getClaims error:", _ae?.message, "has sub:", !!_ad?.claims?.sub, "keys:", _ad?.claims ? Object.keys(_ad.claims).join(",") : "none");
     if (_ae || !_ad?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", detail: _ae?.message || "no sub" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-  } catch {
+  } catch (e) {
+    console.log("[chat/auth] exception:", (e as any)?.message);
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
