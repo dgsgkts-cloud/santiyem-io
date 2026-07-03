@@ -1032,7 +1032,212 @@ serve(async (req) => {
             invs.slice(0, 15).forEach((r: any) => lines.push(`- ${r.counterparty_name} · ${r.direction} · ${fmt(Number(r.grand_total))} · vade ${r.due_date} · ${r.status}`));
             lines.push(``);
             lines.push(`GENEL TOPLAM: ${fmt(totalCheck + totalSub + totalInv)}`);
+          } else if (intent === "TODAYS_TASKS") {
+            const today = now.toISOString().slice(0, 10);
+            let q = sb.from("tasks")
+              .select("title, status, priority, due_date, project_id, projects(name)")
+              .eq("user_id", uid)
+              .or(`due_date.eq.${today},and(due_date.lte.${today},status.neq.done)`)
+              .order("priority", { ascending: false })
+              .limit(30);
+            if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            const { data } = await q;
+            const rows = (data || []) as any[];
+            const todays = rows.filter(r => r.due_date === today);
+            const overdue = rows.filter(r => r.due_date && r.due_date < today && r.status !== "done");
+            lines.push(`BUGÜNKÜ İŞ PLANI — ${today}`);
+            lines.push(`Bugün vadesi olan görev: ${todays.length} · Bugüne devreden geciken: ${overdue.length}`);
+            if (todays.length) {
+              lines.push(`\nBUGÜN:`);
+              todays.slice(0, 15).forEach(r => lines.push(`- [${r.priority || "normal"}] ${r.title} · ${r.projects?.name || "-"} · durum: ${r.status}`));
+            }
+            if (overdue.length) {
+              lines.push(`\nGECİKEN (öncelik verilmeli):`);
+              overdue.slice(0, 10).forEach(r => lines.push(`- [${r.priority || "normal"}] ${r.title} · ${r.projects?.name || "-"} · vade: ${r.due_date}`));
+            }
+          } else if (intent === "LOW_STOCK") {
+            // Compare stock (entries − exits) vs material_norms.norm_quantity per project.
+            let mq = sb.from("materials").select("id, name, unit, project_id, projects(name)").eq("user_id", uid).limit(300);
+            if (projectIdFilter) mq = mq.eq("project_id", projectIdFilter);
+            const { data: mats } = await mq;
+            const mrows = (mats || []) as any[];
+            const ids = mrows.map(m => m.id);
+            let entries: any[] = [], exits: any[] = [], norms: any[] = [];
+            if (ids.length) {
+              const [e, x, n] = await Promise.all([
+                sb.from("material_entries").select("material_id, quantity").in("material_id", ids),
+                sb.from("material_exits").select("material_id, quantity").in("material_id", ids),
+                sb.from("material_norms").select("material_id, norm_quantity").in("material_id", ids),
+              ]);
+              entries = e.data || []; exits = x.data || []; norms = n.data || [];
+            }
+            const stockOf = (mid: string) =>
+              entries.filter(e => e.material_id === mid).reduce((s, e) => s + Number(e.quantity || 0), 0) -
+              exits.filter(e => e.material_id === mid).reduce((s, e) => s + Number(e.quantity || 0), 0);
+            const normOf = (mid: string) => {
+              const n = norms.find(n => n.material_id === mid);
+              return n ? Number(n.norm_quantity || 0) : 0;
+            };
+            const scored = mrows.map(m => {
+              const stock = stockOf(m.id);
+              const norm = normOf(m.id);
+              const ratio = norm > 0 ? stock / norm : (stock <= 0 ? 0 : 1);
+              return { m, stock, norm, ratio };
+            }).filter(r => r.norm > 0 ? r.ratio < 0.4 : r.stock <= 0)
+              .sort((a, b) => a.ratio - b.ratio)
+              .slice(0, 15);
+            lines.push(`KRİTİK / DÜŞÜK STOK (${scored.length} kalem):`);
+            if (scored.length === 0) lines.push(`- Tanımlı normlara göre kritik seviyeye inen malzeme yok.`);
+            scored.forEach(r => lines.push(
+              `- ${r.m.name} (${r.m.projects?.name || "-"}) · stok: ${r.stock} ${r.m.unit || ""}` +
+              (r.norm > 0 ? ` · norm: ${r.norm} · doluluk: %${Math.round(r.ratio * 100)}` : ` · norm tanımsız`)
+            ));
+          } else if (intent === "PERSONNEL_OVERTIME") {
+            const fromDate = df || (() => { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); })();
+            const toDate = dt || now.toISOString().slice(0, 10);
+            let waq = sb.from("worker_attendance")
+              .select("worker_name, check_in, check_out, work_date, project_id, projects(name)")
+              .eq("user_id", uid)
+              .gte("work_date", fromDate).lte("work_date", toDate)
+              .not("check_out", "is", null)
+              .limit(500);
+            if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
+            const { data: wa } = await waq;
+            const rows = (wa || []) as any[];
+            const overtime = rows.map(r => {
+              const inMs = new Date(r.check_in).getTime();
+              const outMs = new Date(r.check_out).getTime();
+              const hours = (outMs - inMs) / 3600_000;
+              return { ...r, hours };
+            }).filter(r => r.hours >= 9).sort((a, b) => b.hours - a.hours);
+            lines.push(`FAZLA MESAİ (${fromDate} → ${toDate}) · ≥ 9 saat vardiyalar: ${overtime.length}`);
+            overtime.slice(0, 15).forEach(r =>
+              lines.push(`- ${r.work_date} · ${r.worker_name} · ${r.hours.toFixed(1)} sa · ${r.projects?.name || "-"}`)
+            );
+            const byWorker = new Map<string, number>();
+            overtime.forEach(r => byWorker.set(r.worker_name, (byWorker.get(r.worker_name) || 0) + (r.hours - 8)));
+            const top = [...byWorker.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+            if (top.length) {
+              lines.push(`\nEN YOĞUN İŞÇİLER (fazla saat toplamı):`);
+              top.forEach(([n, h], i) => lines.push(`${i + 1}. ${n} · +${h.toFixed(1)} sa`));
+            }
+          } else if (intent === "MEETING_SUMMARY") {
+            let mq = sb.from("meetings")
+              .select("id, title, meeting_date, meeting_type, project_id, status")
+              .eq("user_id", uid).order("meeting_date", { ascending: false }).limit(5);
+            if (projectIdFilter) mq = mq.eq("project_id", projectIdFilter);
+            const { data: meets } = await mq;
+            const mrows = (meets || []) as any[];
+            lines.push(`SON TOPLANTILAR (${mrows.length}):`);
+            for (const meet of mrows) {
+              lines.push(`- ${meet.meeting_date} · ${meet.title} · ${meet.meeting_type || "-"} · ${meet.status}`);
+            }
+            if (mrows.length) {
+              const [analysis, actions] = await Promise.all([
+                sb.from("meeting_analyses").select("meeting_id, summary, key_decisions, risks").in("meeting_id", mrows.map(m => m.id)),
+                sb.from("meeting_action_items").select("meeting_id, title, owner, due_date, status").in("meeting_id", mrows.map(m => m.id)).order("due_date", { ascending: true }),
+              ]);
+              const latest = mrows[0];
+              const la = (analysis.data || []).find((a: any) => a.meeting_id === latest.id);
+              if (la?.summary) { lines.push(`\nEN SON TOPLANTI ÖZETİ (${latest.title}):`); lines.push(String(la.summary).slice(0, 600)); }
+              const openActions = (actions.data || []).filter((a: any) => a.status !== "done");
+              if (openActions.length) {
+                lines.push(`\nAÇIK AKSİYON MADDELERİ (${openActions.length}):`);
+                openActions.slice(0, 15).forEach((a: any) =>
+                  lines.push(`- ${a.title} · sorumlu: ${a.owner || "-"} · termin: ${a.due_date || "-"} · durum: ${a.status}`)
+                );
+              }
+            }
+          } else if (intent === "PROJECT_PROGRESS") {
+            let pq = sb.from("projects").select("id, name, status, progress, start_date, end_date").eq("user_id", uid).limit(30);
+            if (projectIdFilter) pq = pq.eq("id", projectIdFilter);
+            const { data: projs } = await pq;
+            const today = now.toISOString().slice(0, 10);
+            const scored = (projs || []).map((p: any) => {
+              const start = p.start_date ? new Date(p.start_date).getTime() : null;
+              const end = p.end_date ? new Date(p.end_date).getTime() : null;
+              const nowMs = new Date(today).getTime();
+              let timeUsed: number | null = null;
+              if (start && end && end > start) timeUsed = Math.max(0, Math.min(1, (nowMs - start) / (end - start)));
+              const prog = Number(p.progress || 0) / 100;
+              const gap = timeUsed !== null ? prog - timeUsed : null;
+              return { p, timeUsed, prog, gap };
+            }).sort((a, b) => (a.gap ?? 0) - (b.gap ?? 0));
+            lines.push(`PROJE İLERLEME KIYASI (${scored.length} proje) — ilerleme vs geçen süre:`);
+            scored.slice(0, 15).forEach(s => {
+              const gapPct = s.gap !== null ? `${Math.round(s.gap * 100)}%` : "-";
+              const status = s.gap === null ? "süre yok" : s.gap < -0.15 ? "🔴 CİDDİ GECİKME" : s.gap < -0.05 ? "🟡 gecikme" : "🟢 uyumlu";
+              lines.push(`- ${s.p.name} · ilerleme: %${s.p.progress} · süre kullanımı: ${s.timeUsed !== null ? Math.round(s.timeUsed * 100) + "%" : "-"} · fark: ${gapPct} · ${status}`);
+            });
+          } else if (intent === "PROJECT_HEALTH" || intent === "PROJECT_RISKS") {
+            const today = now.toISOString().slice(0, 10);
+            const in14 = new Date(now); in14.setDate(in14.getDate() + 14);
+            const in14s = in14.toISOString().slice(0, 10);
+            let pq = sb.from("projects").select("id, name, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(20);
+            if (projectIdFilter) pq = pq.eq("id", projectIdFilter);
+            const { data: projs } = await pq;
+            const pr = (projs || []) as any[];
+            const pids = pr.map(p => p.id);
+            const [overdueTasks, overdueChecks, overdueSubs, upcomingChecks, pendingHak, lowStockMats, siteDiary] = await Promise.all([
+              sb.from("tasks").select("project_id, title").eq("user_id", uid).lt("due_date", today).neq("status", "done"),
+              sb.from("cash_checks").select("project_id, amount, due_date").eq("user_id", uid).lt("due_date", today).neq("status", "paid"),
+              sb.from("subcontractor_payments").select("project_id, amount").eq("user_id", uid).lt("planned_date", today).is("payment_date", null),
+              sb.from("cash_checks").select("project_id, amount, due_date").eq("user_id", uid).gte("due_date", today).lte("due_date", in14s),
+              sb.from("project_hakedis").select("project_id, net_total").eq("user_id", uid).eq("approval_status", "beklemede"),
+              pids.length ? sb.from("materials").select("id, project_id, name").in("project_id", pids) : Promise.resolve({ data: [] as any[] }),
+              sb.from("site_diary_entries").select("project_id, entry_date").eq("user_id", uid).order("entry_date", { ascending: false }).limit(200),
+            ]);
+            // Aggregate risks per project
+            const perProject = pr.map(p => {
+              const oTasks = (overdueTasks.data || []).filter((t: any) => t.project_id === p.id);
+              const oChecks = (overdueChecks.data || []).filter((c: any) => c.project_id === p.id);
+              const oSubs = (overdueSubs.data || []).filter((s: any) => s.project_id === p.id);
+              const upC = (upcomingChecks.data || []).filter((c: any) => c.project_id === p.id);
+              const pending = (pendingHak.data || []).filter((h: any) => h.project_id === p.id);
+              const lastDiary = (siteDiary.data || []).find((d: any) => d.project_id === p.id)?.entry_date || null;
+              const daysSinceDiary = lastDiary ? Math.floor((Date.now() - new Date(lastDiary).getTime()) / 86_400_000) : 999;
+              // Time vs progress
+              const start = p.start_date ? new Date(p.start_date).getTime() : null;
+              const end = p.end_date ? new Date(p.end_date).getTime() : null;
+              const timeUsed = (start && end && end > start) ? Math.max(0, Math.min(1, (Date.now() - start) / (end - start))) : null;
+              const progGap = timeUsed !== null ? (Number(p.progress || 0) / 100) - timeUsed : 0;
+              // Health score 0-100
+              let score = 100;
+              score -= Math.min(25, oTasks.length * 3);
+              score -= Math.min(25, (oChecks.length + oSubs.length) * 5);
+              score -= Math.min(15, Math.max(0, -progGap * 100));
+              score -= pending.length > 3 ? 8 : 0;
+              score -= daysSinceDiary > 7 ? 8 : daysSinceDiary > 3 ? 4 : 0;
+              score = Math.max(0, Math.round(score));
+              const overdueAmount = oChecks.reduce((s, c) => s + Number(c.amount || 0), 0) + oSubs.reduce((s, x) => s + Number(x.amount || 0), 0);
+              const upcomingAmount = upC.reduce((s, c) => s + Number(c.amount || 0), 0);
+              const risks: string[] = [];
+              if (oChecks.length + oSubs.length > 0) risks.push(`Geciken ödeme: ${oChecks.length + oSubs.length} kalem, ${fmt(overdueAmount)}`);
+              if (oTasks.length > 0) risks.push(`Geciken görev: ${oTasks.length}`);
+              if (progGap < -0.1) risks.push(`İlerleme takvimin ${Math.round(-progGap * 100)} puan gerisinde`);
+              if (upcomingAmount > 0) risks.push(`14 gün içinde ${fmt(upcomingAmount)} çek vadesi geliyor`);
+              if (pending.length > 3) risks.push(`Onay bekleyen hakediş: ${pending.length}`);
+              if (daysSinceDiary > 7) risks.push(`Şantiye günlüğü ${daysSinceDiary} gündür güncellenmemiş`);
+              return { p, score, risks, oTasksN: oTasks.length, overdueAmount, upcomingAmount, pendingN: pending.length, progGap, daysSinceDiary };
+            }).sort((a, b) => a.score - b.score);
+
+            if (intent === "PROJECT_HEALTH") {
+              lines.push(`PROJE SAĞLIK SKORLARI (${perProject.length} proje) — düşük skor = yüksek risk:`);
+              perProject.forEach(x => {
+                const flag = x.score >= 80 ? "🟢" : x.score >= 60 ? "🟡" : "🔴";
+                lines.push(`${flag} ${x.p.name} · SAĞLIK: ${x.score}/100 · ilerleme %${x.p.progress}${x.progGap ? ` (fark ${Math.round(x.progGap * 100)}%)` : ""}`);
+                x.risks.slice(0, 3).forEach(r => lines.push(`   · ${r}`));
+              });
+            } else {
+              // PROJECT_RISKS — surface highest-impact risks first, across all projects
+              const allRisks = perProject.flatMap(x => x.risks.map(r => ({ project: x.p.name, score: x.score, risk: r, amount: x.overdueAmount + x.upcomingAmount })));
+              allRisks.sort((a, b) => (a.score - b.score) || (b.amount - a.amount));
+              lines.push(`EN YÜKSEK ETKİLİ RİSKLER (öncelik sırasıyla):`);
+              allRisks.slice(0, 8).forEach((r, i) => lines.push(`${i + 1}. [${r.project}] ${r.risk}`));
+              if (allRisks.length === 0) lines.push(`- Şu anda ölçülebilir kritik risk yok. Sağlık skorları normal aralıkta.`);
+            }
           } else if (intent === "EXECUTIVE_BRIEFING") {
+
             const today = now.toISOString().slice(0, 10);
             const [projs, tasksOverdue, tasksToday, checksSoon, hakedisPending] = await Promise.all([
               sb.from("projects").select("name, status, progress, contract_amount").eq("user_id", uid).limit(20),
