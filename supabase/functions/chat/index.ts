@@ -7,6 +7,99 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ============================================================
+// Voice-mode fast path: module-scope caches (per warm isolate)
+// ============================================================
+type CacheEntry<T> = { value: T; expiresAt: number };
+const projectListCache = new Map<string, CacheEntry<Array<{ id: string; name: string }>>>();
+const brainCache = new Map<string, CacheEntry<string>>();
+const CACHE_MAX = 200;
+
+function cacheGet<T>(m: Map<string, CacheEntry<T>>, k: string): T | null {
+  const e = m.get(k);
+  if (!e) return null;
+  if (e.expiresAt < Date.now()) { m.delete(k); return null; }
+  return e.value;
+}
+function cacheSet<T>(m: Map<string, CacheEntry<T>>, k: string, v: T, ttlMs: number) {
+  if (m.size >= CACHE_MAX) {
+    const firstKey = m.keys().next().value;
+    if (firstKey !== undefined) m.delete(firstKey);
+  }
+  m.set(k, { value: v, expiresAt: Date.now() + ttlMs });
+}
+
+function normalizeQuery(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function extractDateWindow(q: string): { df: string | null; dt: string | null } {
+  const now = new Date();
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  if (/\bbugün\b|\bbugun\b/.test(q)) return { df: iso(now), dt: iso(now) };
+  if (/\bdün\b|\bdun\b/.test(q)) {
+    const d = new Date(now); d.setDate(d.getDate() - 1); return { df: iso(d), dt: iso(d) };
+  }
+  if (/\bbu ay\b/.test(q)) {
+    const s = new Date(now.getFullYear(), now.getMonth(), 1);
+    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { df: iso(s), dt: iso(e) };
+  }
+  if (/\bgeçen ay\b|\bgecen ay\b/.test(q)) {
+    const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const e = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { df: iso(s), dt: iso(e) };
+  }
+  if (/\bbu hafta\b/.test(q)) {
+    const d = new Date(now);
+    const day = (d.getDay() + 6) % 7; // Monday=0
+    const s = new Date(d); s.setDate(d.getDate() - day);
+    const e = new Date(s); e.setDate(s.getDate() + 6);
+    return { df: iso(s), dt: iso(e) };
+  }
+  return { df: null, dt: null };
+}
+
+function classifyIntentHeuristic(
+  rawQuery: string,
+  projectNames: Array<{ id: string; name: string }>,
+): { intent: string; filters: any; confident: boolean } {
+  const q = rawQuery.toLowerCase();
+  const filters: any = {};
+  const dw = extractDateWindow(q);
+  filters.date_from = dw.df;
+  filters.date_to = dw.dt;
+
+  if (/\btoplam\b|\bne kadar\b|\bkaç ton\b|\bkac ton\b|\bkaç m3\b|\bkac m3\b/.test(q)) filters.aggregate = "sum";
+  else if (/\ben\s+(çok|cok)\b/.test(q)) filters.aggregate = "top_by_recipient";
+  else if (/\ben son\b|\bson\s+(yüklenen|yuklenen|eklenen)\b/.test(q)) { filters.aggregate = "latest"; filters.limit = 1; }
+
+  // Project name match against cached list
+  for (const p of projectNames) {
+    const pn = (p.name || "").toLowerCase().trim();
+    if (pn && pn.length >= 3 && q.includes(pn)) { filters.project_name = p.name; break; }
+  }
+
+  let intent = "GENERAL_CHAT";
+  let confident = true;
+  if (/hakediş|hakedis|progress payment/.test(q)) intent = "HAKEDIS_QUERY";
+  else if (/taşeron|taseron|ödeme|odeme|payment|nakit|havale|çek\b|cek\b|kasa/.test(q)) intent = "PAYMENT_QUERY";
+  else if (/görev|gorev|task|yapılacak|yapilacak|to-?do|termin|geciken|bekleyen/.test(q)) intent = "TASK_QUERY";
+  else if (/şantiye günlüğü|santiye gunlugu|günlük|gunluk|beton döküm|beton dokum|kalıp|kalip|demir|hafriyat|iş yapıldı|is yapildi/.test(q)) intent = "SITE_DIARY_QUERY";
+  else if (/belge|evrak|döküman|dokuman|document|dosya|pdf/.test(q)) intent = "DOCUMENT_QUERY";
+  else if (/malzeme|stok|çimento|cimento|beton|demir\b|kum|çakıl|cakil|material/.test(q)) intent = "MATERIAL_QUERY";
+  else if (/sözleşme|sozlesme|kontrat|contract/.test(q)) intent = "CONTRACT_QUERY";
+  else if (/personel|işçi|isci|çalışan|calisan|usta|kalfa|maaş|maas|yevmiye|foreman|worker/.test(q)) intent = "PERSONNEL_QUERY";
+  else if (/proje|inşaat|insaat|şantiye|santiye|villa|bina|site/.test(q)) intent = "PROJECT_QUERY";
+  else { intent = "GENERAL_CHAT"; confident = false; }
+
+  if (/\bbekle/.test(q)) filters.name = "bekliyor";
+  else if (/\bgecik/.test(q)) filters.name = "gecikti";
+
+  return { intent, filters, confident };
+}
+
+
 const SYSTEM_PROMPT = `Sen Şantiyem'sın — Türk müteahhit, mühendis ve mimarların şantiye, proje ve hakediş yönetiminde profesyonel yapay zeka asistanısın.
 
 =================================================== KİMLİĞİN VE TEMEL KURALLAR
