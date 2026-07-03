@@ -1,25 +1,24 @@
-## Sorunlar
+## Teşhis planı — "Bağlanıyor..." takılması
 
-1. **Header iOS status bar ile üst üste biniyor** — `VoiceCopilot`'un üst çubuğu `safe-area-inset-top` uygulamıyor, saat/pil ikonu başlığa binmiş.
-2. **Ajan İngilizce konuşuyor** — ElevenLabs oturumu başlatılırken dil override'ı gönderilmiyor; ajan otomatik olarak İngilizce'ye düşüyor.
+Web preview'de test ediyorsunuz, authentication açık. Sebep büyük ihtimalle **Allowed Origins** eksikliği: preview URL `lovableproject.com` alt-domain'inde çalışıyor ama listede yok.
 
-## Çözüm
+### Adım 1 — Allowed origins genişlet (dashboard, kod yok)
+ElevenLabs → Şantiyem AI Agent → **Security** → Allowed origins şu 6 girdiyi içermeli:
+- `https://*.lovableproject.com`
+- `https://*.lovable.app`
+- `https://santiyem.io`
+- `https://www.santiyem.io`
+- `capacitor://localhost`
+- `http://localhost`
 
-### 1. Safe area (`src/components/voice/VoiceCopilot.tsx`)
-- Root container'a `paddingTop: env(safe-area-inset-top)` ve `paddingBottom: env(safe-area-inset-bottom)` ekle (Tailwind arbitrary: `pt-[env(safe-area-inset-top)]`).
-- Böylece hem üst çubuk (Şantiyem / AI Construction Copilot) hem alt buton alanı çentik/ev tuşu bölgesine binmez.
+Save → preview'i **hard reload** (Cmd+Shift+R) → mikrofona tekrar basın.
 
-### 2. Türkçe zorlaması (`src/components/voice/VoiceCopilot.tsx`)
-- `useConversation({...})` çağrısına `overrides` ekle:
-  ```ts
-  overrides: {
-    agent: { language: "tr" }
-  }
-  ```
-- `startSession` çağrısına da yedek olarak aynı override'ı geç (SDK bunu ilk mesaj için baz alır).
-- **ElevenLabs dashboard gerekliliği**: Agent → Security → "Overrides" bölümünde `language` override'ı ETKİN olmalı. Değilse SDK sessizce yok sayar. (Kodu bittikten sonra kullanıcıya bu tek adımı hatırlatacağım.)
+### Adım 2 — Hâlâ takılıyorsa doğrulama testi
+Authentication'ı geçici olarak **kapatın** ve tekrar deneyin.
+- Bağlanırsa → sorun kesin olarak allowed origins; hangi girdiyi eksik eklediğinizi bulup ekleyeceğiz.
+- Bağlanmazsa → bu bir dashboard sorunu değil. Bu durumda `elevenlabs-conversation-token` edge function loglarına bakıp token cevabındaki HTTP kodunu ve ElevenLabs hata mesajını çıkaracağım.
 
-### 3. Doğrulama
-- Kullanıcıdan simülatörde tekrar mikrofona basmasını isteyeceğim; başlık artık status bar altında görünmeli ve ajan Türkçe karşılamalı ("Merhaba, ben Şantiyem AI…").
+### Adım 3 — Native header safe-area
+Değişikliklerimiz kodda hazır ama iOS'ta görmek için `npm run cap:sync` + Xcode build gerekiyor. Bu ayrı bir konu; şimdilik bağlantı sorununa odaklanalım.
 
-Web tarafına dokunulmaz; sadece bu bileşen değişir.
+Kod değişikliği yok — sadece sizin dashboard'da denemeniz gereken adımlar.
