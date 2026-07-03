@@ -655,6 +655,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const stop = async () => {
     console.log("[voice] endSession() called by user");
+    tl("endSession() called (user pressed stop)");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
 
@@ -665,10 +666,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     const nowSpeaking = conversation.isSpeaking;
     if (!wasSpeakingRef.current && nowSpeaking) {
       greetingStartRef.current = Date.now();
+      tl("SPEAKING started", "first audio playback begins");
       console.log("[voice][DIAG] 🔈 → SPEAKING started at", new Date().toISOString());
     }
     if (wasSpeakingRef.current && !nowSpeaking) {
       const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
+      tl("SPEAKING → LISTENING", `after ${dur}ms of playback`);
       console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
         "\n         last AI text  :", lastAiMessageRef.current,
         "\n         last user text:", lastUserTranscriptRef.current);
@@ -685,7 +688,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           try {
             if (!settingsRef.current.pushToTalk) {
               conversation.setMuted(false);
-              console.log("[voice][DIAG] 🎙️→ON  (greeting released) SDK.setMuted(false)");
+              tl("setMuted(false)", "greeting-release timer (intended)");
               for (const t of micTracksRef.current) {
                 if (t.readyState === "live" && t.kind === "audio") t.enabled = true;
               }
