@@ -433,41 +433,13 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   • SÜRÜŞ: çok kısa, tek nefeslik cümle, maksimum 15 saniye.`;
 
 
-      // ---- Dynamic first message (varies by mode, time of day, user) ------
-      const hour = new Date().getHours();
-      const timeGreet =
-        hour < 6  ? "İyi geceler" :
-        hour < 11 ? "Günaydın"    :
-        hour < 18 ? "İyi günler"  :
-                    "İyi akşamlar";
-      const nameSuffix = firstName ? ` ${firstName}` : "";
-      const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-      const officeOpeners = [
-        `${timeGreet}${nameSuffix}. Hazırım — şirket geneliyle mi başlayalım, belirli bir projeye mi bakalım?`,
-        `Hoş geldin${nameSuffix}. Bu sabah projeleri gözden geçirdim; nereden başlayalım?`,
-        `Tekrar hoş geldin${nameSuffix}. Öncelik vermeniz gereken birkaç konu dikkatimi çekti.`,
-        `${timeGreet}${nameSuffix}. Bugün dikkatimi çeken iki konu var; dinlemek ister misin?`,
-      ];
-      const siteOpeners = [
-        `${timeGreet}${nameSuffix}. Şantiye modu aktif — sahadaki operasyonlarla başlayalım.`,
-        `Hoş geldin${nameSuffix}. Şantiye modundayız. Bugün hangi blokla ilgileneceğiz?`,
-        `${timeGreet}${nameSuffix}. Saha hazır. Puantaj mı, malzeme mi, ilerleme mi?`,
-      ];
-      const drivingOpeners = [
-        `${timeGreet}${nameSuffix}. Sürüş modu aktif. Bugün iki önemli konu dikkatimi çekti — hazır olduğunda başlayabiliriz.`,
-        `${timeGreet}${nameSuffix}. Sürüş modundayız. Kısa tutuyorum, dinliyorum.`,
-        `Tekrar hoş geldin${nameSuffix}. Sürüş modu açık. Öncelikli bir konu var.`,
-      ];
-      const firstMessage =
-        settings.mode === "site"    ? pick(siteOpeners) :
-        settings.mode === "driving" ? pick(drivingOpeners) :
-                                       pick(officeOpeners);
+      // NOTE: `agent.firstMessage` is intentionally NOT overridden here — the
+      // greeting must come solely from the ElevenLabs dashboard configuration.
+      // (Previous mode-based openers were removed on purpose.)
 
       const overrides = {
         agent: {
           language: "tr",
-          firstMessage,
           prompt: { prompt: SYSTEM_PROMPT },
         },
         // Reduce accidental barge-in from short sounds / brief utterances.
