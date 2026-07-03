@@ -1,3 +1,4 @@
+import "./debug/wsRtcTap"; // must run before any SDK constructs WS/RTC
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
