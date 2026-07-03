@@ -1,7 +1,12 @@
 type Msg = { role: "user" | "assistant"; content: string; attachments?: { base64: string; type: string }[] };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-const TIMEOUT_MS = 15000;
+// Time to wait for the server to START responding (headers received).
+// The Construction Brain runs intent classification, DB retrieval and, in
+// action mode, a multi-step tool-calling loop before the first SSE chunk
+// arrives — so we only enforce this timeout until headers are received,
+// and give it enough room for the slowest cold-start path.
+const CONNECT_TIMEOUT_MS = 60000;
 
 export async function streamChat({
   messages,
