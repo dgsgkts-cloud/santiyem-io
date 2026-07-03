@@ -237,6 +237,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     });
 
   const start = async () => {
+    console.log("[voice][start] ➊ Initializing session...");
     setError(null);
     setUiState("connecting");
     setShowSummary(false);
@@ -247,19 +248,23 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       }
       try {
         const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
+        console.log("[voice][start] mic permission state:", perm?.state);
         if (perm?.state === "denied") {
           setError("Mikrofon izni reddedilmiş. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açın.");
           setUiState("error"); return;
         }
       } catch { /* noop */ }
 
+      console.log("[voice][start] ➋ Requesting microphone...");
       try {
         const stream = await withTimeout(
           navigator.mediaDevices.getUserMedia({ audio: true }),
           CONNECT_TIMEOUT_MS, "Mikrofon izni"
         );
+        console.log("[voice][start] ✅ Microphone granted, tracks:", stream.getAudioTracks().length);
         stream.getTracks().forEach((t) => t.stop());
       } catch (micErr) {
+        console.error("[voice][start] ❌ Microphone failed", micErr);
         const name = (micErr as DOMException)?.name;
         if (name === "NotAllowedError" || name === "SecurityError") {
           setError("Mikrofon izni gerekli. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açıp tekrar deneyin.");
@@ -273,21 +278,33 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
+      console.log("[voice][start] ➌ JWT present:", !!jwt);
       if (!jwt) throw new Error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
 
+      console.log("[voice][start] ➍ Fetching ElevenLabs token from edge function...");
+      const tTok = performance.now();
       const res = await withTimeout(
         fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
           method: "POST", headers: { Authorization: `Bearer ${jwt}` },
         }),
         CONNECT_TIMEOUT_MS, "Token isteği"
       );
+      console.log("[voice][start] token endpoint status:", res.status, "in", Math.round(performance.now() - tTok), "ms");
       if (res.status === 402) {
         const body = await res.json();
         setError(body?.message ?? "Günlük ses kotanız doldu.");
         setUiState("error"); return;
       }
-      if (!res.ok) throw new Error(`Token alınamadı (${res.status})`);
-      const { token, signed_url } = await res.json();
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        console.error("[voice][start] token endpoint body:", errText);
+        throw new Error(`Token alınamadı (${res.status}) ${errText.slice(0,200)}`);
+      }
+      const tokenBody = await res.json();
+      const { token, signed_url, agent_id, quota } = tokenBody;
+      console.log("[voice][start] ➎ token endpoint returned:", {
+        has_token: !!token, has_signed_url: !!signed_url, agent_id, quota,
+      });
 
       const SYSTEM_PROMPT = `Sen deneyimli bir Türk şantiye proje direktörüsün. Kullanıcı seninle Şantiyem uygulaması üzerinden sesli konuşuyor. Sen bir chatbot değilsin; saha tecrübesi olan, kısa ve net konuşan bir yönetici gibi davran.
 
@@ -328,22 +345,40 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
       if (token) {
         try {
+          console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
           const connected = waitForConnect();
-          conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
-          await connected; return;
+          try {
+            conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
+          } catch (syncErr) {
+            console.error("[voice][start] startSession threw synchronously:", syncErr);
+            throw syncErr;
+          }
+          console.log("[voice][start] startSession() returned, waiting for onConnect…");
+          await connected;
+          console.log("[voice][start] ✅ WebRTC connected");
+          return;
         } catch (e) {
-          console.warn("[voice] WebRTC failed, WebSocket fallback:", e);
+          console.warn("[voice][start] ⚠️ WebRTC failed, trying WebSocket fallback:", e);
           try { await conversation.endSession(); } catch { /* noop */ }
         }
       }
       if (signed_url) {
+        console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
         const connected = waitForConnect();
-        conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
-        await connected; return;
+        try {
+          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
+        } catch (syncErr) {
+          console.error("[voice][start] startSession threw synchronously (ws):", syncErr);
+          throw syncErr;
+        }
+        console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
+        await connected;
+        console.log("[voice][start] ✅ WebSocket connected");
+        return;
       }
-      throw new Error("Ses bağlantısı kurulamadı.");
+      throw new Error("Ses bağlantısı kurulamadı: token endpoint boş yanıt döndü.");
     } catch (e) {
-      console.error("[voice] start failed:", e);
+      console.error("[voice][start] ❌ FAILED:", e);
       setError(e instanceof Error ? e.message : String(e));
       setUiState("error");
       toast.error("Sesli asistan başlatılamadı", { description: String(e) });
@@ -351,10 +386,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   };
 
   const stop = async () => {
+    console.log("[voice] endSession() called by user");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
 
   useEffect(() => {
+    console.log("[voice][status] SDK status →", conversation.status, "isSpeaking:", conversation.isSpeaking);
     if (conversation.status === "connected") {
       setUiState(conversation.isSpeaking ? "speaking" : "listening");
     }
