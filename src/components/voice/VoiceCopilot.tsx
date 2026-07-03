@@ -54,7 +54,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [muted, setMuted] = useState(false);
+  // `muted` is driven by the ElevenLabs SDK (conversation.isMuted) below.
   const [paused, setPaused] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -331,9 +331,53 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleMute = async () => {
-    try { await conversation.setVolume({ volume: muted ? 1 : 0 }); setMuted(!muted); }
-    catch (e) { console.warn(e); }
+  // ============ MIC MUTE ============
+  // Primary path: ElevenLabs SDK — `conversation.setMuted(true)` calls
+  // `VoiceConversation.setMicMuted` → `InputController.setMuted`, which stops
+  // uplink audio AND disables VAD on the ElevenLabs side.
+  //
+  // Belt-and-suspenders: we also wrap `navigator.mediaDevices.getUserMedia`
+  // during a live session to keep references to every microphone track the SDK
+  // opens, so we can flip `track.enabled = false/true` ourselves. This is what
+  // iOS Safari actually respects even when a transport keeps the pipe open.
+  const muted = conversation.isMuted;
+  const micTracksRef = useRef<Set<MediaStreamTrack>>(new Set());
+
+  useEffect(() => {
+    if (!navigator?.mediaDevices?.getUserMedia) return;
+    const md = navigator.mediaDevices;
+    const original = md.getUserMedia.bind(md);
+    const wrapped: typeof md.getUserMedia = async (constraints) => {
+      const stream = await original(constraints);
+      try {
+        for (const t of stream.getAudioTracks()) {
+          micTracksRef.current.add(t);
+          t.addEventListener("ended", () => micTracksRef.current.delete(t));
+        }
+      } catch { /* noop */ }
+      return stream;
+    };
+    md.getUserMedia = wrapped;
+    return () => { md.getUserMedia = original; };
+  }, []);
+
+  const setLocalTracksEnabled = (enabled: boolean) => {
+    try {
+      for (const t of micTracksRef.current) {
+        if (t.readyState === "live" && t.kind === "audio") t.enabled = enabled;
+      }
+    } catch (e) { console.warn("[voice] track toggle failed", e); }
+  };
+
+  const toggleMute = () => {
+    const next = !muted;
+    console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
+    try {
+      // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
+      conversation.setMuted(next);
+    } catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
+    // 2) Local track flag — makes sure iOS Safari really stops streaming.
+    setLocalTracksEnabled(!next);
   };
   const togglePause = async () => {
     // Best-effort pause via volume (SDK has no native pause for realtime).
@@ -345,18 +389,19 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     catch (e) { console.warn(e); }
   };
 
+  const active = uiState !== "idle" && uiState !== "error";
+
   const statusLabel = useMemo(() => {
+    if (muted && active) return "Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
-      case "listening": return "Dinliyorum…";
+      case "listening": return "Dinleniyor";
       case "thinking": return "Şantiye kayıtları inceleniyor…";
       case "speaking": return "Cevap veriliyor";
       case "error": return "Hata";
       default: return access.hasAccess ? "Dokun ve konuş" : "Kota doldu";
     }
-  }, [uiState, access.hasAccess]);
-
-  const active = uiState !== "idle" && uiState !== "error";
+  }, [uiState, access.hasAccess, muted, active]);
 
   return (
     <div
@@ -657,7 +702,7 @@ function ActionBar({
 }) {
   return (
     <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
-      <ActionBtn onClick={onMute} label={muted ? "Aç" : "Sustur"} active={muted}>
+      <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
         {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </ActionBtn>
       <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
@@ -686,15 +731,25 @@ function ActionBar({
     </div>
   );
 }
-function ActionBtn({ onClick, label, active, children }: {
-  onClick: () => void; label: string; active?: boolean; children: React.ReactNode;
+function ActionBtn({ onClick, label, active, danger, children }: {
+  onClick: () => void; label: string; active?: boolean; danger?: boolean; children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`h-11 w-11 rounded-xl flex items-center justify-center text-white/85 voice-glass-btn ${active ? "ring-1 ring-[#FF6B2B]/60 text-[#FFB58A]" : ""}`}
+      className={`h-11 w-11 rounded-xl flex items-center justify-center voice-glass-btn transition-colors ${
+        danger
+          ? "text-white ring-1 ring-[#FF6B6B]/70"
+          : active
+            ? "ring-1 ring-[#FF6B2B]/60 text-[#FFB58A]"
+            : "text-white/85"
+      }`}
+      style={danger ? {
+        background: "linear-gradient(135deg, #E5484D, #B4272B)",
+        boxShadow: "0 6px 20px -4px rgba(229,72,77,0.55)",
+      } : undefined}
     >
       {children}
     </button>
