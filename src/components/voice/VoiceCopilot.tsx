@@ -808,16 +808,6 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   // Enforce PTT mute state whenever the toggle changes or the session opens.
-  //
-  // ⚠️ ROOT CAUSE (identified during greeting-truncation investigation):
-  // This effect re-runs on EVERY `uiState` change. Right after onConnect,
-  // uiState flips to "listening" (and again to "speaking"), and with
-  // pushToTalk=false the else-branch called `setMuted(false)` +
-  // re-enabled the mic tracks — silently UNDOING the greeting protection
-  // that onConnect had just applied. The mic went hot during the greeting,
-  // speaker echo hit server-side VAD and the server barge-in truncated the
-  // greeting right after the first word. The timeline instrumentation
-  // below flags this exact call if it ever fires while protected.
   useEffect(() => {
     if (uiState === "idle" || uiState === "error") return;
     if (settings.pushToTalk) {
@@ -825,18 +815,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
     } else {
-      if (greetingProtectedRef.current) {
-        // 🚨 This was the callback that terminated greeting playback.
-        tl("🚨 setMuted(false) BLOCKED", `EFFECT[ptt-enforce] tried to unmute during protected greeting (uiState=${uiState})`);
-        console.warn("[voice][DIAG] 🚨 EFFECT[ptt-enforce] attempted setMuted(false) DURING GREETING — blocked (this was the interruption root cause)");
-        return;
-      }
       tl("setMuted(false)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.pushToTalk, uiState, greetingProtected]);
+  }, [settings.pushToTalk, uiState]);
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
