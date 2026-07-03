@@ -678,7 +678,28 @@ serve(async (req) => {
               } catch { /* ignore */ }
             }
           }
-          console.log("[Brain] intent:", intent, "filters:", filters, "voice:", voiceMode);
+          // Alias normalization — accept the sprint-3 intent names but route
+          // them to the existing dispatch handlers to avoid duplicated SQL.
+          const intentAlias: Record<string, string> = {
+            LIVE_PERSONNEL_COUNT: "LIVE_PERSONNEL",
+            PAYMENT_STATUS: "PAYMENT_QUERY",
+            HAKEDIS_STATUS: "HAKEDIS_QUERY",
+            SUBCONTRACTOR_STATUS: "SUBCONTRACTOR",
+            SITE_DIARY: "SITE_DIARY_QUERY",
+            DOCUMENT_SEARCH: "DOCUMENT_QUERY",
+          };
+          if (intentAlias[intent]) intent = intentAlias[intent];
+
+          // Sticky project inheritance — if the current turn didn't mention
+          // a project, carry the last one forward from the conversation.
+          if (!filters.project_name) {
+            const inherited = extractPriorProject(messages || [], projList || []);
+            if (inherited) {
+              filters.project_name = inherited;
+              console.log("[Brain] inherited project from context:", inherited);
+            }
+          }
+          console.log("[Brain] intent(final):", intent, "filters:", filters, "voice:", voiceMode);
 
           // 4) Query database based on intent
           const df = filters.date_from as string | null;
@@ -687,6 +708,7 @@ serve(async (req) => {
           const projectName = (filters.project_name as string | null) || null;
           const keyword = (filters.keyword as string | null) || null;
           const aggregate = (filters.aggregate as string | null) || null;
+
           // Voice mode: keep result set tiny for fast spoken summary
           const baseLimit = voiceMode ? 5 : 10;
           const maxLimit = voiceMode ? 5 : 25;
