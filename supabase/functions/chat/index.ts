@@ -792,6 +792,85 @@ serve(async (req) => {
             const { data } = await q;
             lines.push(`PERSONEL (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.full_name} · ${r.occupation || "-"} · ${r.employment_type} · yevmiye ${fmt(Number(r.daily_wage || 0))} · maaş ${fmt(Number(r.monthly_salary || 0))} · aktif: ${r.is_active}`));
+          } else if (intent === "LIVE_PERSONNEL" || intent === "ATTENDANCE") {
+            const today = now.toISOString().slice(0, 10);
+            const fromDate = df || today;
+            const toDate = dt || today;
+            let waq = sb.from("worker_attendance")
+              .select("worker_name, check_in, check_out, work_date, project_id, status")
+              .eq("user_id", uid)
+              .gte("work_date", fromDate)
+              .lte("work_date", toDate)
+              .order("check_in", { ascending: false }).limit(200);
+            if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
+            const { data: wa, error: waErr } = await waq;
+            const rows = wa || [];
+            if (intent === "LIVE_PERSONNEL") {
+              const onSite = rows.filter((r: any) => r.check_in && !r.check_out);
+              lines.push(`CANLI SAHA DURUMU (${today}):`);
+              lines.push(`- Bugün giriş yapan: ${rows.length}`);
+              lines.push(`- Şu an sahada (çıkış yapılmamış): ${onSite.length}`);
+              onSite.slice(0, 15).forEach((r: any) => lines.push(`  · ${r.worker_name} · giriş ${String(r.check_in).slice(11, 16)}`));
+              if (rows.length === 0 && !waErr) {
+                lines.push(`NOT: Bu proje için bugün QR/puantaj kaydı yok — canlı personel sayısı belirlenemez.`);
+              }
+            } else {
+              lines.push(`YOKLAMA (${fromDate} → ${toDate}, ${rows.length} kayıt):`);
+              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status || "-"}`));
+            }
+          } else if (intent === "SUBCONTRACTOR") {
+            let sq = sb.from("subcontractors").select("id, name, trade, contact_person, phone, is_active").eq("user_id", uid).limit(limit);
+            if (nameFilter) sq = sq.ilike("name", `%${nameFilter}%`);
+            const { data: subs } = await sq;
+            const subRows = subs || [];
+            lines.push(`TAŞERONLAR (${subRows.length} kayıt):`);
+            const ids = subRows.map((s: any) => s.id);
+            let payMap = new Map<string, { paid: number; count: number }>();
+            if (ids.length) {
+              const { data: pays } = await sb.from("subcontractor_payments")
+                .select("subcontractor_id, amount, payment_date")
+                .in("subcontractor_id", ids);
+              (pays || []).forEach((p: any) => {
+                const cur = payMap.get(p.subcontractor_id) || { paid: 0, count: 0 };
+                cur.paid += Number(p.amount || 0); cur.count += 1;
+                payMap.set(p.subcontractor_id, cur);
+              });
+            }
+            subRows.forEach((s: any) => {
+              const st = payMap.get(s.id) || { paid: 0, count: 0 };
+              lines.push(`- ${s.name} · ${s.trade || "-"} · ödeme adedi: ${st.count} · toplam ödenen: ${fmt(st.paid)} · aktif: ${s.is_active}`);
+            });
+          } else if (intent === "FINANCIAL_SUMMARY" || intent === "PROJECT_OVERVIEW") {
+            let pq = sb.from("projects").select("id, name, status, progress, contract_amount, start_date, end_date").eq("user_id", uid).limit(20);
+            if (projectIdFilter) pq = pq.eq("id", projectIdFilter);
+            const { data: projs } = await pq;
+            const projRows = projs || [];
+            const pids = projRows.map((p: any) => p.id);
+            let hakedis = 0, expenses = 0, subPaid = 0, cashPaid = 0, cashCollected = 0;
+            if (pids.length) {
+              const [h, e, sp, cp, cc] = await Promise.all([
+                sb.from("project_hakedis").select("net_total, amount, project_id").in("project_id", pids),
+                sb.from("project_expenses").select("amount, project_id").in("project_id", pids),
+                sb.from("subcontractor_payments").select("amount, project_id").in("project_id", pids),
+                sb.from("cash_payments").select("amount, project_id").in("project_id", pids),
+                sb.from("cash_collections").select("amount, project_id").in("project_id", pids),
+              ]);
+              hakedis = (h.data || []).reduce((s: number, r: any) => s + Number(r.net_total || r.amount || 0), 0);
+              expenses = (e.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              subPaid = (sp.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              cashPaid = (cp.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              cashCollected = (cc.data || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            }
+            const contractTotal = projRows.reduce((s: number, r: any) => s + Number(r.contract_amount || 0), 0);
+            lines.push(`${intent === "FINANCIAL_SUMMARY" ? "FİNANSAL ÖZET" : "PROJE GENEL DURUMU"} (${projRows.length} proje):`);
+            projRows.forEach((p: any) => lines.push(`- ${p.name} · durum: ${p.status} · ilerleme: %${p.progress} · sözleşme: ${fmt(Number(p.contract_amount || 0))}`));
+            lines.push(``);
+            lines.push(`TOPLAM SÖZLEŞME: ${fmt(contractTotal)}`);
+            lines.push(`TOPLAM HAKEDİŞ (net): ${fmt(hakedis)}`);
+            lines.push(`TOPLAM GİDER: ${fmt(expenses)}`);
+            lines.push(`TAŞERON ÖDEMESİ: ${fmt(subPaid)}`);
+            lines.push(`KASA TAHSİLAT: ${fmt(cashCollected)} · KASA ÖDEME: ${fmt(cashPaid)}`);
+            lines.push(`NET NAKİT (tahsilat - ödeme): ${fmt(cashCollected - cashPaid)}`);
           }
 
           if (lines.length > 0) {
@@ -800,11 +879,31 @@ serve(async (req) => {
               `Intent: ${intent}\n` +
               lines.join("\n") +
               "\n=== VERİ SONU ===\n" +
-              "KURAL: Yukarıdaki gerçek proje verisine dayanarak cevap ver. Rakam uydurma. Veri yoksa 'Bu bilgi sistemde bulunamadı.' de. SQL veya JSON gösterme; deneyimli proje yöneticisi gibi kısa, profesyonel Türkçe özetle.\n";
+              "KURAL: SADECE yukarıdaki gerçek veriye dayanarak konuş. Rakam uydurma, verileri yorumla. " +
+              "Cevap formatı: (1) Durum tespiti, (2) Bunun ne anlama geldiği, (3) Önerilen sonraki adım, (4) Tek bir kısa takip sorusu. " +
+              "Aynı sohbette daha önce geçen konuyu tekrar etme; giriş cümlesi kurma. Deneyimli proje müdürü gibi konuş.\n";
           } else if (intent !== "GENERAL_CHAT") {
+            const missingMap: Record<string, string> = {
+              LIVE_PERSONNEL: "Bu proje için bugün QR/puantaj girişi yok. Sahadaki canlı personel sayısını görebilmem için işçilerin QR kodu ile giriş-çıkış yapması gerekiyor.",
+              ATTENDANCE: "Seçili tarih aralığı için yoklama kaydı yok. Puantaj modülünden giriş yapıldığında bu bilgi hazır olur.",
+              SUBCONTRACTOR: "Bu proje için taşeron kaydı yok. Taşeron modülünden firmayı ve ödemeleri girmen gerekiyor.",
+              HAKEDIS_QUERY: "Bu sorguya uyan hakediş kaydı yok. Hakediş modülünden ilgili dönemi oluşturman gerekiyor.",
+              PAYMENT_QUERY: "Bu sorguya uyan ödeme/kasa kaydı yok. Kasa & Ödeme modülünden işlemleri girmen gerekiyor.",
+              TASK_QUERY: "Bu sorguya uyan görev yok. Görev modülünden görev açman gerekiyor.",
+              SITE_DIARY_QUERY: "Seçili aralık için şantiye günlüğü kaydı yok. Günlük modülünden kayıt eklenmesi gerekiyor.",
+              MATERIAL_QUERY: "Bu proje için malzeme kaydı yok. Malzeme modülünden giriş yapman gerekiyor.",
+              CONTRACT_QUERY: "Bu sorguya uyan sözleşme yok.",
+              PERSONNEL_QUERY: "Bu sorguya uyan personel kaydı yok.",
+              FINANCIAL_SUMMARY: "Finansal özet için yeterli veri yok. Hakediş, kasa ve gider modüllerinde kayıt olmalı.",
+              PROJECT_OVERVIEW: "Henüz proje kaydı yok. Önce Projeler modülünden bir proje oluşturman gerekiyor.",
+              DOCUMENT_QUERY: "Yüklü evrak yok.",
+              PROJECT_QUERY: "Bu sorguya uyan proje yok.",
+            };
+            const reason = missingMap[intent] || "İstenen bilgi sistemde bulunamadı.";
             projectDataContext =
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
-              "KURAL: Kullanıcıya 'Bu bilgi sistemde bulunamadı.' şeklinde nazikçe bildir. Tahmini rakam verme.\n";
+              `AÇIKLAMA: ${reason}\n` +
+              "KURAL: Kullanıcıya bilginin neden mevcut olmadığını açıkla ve hangi verinin gerekli olduğunu söyle. Rakam uydurma, alakasız veriye geçme. Kısa bir öneri ile bitir.\n";
           }
           if (projectDataContext) {
             cacheSet(brainCache, cacheKey, projectDataContext, 30_000);
