@@ -435,7 +435,9 @@ serve(async (req) => {
     // --- RAG: Search user's documents for context ---
     let ragContext = "";
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && !voiceMode) {
+
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
