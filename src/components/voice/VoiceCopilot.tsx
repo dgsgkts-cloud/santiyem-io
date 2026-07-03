@@ -52,6 +52,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onConnect: () => {
       try {
+        connectWaiterRef.current?.resolve();
+        connectWaiterRef.current = null;
         sessionStartRef.current = Date.now();
         setUiState("listening");
         if (initialContext) {
