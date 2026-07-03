@@ -104,7 +104,28 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     try {
       const stored = localStorage.getItem("active_project_name");
       if (stored) setProjectName(stored);
+      const cachedName = localStorage.getItem("voice_first_name");
+      if (cachedName) setFirstName(cachedName);
     } catch { /* noop */ }
+    // Fetch user first name (best-effort) for personalized greeting.
+    (async () => {
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const uid = sess?.session?.user?.id;
+        if (!uid) return;
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", uid)
+          .maybeSingle();
+        const full = (data?.full_name || "").trim();
+        if (full) {
+          const first = full.split(/\s+/)[0];
+          setFirstName(first);
+          try { localStorage.setItem("voice_first_name", first); } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
+    })();
   }, []);
 
   // Auto-scroll the transcript window so the newest spoken line is visible.
