@@ -59,6 +59,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
+  // Construction Site Mode — default ON. Aggressive noise handling + anti-barge-in.
+  const [siteMode, setSiteMode] = useState<boolean>(() => {
+    try { const v = localStorage.getItem("voice_site_mode"); return v === null ? true : v === "1"; } catch { return true; }
+  });
+  const siteModeRef = useRef(siteMode);
+  useEffect(() => { siteModeRef.current = siteMode; try { localStorage.setItem("voice_site_mode", siteMode ? "1" : "0"); } catch { /* noop */ } }, [siteMode]);
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
@@ -347,12 +353,31 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     if (!navigator?.mediaDevices?.getUserMedia) return;
     const md = navigator.mediaDevices;
     const original = md.getUserMedia.bind(md);
+    const buildAudioConstraints = (input: boolean | MediaTrackConstraints | undefined): MediaTrackConstraints => {
+      const base: MediaTrackConstraints = typeof input === "object" && input ? { ...input } : {};
+      // Always request browser-level DSP; construction sites need every dB of NS/AGC.
+      base.echoCancellation = true;
+      base.noiseSuppression = true;
+      base.autoGainControl = true;
+      // Chromium-only hints for stronger NS pipeline. Ignored elsewhere.
+      (base as any).googEchoCancellation = true;
+      (base as any).googNoiseSuppression = true;
+      (base as any).googHighpassFilter = true;
+      (base as any).googAutoGainControl = true;
+      (base as any).googTypingNoiseDetection = true;
+      base.channelCount = 1;
+      return base;
+    };
     const wrapped: typeof md.getUserMedia = async (constraints) => {
-      const stream = await original(constraints);
+      const patched: MediaStreamConstraints = { ...(constraints || {}) };
+      if (patched.audio !== false) patched.audio = buildAudioConstraints(patched.audio as any);
+      const stream = await original(patched);
       try {
         for (const t of stream.getAudioTracks()) {
           micTracksRef.current.add(t);
           t.addEventListener("ended", () => micTracksRef.current.delete(t));
+          // Re-apply constraints in case the browser dropped a hint.
+          try { await t.applyConstraints(buildAudioConstraints(true)); } catch { /* noop */ }
         }
       } catch { /* noop */ }
       return stream;
@@ -368,6 +393,29 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       }
     } catch (e) { console.warn("[voice] track toggle failed", e); }
   };
+
+  // ============ ANTI-BARGE-IN (Construction Site Mode) ============
+  // While the agent is speaking AND site mode is on, silence the mic so
+  // hammers, drills, vehicles and background chatter cannot trigger VAD
+  // and interrupt the response. Re-enable a moment after AI stops so a
+  // deliberate user reply still lands quickly.
+  useEffect(() => {
+    const isActive = uiState !== "idle" && uiState !== "error";
+    if (!isActive) return;
+    if (muted) return; // user explicitly muted — respect it
+    if (siteMode && conversation.isSpeaking) {
+      setLocalTracksEnabled(false);
+      return () => {
+        // Small grace so tail-end TTS audio doesn't self-trigger VAD on re-open.
+        setTimeout(() => { if (!muted) setLocalTracksEnabled(true); }, 350);
+      };
+    } else {
+      setLocalTracksEnabled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.isSpeaking, siteMode, uiState, muted]);
+
+
 
   const toggleMute = () => {
     const next = !muted;
@@ -455,6 +503,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             <ActionBar
               muted={muted}
               paused={paused}
+              siteMode={siteMode}
+              onSiteMode={() => setSiteMode((v) => !v)}
               onMute={toggleMute}
               onPause={togglePause}
               onStop={stop}
@@ -694,14 +744,18 @@ function StartButton({ onStart, disabled }: { onStart: () => void; disabled: boo
    ACTION BAR — glass buttons (Mute / Pause / Stop / Keyboard / Repeat / History)
    ===================================================== */
 function ActionBar({
-  muted, paused, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
+  muted, paused, siteMode, onSiteMode, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
 }: {
-  muted: boolean; paused: boolean;
+  muted: boolean; paused: boolean; siteMode: boolean;
+  onSiteMode: () => void;
   onMute: () => void; onPause: () => void; onStop: () => void;
   onKeyboard: () => void; onRepeat: () => void; onHistory: () => void;
 }) {
   return (
     <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
+      <ActionBtn onClick={onSiteMode} label={siteMode ? "Şantiye Modu: Açık" : "Şantiye Modu: Kapalı"} active={siteMode}>
+        <HardHat className="w-4 h-4" />
+      </ActionBtn>
       <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
         {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </ActionBtn>
