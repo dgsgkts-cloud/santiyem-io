@@ -581,7 +581,7 @@ serve(async (req) => {
                     content:
                       `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
                       `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                      `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                      `Şema: {"intent": one of ["LIVE_PERSONNEL","ATTENDANCE","PAYMENT_QUERY","SUBCONTRACTOR","FINANCIAL_SUMMARY","PROJECT_QUERY","PROJECT_OVERVIEW","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
                       `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
                   },
                   { role: "user", content: userQuery },
