@@ -195,7 +195,51 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onMessage: (msg: any) => {
       try {
-        console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
+        const kind = msg?.type ?? msg?.source ?? "unknown";
+        console.log("[voice][onMessage][" + kind + "]", msg);
+
+        // === GREETING DIAGNOSTICS ================================
+        // ElevenLabs emits these when the server truncates a response:
+        //   - "interruption"                    (server-side: user spoke)
+        //   - "agent_response_correction"       (final corrected/truncated text)
+        // If either fires during the first agent turn, the greeting was
+        // interrupted BEFORE playback finished (barge-in), not truncated by
+        // the model or by the client player.
+        if (kind === "interruption" || msg?.type === "interruption") {
+          console.warn("[voice][DIAG] 🛑 INTERRUPTION event from server —",
+            "reason:", msg?.reason ?? msg?.interruption_event?.reason ?? "(none)",
+            "at:", new Date().toISOString(),
+            "last user transcript:", lastUserTranscriptRef.current);
+        }
+        if (kind === "agent_response_correction" || msg?.type === "agent_response_correction") {
+          const original =
+            msg?.agent_response_correction_event?.original_agent_response ??
+            msg?.original_agent_response;
+          const corrected =
+            msg?.agent_response_correction_event?.corrected_agent_response ??
+            msg?.corrected_agent_response;
+          console.warn("[voice][DIAG] ✂️  AGENT_RESPONSE_CORRECTION (server truncated the reply)");
+          console.warn("           original :", original);
+          console.warn("           corrected:", corrected);
+        }
+        if (kind === "agent_response" || msg?.type === "agent_response") {
+          const full = msg?.agent_response_event?.agent_response ?? msg?.message;
+          console.log("[voice][DIAG] 📝 FULL AGENT_RESPONSE text (what TTS will speak):", full);
+        }
+        if (kind === "user_transcript" || msg?.type === "user_transcript") {
+          const t = msg?.user_transcription_event?.user_transcript ?? msg?.message;
+          lastUserTranscriptRef.current = t;
+          console.log("[voice][DIAG] 🎤 USER_TRANSCRIPT (mic heard):", JSON.stringify(t));
+        }
+        if (kind === "vad_score" || msg?.type === "vad_score") {
+          const s = msg?.vad_score_event?.vad_score ?? msg?.vad_score;
+          if (typeof s === "number" && s > 0.5) {
+            console.log("[voice][DIAG] 🔊 VAD spike", s.toFixed(2),
+              "while agent isSpeaking =", conversation.isSpeaking);
+          }
+        }
+        // ============================================================
+
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
           firstReplyPendingRef.current = Date.now();
