@@ -503,6 +503,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             <ActionBar
               muted={muted}
               paused={paused}
+              siteMode={siteMode}
+              onSiteMode={() => setSiteMode((v) => !v)}
               onMute={toggleMute}
               onPause={togglePause}
               onStop={stop}
