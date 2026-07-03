@@ -1452,6 +1452,292 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_action_items: {
+        Row: {
+          assignee_name: string | null
+          assignee_user_id: string | null
+          created_at: string
+          created_task_id: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          meeting_id: string
+          notified_at: string | null
+          notified_channels: string[]
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignee_name?: string | null
+          assignee_user_id?: string | null
+          created_at?: string
+          created_task_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_id: string
+          notified_at?: string | null
+          notified_channels?: string[]
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignee_name?: string | null
+          assignee_user_id?: string | null
+          created_at?: string
+          created_task_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_id?: string
+          notified_at?: string | null
+          notified_channels?: string[]
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_action_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_analyses: {
+        Row: {
+          action_items: Json
+          decisions: Json
+          generated_at: string
+          id: string
+          meeting_id: string
+          model: string | null
+          next_meeting: Json | null
+          numbers: Json
+          prompt_version: string | null
+          questions: Json
+          risks: Json
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          action_items?: Json
+          decisions?: Json
+          generated_at?: string
+          id?: string
+          meeting_id: string
+          model?: string | null
+          next_meeting?: Json | null
+          numbers?: Json
+          prompt_version?: string | null
+          questions?: Json
+          risks?: Json
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          action_items?: Json
+          decisions?: Json
+          generated_at?: string
+          id?: string
+          meeting_id?: string
+          model?: string | null
+          next_meeting?: Json | null
+          numbers?: Json
+          prompt_version?: string | null
+          questions?: Json
+          risks?: Json
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_analyses_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: true
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_participants: {
+        Row: {
+          attended: boolean
+          company: string | null
+          contact_ref: Json | null
+          created_at: string
+          display_name: string
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          meeting_id: string
+          role: string | null
+          speaking_seconds: number
+          user_id: string
+        }
+        Insert: {
+          attended?: boolean
+          company?: string | null
+          contact_ref?: Json | null
+          created_at?: string
+          display_name: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          meeting_id: string
+          role?: string | null
+          speaking_seconds?: number
+          user_id: string
+        }
+        Update: {
+          attended?: boolean
+          company?: string | null
+          contact_ref?: Json | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          meeting_id?: string
+          role?: string | null
+          speaking_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_participants_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_transcripts: {
+        Row: {
+          created_at: string
+          ended_at_ms: number
+          id: string
+          is_final: boolean
+          meeting_id: string
+          seq: number
+          speaker_label: string | null
+          started_at_ms: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at_ms?: number
+          id?: string
+          is_final?: boolean
+          meeting_id: string
+          seq?: number
+          speaker_label?: string | null
+          started_at_ms?: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at_ms?: number
+          id?: string
+          is_final?: boolean
+          meeting_id?: string
+          seq?: number
+          speaker_label?: string | null
+          started_at_ms?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_transcripts_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          audio_path: string | null
+          created_at: string
+          duration_seconds: number
+          ended_at: string | null
+          id: string
+          language: string
+          location: string | null
+          meeting_type: string
+          metadata: Json
+          project_id: string | null
+          started_at: string | null
+          status: string
+          tags: string[]
+          team_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_path?: string | null
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          language?: string
+          location?: string | null
+          meeting_type?: string
+          metadata?: Json
+          project_id?: string | null
+          started_at?: string | null
+          status?: string
+          tags?: string[]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_path?: string | null
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          language?: string
+          location?: string | null
+          meeting_type?: string
+          metadata?: Json
+          project_id?: string | null
+          started_at?: string | null
+          status?: string
+          tags?: string[]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_history: {
         Row: {
           body: string
