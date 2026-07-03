@@ -333,10 +333,12 @@ function NewMeeting({
     setCreating(true);
     try {
       const t = title.trim() || `Toplantı ${new Date().toLocaleString("tr-TR")}`;
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Oturum bulunamadı");
       const { data, error } = await supabase
         .from("meetings")
         .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: uid,
           title: t,
           project_id: projectId || null,
           location: location || null,
@@ -353,15 +355,10 @@ function NewMeeting({
         await supabase.from("meeting_participants").insert(
           participants.map((p) => ({
             meeting_id: id,
-            user_id: (supabase.auth.getUser as any) ? undefined : undefined,
+            user_id: uid,
             display_name: p.display_name,
           })) as any,
         );
-        // ensure user_id
-        const uid = (await supabase.auth.getUser()).data.user?.id;
-        if (uid) {
-          await supabase.from("meeting_participants").update({ user_id: uid }).eq("meeting_id", id);
-        }
       }
       await recorder.start();
     } catch (e: any) {
