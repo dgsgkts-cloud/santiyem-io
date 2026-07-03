@@ -801,8 +801,11 @@ serve(async (req) => {
         }
       }
     } catch (brainErr) {
-      console.error("Construction Brain error (non-fatal):", brainErr);
+      if (!(brainErr instanceof Error && brainErr.message === "__CACHE_HIT__")) {
+        console.error("Construction Brain error (non-fatal):", brainErr);
+      }
     }
+
 
     // Build messages with multimodal support
     const formattedMessages = messages.map((m: { role: string; content: string; attachments?: { base64: string; type: string }[] }) => {
