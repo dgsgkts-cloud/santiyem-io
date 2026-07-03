@@ -212,8 +212,8 @@ serve(async (req) => {
   }
   try {
     const _authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: _ad, error: _ae } = await _authClient.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (_ae || !_ad?.user) {
+    const { data: _ad, error: _ae } = await _authClient.auth.getClaims(authHeader.replace("Bearer ", ""));
+    if (_ae || !_ad?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -246,7 +246,8 @@ serve(async (req) => {
         
         const anonClient = createClient(supabaseUrl, anonKey);
         const token = authHeader.replace("Bearer ", "");
-        const { data: { user } } = await anonClient.auth.getUser(token);
+        const { data: claimsData } = await anonClient.auth.getClaims(token);
+        const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub as string } : null;
         
         if (user) {
           const supabase = createClient(supabaseUrl, serviceKey);
@@ -322,7 +323,8 @@ serve(async (req) => {
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
       const anonClient = createClient(supabaseUrl, anonKey);
       const token = authHeader!.replace("Bearer ", "");
-      const { data: { user } } = await anonClient.auth.getUser(token);
+      const { data: claimsData2 } = await anonClient.auth.getClaims(token);
+      const user = claimsData2?.claims?.sub ? { id: claimsData2.claims.sub as string } : null;
 
       if (user) {
         const sb = createClient(supabaseUrl, serviceKey);
@@ -544,7 +546,8 @@ serve(async (req) => {
         const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
         const anon = createClient(supabaseUrl, anonKey);
         const token = authHeader!.replace("Bearer ", "");
-        const { data: { user } } = await anon.auth.getUser(token);
+        const { data: claimsData3 } = await anon.auth.getClaims(token);
+        const user = claimsData3?.claims?.sub ? { id: claimsData3.claims.sub as string } : null;
 
         if (user) {
           const sb = createClient(supabaseUrl, serviceKey);
