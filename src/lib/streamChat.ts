@@ -1,7 +1,12 @@
 type Msg = { role: "user" | "assistant"; content: string; attachments?: { base64: string; type: string }[] };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-const TIMEOUT_MS = 15000;
+// Time to wait for the server to START responding (headers received).
+// The Construction Brain runs intent classification, DB retrieval and, in
+// action mode, a multi-step tool-calling loop before the first SSE chunk
+// arrives — so we only enforce this timeout until headers are received,
+// and give it enough room for the slowest cold-start path.
+const CONNECT_TIMEOUT_MS = 60000;
 
 export async function streamChat({
   messages,
@@ -15,13 +20,13 @@ export async function streamChat({
   onError: (error: string) => void;
 }) {
   const controller = new AbortController();
-  let receivedAnyChunk = false;
+  let headersReceived = false;
   const timeoutId = setTimeout(() => {
-    if (!receivedAnyChunk) {
-      console.error("[AI] Timeout reached (15s), aborting request");
+    if (!headersReceived) {
+      console.error("[AI] Connect timeout reached, aborting request");
       controller.abort();
     }
-  }, TIMEOUT_MS);
+  }, CONNECT_TIMEOUT_MS);
 
   console.log("[AI] → POST", CHAT_URL, "msgs:", messages.length);
 
@@ -36,19 +41,23 @@ export async function streamChat({
       signal: controller.signal,
     });
 
+    // Headers are back — server is alive. Cancel the connect timeout so a
+    // long tool-loop / DB retrieval doesn't get killed before the first
+    // SSE chunk lands.
+    headersReceived = true;
+    clearTimeout(timeoutId);
+
     console.log("[AI] ← status:", resp.status, "ok:", resp.ok);
 
     if (!resp.ok) {
       const data = await resp.json().catch(() => ({ error: "Bağlantı hatası" }));
       console.error("[AI] HTTP error:", resp.status, data);
-      clearTimeout(timeoutId);
       onError("AI şu an yanıt veremiyor, lütfen tekrar dene");
       return;
     }
 
     if (!resp.body) {
       console.error("[AI] No response body — streaming may not be supported in this environment");
-      clearTimeout(timeoutId);
       onError("AI şu an yanıt veremiyor, lütfen tekrar dene");
       return;
     }
@@ -60,7 +69,6 @@ export async function streamChat({
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      receivedAnyChunk = true;
       buffer += decoder.decode(value, { stream: true });
 
       let newlineIdx: number;
