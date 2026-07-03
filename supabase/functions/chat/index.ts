@@ -709,7 +709,8 @@ serve(async (req) => {
             const { data } = await q;
             let rows = (data || []).filter((r: any) => r.subcontractor_id); // ignore anything not confidently classified
             if (nameFilter && !subcontractorScope) {
-              rows = rows.filter((r: any) => (r.subcontractors?.name || "").toLowerCase().includes(nameFilter));
+              const nf = normalizeTr(nameFilter);
+              rows = rows.filter((r: any) => normalizeTr(r.subcontractors?.name || "").includes(nf));
             }
             const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
             lines.push(`TAŞERON ÖDEMELERİ (${rows.length} kayıt, toplam ${fmt(total)}):`);
