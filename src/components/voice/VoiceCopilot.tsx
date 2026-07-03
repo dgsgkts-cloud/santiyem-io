@@ -276,6 +276,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const start = async () => {
     console.log("[voice][start] ➊ Initializing session...");
+    connectStartRef.current = Date.now();
+    setDebug((d) => ({ ...d, lastError: "", lastEvent: "start", connectLatencyMs: 0, firstReplyLatencyMs: 0, toolCalls: 0 }));
     setError(null);
     setUiState("connecting");
     setShowSummary(false);
