@@ -229,21 +229,32 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           language: "tr",
           firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?",
         },
-      };
+      } as const;
+
+      // startSession is fire-and-forget in this SDK version;
+      // success/failure arrives via onConnect/onError callbacks.
+      const waitForConnect = () =>
+        withTimeout(
+          new Promise<void>((resolve, reject) => {
+            connectWaiterRef.current = { resolve, reject };
+          }),
+          CONNECT_TIMEOUT_MS,
+          "Ses bağlantısı"
+        ).finally(() => {
+          connectWaiterRef.current = null;
+        });
 
       // 1) Try WebRTC first (lower latency)
       if (token) {
         try {
           console.log("[voice] starting WebRTC session…");
-          await withTimeout(
-            conversation.startSession({
-              conversationToken: token,
-              connectionType: "webrtc",
-              overrides,
-            }),
-            CONNECT_TIMEOUT_MS,
-            "WebRTC bağlantısı"
-          );
+          const connected = waitForConnect();
+          conversation.startSession({
+            conversationToken: token,
+            connectionType: "webrtc",
+            overrides,
+          });
+          await connected;
           console.log("[voice] WebRTC session started");
           return;
         } catch (e) {
@@ -255,15 +266,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       // 2) Fallback: WebSocket via signed URL
       if (signed_url) {
         console.log("[voice] starting WebSocket session…");
-        await withTimeout(
-          conversation.startSession({
-            signedUrl: signed_url,
-            connectionType: "websocket",
-            overrides,
-          }),
-          CONNECT_TIMEOUT_MS,
-          "WebSocket bağlantısı"
-        );
+        const connected = waitForConnect();
+        conversation.startSession({
+          signedUrl: signed_url,
+          connectionType: "websocket",
+          overrides,
+        });
+        await connected;
         console.log("[voice] WebSocket session started");
         return;
       }
