@@ -91,6 +91,29 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const greetingProtectedRef = useRef<boolean>(false);
   const greetingReleaseTimerRef = useRef<number | null>(null);
   const [greetingProtected, setGreetingProtected] = useState<boolean>(false);
+  // ── SESSION TIMELINE (root-cause instrumentation) ──────────────────
+  // Every lifecycle event is stamped relative to startSession() so the
+  // first-5-seconds timeline can be read straight off the console.
+  const tlT0Ref = useRef<number | null>(null);
+  const tlLinesRef = useRef<string[]>([]);
+  const tlFirstAudioRef = useRef<boolean>(false);
+  const tlDumpTimerRef = useRef<number | null>(null);
+  const tl = (event: string, detail = "") => {
+    const t0 = tlT0Ref.current;
+    const dt = t0 == null ? 0 : performance.now() - t0;
+    const secs = Math.floor(dt / 1000);
+    const ms = Math.round(dt % 1000);
+    const stamp = `${String(secs).padStart(2, "0")}.${String(ms).padStart(3, "0")}`;
+    const line = `${stamp}  ${event}${detail ? `  — ${detail}` : ""}`;
+    tlLinesRef.current.push(line);
+    console.log("[voice][TL] " + line);
+  };
+  const tlDump = (label: string) => {
+    console.warn(
+      `[voice][TL] ═══ SESSION TIMELINE (${label}) ═══\n` +
+      tlLinesRef.current.join("\n")
+    );
+  };
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
@@ -160,6 +183,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
     onConnect: (info?: unknown) => {
       console.log("[voice][SDK] ✅ onConnect fired", info);
+      tl("connected", "onConnect fired");
       try {
         connectWaiterRef.current?.resolve();
         connectWaiterRef.current = null;
@@ -169,18 +193,25 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         firstReplyPendingRef.current = Date.now();
         setUiState("listening");
 
+        // Dump the first-5-seconds timeline automatically.
+        if (tlDumpTimerRef.current) window.clearTimeout(tlDumpTimerRef.current);
+        tlDumpTimerRef.current = window.setTimeout(() => tlDump("first 5s"), 5500);
+
         // === GREETING PROTECTION ================================
         // Lock the mic & server-side VAD until the greeting has fully played.
         // Released later in the SPEAKING → LISTENING transition below.
         greetingProtectedRef.current = true;
         setGreetingProtected(true);
         console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
-        try { conversation.setMuted(true); console.log("[voice][DIAG] 🎙️→OFF (greeting) SDK.setMuted(true)"); } catch { /* noop */ }
+        try {
+          conversation.setMuted(true);
+          tl("setMuted(true)", "onConnect / greeting protection");
+        } catch { /* noop */ }
         try {
           for (const t of micTracksRef.current) {
             if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
           }
-          console.log("[voice][DIAG] 🎙️→OFF (greeting) local tracks disabled");
+          tl("mic tracks OFF", "onConnect / greeting protection");
         } catch { /* noop */ }
         // ========================================================
 
@@ -194,10 +225,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onStatusChange: (v: unknown) => {
       console.log("[voice][SDK] onStatusChange →", v);
+      tl("onStatusChange", String((v as any)?.status ?? v));
       setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
     onDisconnect: (details?: unknown) => {
       console.log("[voice][SDK] 🔌 onDisconnect", details);
+      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 120));
+      tlDump("on disconnect");
       try {
         setUiState("idle");
         setDebug((d) => ({ ...d, lastEvent: "disconnect" }));
@@ -223,6 +257,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         const kind = msg?.type ?? msg?.source ?? "unknown";
         console.log("[voice][onMessage][" + kind + "]", msg);
 
+        // Timeline: first audio chunk of the session (WebSocket transport).
+        if (kind === "audio" && !tlFirstAudioRef.current) {
+          tlFirstAudioRef.current = true;
+          tl("first audio chunk received");
+        }
+
         // === GREETING DIAGNOSTICS ================================
         // ElevenLabs emits these when the server truncates a response:
         //   - "interruption"                    (server-side: user spoke)
@@ -231,6 +271,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         // interrupted BEFORE playback finished (barge-in), not truncated by
         // the model or by the client player.
         if (kind === "interruption" || msg?.type === "interruption") {
+          tl("🛑 INTERRUPTION (server)", `reason=${msg?.reason ?? msg?.interruption_event?.reason ?? "none"}`);
           console.warn("[voice][DIAG] 🛑 INTERRUPTION event from server —",
             "reason:", msg?.reason ?? msg?.interruption_event?.reason ?? "(none)",
             "at:", new Date().toISOString(),
@@ -243,22 +284,26 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           const corrected =
             msg?.agent_response_correction_event?.corrected_agent_response ??
             msg?.corrected_agent_response;
+          tl("✂️ agent_response_correction (server truncated)");
           console.warn("[voice][DIAG] ✂️  AGENT_RESPONSE_CORRECTION (server truncated the reply)");
           console.warn("           original :", original);
           console.warn("           corrected:", corrected);
         }
         if (kind === "agent_response" || msg?.type === "agent_response") {
           const full = msg?.agent_response_event?.agent_response ?? msg?.message;
+          tl("greeting/agent text received", String(full ?? "").slice(0, 80));
           console.log("[voice][DIAG] 📝 FULL AGENT_RESPONSE text (what TTS will speak):", full);
         }
         if (kind === "user_transcript" || msg?.type === "user_transcript") {
           const t = msg?.user_transcription_event?.user_transcript ?? msg?.message;
           lastUserTranscriptRef.current = t;
+          tl("user_transcript (mic heard!)", JSON.stringify(t).slice(0, 80));
           console.log("[voice][DIAG] 🎤 USER_TRANSCRIPT (mic heard):", JSON.stringify(t));
         }
         if (kind === "vad_score" || msg?.type === "vad_score") {
           const s = msg?.vad_score_event?.vad_score ?? msg?.vad_score;
           if (typeof s === "number" && s > 0.5) {
+            tl("VAD spike", `${s.toFixed(2)} while isSpeaking=${conversation.isSpeaking}`);
             console.log("[voice][DIAG] 🔊 VAD spike", s.toFixed(2),
               "while agent isSpeaking =", conversation.isSpeaking);
           }
@@ -379,6 +424,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const start = async () => {
     console.log("[voice][start] ➊ Initializing session...");
+    // Reset the session timeline — T0 = user pressed start.
+    tlT0Ref.current = performance.now();
+    tlLinesRef.current = [];
+    tlFirstAudioRef.current = false;
+    tl("startSession requested (user)");
     connectStartRef.current = Date.now();
     setDebug((d) => ({ ...d, lastError: "", lastEvent: "start", connectLatencyMs: 0, firstReplyLatencyMs: 0, toolCalls: 0 }));
     setError(null);
@@ -571,6 +621,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         try {
           console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
+          tl("startSession() called", "websocket");
           conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
           console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
@@ -586,6 +637,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       if (token) {
         console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
+        tl("startSession() called", "webrtc fallback");
         conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
         console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
@@ -603,6 +655,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const stop = async () => {
     console.log("[voice] endSession() called by user");
+    tl("endSession() called (user pressed stop)");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
 
@@ -613,10 +666,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     const nowSpeaking = conversation.isSpeaking;
     if (!wasSpeakingRef.current && nowSpeaking) {
       greetingStartRef.current = Date.now();
+      tl("SPEAKING started", "first audio playback begins");
       console.log("[voice][DIAG] 🔈 → SPEAKING started at", new Date().toISOString());
     }
     if (wasSpeakingRef.current && !nowSpeaking) {
       const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
+      tl("SPEAKING → LISTENING", `after ${dur}ms of playback`);
       console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
         "\n         last AI text  :", lastAiMessageRef.current,
         "\n         last user text:", lastUserTranscriptRef.current);
@@ -633,7 +688,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           try {
             if (!settingsRef.current.pushToTalk) {
               conversation.setMuted(false);
-              console.log("[voice][DIAG] 🎙️→ON  (greeting released) SDK.setMuted(false)");
+              tl("setMuted(false)", "greeting-release timer (intended)");
               for (const t of micTracksRef.current) {
                 if (t.readyState === "live" && t.kind === "audio") t.enabled = true;
               }
@@ -753,6 +808,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const toggleMute = () => {
     const next = !muted;
+    tl(`setMuted(${next})`, "user toggled mute button");
     console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
     try {
       // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
@@ -794,17 +850,35 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   // Enforce PTT mute state whenever the toggle changes or the session opens.
+  //
+  // ⚠️ ROOT CAUSE (identified during greeting-truncation investigation):
+  // This effect re-runs on EVERY `uiState` change. Right after onConnect,
+  // uiState flips to "listening" (and again to "speaking"), and with
+  // pushToTalk=false the else-branch called `setMuted(false)` +
+  // re-enabled the mic tracks — silently UNDOING the greeting protection
+  // that onConnect had just applied. The mic went hot during the greeting,
+  // speaker echo hit server-side VAD and the server barge-in truncated the
+  // greeting right after the first word. The timeline instrumentation
+  // below flags this exact call if it ever fires while protected.
   useEffect(() => {
     if (uiState === "idle" || uiState === "error") return;
     if (settings.pushToTalk) {
+      tl("setMuted(true)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
     } else {
+      if (greetingProtectedRef.current) {
+        // 🚨 This was the callback that terminated greeting playback.
+        tl("🚨 setMuted(false) BLOCKED", `EFFECT[ptt-enforce] tried to unmute during protected greeting (uiState=${uiState})`);
+        console.warn("[voice][DIAG] 🚨 EFFECT[ptt-enforce] attempted setMuted(false) DURING GREETING — blocked (this was the interruption root cause)");
+        return;
+      }
+      tl("setMuted(false)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.pushToTalk, uiState]);
+  }, [settings.pushToTalk, uiState, greetingProtected]);
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
