@@ -105,8 +105,10 @@ export function VoiceCopilot({ onClose, access, compact = false, autoStart = fal
               voice_mode: true,
             }),
           });
-          const text = await res.text();
-          return text.slice(0, 2000);
+          if (!res.ok) return `error: HTTP ${res.status}`;
+          const json = await res.json().catch(() => null);
+          const text = json?.text ?? json?.error ?? "";
+          return String(text).slice(0, 1200);
         } catch (e) {
           return `error: ${String(e)}`;
         }
