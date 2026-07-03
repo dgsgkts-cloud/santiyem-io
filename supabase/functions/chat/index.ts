@@ -1380,16 +1380,23 @@ KURALLAR:
     // Voice mode: non-streaming, natural spoken JSON reply
     // ============================================================
     if (voiceMode) {
-      const voiceSystem = systemPrompt + `
+      // Voice: use a lean system prompt (skip the heavy SYSTEM_PROMPT with dashboard rules)
+      // and pass only text messages — no attachments, no markdown scaffolding.
+      const voiceSystem =
+        `Sen Şantiyem AI'sın — deneyimli bir inşaat proje müdürü. Türkçe sesli asistan modundasın.\n` +
+        `KURALLAR:\n` +
+        `- Markdown, tablo, madde işareti, başlık, emoji YOK.\n` +
+        `- En fazla 2 kısa paragraf, kısa cümleler.\n` +
+        `- Sayı ve tarihleri doğal söyle (ör. "bir milyon iki yüz bin lira", "on beş Kasım").\n` +
+        `- Yanıtı kısa bir takip sorusuyla bitir.\n` +
+        `- Aşağıdaki VERİ bloğunda bilgi varsa sadece ona dayan; yoksa "sistemde bulamadım" de. Rakam uydurma.` +
+        projectDataContext;
 
-SESLİ MOD KURALLARI (ZORUNLU):
-- Yanıtın sesli okunacak, doğal ve akıcı Türkçe konuş.
-- Markdown, tablo, madde işareti, başlık, emoji KULLANMA.
-- En fazla 2-3 kısa paragraf. Kısa cümleler kur.
-- Sayıları doğal söyle ("1.250.000 TL" yerine "bir milyon iki yüz elli bin lira").
-- Tarihleri doğal söyle ("15/11/2026" yerine "on beş Kasım").
-- Yanıtı mutlaka kısa bir takip sorusuyla bitir (ör. "Detayları listeleyeyim mi?").
-- Veri yoksa spekülasyon yapma, yokluğu doğal biçimde söyle.`;
+      // Keep only last 6 turns for voice to reduce token cost & latency
+      const voiceMessages = messages
+        .filter((m: any) => m.role === "user" || m.role === "assistant")
+        .slice(-6)
+        .map((m: any) => ({ role: m.role, content: String(m.content ?? "") }));
 
       const vResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -1398,15 +1405,17 @@ SESLİ MOD KURALLARI (ZORUNLU):
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
             { role: "system", content: voiceSystem },
-            ...formattedMessages,
+            ...voiceMessages,
           ],
           stream: false,
-          max_tokens: 400,
+          max_tokens: 220,
+          temperature: 0.4,
         }),
       });
+
 
       if (!vResp.ok) {
         const errTxt = await vResp.text();
