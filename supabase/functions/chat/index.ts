@@ -508,14 +508,14 @@ serve(async (req) => {
             }
           } else if (intent === "TASK_QUERY") {
             const today = now.toISOString().slice(0, 10);
-            let q = sb.from("tasks").select("title, status, priority, due_date, project_id, assignee_name").order("due_date", { ascending: true }).limit(limit);
+            let q = sb.from("tasks").select("title, status, priority, due_date, project_id, assigned_to").order("due_date", { ascending: true }).limit(limit);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
             if (nameFilter && (nameFilter.includes("gecik") || nameFilter.includes("geç"))) q = q.lt("due_date", today).neq("status", "done");
             if (df) q = q.gte("due_date", df);
             if (dt) q = q.lte("due_date", dt);
             const { data } = await q;
             lines.push(`GÖREVLER (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.title} · durum: ${r.status} · öncelik: ${r.priority} · termin: ${r.due_date || "-"}${r.assignee_name ? " · " + r.assignee_name : ""}`));
+            (data || []).forEach((r: any) => lines.push(`- ${r.title} · durum: ${r.status} · öncelik: ${r.priority} · termin: ${r.due_date || "-"}`));
           } else if (intent === "SITE_DIARY_QUERY") {
             let q = sb.from("site_diary_entries")
               .select("entry_date, work_status, work_done, weather_icon, project_id")
