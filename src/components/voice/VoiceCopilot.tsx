@@ -79,6 +79,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  // ── Debug telemetry (dev-only overlay) ─────────────────────────
+  const connectStartRef = useRef<number | null>(null);
+  const [debug, setDebug] = useState({
+    connectLatencyMs: 0,
+    firstReplyLatencyMs: 0,
+    toolCalls: 0,
+    lastError: "",
+    lastEvent: "",
+  });
+  const firstReplyPendingRef = useRef<number | null>(null);
+  const [showDebug, setShowDebug] = useState<boolean>(() => {
+    try { return localStorage.getItem("voice_debug_open") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("voice_debug_open", showDebug ? "1" : "0"); } catch { /* noop */ }
+  }, [showDebug]);
   const navigate = useNavigate();
 
   // Load active project name (frontend only, no backend changes)
