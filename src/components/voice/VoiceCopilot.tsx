@@ -168,6 +168,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
         firstReplyPendingRef.current = Date.now();
         setUiState("listening");
+
+        // === GREETING PROTECTION ================================
+        // Lock the mic & server-side VAD until the greeting has fully played.
+        // Released later in the SPEAKING → LISTENING transition below.
+        greetingProtectedRef.current = true;
+        setGreetingProtected(true);
+        console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
+        try { conversation.setMuted(true); console.log("[voice][DIAG] 🎙️→OFF (greeting) SDK.setMuted(true)"); } catch { /* noop */ }
+        try {
+          for (const t of micTracksRef.current) {
+            if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
+          }
+          console.log("[voice][DIAG] 🎙️→OFF (greeting) local tracks disabled");
+        } catch { /* noop */ }
+        // ========================================================
+
         if (initialContext) {
           queueMicrotask(() => {
             try { conversation.sendContextualUpdate(initialContext); }
