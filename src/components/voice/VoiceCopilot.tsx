@@ -602,7 +602,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         try {
           console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-          tl("startSession() called", "websocket");
+          startSessionCallCountRef.current += 1;
+          if (startSessionCallCountRef.current > 1) {
+            console.warn(`[voice][DIAG] ⚠️ startSession() invoked ${startSessionCallCountRef.current} times this component lifetime`);
+            console.trace("MULTIPLE startSession() CALLS");
+          }
+          tl("startSession() called", `websocket (call #${startSessionCallCountRef.current})`);
           conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
           console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
@@ -610,6 +615,8 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           return;
         } catch (e) {
           console.warn("[voice][start] ⚠️ WebSocket failed, trying WebRTC fallback:", e);
+          console.trace("VOICE TERMINATION (endSession: ws connect failed → cleanup before webrtc fallback)");
+          tl("endSession() called", "ws connect failed, cleaning up before webrtc fallback");
           try { conversation.endSession(); } catch { /* noop */ }
           await waitForDisconnected(3000);
         }
@@ -618,7 +625,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       if (token) {
         console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-        tl("startSession() called", "webrtc fallback");
+        startSessionCallCountRef.current += 1;
+        if (startSessionCallCountRef.current > 1) {
+          console.warn(`[voice][DIAG] ⚠️ startSession() invoked ${startSessionCallCountRef.current} times this component lifetime`);
+          console.trace("MULTIPLE startSession() CALLS");
+        }
+        tl("startSession() called", `webrtc fallback (call #${startSessionCallCountRef.current})`);
         conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
         console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
@@ -635,7 +647,8 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   const stop = async () => {
-    console.log("[voice] endSession() called by user");
+    console.log("[voice] endSession() called by user @", new Date().toISOString());
+    console.trace("VOICE TERMINATION (endSession: user pressed stop)");
     tl("endSession() called (user pressed stop)");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
@@ -669,9 +682,18 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   }, [conversation.status, conversation.isSpeaking]);
 
   useEffect(() => {
+    const mountedAt = performance.now();
+    console.log("[voice][mount] ⬆️ VoiceCopilotInner MOUNTED @", new Date().toISOString());
     if (autoStart && uiState === "idle" && access.hasAccess) start();
     return () => {
+      console.trace("VOICE TERMINATION (VoiceCopilotInner UNMOUNT)");
+      console.warn(
+        "[voice][mount] ⬇️ VoiceCopilotInner UNMOUNTED after",
+        Math.round(performance.now() - mountedAt), "ms — SDK status:", conversation.status
+      );
       if (conversation.status === "connected") {
+        console.trace("VOICE TERMINATION (endSession: unmount cleanup)");
+        tl("endSession() called", "component unmount cleanup");
         try { conversation.endSession(); } catch { /* noop */ }
       }
     };
