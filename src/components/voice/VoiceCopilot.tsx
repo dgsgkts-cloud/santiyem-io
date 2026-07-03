@@ -161,6 +161,14 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     }
   };
 
+  const CONNECT_TIMEOUT_MS = 15000;
+
+  const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`${label} zaman aşımına uğradı`)), ms);
+      p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+    });
+
   const start = async () => {
     setError(null);
     setUiState("connecting");
@@ -170,14 +178,31 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         setUiState("error");
         return;
       }
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Check (don't request) mic permission — the SDK will request it once itself.
+      try {
+        const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
+        console.log("[voice] mic permission state:", perm?.state);
+        if (perm?.state === "denied") {
+          setError("Mikrofon izni reddedilmiş. Cihaz ayarlarından uygulamaya mikrofon izni verin.");
+          setUiState("error");
+          return;
+        }
+      } catch { /* permissions API not supported everywhere — SDK will prompt */ }
+
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
       if (!jwt) throw new Error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` },
-      });
+
+      console.log("[voice] fetching conversation token…");
+      const res = await withTimeout(
+        fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${jwt}` },
+        }),
+        CONNECT_TIMEOUT_MS,
+        "Token isteği"
+      );
       if (res.status === 402) {
         const body = await res.json();
         setError(body?.message ?? "Günlük ses kotanız doldu.");
@@ -187,16 +212,56 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       if (!res.ok) {
         throw new Error(`Token alınamadı (${res.status})`);
       }
-      const { token } = await res.json();
-      await conversation.startSession({
-        conversationToken: token,
-        connectionType: "webrtc",
-        overrides: {
-          agent: { language: "tr" },
+      const { token, signed_url, agent_id } = await res.json();
+      console.log("[voice] token received. agent:", agent_id, "webrtc token:", Boolean(token), "signed_url:", Boolean(signed_url));
+
+      const overrides = {
+        agent: {
+          language: "tr",
+          firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?",
         },
-      });
+      };
+
+      // 1) Try WebRTC first (lower latency)
+      if (token) {
+        try {
+          console.log("[voice] starting WebRTC session…");
+          await withTimeout(
+            conversation.startSession({
+              conversationToken: token,
+              connectionType: "webrtc",
+              overrides,
+            }),
+            CONNECT_TIMEOUT_MS,
+            "WebRTC bağlantısı"
+          );
+          console.log("[voice] WebRTC session started");
+          return;
+        } catch (e) {
+          console.warn("[voice] WebRTC failed, will try WebSocket fallback:", e);
+          try { await conversation.endSession(); } catch { /* noop */ }
+        }
+      }
+
+      // 2) Fallback: WebSocket via signed URL
+      if (signed_url) {
+        console.log("[voice] starting WebSocket session…");
+        await withTimeout(
+          conversation.startSession({
+            signedUrl: signed_url,
+            connectionType: "websocket",
+            overrides,
+          }),
+          CONNECT_TIMEOUT_MS,
+          "WebSocket bağlantısı"
+        );
+        console.log("[voice] WebSocket session started");
+        return;
+      }
+
+      throw new Error("Ses bağlantısı kurulamadı. Lütfen tekrar deneyin.");
     } catch (e) {
-      console.error(e);
+      console.error("[voice] start failed:", e);
       setError(e instanceof Error ? e.message : String(e));
       setUiState("error");
       toast.error("Sesli asistan başlatılamadı", { description: String(e) });
