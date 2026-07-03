@@ -364,16 +364,16 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     const original = md.getUserMedia.bind(md);
     const buildAudioConstraints = (input: boolean | MediaTrackConstraints | undefined): MediaTrackConstraints => {
       const base: MediaTrackConstraints = typeof input === "object" && input ? { ...input } : {};
-      // Always request browser-level DSP; construction sites need every dB of NS/AGC.
+      const ns = settingsRef.current.noiseSuppression;
       base.echoCancellation = true;
-      base.noiseSuppression = true;
+      base.noiseSuppression = ns;
       base.autoGainControl = true;
       // Chromium-only hints for stronger NS pipeline. Ignored elsewhere.
       (base as any).googEchoCancellation = true;
-      (base as any).googNoiseSuppression = true;
-      (base as any).googHighpassFilter = true;
+      (base as any).googNoiseSuppression = ns;
+      (base as any).googHighpassFilter = ns;
       (base as any).googAutoGainControl = true;
-      (base as any).googTypingNoiseDetection = true;
+      (base as any).googTypingNoiseDetection = ns;
       base.channelCount = 1;
       return base;
     };
