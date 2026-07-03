@@ -129,13 +129,33 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         }
       } catch (e) { console.error("onConnect handler failed", e); }
     },
+    onConnect: (info?: unknown) => {
+      console.log("[voice][SDK] ✅ onConnect fired", info);
+      try {
+        connectWaiterRef.current?.resolve();
+        connectWaiterRef.current = null;
+        sessionStartRef.current = Date.now();
+        const lat = connectStartRef.current ? Date.now() - connectStartRef.current : 0;
+        setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
+        firstReplyPendingRef.current = Date.now();
+        setUiState("listening");
+        if (initialContext) {
+          queueMicrotask(() => {
+            try { conversation.sendContextualUpdate(initialContext); }
+            catch (e) { console.warn("contextual update failed", e); }
+          });
+        }
+      } catch (e) { console.error("onConnect handler failed", e); }
+    },
     onStatusChange: (v: unknown) => {
       console.log("[voice][SDK] onStatusChange →", v);
+      setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
     onDisconnect: (details?: unknown) => {
       console.log("[voice][SDK] 🔌 onDisconnect", details);
       try {
         setUiState("idle");
+        setDebug((d) => ({ ...d, lastEvent: "disconnect" }));
         const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
         sessionStartRef.current = null;
         if (secs > 0) trackUsage(secs);
