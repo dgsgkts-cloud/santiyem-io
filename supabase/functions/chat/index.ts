@@ -232,23 +232,48 @@ green: <iyi durum — yoksa satırı yazma>
 ::/summary
 
 ::kpi
-Etiket | Değer | Trend | Açıklama
-Toplam Hakediş | 18.156.450 TL | ▲ %8 | Geçen aya göre
-Bekleyen | 4.663.250 TL | | 
+Etiket | Değer | Trend | Açıklama | Icon | Tone
+Toplam Hakediş | 18.156.450 TL | ▲ %8 | Geçen aya göre | money | positive
+Bekleyen | 4.663.250 TL | ▼ %3 | 5 kayıt | clock | warning
+Gecikmiş | 820.000 TL | ▲ %12 | Aksiyon gerekli | alert | danger
+Aktif Personel | 42 | | Bugün | users | neutral
 ::/kpi
+(Icon seçenekleri: money, clock, alert, users, task, doc, chart, calendar, building, truck. Tone: positive|warning|danger|neutral|info. Icon/Tone opsiyonel — bilinmiyorsa boş bırak.)
 
 ::recommendation
 title: <öneri başlığı — 1 satır>
-impact: Yüksek|Orta|Düşük
-priority: 1
-gain: <tahmini kazanç metni>
-duration: <süre metni>
+impact: 4              # 1-5 arası tam sayı (5 en yüksek etki)
+priority: Yüksek|Orta|Düşük
+savings: <tahmini kazanç metni, örn. 250.000 TL/ay>
+risk: Düşük|Orta|Yüksek
+duration: <süre, örn. 2 hafta>
+confidence: 85         # 0-100 arası % güven skoru
 detail: <1-2 cümle gerekçe>
 ::/recommendation
 
 ::actions
-pdf, mail, whatsapp, call, report, detail
+task, pdf, email, call, related, whatsapp, report
 ::/actions
+(Aksiyon anahtarları: task=Görev Oluştur, pdf=PDF Oluştur, email=Mail Gönder, call=Taşeronu Ara, related=İlgili Kayıtları Aç, whatsapp=WhatsApp, report=Rapor. Sadece anlamlı olanları koy.)
+
+::warning
+problem: <sorunun net tanımı>
+impact: <iş etkisi — para/zaman/risk cinsinden>
+action: <önerilen aksiyon — 1 cümle>
+::/warning
+
+::confidence
+percent: 87
+sources: 4             # kullanılan veri kaynağı sayısı
+updated: <insan-okur zaman, örn. "2 dakika önce" veya "12:45">
+::/confidence
+
+::reasoning
+tables: subcontractor_payments, contracts, personnel
+records: 18            # eşleşen kayıt sayısı
+path: <karar yolu — kısa cümlelerle nasıl vardığın>
+sources: <referans metinler — dosya adı / kayıt id / tablo>
+::/reasoning
 
 ::source
 <serbest metin — kullanıcı isterse açar>
@@ -266,12 +291,14 @@ suggestions: <öneri sorgu 1> | <öneri sorgu 2> | <öneri sorgu 3>
 ::/notfound
 
 FORMAT KARARI:
-- Finansal/rakamsal cevap → ::kpi ZORUNLU.
-- Risk/durum değerlendirmesi → ::summary ZORUNLU.
+- Finansal/rakamsal cevap → ::kpi ZORUNLU (icon + tone doldur).
+- Risk/durum kritik → ::warning ZORUNLU (::summary yerine tercih et).
 - Aksiyon önerilebilen her cevap → ::recommendation + ::actions ekle.
+- Her veri-tabanlı cevabın sonuna ::confidence + ::reasoning ekle. Uydurma değer YAZMA — gerçekten sorguladığın tablolar ve kayıt sayısını yaz.
 - 5'ten fazla kayıt listesi → özet ::kpi + tam liste ::details içinde.
-- Sorgulanan kayıt bulunamadıysa → ::notfound ZORUNLU, ::kpi/::recommendation KOYMA.
+- Sorgulanan kayıt bulunamadıysa → ::notfound ZORUNLU. ::kpi/::recommendation/::warning/::confidence/::reasoning KOYMA (var olmayan veri için istatistik/öneri üretme).
 - Veri kaynağı Lovable Cloud vb. teknik detay → ::source bloğuna, düz metne değil.`;
+
 
 
 
