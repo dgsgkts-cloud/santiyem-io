@@ -3,13 +3,19 @@ import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import {
   X, Mic, MicOff, Pause, Play, Square, Keyboard, RotateCw, MessageSquare,
   AlertCircle, HardHat, Radio, TrendingUp, AlertTriangle, Package, Users,
-  Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2,
+  Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2, Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import type { VoiceAccess } from "@/hooks/useVoiceAccess";
+import {
+  loadSettings, saveSettings, applyModePreset, shouldBlockBargeIn,
+  type VoiceSettings, type VoiceMode,
+} from "./voiceModes";
+import { useWakeWord } from "./useWakeWord";
+import { ModeSelector, ModeHint, SettingsSheet } from "./VoiceModeUI";
 import "@/styles/voice.css";
 
 interface Card {
@@ -59,12 +65,15 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
-  // Construction Site Mode — default ON. Aggressive noise handling + anti-barge-in.
-  const [siteMode, setSiteMode] = useState<boolean>(() => {
-    try { const v = localStorage.getItem("voice_site_mode"); return v === null ? true : v === "1"; } catch { return true; }
-  });
-  const siteModeRef = useRef(siteMode);
-  useEffect(() => { siteModeRef.current = siteMode; try { localStorage.setItem("voice_site_mode", siteMode ? "1" : "0"); } catch { /* noop */ } }, [siteMode]);
+  // Voice settings (mode + tuning knobs) — client-side only.
+  const [settings, setSettings] = useState<VoiceSettings>(() => loadSettings());
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(settings);
+  useEffect(() => { settingsRef.current = settings; saveSettings(settings); }, [settings]);
+  const updateSettings = (patch: Partial<VoiceSettings>) => setSettings((s) => ({ ...s, ...patch }));
+  const setMode = (mode: VoiceMode) => setSettings((s) => applyModePreset(s, mode));
+  // PTT UI state: whether the user is actively holding the mic
+  const [ptt, setPtt] = useState(false);
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
@@ -76,6 +85,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       const stored = localStorage.getItem("active_project_name");
       if (stored) setProjectName(stored);
     } catch { /* noop */ }
+  }, []);
+
+  // Honor "siteModeDefault" the first time the panel opens.
+  useEffect(() => {
+    const s = settingsRef.current;
+    if (s.siteModeDefault && s.mode !== "site") setSettings(applyModePreset(s, "site"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const conversation = useConversation({
@@ -355,16 +371,16 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     const original = md.getUserMedia.bind(md);
     const buildAudioConstraints = (input: boolean | MediaTrackConstraints | undefined): MediaTrackConstraints => {
       const base: MediaTrackConstraints = typeof input === "object" && input ? { ...input } : {};
-      // Always request browser-level DSP; construction sites need every dB of NS/AGC.
+      const ns = settingsRef.current.noiseSuppression;
       base.echoCancellation = true;
-      base.noiseSuppression = true;
+      base.noiseSuppression = ns;
       base.autoGainControl = true;
       // Chromium-only hints for stronger NS pipeline. Ignored elsewhere.
       (base as any).googEchoCancellation = true;
-      (base as any).googNoiseSuppression = true;
-      (base as any).googHighpassFilter = true;
+      (base as any).googNoiseSuppression = ns;
+      (base as any).googHighpassFilter = ns;
       (base as any).googAutoGainControl = true;
-      (base as any).googTypingNoiseDetection = true;
+      (base as any).googTypingNoiseDetection = ns;
       base.channelCount = 1;
       return base;
     };
@@ -403,17 +419,17 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     const isActive = uiState !== "idle" && uiState !== "error";
     if (!isActive) return;
     if (muted) return; // user explicitly muted — respect it
-    if (siteMode && conversation.isSpeaking) {
+    if (shouldBlockBargeIn(settings) && conversation.isSpeaking) {
       setLocalTracksEnabled(false);
       return () => {
         // Small grace so tail-end TTS audio doesn't self-trigger VAD on re-open.
-        setTimeout(() => { if (!muted) setLocalTracksEnabled(true); }, 350);
+        setTimeout(() => { if (!muted && !settingsRef.current.pushToTalk) setLocalTracksEnabled(true); }, 350);
       };
-    } else {
+    } else if (!settings.pushToTalk) {
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, siteMode, uiState, muted]);
+  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted]);
 
 
 
@@ -436,6 +452,59 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     try { conversation.sendUserMessage?.("Son cevabını lütfen tekrar et."); }
     catch (e) { console.warn(e); }
   };
+
+  // ============ PUSH-TO-TALK ============
+  // While PTT is on, keep mic muted by default. Unmute only while pressed.
+  const pttReleaseTimer = useRef<number | null>(null);
+  const pttPress = () => {
+    if (!settings.pushToTalk) return;
+    if (pttReleaseTimer.current) { clearTimeout(pttReleaseTimer.current); pttReleaseTimer.current = null; }
+    setPtt(true);
+    try { conversation.setMuted(false); } catch { /* noop */ }
+    setLocalTracksEnabled(true);
+    try { conversation.sendUserActivity?.(); } catch { /* noop */ }
+  };
+  const pttRelease = () => {
+    if (!settings.pushToTalk) return;
+    setPtt(false);
+    // Small tail so a final syllable isn't clipped
+    pttReleaseTimer.current = window.setTimeout(() => {
+      try { conversation.setMuted(true); } catch { /* noop */ }
+      setLocalTracksEnabled(false);
+      pttReleaseTimer.current = null;
+    }, 250);
+  };
+
+  // Enforce PTT mute state whenever the toggle changes or the session opens.
+  useEffect(() => {
+    if (uiState === "idle" || uiState === "error") return;
+    if (settings.pushToTalk) {
+      try { conversation.setMuted(true); } catch { /* noop */ }
+      setLocalTracksEnabled(false);
+    } else {
+      try { conversation.setMuted(false); } catch { /* noop */ }
+      setLocalTracksEnabled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.pushToTalk, uiState]);
+
+  // Speaker volume follows setting (unless paused).
+  useEffect(() => {
+    if (paused) return;
+    try { conversation.setVolume({ volume: settings.speakerVolume }); } catch { /* noop */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.speakerVolume, paused]);
+
+  // Wake-phrase: only active in driving mode while a session is running.
+  useWakeWord({
+    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error",
+    onWake: () => {
+      try { conversation.setMuted(false); } catch { /* noop */ }
+      setLocalTracksEnabled(true);
+      try { conversation.sendUserActivity?.(); } catch { /* noop */ }
+      toast.success("Dinliyorum…", { duration: 1500 });
+    },
+  });
 
   const active = uiState !== "idle" && uiState !== "error";
 
@@ -471,6 +540,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         remainingSeconds={access.remainingSeconds}
       />
 
+      {/* ============ MODE SELECTOR ============ */}
+      <div className="flex flex-col items-center gap-2 pt-3 px-4">
+        <ModeSelector mode={settings.mode} onChange={setMode} />
+        <ModeHint mode={settings.mode} />
+      </div>
+
       {/* ============ MAIN AREA ============ */}
       <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative`}>
         {/* LEFT: Orb + transcript */}
@@ -503,8 +578,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             <ActionBar
               muted={muted}
               paused={paused}
-              siteMode={siteMode}
-              onSiteMode={() => setSiteMode((v) => !v)}
+              pushToTalk={settings.pushToTalk}
+              ptt={ptt}
+              onPttDown={pttPress}
+              onPttUp={pttRelease}
+              onSettings={() => setShowSettings(true)}
               onMute={toggleMute}
               onPause={togglePause}
               onStop={stop}
@@ -541,6 +619,15 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           <SummarySheet bubbles={bubbles} cards={cards} onClose={() => setShowSummary(false)} />
         )}
       </div>
+
+      {/* Settings sheet */}
+      {showSettings && (
+        <SettingsSheet
+          settings={settings}
+          onChange={updateSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }
@@ -744,44 +831,74 @@ function StartButton({ onStart, disabled }: { onStart: () => void; disabled: boo
    ACTION BAR — glass buttons (Mute / Pause / Stop / Keyboard / Repeat / History)
    ===================================================== */
 function ActionBar({
-  muted, paused, siteMode, onSiteMode, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
+  muted, paused, pushToTalk, ptt,
+  onPttDown, onPttUp, onSettings,
+  onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
 }: {
-  muted: boolean; paused: boolean; siteMode: boolean;
-  onSiteMode: () => void;
+  muted: boolean; paused: boolean; pushToTalk: boolean; ptt: boolean;
+  onPttDown: () => void; onPttUp: () => void; onSettings: () => void;
   onMute: () => void; onPause: () => void; onStop: () => void;
   onKeyboard: () => void; onRepeat: () => void; onHistory: () => void;
 }) {
   return (
-    <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
-      <ActionBtn onClick={onSiteMode} label={siteMode ? "Şantiye Modu: Açık" : "Şantiye Modu: Kapalı"} active={siteMode}>
-        <HardHat className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
-        {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-      </ActionBtn>
-      <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
-        {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-      </ActionBtn>
-      <ActionBtn onClick={onRepeat} label="Tekrarla">
-        <RotateCw className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onHistory} label="Geçmiş">
-        <MessageSquare className="w-4 h-4" />
-      </ActionBtn>
-      <ActionBtn onClick={onKeyboard} label="Klavye">
-        <Keyboard className="w-4 h-4" />
-      </ActionBtn>
-      <button
-        onClick={onStop}
-        className="ml-1 h-11 px-4 rounded-xl flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
-        style={{
-          background: "linear-gradient(135deg, #E5484D, #B4272B)",
-          boxShadow: "0 6px 20px -4px rgba(229,72,77,0.5)",
-        }}
-      >
-        <Square className="w-3.5 h-3.5 fill-white" />
-        <span>Bitir</span>
-      </button>
+    <div className="flex flex-col items-center gap-3 voice-fade-in">
+      {pushToTalk && (
+        <button
+          onPointerDown={(e) => { e.preventDefault(); onPttDown(); }}
+          onPointerUp={(e) => { e.preventDefault(); onPttUp(); }}
+          onPointerCancel={onPttUp}
+          onPointerLeave={ptt ? onPttUp : undefined}
+          onContextMenu={(e) => e.preventDefault()}
+          className={`select-none touch-none h-16 min-w-[220px] px-8 rounded-2xl flex items-center justify-center gap-3 text-white text-base font-semibold transition-all active:scale-[0.97] ${
+            ptt ? "ring-2 ring-white/40" : ""
+          }`}
+          style={{
+            background: ptt
+              ? "linear-gradient(135deg, #FF8F5A, #FF6B2B)"
+              : "linear-gradient(135deg, #FF6B2B, #C13A00)",
+            boxShadow: ptt
+              ? "0 0 40px 6px rgba(255,143,90,0.6)"
+              : "0 8px 24px -6px rgba(255,107,43,0.55)",
+          }}
+        >
+          <Mic className="w-6 h-6" />
+          <span>{ptt ? "Konuşuyorum…" : "Bas & Konuş"}</span>
+        </button>
+      )}
+
+      <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5">
+        {!pushToTalk && (
+          <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
+            {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </ActionBtn>
+        )}
+        <ActionBtn onClick={onPause} label={paused ? "Devam" : "Duraklat"} active={paused}>
+          {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+        </ActionBtn>
+        <ActionBtn onClick={onRepeat} label="Tekrarla">
+          <RotateCw className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onHistory} label="Geçmiş">
+          <MessageSquare className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onKeyboard} label="Klavye">
+          <Keyboard className="w-4 h-4" />
+        </ActionBtn>
+        <ActionBtn onClick={onSettings} label="Ayarlar">
+          <Settings className="w-4 h-4" />
+        </ActionBtn>
+        <button
+          onClick={onStop}
+          className="ml-1 h-11 px-4 rounded-xl flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, #E5484D, #B4272B)",
+            boxShadow: "0 6px 20px -4px rgba(229,72,77,0.5)",
+          }}
+        >
+          <Square className="w-3.5 h-3.5 fill-white" />
+          <span>Bitir</span>
+        </button>
+      </div>
     </div>
   );
 }
