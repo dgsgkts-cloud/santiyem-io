@@ -332,31 +332,51 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   }, []);
 
   // ============ MIC MUTE ============
-  // Primary: ElevenLabs SDK (conversation.setMuted → conversation.setMicMuted → InputController.setMuted).
-  // Fallback: flip every local audio MediaStreamTrack's `enabled` flag so iOS Safari stops
-  // sending mic audio even if the SDK's mute call is a no-op on a given transport.
+  // Primary path: ElevenLabs SDK — `conversation.setMuted(true)` calls
+  // `VoiceConversation.setMicMuted` → `InputController.setMuted`, which stops
+  // uplink audio AND disables VAD on the ElevenLabs side.
+  //
+  // Belt-and-suspenders: we also wrap `navigator.mediaDevices.getUserMedia`
+  // during a live session to keep references to every microphone track the SDK
+  // opens, so we can flip `track.enabled = false/true` ourselves. This is what
+  // iOS Safari actually respects even when a transport keeps the pipe open.
   const muted = conversation.isMuted;
+  const micTracksRef = useRef<Set<MediaStreamTrack>>(new Set());
+
+  useEffect(() => {
+    if (!navigator?.mediaDevices?.getUserMedia) return;
+    const md = navigator.mediaDevices;
+    const original = md.getUserMedia.bind(md);
+    const wrapped: typeof md.getUserMedia = async (constraints) => {
+      const stream = await original(constraints);
+      try {
+        for (const t of stream.getAudioTracks()) {
+          micTracksRef.current.add(t);
+          t.addEventListener("ended", () => micTracksRef.current.delete(t));
+        }
+      } catch { /* noop */ }
+      return stream;
+    };
+    md.getUserMedia = wrapped;
+    return () => { md.getUserMedia = original; };
+  }, []);
+
   const setLocalTracksEnabled = (enabled: boolean) => {
     try {
-      const anyNav = navigator as any;
-      // Track all live mic streams we requested; the SDK owns its own stream but we also toggle
-      // any streams the browser currently exposes to us via getUserMedia cache.
-      const tracks: MediaStreamTrack[] = [];
-      // Walk global registry if the SDK exposed it (best-effort, never throws).
-      if (anyNav.__voiceMicTracks && Array.isArray(anyNav.__voiceMicTracks)) {
-        for (const t of anyNav.__voiceMicTracks) if (t?.kind === "audio") tracks.push(t);
+      for (const t of micTracksRef.current) {
+        if (t.readyState === "live" && t.kind === "audio") t.enabled = enabled;
       }
-      for (const t of tracks) t.enabled = enabled;
     } catch (e) { console.warn("[voice] track toggle failed", e); }
   };
-  const toggleMute = async () => {
+
+  const toggleMute = () => {
     const next = !muted;
-    console.log("[voice] toggleMute →", next);
+    console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
     try {
-      // 1) SDK path — updates ElevenLabs InputController and stops uplink audio + VAD.
+      // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
       conversation.setMuted(next);
     } catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
-    // 2) Belt-and-suspenders: also disable local tracks so iOS Safari definitely stops streaming.
+    // 2) Local track flag — makes sure iOS Safari really stops streaming.
     setLocalTracksEnabled(!next);
   };
   const togglePause = async () => {
