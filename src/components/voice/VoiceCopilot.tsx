@@ -59,6 +59,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
+  // Construction Site Mode — default ON. Aggressive noise handling + anti-barge-in.
+  const [siteMode, setSiteMode] = useState<boolean>(() => {
+    try { const v = localStorage.getItem("voice_site_mode"); return v === null ? true : v === "1"; } catch { return true; }
+  });
+  const siteModeRef = useRef(siteMode);
+  useEffect(() => { siteModeRef.current = siteMode; try { localStorage.setItem("voice_site_mode", siteMode ? "1" : "0"); } catch { /* noop */ } }, [siteMode]);
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
