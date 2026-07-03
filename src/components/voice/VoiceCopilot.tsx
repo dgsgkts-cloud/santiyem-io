@@ -165,6 +165,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
+          firstReplyPendingRef.current = Date.now();
           setBubbles((prev) => [...prev, { id: `${Date.now()}-u`, role: "user" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
         if (msg?.source === "ai" && typeof msg.message === "string") {
