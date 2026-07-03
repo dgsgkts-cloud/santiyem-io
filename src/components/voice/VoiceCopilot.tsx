@@ -97,7 +97,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const conversation = useConversation({
     overrides: { agent: { language: "tr" } },
-    onConnect: () => {
+    onConnect: (info?: unknown) => {
+      console.log("[voice][SDK] ✅ onConnect fired", info);
       try {
         connectWaiterRef.current?.resolve();
         connectWaiterRef.current = null;
@@ -111,14 +112,29 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         }
       } catch (e) { console.error("onConnect handler failed", e); }
     },
-    onDisconnect: () => {
+    onStatusChange: (v: unknown) => {
+      console.log("[voice][SDK] onStatusChange →", v);
+    },
+    onDisconnect: (details?: unknown) => {
+      console.log("[voice][SDK] 🔌 onDisconnect", details);
       try {
         setUiState("idle");
         const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
         sessionStartRef.current = null;
         if (secs > 0) trackUsage(secs);
         if (bubbles.length >= 2) setShowSummary(true);
+        // If we never got onConnect, resolve the waiter with an error so start() unblocks.
+        if (connectWaiterRef.current) {
+          connectWaiterRef.current.reject(new Error(
+            "SDK bağlantı kurmadan kapandı: " + JSON.stringify(details ?? {}).slice(0, 300)
+          ));
+          connectWaiterRef.current = null;
+        }
       } catch (e) { console.error("onDisconnect handler failed", e); }
+    },
+    onDebug: (info: unknown) => {
+      // Very chatty — but essential to see why the SDK is stuck.
+      console.log("[voice][SDK][debug]", info);
     },
     onMessage: (msg: any) => {
       try {
@@ -136,8 +152,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onError: (e: unknown) => {
       try {
-        console.error("Voice error", e);
-        const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata.");
+        console.error("[voice][SDK] ❌ onError", e);
+        const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : (typeof e === "object" ? JSON.stringify(e).slice(0, 300) : "Ses bağlantısında hata."));
         if (connectWaiterRef.current) {
           connectWaiterRef.current.reject(new Error(msg));
           connectWaiterRef.current = null;
