@@ -513,7 +513,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       if (token) {
         console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
-        conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
+        conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
         console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
         console.log("[voice][start] ✅ WebRTC connected");
