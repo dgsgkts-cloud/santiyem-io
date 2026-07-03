@@ -4,6 +4,7 @@ import {
   X, Mic, MicOff, Pause, Play, Square, Keyboard, RotateCw, MessageSquare,
   AlertCircle, HardHat, Radio, TrendingUp, AlertTriangle, Package, Users,
   Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2, Settings,
+  RefreshCw, Bug,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +79,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  // ── Debug telemetry (dev-only overlay) ─────────────────────────
+  const connectStartRef = useRef<number | null>(null);
+  const [debug, setDebug] = useState({
+    connectLatencyMs: 0,
+    firstReplyLatencyMs: 0,
+    toolCalls: 0,
+    lastError: "",
+    lastEvent: "",
+  });
+  const firstReplyPendingRef = useRef<number | null>(null);
+  const [showDebug, setShowDebug] = useState<boolean>(() => {
+    try { return localStorage.getItem("voice_debug_open") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("voice_debug_open", showDebug ? "1" : "0"); } catch { /* noop */ }
+  }, [showDebug]);
   const navigate = useNavigate();
 
   // Load active project name (frontend only, no backend changes)
@@ -97,12 +114,17 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const conversation = useConversation({
     overrides: { agent: { language: "tr" } },
+    // (original onConnect replaced by instrumented handler below)
+
     onConnect: (info?: unknown) => {
       console.log("[voice][SDK] ✅ onConnect fired", info);
       try {
         connectWaiterRef.current?.resolve();
         connectWaiterRef.current = null;
         sessionStartRef.current = Date.now();
+        const lat = connectStartRef.current ? Date.now() - connectStartRef.current : 0;
+        setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
+        firstReplyPendingRef.current = Date.now();
         setUiState("listening");
         if (initialContext) {
           queueMicrotask(() => {
@@ -114,11 +136,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onStatusChange: (v: unknown) => {
       console.log("[voice][SDK] onStatusChange →", v);
+      setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
     onDisconnect: (details?: unknown) => {
       console.log("[voice][SDK] 🔌 onDisconnect", details);
       try {
         setUiState("idle");
+        setDebug((d) => ({ ...d, lastEvent: "disconnect" }));
         const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
         sessionStartRef.current = null;
         if (secs > 0) trackUsage(secs);
@@ -141,11 +165,17 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
+          firstReplyPendingRef.current = Date.now();
           setBubbles((prev) => [...prev, { id: `${Date.now()}-u`, role: "user" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
         if (msg?.source === "ai" && typeof msg.message === "string") {
           setTranscript(msg.message);
           lastAiMessageRef.current = msg.message;
+          if (firstReplyPendingRef.current) {
+            const lat = Date.now() - firstReplyPendingRef.current;
+            firstReplyPendingRef.current = null;
+            setDebug((d) => ({ ...d, firstReplyLatencyMs: lat }));
+          }
           setBubbles((prev) => [...prev, { id: `${Date.now()}-a`, role: "ai" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
       } catch (e) { console.error("onMessage handler failed", e); }
@@ -154,6 +184,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       try {
         console.error("[voice][SDK] ❌ onError", e);
         const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : (typeof e === "object" ? JSON.stringify(e).slice(0, 300) : "Ses bağlantısında hata."));
+        setDebug((d) => ({ ...d, lastError: msg, lastEvent: "error" }));
         if (connectWaiterRef.current) {
           connectWaiterRef.current.reject(new Error(msg));
           connectWaiterRef.current = null;
@@ -188,6 +219,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       query_project_data: async (params: { intent?: string; keyword?: string }) => {
         const t0 = performance.now();
         console.log("[voice][tool] query_project_data CALLED", params);
+        setDebug((d) => ({ ...d, toolCalls: d.toolCalls + 1, lastEvent: "tool:query_project_data" }));
         setUiState("thinking");
         try {
           const { data: sess } = await supabase.auth.getSession();
@@ -245,6 +277,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
   const start = async () => {
     console.log("[voice][start] ➊ Initializing session...");
+    connectStartRef.current = Date.now();
+    setDebug((d) => ({ ...d, lastError: "", lastEvent: "start", connectLatencyMs: 0, firstReplyLatencyMs: 0, toolCalls: 0 }));
     setError(null);
     setUiState("connecting");
     setShowSummary(false);
@@ -638,8 +672,27 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             )}
           </div>
 
-          {/* Action bar / Start button */}
-          {uiState === "idle" || uiState === "error" ? (
+          {/* Action bar / Start / Retry button */}
+          {uiState === "error" ? (
+            <div className="flex flex-col items-center gap-2 voice-fade-in">
+              <button
+                onClick={start}
+                disabled={!access.hasAccess}
+                className="group relative h-16 px-8 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+                  boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
+                }}
+              >
+                <RefreshCw className="w-5 h-5" strokeWidth={2} />
+                <span className="text-base">Yeniden Dene</span>
+              </button>
+              <button onClick={() => { setError(null); setUiState("idle"); }}
+                className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
+                Vazgeç
+              </button>
+            </div>
+          ) : uiState === "idle" ? (
             <StartButton onStart={start} disabled={!access.hasAccess} />
           ) : (
             <ActionBar
@@ -693,6 +746,34 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Dev-only debug panel */}
+      {import.meta.env.DEV && (
+        <DebugPanel
+          open={showDebug}
+          onToggle={() => setShowDebug((v) => !v)}
+          data={{
+            uiState,
+            sdkStatus: String(conversation.status),
+            isSpeaking: conversation.isSpeaking,
+            isMuted: muted,
+            pushToTalk: settings.pushToTalk,
+            ptt,
+            mode: settings.mode,
+            micTracks: micTracksRef.current.size,
+            speakerVolume: settings.speakerVolume,
+            paused,
+            bubbles: bubbles.length,
+            cards: cards.length,
+            connectLatencyMs: debug.connectLatencyMs,
+            firstReplyLatencyMs: debug.firstReplyLatencyMs,
+            toolCalls: debug.toolCalls,
+            lastEvent: debug.lastEvent,
+            lastError: debug.lastError || error || "",
+            agent: "elevenlabs",
+          }}
         />
       )}
     </div>
@@ -1249,3 +1330,42 @@ function buildSummary(bubbles: Bubble[]) {
     nextQuestion,
   };
 }
+
+/* =====================================================
+   DEBUG PANEL — dev-only floating diagnostics
+   ===================================================== */
+function DebugPanel({
+  open, onToggle, data,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  data: Record<string, string | number | boolean>;
+}) {
+  return (
+    <div className="fixed bottom-3 right-3 z-[60] font-mono text-[10px] pointer-events-auto">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/70 border border-white/10 text-emerald-300 hover:bg-black/90"
+        aria-label="Debug"
+      >
+        <Bug className="w-3 h-3" /> {open ? "hide" : "debug"}
+      </button>
+      {open && (
+        <div className="mt-2 w-[260px] max-h-[60vh] overflow-y-auto rounded-lg bg-black/85 border border-white/10 p-3 backdrop-blur">
+          <div className="text-emerald-300 uppercase tracking-widest text-[9px] mb-2">Voice Debug</div>
+          <table className="w-full">
+            <tbody>
+              {Object.entries(data).map(([k, v]) => (
+                <tr key={k} className="border-b border-white/5 last:border-0">
+                  <td className="py-1 pr-2 text-white/50 align-top">{k}</td>
+                  <td className="py-1 text-white/90 break-all">{String(v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
