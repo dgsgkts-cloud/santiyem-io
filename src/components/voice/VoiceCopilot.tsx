@@ -94,7 +94,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     onError: (e: unknown) => {
       try {
         console.error("Voice error", e);
-        setError(typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata."));
+        const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata.");
+        if (connectWaiterRef.current) {
+          connectWaiterRef.current.reject(new Error(msg));
+          connectWaiterRef.current = null;
+          return; // start() flow handles the fallback / error UI
+        }
+        setError(msg);
         setUiState("error");
       } catch (err) {
         console.error("onError handler failed", err);
