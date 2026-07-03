@@ -400,7 +400,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   // and interrupt the response. Re-enable a moment after AI stops so a
   // deliberate user reply still lands quickly.
   useEffect(() => {
-    if (!active) return;
+    const isActive = uiState !== "idle" && uiState !== "error";
+    if (!isActive) return;
     if (muted) return; // user explicitly muted — respect it
     if (siteMode && conversation.isSpeaking) {
       setLocalTracksEnabled(false);
@@ -412,7 +413,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, siteMode, active, muted]);
+  }, [conversation.isSpeaking, siteMode, uiState, muted]);
+
 
 
   const toggleMute = () => {
