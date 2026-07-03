@@ -533,6 +533,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         remainingSeconds={access.remainingSeconds}
       />
 
+      {/* ============ MODE SELECTOR ============ */}
+      <div className="flex flex-col items-center gap-2 pt-3 px-4">
+        <ModeSelector mode={settings.mode} onChange={setMode} />
+        <ModeHint mode={settings.mode} />
+      </div>
+
       {/* ============ MAIN AREA ============ */}
       <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative`}>
         {/* LEFT: Orb + transcript */}
