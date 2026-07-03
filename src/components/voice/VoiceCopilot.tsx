@@ -46,6 +46,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const navigate = useNavigate();
 
   const conversation = useConversation({
+    overrides: {
+      agent: { language: "tr" },
+    },
     onConnect: () => {
       try {
         sessionStartRef.current = Date.now();
@@ -188,6 +191,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       await conversation.startSession({
         conversationToken: token,
         connectionType: "webrtc",
+        overrides: {
+          agent: { language: "tr" },
+        },
       });
     } catch (e) {
       console.error(e);
@@ -245,7 +251,14 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   }, [uiState, access.hasAccess]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0A0E13]/95 backdrop-blur-xl flex flex-col">
+    <div
+      className="fixed inset-0 z-50 bg-[#0A0E13]/95 backdrop-blur-xl flex flex-col"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
         <div>
