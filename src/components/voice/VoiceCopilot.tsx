@@ -151,11 +151,10 @@ export function VoiceCopilot({ onClose, access, compact = false, autoStart = fal
       if (!res.ok) {
         throw new Error(`Token alınamadı (${res.status})`);
       }
-      const { token, agent_id } = await res.json();
+      const { token } = await res.json();
       await conversation.startSession({
         conversationToken: token,
         connectionType: "webrtc",
-        agentId: agent_id,
       });
     } catch (e) {
       console.error(e);
@@ -186,7 +185,7 @@ export function VoiceCopilot({ onClose, access, compact = false, autoStart = fal
     }
     return () => {
       if (conversation.status === "connected") {
-        conversation.endSession().catch(() => {});
+        try { conversation.endSession(); } catch { /* noop */ }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
