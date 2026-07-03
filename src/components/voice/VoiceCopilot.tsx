@@ -116,7 +116,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         if (!uid) return;
         const { data } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, role, title")
           .eq("user_id", uid)
           .maybeSingle();
         const full = (data?.full_name || "").trim();
@@ -125,6 +125,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           setFirstName(first);
           try { localStorage.setItem("voice_first_name", first); } catch { /* noop */ }
         }
+        const role = (data?.role || data?.title || "").trim();
+        if (role) setUserRole(role);
       } catch { /* noop */ }
     })();
   }, []);
