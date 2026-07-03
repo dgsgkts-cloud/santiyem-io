@@ -419,13 +419,55 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 - Konuşurken duyduğun kısa sesleri (öksürük, "hı-hı", "evet", "tamam", "ok", "aha", nefes, arka plan gürültüsü, telefon sesi, kısa mırıltılar) KESİNTİ SAYMA. Cümleni bitir.
 - Sadece kullanıcı NET, TAM ve YENİ bir cümleye başlarsa (en az 2–3 kelime, açık bir soru veya komut) kendini durdur.
 - Emin değilsen konuşmaya devam et; cümleyi yarıda bırakma. Kullanıcı bir sonraki nefeste tekrar deneyecektir.
-- Kullanıcı seni yanlışlıkla kestiğini düşünürsen ("devam et", "bitir cümleni" derse) kaldığın yerden devam et.`;
+- Kullanıcı seni yanlışlıkla kestiğini düşünürsen ("devam et", "bitir cümleni" derse) kaldığın yerden devam et.
 
+## İLK İZLENİM (ÇOK ÖNEMLİ — KENDİNİ TANITMA)
+- Kendini ASLA tanıtma. "Ben Şantiyem AI", "Size nasıl yardımcı olabilirim", "Hangi projede yardımcı olayım" gibi cümleleri YASAK.
+- Kullanıcı seni zaten tanıyor. Güvenli, doğrudan ve proaktif konuş — bir chatbot değil, şirketin AI Proje Direktörüsün.
+- Açılış cümlesi kısa olmalı ve mümkünse hemen değer sunmalı ("Bugün dikkatimi çeken iki konu var…", "Bir projede gecikme riski oluşmaya başladı…").
+- Selamlama tek kelimeyi geçmesin ("Merhaba Doğuş.", "Günaydın Doğuş.", "Tekrar hoş geldin."). Aynı cümleyi arka arkaya kullanma; varyasyon yap.
+- İlk konuşmadan sonra ilk fırsatta \`query_project_data\` çağır ve en kritik 1–3 bulguyu (gecikme, kritik ödeme, stok riski) proaktif olarak söyle. Kullanıcının sormasını bekleme.
+- MOD'a göre uzunluk:
+  • OFİS: analitik ve profesyonel, 2 cümle.
+  • SAHA: operasyonel ve kısa, 1–2 cümle.
+  • SÜRÜŞ: çok kısa, tek nefeslik cümle, maksimum 15 saniye.`;
+
+
+      // ---- Dynamic first message (varies by mode, time of day, user) ------
+      const hour = new Date().getHours();
+      const timeGreet =
+        hour < 6  ? "İyi geceler" :
+        hour < 11 ? "Günaydın"    :
+        hour < 18 ? "İyi günler"  :
+                    "İyi akşamlar";
+      const nameSuffix = firstName ? ` ${firstName}` : "";
+      const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+      const officeOpeners = [
+        `${timeGreet}${nameSuffix}. Hazırım — şirket geneliyle mi başlayalım, belirli bir projeye mi bakalım?`,
+        `Hoş geldin${nameSuffix}. Bu sabah projeleri gözden geçirdim; nereden başlayalım?`,
+        `Tekrar hoş geldin${nameSuffix}. Öncelik vermeniz gereken birkaç konu dikkatimi çekti.`,
+        `${timeGreet}${nameSuffix}. Bugün dikkatimi çeken iki konu var; dinlemek ister misin?`,
+      ];
+      const siteOpeners = [
+        `${timeGreet}${nameSuffix}. Şantiye modu aktif — sahadaki operasyonlarla başlayalım.`,
+        `Hoş geldin${nameSuffix}. Şantiye modundayız. Bugün hangi blokla ilgileneceğiz?`,
+        `${timeGreet}${nameSuffix}. Saha hazır. Puantaj mı, malzeme mi, ilerleme mi?`,
+      ];
+      const drivingOpeners = [
+        `${timeGreet}${nameSuffix}. Sürüş modu aktif. Bugün iki önemli konu dikkatimi çekti — hazır olduğunda başlayabiliriz.`,
+        `${timeGreet}${nameSuffix}. Sürüş modundayız. Kısa tutuyorum, dinliyorum.`,
+        `Tekrar hoş geldin${nameSuffix}. Sürüş modu açık. Öncelikli bir konu var.`,
+      ];
+      const firstMessage =
+        settings.mode === "site"    ? pick(siteOpeners) :
+        settings.mode === "driving" ? pick(drivingOpeners) :
+                                       pick(officeOpeners);
 
       const overrides = {
         agent: {
           language: "tr",
-          firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?",
+          firstMessage,
           prompt: { prompt: SYSTEM_PROMPT },
         },
         // Reduce accidental barge-in from short sounds / brief utterances.
