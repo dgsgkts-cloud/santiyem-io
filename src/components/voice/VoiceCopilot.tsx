@@ -49,7 +49,13 @@ type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 export function VoiceCopilot(props: Props) {
-  console.log("[voice][mount] VoiceCopilot → ConversationProvider mounted");
+  useEffect(() => {
+    console.log("[voice][mount] ⬆️ VoiceCopilot (ConversationProvider wrapper) MOUNTED @", new Date().toISOString());
+    return () => {
+      console.trace("VOICE TERMINATION (ConversationProvider wrapper UNMOUNT)");
+      console.warn("[voice][mount] ⬇️ VoiceCopilot (ConversationProvider wrapper) UNMOUNTED @", new Date().toISOString());
+    };
+  }, []);
   return (
     <ConversationProvider>
       <VoiceCopilotInner {...props} />
@@ -92,6 +98,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const tlLinesRef = useRef<string[]>([]);
   const tlFirstAudioRef = useRef<boolean>(false);
   const tlDumpTimerRef = useRef<number | null>(null);
+  // How many times conversation.startSession() has actually been invoked
+  // this component lifetime. >1 without an intervening user stop = bug.
+  const startSessionCallCountRef = useRef<number>(0);
   const tl = (event: string, detail = "") => {
     const t0 = tlT0Ref.current;
     const dt = t0 == null ? 0 : performance.now() - t0;
@@ -205,13 +214,27 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       } catch (e) { console.error("onConnect handler failed", e); }
     },
     onStatusChange: (v: unknown) => {
-      console.log("[voice][SDK] onStatusChange →", v);
+      console.log("[voice][SDK] onStatusChange →", v, "@", new Date().toISOString());
       tl("onStatusChange", String((v as any)?.status ?? v));
       setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
+    onModeChange: (m: unknown) => {
+      console.log("[voice][SDK] onModeChange →", m, "@", new Date().toISOString());
+      tl("onModeChange", String((m as any)?.mode ?? m));
+    },
     onDisconnect: (details?: unknown) => {
-      console.log("[voice][SDK] 🔌 onDisconnect", details);
-      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 120));
+      const d = details as any;
+      console.error("[voice][SDK] 🔌 onDisconnect @", new Date().toISOString(), {
+        reason: d?.reason ?? "(none)",
+        closeCode: d?.closeCode ?? d?.code ?? "(none)",
+        closeReason: d?.closeReason ?? "(none)",
+        message: d?.message ?? "(none)",
+        error: d?.error ?? "(none)",
+        context: d?.context ?? "(none)",
+        raw: details,
+      });
+      console.trace("VOICE TERMINATION (onDisconnect fired)");
+      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 300));
       tlDump("on disconnect");
       try {
         setUiState("idle");
