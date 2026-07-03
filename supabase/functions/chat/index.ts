@@ -389,6 +389,18 @@ serve(async (req) => {
           const lines: string[] = [];
 
           if (intent === "PAYMENT_QUERY") {
+            // Detect whether the user is explicitly asking about SUBCONTRACTOR payments.
+            // We only classify a payment as "subcontractor" when there's a hard signal:
+            //   - subcontractor_payments row (has FK subcontractor_id) — authoritative
+            //   - cash_payments row with category='Taşeron Ödemesi' OR source_type='subcontractor_payment'
+            // Everything else (fuel, excavation, office, materials) is NEVER returned as subcontractor.
+            const qText = (userQuery || "").toLowerCase();
+            const nameHint = (nameFilter || "");
+            const subcontractorScope =
+              /taşeron|taseron|taşoron|subcontractor|alt ?yüklenici|alt ?yuklenici/.test(qText) ||
+              /taşeron|taseron|subcontractor/.test(nameHint);
+
+            // 1) Authoritative subcontractor payments (has subcontractor_id FK)
             let q = sb.from("subcontractor_payments")
               .select("amount, payment_date, description, payment_method, project_id, subcontractor_id, subcontractors(name)")
               .eq("user_id", uid).order("payment_date", { ascending: false }).limit(limit);
@@ -396,26 +408,52 @@ serve(async (req) => {
             if (dt) q = q.lte("payment_date", dt);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
             const { data } = await q;
-            let rows = data || [];
-            if (nameFilter) rows = rows.filter((r: any) => (r.subcontractors?.name || "").toLowerCase().includes(nameFilter));
+            let rows = (data || []).filter((r: any) => r.subcontractor_id); // ignore anything not confidently classified
+            if (nameFilter && !subcontractorScope) {
+              rows = rows.filter((r: any) => (r.subcontractors?.name || "").toLowerCase().includes(nameFilter));
+            }
             const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-            lines.push(`ÖDEMELER (${rows.length} kayıt, toplam ${fmt(total)}):`);
+            lines.push(`TAŞERON ÖDEMELERİ (${rows.length} kayıt, toplam ${fmt(total)}):`);
             rows.forEach((r: any) => lines.push(`- ${r.payment_date} · ${r.subcontractors?.name || "?"} · ${fmt(Number(r.amount))} · ${r.payment_method}${r.description ? " · " + r.description : ""}`));
 
-            // Also project_expenses if generic "ödeme" query
-            let eq = sb.from("project_expenses")
-              .select("amount, expense_date, description, category, project_id")
-              .eq("user_id", uid).order("expense_date", { ascending: false }).limit(limit);
-            if (df) eq = eq.gte("expense_date", df);
-            if (dt) eq = eq.lte("expense_date", dt);
-            if (projectIdFilter) eq = eq.eq("project_id", projectIdFilter);
-            const { data: exp } = await eq;
-            if (exp && exp.length) {
-              const et = exp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-              lines.push(`\nDİĞER PROJE GİDERLERİ (${exp.length} kayıt, toplam ${fmt(et)}):`);
-              exp.slice(0, limit).forEach((r: any) => lines.push(`- ${r.expense_date} · ${r.category} · ${fmt(Number(r.amount))}${r.description ? " · " + r.description : ""}`));
+            if (subcontractorScope) {
+              // Also pull cash_payments explicitly categorized as Taşeron Ödemesi that AREN'T mirrors
+              // of a subcontractor_payments row (source_type is null / not subcontractor_payment).
+              let cq = sb.from("cash_payments")
+                .select("amount, payment_date, description, category, recipient, project_id, source_type")
+                .eq("user_id", uid)
+                .eq("category", "Taşeron Ödemesi")
+                .is("source_type", null)
+                .order("payment_date", { ascending: false }).limit(limit);
+              if (df) cq = cq.gte("payment_date", df);
+              if (dt) cq = cq.lte("payment_date", dt);
+              if (projectIdFilter) cq = cq.eq("project_id", projectIdFilter);
+              const { data: cash } = await cq;
+              if (cash && cash.length) {
+                const ct = cash.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+                lines.push(`\nEK TAŞERON KASA ÖDEMELERİ (${cash.length} kayıt, toplam ${fmt(ct)}):`);
+                cash.forEach((r: any) => lines.push(`- ${r.payment_date} · ${r.recipient || "?"} · ${fmt(Number(r.amount))}${r.description ? " · " + r.description : ""}`));
+              }
+              const grand = total + (cash || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              lines.push(`\nGENEL TAŞERON TOPLAMI: ${fmt(grand)}`);
+              lines.push(`\nNOT: Bu listede yalnızca kesin olarak taşeron olarak sınıflandırılmış ödemeler var. Yakıt, kazı, malzeme veya ofis giderleri gibi sınıflandırılamayan kayıtlar dahil edilmemiştir.`);
+            } else {
+              // Generic "ödeme" query — show classified extras but keep them clearly labeled.
+              let eq = sb.from("project_expenses")
+                .select("amount, expense_date, description, category, project_id")
+                .eq("user_id", uid).order("expense_date", { ascending: false }).limit(limit);
+              if (df) eq = eq.gte("expense_date", df);
+              if (dt) eq = eq.lte("expense_date", dt);
+              if (projectIdFilter) eq = eq.eq("project_id", projectIdFilter);
+              const { data: exp } = await eq;
+              if (exp && exp.length) {
+                const et = exp.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+                lines.push(`\nDİĞER PROJE GİDERLERİ (${exp.length} kayıt, toplam ${fmt(et)}) — TAŞERON DEĞİLDİR:`);
+                exp.slice(0, limit).forEach((r: any) => lines.push(`- ${r.expense_date} · ${r.category} · ${fmt(Number(r.amount))}${r.description ? " · " + r.description : ""}`));
+              }
             }
           } else if (intent === "HAKEDIS_QUERY") {
+
             let q = sb.from("project_hakedis")
               .select("period, amount, net_total, status, approval_status, created_at, payment_date, project_id")
               .eq("user_id", uid).order("created_at", { ascending: false }).limit(limit);
