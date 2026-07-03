@@ -79,7 +79,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.error("onDisconnect handler failed", e);
       }
     },
-    onMessage: (msg: { source?: string; message?: string; type?: string; [k: string]: unknown }) => {
+    onMessage: (msg: any) => {
       try {
         console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
