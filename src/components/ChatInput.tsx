@@ -127,7 +127,7 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         </div>
       </div>
       <p className="text-center text-[11px] text-muted-foreground mt-2">
-        ⚠️ Genel rehberlik amaçlıdır. Projeye özel kararlar için yetkili mühendis onayı alınız.
+        Şantiyem AI proje verilerinizi analiz ederek yanıt üretir.
       </p>
     </div>
   );
