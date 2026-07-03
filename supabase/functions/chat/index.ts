@@ -525,6 +525,444 @@ serve(async (req) => {
 
     const systemPrompt = SYSTEM_PROMPT + ragContext + projectDataContext;
 
+    // ============================================================
+    // ACTION ASSISTANT — tool-calling with confirmation gating
+    // ============================================================
+    // Detect action intent from last user message. If action, run a
+    // non-streaming tool loop and return the final text as an SSE stream.
+    try {
+      const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
+      const rawText = (lastUserMsg?.content || "").toString().toLowerCase();
+      const ACTION_RE =
+        /\b(kaydet|ekle|oluştur|olustur|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|gir(?:iş|is)?|ata(?:y[ıi]m)?|başlat|baslat|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not))\b/;
+      const CONFIRM_RE = /\b(evet|onayl[ıi]yorum|onayla|onay|tamam|kaydet|geç|gec|ilerle|olur|hadi)\b/;
+      const isAction = ACTION_RE.test(rawText) || (CONFIRM_RE.test(rawText) && messages.length >= 3);
+
+      if (isAction && Deno.env.get("SUPABASE_URL")) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const anon = createClient(supabaseUrl, anonKey);
+        const token = authHeader!.replace("Bearer ", "");
+        const { data: { user } } = await anon.auth.getUser(token);
+
+        if (user) {
+          const sb = createClient(supabaseUrl, serviceKey);
+          const uid = user.id;
+          const today = new Date().toISOString().slice(0, 10);
+
+          // --- Tool schemas (OpenAI compatible) ---
+          const tools = [
+            {
+              type: "function",
+              function: {
+                name: "resolve_lookups",
+                description: "Resolve human-readable names into database IDs. Call before mutation tools. Returns matches or ambiguity list.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    project_name: { type: "string" },
+                    subcontractor_name: { type: "string" },
+                    personnel_name: { type: "string" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_subcontractor_payment",
+                description: "Save a subcontractor payment. Set confirmed=false first to preview the summary. Only set confirmed=true after the user explicitly approves (evet/onaylıyorum/tamam).",
+                parameters: {
+                  type: "object",
+                  required: ["subcontractor_id", "amount", "payment_method", "confirmed"],
+                  properties: {
+                    subcontractor_id: { type: "string", description: "UUID from resolve_lookups" },
+                    amount: { type: "number" },
+                    payment_method: { type: "string", enum: ["nakit", "havale", "cek", "kredi_karti"] },
+                    payment_date: { type: "string", description: "YYYY-MM-DD, defaults today" },
+                    project_id: { type: "string" },
+                    description: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_task",
+                description: "Create a new task. Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["project_id", "title", "confirmed"],
+                  properties: {
+                    project_id: { type: "string" },
+                    title: { type: "string" },
+                    priority: { type: "string", enum: ["low", "normal", "high", "urgent"] },
+                    due_date: { type: "string" },
+                    description: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_hakedis_draft",
+                description: "Create a draft hakediş (progress payment). Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["project_id", "period", "amount", "confirmed"],
+                  properties: {
+                    project_id: { type: "string" },
+                    period: { type: "string", description: "e.g. '2026-06' or 'Haziran 2026'" },
+                    amount: { type: "number", description: "Gross iş kalemleri toplamı (KDV hariç)" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_site_diary",
+                description: "Add a site diary entry for a project on a date. Preview first.",
+                parameters: {
+                  type: "object",
+                  required: ["project_id", "entry_date", "confirmed"],
+                  properties: {
+                    project_id: { type: "string" },
+                    entry_date: { type: "string" },
+                    work_status: { type: "string", enum: ["normal", "durdu"] },
+                    work_done: { type: "string" },
+                    general_note: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_material_entry",
+                description: "Add a material stock entry (giriş) to a project. Preview first.",
+                parameters: {
+                  type: "object",
+                  required: ["project_id", "material_name", "quantity", "confirmed"],
+                  properties: {
+                    project_id: { type: "string" },
+                    material_name: { type: "string" },
+                    unit: { type: "string" },
+                    quantity: { type: "number" },
+                    unit_price: { type: "number" },
+                    supplier: { type: "string" },
+                    entry_date: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+          ];
+
+          const fmtTRY = (n: number) => new Intl.NumberFormat("tr-TR").format(n) + " ₺";
+
+          // --- Tool executor ---
+          async function runTool(name: string, args: any): Promise<any> {
+            try {
+              if (name === "resolve_lookups") {
+                const out: any = {};
+                if (args.project_name) {
+                  const { data } = await sb.from("projects").select("id, name, client").eq("user_id", uid).ilike("name", `%${args.project_name}%`).limit(5);
+                  out.projects = data || [];
+                }
+                if (args.subcontractor_name) {
+                  const { data } = await sb.from("subcontractors").select("id, name, specialty").eq("user_id", uid).ilike("name", `%${args.subcontractor_name}%`).limit(5);
+                  out.subcontractors = data || [];
+                }
+                if (args.personnel_name) {
+                  const { data } = await sb.from("personnel").select("id, full_name, occupation").eq("user_id", uid).ilike("full_name", `%${args.personnel_name}%`).limit(5);
+                  out.personnel = data || [];
+                }
+                return out;
+              }
+
+              if (name === "save_subcontractor_payment") {
+                const missing: string[] = [];
+                if (!args.subcontractor_id) missing.push("taşeron");
+                if (!(args.amount > 0)) missing.push("tutar");
+                if (!args.payment_method) missing.push("ödeme yöntemi");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const { data: sub } = await sb.from("subcontractors").select("name, user_id").eq("id", args.subcontractor_id).maybeSingle();
+                if (!sub || sub.user_id !== uid) return { status: "ERROR", error: "Taşeron bulunamadı" };
+                const summary = {
+                  action: "Taşeron Ödemesi",
+                  taşeron: sub.name,
+                  tutar: fmtTRY(Number(args.amount)),
+                  ödeme_yöntemi: args.payment_method,
+                  tarih: args.payment_date || today,
+                  proje_id: args.project_id || null,
+                  açıklama: args.description || "",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("subcontractor_payments").insert({
+                  user_id: uid,
+                  subcontractor_id: args.subcontractor_id,
+                  amount: args.amount,
+                  payment_date: args.payment_date || today,
+                  payment_method: args.payment_method,
+                  project_id: args.project_id || null,
+                  description: args.description || null,
+                  status: "odendi",
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_task") {
+                const missing: string[] = [];
+                if (!args.project_id) missing.push("proje");
+                if (!args.title) missing.push("başlık");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const summary = {
+                  action: "Görev",
+                  proje_id: args.project_id,
+                  başlık: args.title,
+                  öncelik: args.priority || "normal",
+                  termin: args.due_date || null,
+                  açıklama: args.description || "",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("tasks").insert({
+                  project_id: args.project_id,
+                  title: args.title,
+                  description: args.description || "",
+                  priority: args.priority || "normal",
+                  due_date: args.due_date || null,
+                  status: "todo",
+                  created_by: uid,
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_hakedis_draft") {
+                const missing: string[] = [];
+                if (!args.project_id) missing.push("proje");
+                if (!args.period) missing.push("dönem");
+                if (!(args.amount > 0)) missing.push("tutar");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const kdv = Number(args.amount) * 0.20;
+                const gross = Number(args.amount) + kdv;
+                const stopaj = gross * 0.03;
+                const net = gross - stopaj;
+                const summary = {
+                  action: "Hakediş Taslağı",
+                  proje_id: args.project_id,
+                  dönem: args.period,
+                  iş_kalemleri: fmtTRY(Number(args.amount)),
+                  kdv: fmtTRY(kdv),
+                  brüt: fmtTRY(gross),
+                  stopaj: fmtTRY(stopaj),
+                  net_ödenecek: fmtTRY(net),
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("project_hakedis").insert({
+                  user_id: uid,
+                  project_id: args.project_id,
+                  period: args.period,
+                  amount: args.amount,
+                  kdv,
+                  net,
+                  gross_total: gross,
+                  deductions_total: stopaj,
+                  net_total: net,
+                  status: "Bekliyor",
+                  approval_status: "taslak",
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_site_diary") {
+                const missing: string[] = [];
+                if (!args.project_id) missing.push("proje");
+                if (!args.entry_date) missing.push("tarih");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const summary = {
+                  action: "Şantiye Günlüğü",
+                  proje_id: args.project_id,
+                  tarih: args.entry_date,
+                  durum: args.work_status || "normal",
+                  yapılan_iş: args.work_done || "",
+                  not: args.general_note || "",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("site_diary_entries").upsert({
+                  user_id: uid,
+                  project_id: args.project_id,
+                  entry_date: args.entry_date,
+                  work_status: args.work_status || "normal",
+                  work_done: args.work_done || "",
+                  general_note: args.general_note || "",
+                  status: "published",
+                }, { onConflict: "project_id,entry_date" }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_material_entry") {
+                const missing: string[] = [];
+                if (!args.project_id) missing.push("proje");
+                if (!args.material_name) missing.push("malzeme adı");
+                if (!(args.quantity > 0)) missing.push("miktar");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+
+                const unit = args.unit || "adet";
+                const qty = Number(args.quantity);
+                const price = Number(args.unit_price || 0);
+                const summary = {
+                  action: "Malzeme Girişi",
+                  proje_id: args.project_id,
+                  malzeme: args.material_name,
+                  miktar: `${qty} ${unit}`,
+                  birim_fiyat: price ? fmtTRY(price) : "-",
+                  toplam: price ? fmtTRY(qty * price) : "-",
+                  tedarikçi: args.supplier || "-",
+                  tarih: args.entry_date || today,
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+
+                // Find or create material
+                let matId: string | null = null;
+                const { data: existing } = await sb.from("materials").select("id")
+                  .eq("user_id", uid).eq("project_id", args.project_id)
+                  .ilike("name", args.material_name).limit(1).maybeSingle();
+                if (existing) matId = existing.id;
+                else {
+                  const { data: created, error: cErr } = await sb.from("materials").insert({
+                    user_id: uid, project_id: args.project_id, name: args.material_name, unit,
+                  }).select("id").maybeSingle();
+                  if (cErr) return { status: "ERROR", error: cErr.message };
+                  matId = created!.id;
+                }
+                const { data, error } = await sb.from("material_entries").insert({
+                  user_id: uid,
+                  material_id: matId,
+                  entry_date: args.entry_date || today,
+                  quantity: qty,
+                  unit_price: price,
+                  total_amount: qty * price,
+                  supplier: args.supplier || null,
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              return { status: "ERROR", error: "Unknown tool" };
+            } catch (e) {
+              return { status: "ERROR", error: e instanceof Error ? e.message : "tool failed" };
+            }
+          }
+
+          const ACTION_SYSTEM = `${SYSTEM_PROMPT}${ragContext}${projectDataContext}
+
+=================================================== EYLEM MODU (ACTION ASSISTANT)
+Şu anda EYLEM MODUNDASIN. Kullanıcı bir işlem yapmak istiyor (ödeme, görev, hakediş, günlük, malzeme).
+
+KURALLAR:
+1. Önce eksik bilgileri sor (tek tek, kısa cümlelerle). Mesela "Tutar ne kadar?", "Hangi projeye?".
+2. İnsan ismini (proje, taşeron, personel) UUID'ye çevirmek için önce 'resolve_lookups' aracını çağır.
+3. Tüm bilgiler tamamlanınca, ilgili save_* aracını **confirmed=false** ile çağır → araç sana özet döndürecek.
+4. Bu özeti kullanıcıya sun ve **"Onaylıyor musunuz?"** diye sor. Örnek format:
+
+   📋 **Onay bekliyor:**
+   - Taşeron: Mehmet Usta
+   - Tutar: 15.000 ₺
+   - Yöntem: Nakit
+   - Tarih: 2026-07-03
+   
+   Kaydetmek için "evet" yazın.
+
+5. Kullanıcı 'evet/onaylıyorum/tamam' derse, AYNI aracı bu kez **confirmed=true** ile çağır ve kaydı yap.
+6. Kullanıcı onaylamadan ASLA confirmed=true kullanma. Bu kural mutlaktır.
+7. MISSING_FIELDS dönerse, eksikleri kullanıcıya sor. ERROR dönerse hatayı açıkla.
+8. Kayıt başarılı olunca "✅ Kaydedildi." de ve kısa özet ver.
+
+Cevabın Türkçe, kısa ve profesyonel olsun. Gereksiz sohbet etme.`;
+
+          // --- Tool-calling loop ---
+          const convo: any[] = [
+            { role: "system", content: ACTION_SYSTEM },
+            ...formattedMessages,
+          ];
+
+          let finalText = "";
+          for (let step = 0; step < 6; step++) {
+            const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                messages: convo,
+                tools,
+                tool_choice: "auto",
+              }),
+            });
+            if (!r.ok) {
+              const errTxt = await r.text();
+              console.error("[Action] gateway error:", r.status, errTxt);
+              if (r.status === 429) return new Response(JSON.stringify({ error: "Rate limit aşıldı." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              if (r.status === 402) return new Response(JSON.stringify({ error: "AI kredisi yetersiz." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              return new Response(JSON.stringify({ error: "AI servisi hatası" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            const j = await r.json();
+            const msg = j.choices?.[0]?.message;
+            if (!msg) break;
+            convo.push(msg);
+            const toolCalls = msg.tool_calls || [];
+            if (!toolCalls.length) {
+              finalText = msg.content || "";
+              break;
+            }
+            for (const tc of toolCalls) {
+              let parsedArgs: any = {};
+              try { parsedArgs = JSON.parse(tc.function?.arguments || "{}"); } catch { /* keep {} */ }
+              console.log("[Action] tool:", tc.function?.name, parsedArgs);
+              const result = await runTool(tc.function?.name, parsedArgs);
+              convo.push({
+                role: "tool",
+                tool_call_id: tc.id,
+                content: JSON.stringify(result),
+              });
+            }
+          }
+
+          if (!finalText) finalText = "İşleme devam edemedim. Lütfen tekrar deneyin.";
+
+          // Emit as a single SSE chunk so the frontend's streaming reader consumes it.
+          const encoder = new TextEncoder();
+          const stream = new ReadableStream({
+            start(controller) {
+              const chunk = { choices: [{ delta: { content: finalText } }] };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+              controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+              controller.close();
+            },
+          });
+          return new Response(stream, {
+            headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+          });
+        }
+      }
+    } catch (actionErr) {
+      console.error("Action Assistant error (falling back to chat):", actionErr);
+    }
+
+    // ============================================================
+    // Default: streaming Q&A
+    // ============================================================
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
