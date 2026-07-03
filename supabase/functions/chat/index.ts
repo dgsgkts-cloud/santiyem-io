@@ -7,6 +7,99 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ============================================================
+// Voice-mode fast path: module-scope caches (per warm isolate)
+// ============================================================
+type CacheEntry<T> = { value: T; expiresAt: number };
+const projectListCache = new Map<string, CacheEntry<Array<{ id: string; name: string }>>>();
+const brainCache = new Map<string, CacheEntry<string>>();
+const CACHE_MAX = 200;
+
+function cacheGet<T>(m: Map<string, CacheEntry<T>>, k: string): T | null {
+  const e = m.get(k);
+  if (!e) return null;
+  if (e.expiresAt < Date.now()) { m.delete(k); return null; }
+  return e.value;
+}
+function cacheSet<T>(m: Map<string, CacheEntry<T>>, k: string, v: T, ttlMs: number) {
+  if (m.size >= CACHE_MAX) {
+    const firstKey = m.keys().next().value;
+    if (firstKey !== undefined) m.delete(firstKey);
+  }
+  m.set(k, { value: v, expiresAt: Date.now() + ttlMs });
+}
+
+function normalizeQuery(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function extractDateWindow(q: string): { df: string | null; dt: string | null } {
+  const now = new Date();
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  if (/\bbugün\b|\bbugun\b/.test(q)) return { df: iso(now), dt: iso(now) };
+  if (/\bdün\b|\bdun\b/.test(q)) {
+    const d = new Date(now); d.setDate(d.getDate() - 1); return { df: iso(d), dt: iso(d) };
+  }
+  if (/\bbu ay\b/.test(q)) {
+    const s = new Date(now.getFullYear(), now.getMonth(), 1);
+    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { df: iso(s), dt: iso(e) };
+  }
+  if (/\bgeçen ay\b|\bgecen ay\b/.test(q)) {
+    const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const e = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { df: iso(s), dt: iso(e) };
+  }
+  if (/\bbu hafta\b/.test(q)) {
+    const d = new Date(now);
+    const day = (d.getDay() + 6) % 7; // Monday=0
+    const s = new Date(d); s.setDate(d.getDate() - day);
+    const e = new Date(s); e.setDate(s.getDate() + 6);
+    return { df: iso(s), dt: iso(e) };
+  }
+  return { df: null, dt: null };
+}
+
+function classifyIntentHeuristic(
+  rawQuery: string,
+  projectNames: Array<{ id: string; name: string }>,
+): { intent: string; filters: any; confident: boolean } {
+  const q = rawQuery.toLowerCase();
+  const filters: any = {};
+  const dw = extractDateWindow(q);
+  filters.date_from = dw.df;
+  filters.date_to = dw.dt;
+
+  if (/\btoplam\b|\bne kadar\b|\bkaç ton\b|\bkac ton\b|\bkaç m3\b|\bkac m3\b/.test(q)) filters.aggregate = "sum";
+  else if (/\ben\s+(çok|cok)\b/.test(q)) filters.aggregate = "top_by_recipient";
+  else if (/\ben son\b|\bson\s+(yüklenen|yuklenen|eklenen)\b/.test(q)) { filters.aggregate = "latest"; filters.limit = 1; }
+
+  // Project name match against cached list
+  for (const p of projectNames) {
+    const pn = (p.name || "").toLowerCase().trim();
+    if (pn && pn.length >= 3 && q.includes(pn)) { filters.project_name = p.name; break; }
+  }
+
+  let intent = "GENERAL_CHAT";
+  let confident = true;
+  if (/hakediş|hakedis|progress payment/.test(q)) intent = "HAKEDIS_QUERY";
+  else if (/taşeron|taseron|ödeme|odeme|payment|nakit|havale|çek\b|cek\b|kasa/.test(q)) intent = "PAYMENT_QUERY";
+  else if (/görev|gorev|task|yapılacak|yapilacak|to-?do|termin|geciken|bekleyen/.test(q)) intent = "TASK_QUERY";
+  else if (/şantiye günlüğü|santiye gunlugu|günlük|gunluk|beton döküm|beton dokum|kalıp|kalip|demir|hafriyat|iş yapıldı|is yapildi/.test(q)) intent = "SITE_DIARY_QUERY";
+  else if (/belge|evrak|döküman|dokuman|document|dosya|pdf/.test(q)) intent = "DOCUMENT_QUERY";
+  else if (/malzeme|stok|çimento|cimento|beton|demir\b|kum|çakıl|cakil|material/.test(q)) intent = "MATERIAL_QUERY";
+  else if (/sözleşme|sozlesme|kontrat|contract/.test(q)) intent = "CONTRACT_QUERY";
+  else if (/personel|işçi|isci|çalışan|calisan|usta|kalfa|maaş|maas|yevmiye|foreman|worker/.test(q)) intent = "PERSONNEL_QUERY";
+  else if (/proje|inşaat|insaat|şantiye|santiye|villa|bina|site/.test(q)) intent = "PROJECT_QUERY";
+  else { intent = "GENERAL_CHAT"; confident = false; }
+
+  if (/\bbekle/.test(q)) filters.name = "bekliyor";
+  else if (/\bgecik/.test(q)) filters.name = "gecikti";
+
+  return { intent, filters, confident };
+}
+
+
 const SYSTEM_PROMPT = `Sen Şantiyem'sın — Türk müteahhit, mühendis ve mimarların şantiye, proje ve hakediş yönetiminde profesyonel yapay zeka asistanısın.
 
 =================================================== KİMLİĞİN VE TEMEL KURALLAR
@@ -342,7 +435,8 @@ serve(async (req) => {
     // --- RAG: Search user's documents for context ---
     let ragContext = "";
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
+    if (authHeader && !voiceMode) {
+
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -436,64 +530,87 @@ serve(async (req) => {
         const userQuery = (lastUserMsg?.content || "").trim();
 
         if (userQuery && userQuery.length >= 3) {
-          // 1) Intent detection via fast JSON classifier
-          const now = new Date();
-          const intentResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
-              response_format: { type: "json_object" },
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
-                    `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                    `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
-                    `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. ` +
-                    `"Bu ay" → içinde bulunulan ay başı-sonu. "Geçen ay" → önceki ay. "Bu hafta" → pazartesi-pazar. ` +
-                    `"En son" / "son yüklenen" → limit=1, aggregate="latest". ` +
-                    `"Ne kadar / toplam / kaç ton / kaç m3" → aggregate="sum". ` +
-                    `"En çok ... yaptığımız" → aggregate="top_by_recipient". ` +
-                    `"Beton dökümü / kalıp / demir / hafriyat" gibi iş kalemi geçerse SITE_DIARY_QUERY için keyword'e yaz. ` +
-                    `"Bekleyen" → filters.name = "bekliyor". "Geciken" → filters.name = "gecikti". Sadece JSON döndür.`,
-                },
-                { role: "user", content: userQuery },
-              ],
-            }),
-          });
-
-          let intent = "GENERAL_CHAT";
-          let filters: any = {};
-          if (intentResp.ok) {
-            const j = await intentResp.json();
-            try {
-              const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
-              intent = parsed.intent || "GENERAL_CHAT";
-              filters = parsed.filters || {};
-            } catch { /* ignore */ }
-          }
-          console.log("[Brain] intent:", intent, "filters:", filters);
-
-          // 2) Query database based on intent (RLS bypassed via service key; always scope by user_id)
           const uid = user.id;
+          const normQ = normalizeQuery(userQuery);
+
+          // 0) Cache: exact query dedupe (per user + mode)
+          const cacheKey = `${uid}|${voiceMode ? "v" : "w"}|${normQ}`;
+          const cached = cacheGet(brainCache, cacheKey);
+          if (cached !== null) {
+            projectDataContext = cached;
+            console.log("[Brain] cache hit");
+            throw new Error("__CACHE_HIT__");
+          }
+
+          const now = new Date();
+          const brainStart = Date.now();
+
+          // 1) Cached project list for name resolution + heuristic matching
+          let projList = cacheGet(projectListCache, uid);
+          if (!projList) {
+            const { data: pl } = await sb.from("projects")
+              .select("id, name").eq("user_id", uid).limit(50);
+            projList = (pl || []) as any;
+            cacheSet(projectListCache, uid, projList!, 60_000);
+          }
+
+          // 2) Heuristic intent classifier (fast, no LLM)
+          const heur = classifyIntentHeuristic(userQuery, projList!);
+          let intent = heur.intent;
+          let filters: any = heur.filters;
+
+          // 3) Only fall back to LLM classifier in WEB mode when heuristic is uncertain
+          if (!voiceMode && !heur.confident) {
+            const intentResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash-lite",
+                response_format: { type: "json_object" },
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
+                      `Bugün: ${now.toISOString().slice(0, 10)}. ` +
+                      `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                      `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
+                  },
+                  { role: "user", content: userQuery },
+                ],
+              }),
+            });
+            if (intentResp.ok) {
+              const j = await intentResp.json();
+              try {
+                const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
+                intent = parsed.intent || intent;
+                filters = { ...filters, ...(parsed.filters || {}) };
+              } catch { /* ignore */ }
+            }
+          }
+          console.log("[Brain] intent:", intent, "filters:", filters, "voice:", voiceMode);
+
+          // 4) Query database based on intent
           const df = filters.date_from as string | null;
           const dt = filters.date_to as string | null;
           const nameFilter = (filters.name as string | null)?.toLowerCase() || null;
           const projectName = (filters.project_name as string | null) || null;
           const keyword = (filters.keyword as string | null) || null;
           const aggregate = (filters.aggregate as string | null) || null;
-          const limit = Math.min(Number(filters.limit) || 10, 25);
+          // Voice mode: keep result set tiny for fast spoken summary
+          const baseLimit = voiceMode ? 5 : 10;
+          const maxLimit = voiceMode ? 5 : 25;
+          const limit = Math.min(Number(filters.limit) || baseLimit, maxLimit);
 
-          // Helper: resolve project_id from name
+          // Resolve project_id from cached list first (no extra query)
           let projectIdFilter: string | null = null;
           if (projectName) {
-            const { data: proj } = await sb
-              .from("projects").select("id, name").eq("user_id", uid)
-              .ilike("name", `%${projectName}%`).limit(1).maybeSingle();
-            if (proj) projectIdFilter = proj.id;
+            const pn = projectName.toLowerCase();
+            const hit = projList!.find(p => (p.name || "").toLowerCase().includes(pn));
+            if (hit) projectIdFilter = hit.id;
           }
+
 
           const fmt = (n: any) =>
             typeof n === "number" ? new Intl.NumberFormat("tr-TR").format(n) + " ₺" : String(n ?? "");
@@ -681,11 +798,19 @@ serve(async (req) => {
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
               "KURAL: Kullanıcıya 'Bu bilgi sistemde bulunamadı.' şeklinde nazikçe bildir. Tahmini rakam verme.\n";
           }
+          if (projectDataContext) {
+            cacheSet(brainCache, cacheKey, projectDataContext, 30_000);
+          }
+          console.log(`[Brain] built in ${Date.now() - brainStart}ms`);
         }
       }
+
     } catch (brainErr) {
-      console.error("Construction Brain error (non-fatal):", brainErr);
+      if (!(brainErr instanceof Error && brainErr.message === "__CACHE_HIT__")) {
+        console.error("Construction Brain error (non-fatal):", brainErr);
+      }
     }
+
 
     // Build messages with multimodal support
     const formattedMessages = messages.map((m: { role: string; content: string; attachments?: { base64: string; type: string }[] }) => {
@@ -716,7 +841,7 @@ serve(async (req) => {
       const ACTION_RE =
         /\b(kaydet|ekle|oluştur|olustur|aç(?:al[ıi]m)?|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|ödeme yap|odeme yap|gir(?:iş|is)?|ata(?:y[ıi]m|n[ıi]r)?|görev\s+ver|başlat|baslat|düzenle|duzenle|not düş|not dus|sözleşme|sozlesme|hakediş(?:\s+oluştur|\s+olustur)?|hakedis|beton döküm|beton dokum|malzeme (girişi|girisi|ekle)|personel (ekle|kaydet)|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not|personel|sözleşme|sozlesme))\b/;
       const CONFIRM_RE = /\b(evet|onayl[ıi]yorum|onayla|onay|tamam|kaydet|geç|gec|ilerle|olur|hadi)\b/;
-      const isAction = ACTION_RE.test(rawText) || (CONFIRM_RE.test(rawText) && messages.length >= 3);
+      const isAction = !voiceMode && (ACTION_RE.test(rawText) || (CONFIRM_RE.test(rawText) && messages.length >= 3));
 
       if (isAction && Deno.env.get("SUPABASE_URL")) {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -1255,16 +1380,23 @@ KURALLAR:
     // Voice mode: non-streaming, natural spoken JSON reply
     // ============================================================
     if (voiceMode) {
-      const voiceSystem = systemPrompt + `
+      // Voice: use a lean system prompt (skip the heavy SYSTEM_PROMPT with dashboard rules)
+      // and pass only text messages — no attachments, no markdown scaffolding.
+      const voiceSystem =
+        `Sen Şantiyem AI'sın — deneyimli bir inşaat proje müdürü. Türkçe sesli asistan modundasın.\n` +
+        `KURALLAR:\n` +
+        `- Markdown, tablo, madde işareti, başlık, emoji YOK.\n` +
+        `- En fazla 2 kısa paragraf, kısa cümleler.\n` +
+        `- Sayı ve tarihleri doğal söyle (ör. "bir milyon iki yüz bin lira", "on beş Kasım").\n` +
+        `- Yanıtı kısa bir takip sorusuyla bitir.\n` +
+        `- Aşağıdaki VERİ bloğunda bilgi varsa sadece ona dayan; yoksa "sistemde bulamadım" de. Rakam uydurma.` +
+        projectDataContext;
 
-SESLİ MOD KURALLARI (ZORUNLU):
-- Yanıtın sesli okunacak, doğal ve akıcı Türkçe konuş.
-- Markdown, tablo, madde işareti, başlık, emoji KULLANMA.
-- En fazla 2-3 kısa paragraf. Kısa cümleler kur.
-- Sayıları doğal söyle ("1.250.000 TL" yerine "bir milyon iki yüz elli bin lira").
-- Tarihleri doğal söyle ("15/11/2026" yerine "on beş Kasım").
-- Yanıtı mutlaka kısa bir takip sorusuyla bitir (ör. "Detayları listeleyeyim mi?").
-- Veri yoksa spekülasyon yapma, yokluğu doğal biçimde söyle.`;
+      // Keep only last 6 turns for voice to reduce token cost & latency
+      const voiceMessages = messages
+        .filter((m: any) => m.role === "user" || m.role === "assistant")
+        .slice(-6)
+        .map((m: any) => ({ role: m.role, content: String(m.content ?? "") }));
 
       const vResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -1273,15 +1405,17 @@ SESLİ MOD KURALLARI (ZORUNLU):
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
             { role: "system", content: voiceSystem },
-            ...formattedMessages,
+            ...voiceMessages,
           ],
           stream: false,
-          max_tokens: 400,
+          max_tokens: 220,
+          temperature: 0.4,
         }),
       });
+
 
       if (!vResp.ok) {
         const errTxt = await vResp.text();
