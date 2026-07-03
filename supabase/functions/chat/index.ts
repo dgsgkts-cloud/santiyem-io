@@ -246,7 +246,8 @@ serve(async (req) => {
         
         const anonClient = createClient(supabaseUrl, anonKey);
         const token = authHeader.replace("Bearer ", "");
-        const { data: { user } } = await anonClient.auth.getUser(token);
+        const { data: claimsData } = await anonClient.auth.getClaims(token);
+        const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub as string } : null;
         
         if (user) {
           const supabase = createClient(supabaseUrl, serviceKey);
