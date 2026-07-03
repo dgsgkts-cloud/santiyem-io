@@ -425,6 +425,20 @@ serve(async (req) => {
             lines.push(`TAŞERON ÖDEMELERİ (${rows.length} kayıt, toplam ${fmt(total)}):`);
             rows.forEach((r: any) => lines.push(`- ${r.payment_date} · ${r.subcontractors?.name || "?"} · ${fmt(Number(r.amount))} · ${r.payment_method}${r.description ? " · " + r.description : ""}`));
 
+            // Top-by-recipient aggregation: "en çok ödeme yaptığımız taşeron"
+            if (aggregate === "top_by_recipient" || /en\s+(cok|çok)/.test(qText)) {
+              const agg = new Map<string, number>();
+              rows.forEach((r: any) => {
+                const k = r.subcontractors?.name || "?";
+                agg.set(k, (agg.get(k) || 0) + Number(r.amount || 0));
+              });
+              const top = [...agg.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+              if (top.length) {
+                lines.push(`\nTAŞERON BAZINDA SIRALAMA:`);
+                top.forEach(([n, v], i) => lines.push(`${i + 1}. ${n} · ${fmt(v)}`));
+              }
+            }
+
             if (subcontractorScope) {
               // Also pull cash_payments explicitly categorized as Taşeron Ödemesi that AREN'T mirrors
               // of a subcontractor_payments row (source_type is null / not subcontractor_payment).
