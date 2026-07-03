@@ -1289,7 +1289,15 @@ serve(async (req) => {
               EXECUTIVE_BRIEFING: { reason: "Brifing için yeterli veri yok.", alt: "Var olan modüllerden biri (görev, ödeme, hakediş) için ayrı özet hazırlayabilirim." },
               DOCUMENT_QUERY: { reason: "Yüklü evrak yok.", alt: "Belge Merkezi'nden PDF yüklediğinde içeriği analiz edebilirim." },
               PROJECT_QUERY: { reason: "Bu sorguya uyan proje yok.", alt: "Tüm projelerin özetini gösterebilirim." },
+              TODAYS_TASKS: { reason: "Bugün için planlı görev bulunmuyor.", alt: "Bu haftanın açık görevlerini veya geciken işleri listeleyebilirim." },
+              LOW_STOCK: { reason: "Malzeme norm tanımlı değil ya da stok verisi henüz girilmemiş; kritik stok analizi yapılamıyor.", alt: "Malzeme normlarını tanımlayıp giriş/çıkış kayıtlarını ekledikten sonra kritik stokları çıkarabilirim." },
+              PERSONNEL_OVERTIME: { reason: "Seçili aralıkta 9 saati aşan vardiya kaydı bulunmuyor.", alt: "Genel yoklama özetini veya bu haftaki toplam adam/saat dağılımını gösterebilirim." },
+              MEETING_SUMMARY: { reason: "Toplantı kaydı bulunmuyor.", alt: "Toplantı Merkezi'nde yeni bir toplantı başlattığında transkript ve karar özetini otomatik çıkarabilirim." },
+              PROJECT_PROGRESS: { reason: "İlerleme kıyaslaması için başlangıç/bitiş tarihi olan proje yok.", alt: "Aktif proje listesini veya sözleşme özetini gösterebilirim." },
+              PROJECT_HEALTH: { reason: "Sağlık skoru hesaplamak için yeterli proje verisi yok.", alt: "İlk projeni oluşturup görev/ödeme kayıtlarını girdiğinde skorları çıkarabilirim." },
+              PROJECT_RISKS: { reason: "Şu anda ölçülebilir bir kritik risk sinyali yok.", alt: "Yaklaşan ödeme takvimini veya proje ilerleme durumunu gösterebilirim." },
             };
+
             const m = missingMap[intent] || { reason: "İstenen bilgi sistemde bulunamadı.", alt: "Farklı bir konuda yardımcı olabilirim." };
             projectDataContext =
               "\n\n=== KULLANICI PROJE VERİSİ ===\nIntent: " + intent + "\nSonuç: kayıt bulunamadı.\n" +
