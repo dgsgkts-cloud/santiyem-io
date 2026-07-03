@@ -582,6 +582,24 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   useEffect(() => {
     console.log("[voice][status] SDK status →", conversation.status, "isSpeaking:", conversation.isSpeaking);
+
+    // === GREETING DIAGNOSTICS: SPEAKING ↔ LISTENING transitions ===========
+    const nowSpeaking = conversation.isSpeaking;
+    if (!wasSpeakingRef.current && nowSpeaking) {
+      greetingStartRef.current = Date.now();
+      console.log("[voice][DIAG] 🔈 → SPEAKING started at", new Date().toISOString());
+    }
+    if (wasSpeakingRef.current && !nowSpeaking) {
+      const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
+      console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
+        "\n         last AI text  :", lastAiMessageRef.current,
+        "\n         last user text:", lastUserTranscriptRef.current,
+        "\n         (if last user text is non-empty and this happened <5s in, the greeting was BARGE-IN interrupted)");
+      greetingStartRef.current = null;
+    }
+    wasSpeakingRef.current = nowSpeaking;
+    // ======================================================================
+
     if (conversation.status === "connected") {
       setUiState(conversation.isSpeaking ? "speaking" : "listening");
     }
