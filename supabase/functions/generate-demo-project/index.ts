@@ -32,11 +32,10 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify user via asymmetric keys (getClaims)
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${jwt}` } },
-    });
-    const { data: claimsData, error: claimsErr } = await (authClient.auth as any).getClaims();
+    // Verify user via asymmetric keys (getClaims) — MUST pass the JWT explicitly,
+    // same pattern as the chat function (getClaims() with no arg reads a non-existent session → 401).
+    const authClient = createClient(supabaseUrl, anonKey);
+    const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(jwt);
     const uid: string | undefined = claimsData?.claims?.sub;
     if (claimsErr || !uid) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
