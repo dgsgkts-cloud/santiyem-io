@@ -170,6 +170,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         if (msg?.source === "ai" && typeof msg.message === "string") {
           setTranscript(msg.message);
           lastAiMessageRef.current = msg.message;
+          if (firstReplyPendingRef.current) {
+            const lat = Date.now() - firstReplyPendingRef.current;
+            firstReplyPendingRef.current = null;
+            setDebug((d) => ({ ...d, firstReplyLatencyMs: lat }));
+          }
           setBubbles((prev) => [...prev, { id: `${Date.now()}-a`, role: "ai" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
       } catch (e) { console.error("onMessage handler failed", e); }
@@ -178,6 +183,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       try {
         console.error("[voice][SDK] ❌ onError", e);
         const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : (typeof e === "object" ? JSON.stringify(e).slice(0, 300) : "Ses bağlantısında hata."));
+        setDebug((d) => ({ ...d, lastError: msg, lastEvent: "error" }));
         if (connectWaiterRef.current) {
           connectWaiterRef.current.reject(new Error(msg));
           connectWaiterRef.current = null;
