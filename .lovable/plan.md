@@ -1,24 +1,31 @@
-## Teşhis planı — "Bağlanıyor..." takılması
+# Sesli Asistan: Bağlantı, Mikrofon İzni ve İlk Mesaj Düzeltmeleri
 
-Web preview'de test ediyorsunuz, authentication açık. Sebep büyük ihtimalle **Allowed Origins** eksikliği: preview URL `lovableproject.com` alt-domain'inde çalışıyor ama listede yok.
+## Tespitler
 
-### Adım 1 — Allowed origins genişlet (dashboard, kod yok)
-ElevenLabs → Şantiyem AI Agent → **Security** → Allowed origins şu 6 girdiyi içermeli:
-- `https://*.lovableproject.com`
-- `https://*.lovable.app`
-- `https://santiyem.io`
-- `https://www.santiyem.io`
-- `capacitor://localhost`
-- `http://localhost`
+1. **"Bağlanıyor…" da takılma**: `startSession` çağrısında zaman aşımı yok — WebRTC bağlantısı kurulamazsa (örn. dil override'ı ajanda tanımlı değilse veya WebRTC engellenirse) ekran sonsuza kadar "Bağlanıyor…" da kalıyor, hata göstermiyor. Ayrıca backend loglarında token isteği hiç görünmüyor; yani akış büyük ihtimalle daha mikrofon izni aşamasında takılıyor.
+2. **Mikrofon izninin tekrar tekrar sorulması**: Kod önce kendisi `getUserMedia` çağırıyor, sonra ElevenLabs SDK'sı bağlantı açarken **ikinci kez** mikrofon istiyor. iOS'ta bu çift istem olarak görünüyor.
+3. **İlk mesajın söylenmemesi**: `language: "tr"` override'ı gönderiliyor ama ajanın Türkçe dil ayarında ilk mesaj tanımlı değilse ElevenLabs ilk mesajı boş geçiyor.
 
-Save → preview'i **hard reload** (Cmd+Shift+R) → mikrofona tekrar basın.
+## Yapılacaklar
 
-### Adım 2 — Hâlâ takılıyorsa doğrulama testi
-Authentication'ı geçici olarak **kapatın** ve tekrar deneyin.
-- Bağlanırsa → sorun kesin olarak allowed origins; hangi girdiyi eksik eklediğinizi bulup ekleyeceğiz.
-- Bağlanmazsa → bu bir dashboard sorunu değil. Bu durumda `elevenlabs-conversation-token` edge function loglarına bakıp token cevabındaki HTTP kodunu ve ElevenLabs hata mesajını çıkaracağım.
+### 1. Bağlantı teşhisi ve zaman aşımı (`VoiceCopilot.tsx`)
+- `startSession`'a 15 saniyelik zaman aşımı ekle; süre dolarsa "Bağlanıyor" yerine net bir hata mesajı ve "Tekrar Dene" butonu göster.
+- Her adımı (mikrofon izni → token alındı → oturum açıldı) konsola logla ki takılmanın tam yeri görülebilsin.
+- Token yanıtındaki `agent_id`'yi de logla.
 
-### Adım 3 — Native header safe-area
-Değişikliklerimiz kodda hazır ama iOS'ta görmek için `npm run cap:sync` + Xcode build gerekiyor. Bu ayrı bir konu; şimdilik bağlantı sorununa odaklanalım.
+### 2. WebSocket yedeği (edge function + client)
+- Token fonksiyonuna `signed_url` desteği ekle (ElevenLabs `get-signed-url` ucu).
+- WebRTC 15 saniyede bağlanamazsa otomatik olarak WebSocket (`signedUrl`) ile yeniden dene — bazı ağlarda/iOS WebView'da WebRTC engellenebiliyor.
 
-Kod değişikliği yok — sadece sizin dashboard'da denemeniz gereken adımlar.
+### 3. Tek mikrofon istemi
+- Manuel `getUserMedia` ön çağrısını kaldır; mikrofonu yalnızca SDK istesin (tek istem).
+- İzin durumunu `navigator.permissions.query({ name: "microphone" })` ile kontrol edip daha önce reddedildiyse açıklayıcı mesaj göster.
+- Not: Native (Capacitor) tarafta iOS'un her oturumda tekrar sorması WKWebView davranışıdır; `Info.plist`'te `NSMicrophoneUsageDescription` tanımlı olmalı ve Capacitor 5+ native izin verildiyse tekrar sormaz. Bunun için yerel projede `npx cap sync` + yeni build gerekir.
+
+### 4. İlk mesaj garantisi
+- `startSession` override'ına `firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?"` ekle.
+- **Sizin yapmanız gereken (ElevenLabs panelinde, 1 kez)**: Agent → Security → Overrides bölümünde **First message** kutusunu da işaretleyin (Language'in yanına). İşaretlenmezse override sessizce yok sayılır.
+
+## Teknik Detaylar
+- Değişen dosyalar: `src/components/voice/VoiceCopilot.tsx`, `supabase/functions/elevenlabs-conversation-token/index.ts`
+- Doğrulama: Edge function'ı doğrudan test edip token/signed URL döndüğünü kontrol edeceğim; web önizlemede bağlantı akışını konsol loglarıyla izleyeceğim.

@@ -43,6 +43,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const sessionStartRef = useRef<number | null>(null);
+  const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const navigate = useNavigate();
 
   const conversation = useConversation({
@@ -51,6 +52,8 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onConnect: () => {
       try {
+        connectWaiterRef.current?.resolve();
+        connectWaiterRef.current = null;
         sessionStartRef.current = Date.now();
         setUiState("listening");
         if (initialContext) {
@@ -91,7 +94,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     onError: (e: unknown) => {
       try {
         console.error("Voice error", e);
-        setError(typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata."));
+        const msg = typeof e === "string" ? e : (e instanceof Error ? e.message : "Ses bağlantısında hata.");
+        if (connectWaiterRef.current) {
+          connectWaiterRef.current.reject(new Error(msg));
+          connectWaiterRef.current = null;
+          return; // start() flow handles the fallback / error UI
+        }
+        setError(msg);
         setUiState("error");
       } catch (err) {
         console.error("onError handler failed", err);
@@ -161,6 +170,14 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     }
   };
 
+  const CONNECT_TIMEOUT_MS = 15000;
+
+  const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`${label} zaman aşımına uğradı`)), ms);
+      p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+    });
+
   const start = async () => {
     setError(null);
     setUiState("connecting");
@@ -170,14 +187,31 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         setUiState("error");
         return;
       }
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Check (don't request) mic permission — the SDK will request it once itself.
+      try {
+        const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
+        console.log("[voice] mic permission state:", perm?.state);
+        if (perm?.state === "denied") {
+          setError("Mikrofon izni reddedilmiş. Cihaz ayarlarından uygulamaya mikrofon izni verin.");
+          setUiState("error");
+          return;
+        }
+      } catch { /* permissions API not supported everywhere — SDK will prompt */ }
+
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
       if (!jwt) throw new Error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` },
-      });
+
+      console.log("[voice] fetching conversation token…");
+      const res = await withTimeout(
+        fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${jwt}` },
+        }),
+        CONNECT_TIMEOUT_MS,
+        "Token isteği"
+      );
       if (res.status === 402) {
         const body = await res.json();
         setError(body?.message ?? "Günlük ses kotanız doldu.");
@@ -187,16 +221,65 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       if (!res.ok) {
         throw new Error(`Token alınamadı (${res.status})`);
       }
-      const { token } = await res.json();
-      await conversation.startSession({
-        conversationToken: token,
-        connectionType: "webrtc",
-        overrides: {
-          agent: { language: "tr" },
+      const { token, signed_url, agent_id } = await res.json();
+      console.log("[voice] token received. agent:", agent_id, "webrtc token:", Boolean(token), "signed_url:", Boolean(signed_url));
+
+      const overrides = {
+        agent: {
+          language: "tr",
+          firstMessage: "Merhaba, ben Şantiyem AI. Hangi projede yardımcı olayım?",
         },
-      });
+      } as const;
+
+      // startSession is fire-and-forget in this SDK version;
+      // success/failure arrives via onConnect/onError callbacks.
+      const waitForConnect = () =>
+        withTimeout(
+          new Promise<void>((resolve, reject) => {
+            connectWaiterRef.current = { resolve, reject };
+          }),
+          CONNECT_TIMEOUT_MS,
+          "Ses bağlantısı"
+        ).finally(() => {
+          connectWaiterRef.current = null;
+        });
+
+      // 1) Try WebRTC first (lower latency)
+      if (token) {
+        try {
+          console.log("[voice] starting WebRTC session…");
+          const connected = waitForConnect();
+          conversation.startSession({
+            conversationToken: token,
+            connectionType: "webrtc",
+            overrides,
+          });
+          await connected;
+          console.log("[voice] WebRTC session started");
+          return;
+        } catch (e) {
+          console.warn("[voice] WebRTC failed, will try WebSocket fallback:", e);
+          try { await conversation.endSession(); } catch { /* noop */ }
+        }
+      }
+
+      // 2) Fallback: WebSocket via signed URL
+      if (signed_url) {
+        console.log("[voice] starting WebSocket session…");
+        const connected = waitForConnect();
+        conversation.startSession({
+          signedUrl: signed_url,
+          connectionType: "websocket",
+          overrides,
+        });
+        await connected;
+        console.log("[voice] WebSocket session started");
+        return;
+      }
+
+      throw new Error("Ses bağlantısı kurulamadı. Lütfen tekrar deneyin.");
     } catch (e) {
-      console.error(e);
+      console.error("[voice] start failed:", e);
       setError(e instanceof Error ? e.message : String(e));
       setUiState("error");
       toast.error("Sesli asistan başlatılamadı", { description: String(e) });

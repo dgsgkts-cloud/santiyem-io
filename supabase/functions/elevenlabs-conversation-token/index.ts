@@ -76,25 +76,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Request a conversation token
-    const tokenRes = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
-      { headers: { "xi-api-key": apiKey } }
-    );
+    // Request a WebRTC conversation token + WebSocket signed URL in parallel
+    const [tokenRes, signedRes] = await Promise.all([
+      fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
+        { headers: { "xi-api-key": apiKey } }
+      ),
+      fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
+        { headers: { "xi-api-key": apiKey } }
+      ),
+    ]);
 
-    if (!tokenRes.ok) {
+    if (!tokenRes.ok && !signedRes.ok) {
       const errText = await tokenRes.text();
+      await signedRes.text().catch(() => null);
+      console.error("elevenlabs token error", tokenRes.status, errText);
       return new Response(
         JSON.stringify({ error: "elevenlabs_error", details: errText, status: tokenRes.status }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { token } = await tokenRes.json();
+    const tokenJson = tokenRes.ok ? await tokenRes.json().catch(() => null) : null;
+    const signedJson = signedRes.ok ? await signedRes.json().catch(() => null) : null;
+    if (!tokenRes.ok) await tokenRes.text().catch(() => null);
+    if (!signedRes.ok) await signedRes.text().catch(() => null);
 
     return new Response(
       JSON.stringify({
-        token,
+        token: tokenJson?.token ?? null,
+        signed_url: signedJson?.signed_url ?? null,
         agent_id: agentId,
         quota: {
           is_premium: isPremium,
