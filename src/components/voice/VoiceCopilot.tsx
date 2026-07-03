@@ -461,6 +461,19 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         },
       } as any;
 
+      // ---- Dynamic variables sent to the ElevenLabs agent -----------------
+      // The dashboard greeting can reference these via {{user_name}} etc.
+      // Only include values we actually have — omit missing ones gracefully.
+      const dynamicVariables: Record<string, string> = {};
+      if (firstName) dynamicVariables.user_name = firstName;
+      try {
+        const cp = getCompanyProfile();
+        const company = (cp?.companyName || "").trim();
+        if (company) dynamicVariables.company_name = company;
+      } catch { /* noop */ }
+      if (userRole) dynamicVariables.user_role = userRole;
+      console.log("[voice][start] dynamicVariables →", dynamicVariables);
+
       const waitForConnect = (ms: number) =>
         withTimeout(
           new Promise<void>((resolve, reject) => { connectWaiterRef.current = { resolve, reject }; }),
