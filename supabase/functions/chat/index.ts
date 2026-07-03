@@ -743,6 +743,48 @@ serve(async (req) => {
                 },
               },
             },
+            {
+              type: "function",
+              function: {
+                name: "save_personnel",
+                description: "Create a new personnel (worker/foreman) record. Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["full_name", "confirmed"],
+                  properties: {
+                    full_name: { type: "string" },
+                    occupation: { type: "string" },
+                    phone: { type: "string" },
+                    employment_type: { type: "string", enum: ["daily_wage", "monthly_salary", "subcontractor"] },
+                    daily_wage: { type: "number" },
+                    monthly_salary: { type: "number" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_contract",
+                description: "Create a new contract (sözleşme). Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["name", "counterparty", "amount", "confirmed"],
+                  properties: {
+                    name: { type: "string" },
+                    counterparty: { type: "string", description: "Karşı taraf (taşeron/müşteri)" },
+                    amount: { type: "number" },
+                    contract_type: { type: "string", description: "yapim_isleri, taseronluk, hizmet, vb." },
+                    project_id: { type: "string" },
+                    start_date: { type: "string" },
+                    end_date: { type: "string" },
+                    notes: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
           ];
 
           const fmtTRY = (n: number) => new Intl.NumberFormat("tr-TR").format(n) + " ₺";
