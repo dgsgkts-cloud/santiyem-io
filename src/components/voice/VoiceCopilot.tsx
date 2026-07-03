@@ -4,6 +4,7 @@ import {
   X, Mic, MicOff, Pause, Play, Square, Keyboard, RotateCw, MessageSquare,
   AlertCircle, HardHat, Radio, TrendingUp, AlertTriangle, Package, Users,
   Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2, Settings,
+  RefreshCw, Bug,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
