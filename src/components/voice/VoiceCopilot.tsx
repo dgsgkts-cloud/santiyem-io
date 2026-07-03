@@ -1330,3 +1330,42 @@ function buildSummary(bubbles: Bubble[]) {
     nextQuestion,
   };
 }
+
+/* =====================================================
+   DEBUG PANEL — dev-only floating diagnostics
+   ===================================================== */
+function DebugPanel({
+  open, onToggle, data,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  data: Record<string, string | number | boolean>;
+}) {
+  return (
+    <div className="fixed bottom-3 right-3 z-[60] font-mono text-[10px] pointer-events-auto">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-black/70 border border-white/10 text-emerald-300 hover:bg-black/90"
+        aria-label="Debug"
+      >
+        <Bug className="w-3 h-3" /> {open ? "hide" : "debug"}
+      </button>
+      {open && (
+        <div className="mt-2 w-[260px] max-h-[60vh] overflow-y-auto rounded-lg bg-black/85 border border-white/10 p-3 backdrop-blur">
+          <div className="text-emerald-300 uppercase tracking-widest text-[9px] mb-2">Voice Debug</div>
+          <table className="w-full">
+            <tbody>
+              {Object.entries(data).map(([k, v]) => (
+                <tr key={k} className="border-b border-white/5 last:border-0">
+                  <td className="py-1 pr-2 text-white/50 align-top">{k}</td>
+                  <td className="py-1 text-white/90 break-all">{String(v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
