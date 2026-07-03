@@ -18,6 +18,7 @@ import {
   BarChart3,
   Search,
   Database,
+  SearchX,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
