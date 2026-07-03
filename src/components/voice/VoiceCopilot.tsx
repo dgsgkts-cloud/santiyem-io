@@ -257,6 +257,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         const kind = msg?.type ?? msg?.source ?? "unknown";
         console.log("[voice][onMessage][" + kind + "]", msg);
 
+        // Timeline: first audio chunk of the session (WebSocket transport).
+        if (kind === "audio" && !tlFirstAudioRef.current) {
+          tlFirstAudioRef.current = true;
+          tl("first audio chunk received");
+        }
+
         // === GREETING DIAGNOSTICS ================================
         // ElevenLabs emits these when the server truncates a response:
         //   - "interruption"                    (server-side: user spoke)
@@ -265,6 +271,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         // interrupted BEFORE playback finished (barge-in), not truncated by
         // the model or by the client player.
         if (kind === "interruption" || msg?.type === "interruption") {
+          tl("🛑 INTERRUPTION (server)", `reason=${msg?.reason ?? msg?.interruption_event?.reason ?? "none"}`);
           console.warn("[voice][DIAG] 🛑 INTERRUPTION event from server —",
             "reason:", msg?.reason ?? msg?.interruption_event?.reason ?? "(none)",
             "at:", new Date().toISOString(),
@@ -277,22 +284,26 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           const corrected =
             msg?.agent_response_correction_event?.corrected_agent_response ??
             msg?.corrected_agent_response;
+          tl("✂️ agent_response_correction (server truncated)");
           console.warn("[voice][DIAG] ✂️  AGENT_RESPONSE_CORRECTION (server truncated the reply)");
           console.warn("           original :", original);
           console.warn("           corrected:", corrected);
         }
         if (kind === "agent_response" || msg?.type === "agent_response") {
           const full = msg?.agent_response_event?.agent_response ?? msg?.message;
+          tl("greeting/agent text received", String(full ?? "").slice(0, 80));
           console.log("[voice][DIAG] 📝 FULL AGENT_RESPONSE text (what TTS will speak):", full);
         }
         if (kind === "user_transcript" || msg?.type === "user_transcript") {
           const t = msg?.user_transcription_event?.user_transcript ?? msg?.message;
           lastUserTranscriptRef.current = t;
+          tl("user_transcript (mic heard!)", JSON.stringify(t).slice(0, 80));
           console.log("[voice][DIAG] 🎤 USER_TRANSCRIPT (mic heard):", JSON.stringify(t));
         }
         if (kind === "vad_score" || msg?.type === "vad_score") {
           const s = msg?.vad_score_event?.vad_score ?? msg?.vad_score;
           if (typeof s === "number" && s > 0.5) {
+            tl("VAD spike", `${s.toFixed(2)} while isSpeaking=${conversation.isSpeaking}`);
             console.log("[voice][DIAG] 🔊 VAD spike", s.toFixed(2),
               "while agent isSpeaking =", conversation.isSpeaking);
           }
