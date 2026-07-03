@@ -82,6 +82,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  const lastUserTranscriptRef = useRef<string>("");
+  const wasSpeakingRef = useRef<boolean>(false);
+  const greetingStartRef = useRef<number | null>(null);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
@@ -195,7 +198,51 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onMessage: (msg: any) => {
       try {
-        console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
+        const kind = msg?.type ?? msg?.source ?? "unknown";
+        console.log("[voice][onMessage][" + kind + "]", msg);
+
+        // === GREETING DIAGNOSTICS ================================
+        // ElevenLabs emits these when the server truncates a response:
+        //   - "interruption"                    (server-side: user spoke)
+        //   - "agent_response_correction"       (final corrected/truncated text)
+        // If either fires during the first agent turn, the greeting was
+        // interrupted BEFORE playback finished (barge-in), not truncated by
+        // the model or by the client player.
+        if (kind === "interruption" || msg?.type === "interruption") {
+          console.warn("[voice][DIAG] 🛑 INTERRUPTION event from server —",
+            "reason:", msg?.reason ?? msg?.interruption_event?.reason ?? "(none)",
+            "at:", new Date().toISOString(),
+            "last user transcript:", lastUserTranscriptRef.current);
+        }
+        if (kind === "agent_response_correction" || msg?.type === "agent_response_correction") {
+          const original =
+            msg?.agent_response_correction_event?.original_agent_response ??
+            msg?.original_agent_response;
+          const corrected =
+            msg?.agent_response_correction_event?.corrected_agent_response ??
+            msg?.corrected_agent_response;
+          console.warn("[voice][DIAG] ✂️  AGENT_RESPONSE_CORRECTION (server truncated the reply)");
+          console.warn("           original :", original);
+          console.warn("           corrected:", corrected);
+        }
+        if (kind === "agent_response" || msg?.type === "agent_response") {
+          const full = msg?.agent_response_event?.agent_response ?? msg?.message;
+          console.log("[voice][DIAG] 📝 FULL AGENT_RESPONSE text (what TTS will speak):", full);
+        }
+        if (kind === "user_transcript" || msg?.type === "user_transcript") {
+          const t = msg?.user_transcription_event?.user_transcript ?? msg?.message;
+          lastUserTranscriptRef.current = t;
+          console.log("[voice][DIAG] 🎤 USER_TRANSCRIPT (mic heard):", JSON.stringify(t));
+        }
+        if (kind === "vad_score" || msg?.type === "vad_score") {
+          const s = msg?.vad_score_event?.vad_score ?? msg?.vad_score;
+          if (typeof s === "number" && s > 0.5) {
+            console.log("[voice][DIAG] 🔊 VAD spike", s.toFixed(2),
+              "while agent isSpeaking =", conversation.isSpeaking);
+          }
+        }
+        // ============================================================
+
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
           firstReplyPendingRef.current = Date.now();
@@ -535,6 +582,24 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   useEffect(() => {
     console.log("[voice][status] SDK status →", conversation.status, "isSpeaking:", conversation.isSpeaking);
+
+    // === GREETING DIAGNOSTICS: SPEAKING ↔ LISTENING transitions ===========
+    const nowSpeaking = conversation.isSpeaking;
+    if (!wasSpeakingRef.current && nowSpeaking) {
+      greetingStartRef.current = Date.now();
+      console.log("[voice][DIAG] 🔈 → SPEAKING started at", new Date().toISOString());
+    }
+    if (wasSpeakingRef.current && !nowSpeaking) {
+      const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
+      console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
+        "\n         last AI text  :", lastAiMessageRef.current,
+        "\n         last user text:", lastUserTranscriptRef.current,
+        "\n         (if last user text is non-empty and this happened <5s in, the greeting was BARGE-IN interrupted)");
+      greetingStartRef.current = null;
+    }
+    wasSpeakingRef.current = nowSpeaking;
+    // ======================================================================
+
     if (conversation.status === "connected") {
       setUiState(conversation.isSpeaking ? "speaking" : "listening");
     }
@@ -617,10 +682,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (!isActive) return;
     if (muted) return; // user explicitly muted — respect it
     if (shouldBlockBargeIn(settings) && conversation.isSpeaking) {
+      console.log("[voice][DIAG] 🎙️→OFF anti-barge-in disabled local mic while agent speaks");
       setLocalTracksEnabled(false);
       return () => {
         // Small grace so tail-end TTS audio doesn't self-trigger VAD on re-open.
-        setTimeout(() => { if (!muted && !settingsRef.current.pushToTalk) setLocalTracksEnabled(true); }, 350);
+        setTimeout(() => {
+          if (!muted && !settingsRef.current.pushToTalk) {
+            console.log("[voice][DIAG] 🎙️→ON  re-enabled local mic after agent finished");
+            setLocalTracksEnabled(true);
+          }
+        }, 350);
       };
     } else if (!settings.pushToTalk) {
       setLocalTracksEnabled(true);
