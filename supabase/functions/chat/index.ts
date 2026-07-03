@@ -655,13 +655,33 @@ serve(async (req) => {
           const maxLimit = voiceMode ? 5 : 25;
           const limit = Math.min(Number(filters.limit) || baseLimit, maxLimit);
 
-          // Resolve project_id from cached list first (no extra query)
+          // Resolve project_id from cached list using fuzzy resolver.
+          // If the user's mention is ambiguous across multiple projects, short-circuit
+          // with a clarification question instead of guessing.
           let projectIdFilter: string | null = null;
+          let projectClarification: string | null = null;
           if (projectName) {
-            const pn = projectName.toLowerCase();
-            const hit = projList!.find(p => (p.name || "").toLowerCase().includes(pn));
-            if (hit) projectIdFilter = hit.id;
+            const outcome = resolveEntity(
+              projectName,
+              (projList || []).map(p => ({ id: p.id, name: p.name }) as EntityCandidate),
+              { autoSelectThreshold: 0.85, suggestThreshold: 0.62 },
+            );
+            if (outcome.status === "auto") {
+              projectIdFilter = outcome.match.id;
+            } else if (outcome.status === "ambiguous") {
+              projectClarification = buildClarification("proje", outcome.matches);
+            }
           }
+
+          // If we hit an ambiguous project mention, ask the user to disambiguate
+          // rather than returning data that might be from the wrong project.
+          if (projectClarification) {
+            projectDataContext = `AÇIKLAMA GEREKLİ: ${projectClarification}`;
+            cacheSet(brainCache, cacheKey, projectDataContext, 10_000);
+            throw new Error("__CACHE_HIT__");
+          }
+
+
 
 
           const fmt = (n: any) =>
