@@ -43,6 +43,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const sessionStartRef = useRef<number | null>(null);
+  const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const navigate = useNavigate();
 
   const conversation = useConversation({
