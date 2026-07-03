@@ -3,6 +3,7 @@ import { Mic, Lock } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 import { VoiceCopilot } from "./VoiceCopilot";
+import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
 
@@ -60,7 +61,11 @@ export function VoiceOrb() {
           </div>
         </div>
       </button>
-      {open && <VoiceCopilot onClose={() => setOpen(false)} access={access} />}
+      {open && (
+        <VoiceErrorBoundary onClose={() => setOpen(false)}>
+          <VoiceCopilot onClose={() => setOpen(false)} access={access} />
+        </VoiceErrorBoundary>
+      )}
     </>
   );
 }
