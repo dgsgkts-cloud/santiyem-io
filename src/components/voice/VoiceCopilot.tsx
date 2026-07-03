@@ -744,14 +744,18 @@ function StartButton({ onStart, disabled }: { onStart: () => void; disabled: boo
    ACTION BAR — glass buttons (Mute / Pause / Stop / Keyboard / Repeat / History)
    ===================================================== */
 function ActionBar({
-  muted, paused, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
+  muted, paused, siteMode, onSiteMode, onMute, onPause, onStop, onKeyboard, onRepeat, onHistory,
 }: {
-  muted: boolean; paused: boolean;
+  muted: boolean; paused: boolean; siteMode: boolean;
+  onSiteMode: () => void;
   onMute: () => void; onPause: () => void; onStop: () => void;
   onKeyboard: () => void; onRepeat: () => void; onHistory: () => void;
 }) {
   return (
     <div className="voice-glass-strong rounded-2xl px-2 py-2 flex items-center gap-1.5 voice-fade-in">
+      <ActionBtn onClick={onSiteMode} label={siteMode ? "Şantiye Modu: Açık" : "Şantiye Modu: Kapalı"} active={siteMode}>
+        <HardHat className="w-4 h-4" />
+      </ActionBtn>
       <ActionBtn onClick={onMute} label={muted ? "Mikrofonu aç" : "Sustur"} danger={muted}>
         {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </ActionBtn>
