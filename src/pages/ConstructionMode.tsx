@@ -1,0 +1,36 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { VoiceCopilot } from "@/components/voice/VoiceCopilot";
+import { useVoiceAccess } from "@/hooks/useVoiceAccess";
+
+/**
+ * Hands-free "Saha Modu" — big microphone, glove-friendly.
+ * Uses VoiceCopilot in compact mode (no dashboard rail).
+ */
+export default function ConstructionMode() {
+  const navigate = useNavigate();
+  const access = useVoiceAccess();
+
+  // Keep screen awake while on site
+  useEffect(() => {
+    let wakeLock: WakeLockSentinel | null = null;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<WakeLockSentinel> } };
+    if (nav.wakeLock?.request) {
+      nav.wakeLock.request("screen").then((w) => (wakeLock = w)).catch(() => {});
+    }
+    return () => { if (wakeLock) wakeLock.release().catch(() => {}); };
+  }, []);
+
+  if (access.loading) {
+    return <div className="min-h-screen bg-black flex items-center justify-center text-white/60">Yükleniyor…</div>;
+  }
+
+  return (
+    <VoiceCopilot
+      onClose={() => navigate(-1)}
+      access={access}
+      compact
+      autoStart={access.hasAccess}
+    />
+  );
+}

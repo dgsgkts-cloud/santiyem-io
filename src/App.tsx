@@ -13,6 +13,9 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 
 import DeepLinkHandler from "@/components/DeepLinkHandler";
 import NativeSetup from "@/components/NativeSetup";
+import { VoiceOrb } from "@/components/voice/VoiceOrb";
+
+const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -87,13 +90,14 @@ const App = () => (
               <Route path="/santiye-giris/:token" element={<SantiyeGiris />} />
               <Route path="/ekip/:token" element={<EkipTakip />} />
               <Route path="/proje-davet/:token" element={<InviteAccept />} />
+              <Route path="/saha" element={<ConstructionMode />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
           {!Capacitor.isNativePlatform() && <CookieBanner />}
           <WhatsAppButton />
-          
+          <VoiceOrb />
           <DeepLinkHandler />
           <NativeSetup />
         </BrowserRouter>
