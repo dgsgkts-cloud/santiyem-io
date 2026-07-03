@@ -3,13 +3,19 @@ import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import {
   X, Mic, MicOff, Pause, Play, Square, Keyboard, RotateCw, MessageSquare,
   AlertCircle, HardHat, Radio, TrendingUp, AlertTriangle, Package, Users,
-  Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2,
+  Activity, ChevronDown, ChevronUp, Sparkle, ArrowRight, Loader2, Settings,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import type { VoiceAccess } from "@/hooks/useVoiceAccess";
+import {
+  loadSettings, saveSettings, applyModePreset, shouldBlockBargeIn,
+  type VoiceSettings, type VoiceMode,
+} from "./voiceModes";
+import { useWakeWord } from "./useWakeWord";
+import { ModeSelector, ModeHint, SettingsSheet } from "./VoiceModeUI";
 import "@/styles/voice.css";
 
 interface Card {
