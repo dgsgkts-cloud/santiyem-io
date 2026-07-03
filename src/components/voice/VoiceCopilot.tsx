@@ -174,6 +174,19 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     onDisconnect: (details?: unknown) => {
       console.log("[voice][SDK] 🔌 onDisconnect", details);
       try {
+        const d: any = details as any;
+        const reason = d?.reason ?? d?.detail?.reason;
+        const closeCode = d?.closeCode ?? d?.code ?? d?.event?.code;
+        const closeReason = d?.closeReason ?? d?.event?.reason;
+        const error = d?.error ?? d?.detail?.error;
+        const event = d?.event ?? d?.detail?.event;
+        console.error("[voice][SDK] 🔌 onDisconnect payload", { reason, closeCode, closeReason, error, event });
+        if (reason === undefined && closeCode === undefined && closeReason === undefined && error === undefined && event === undefined) {
+          console.error("[voice][SDK] 🔌 onDisconnect RAW arg:");
+          console.dir(details, { depth: null } as any);
+        }
+      } catch (e) { console.error("[voice][SDK] onDisconnect logger failed", e); }
+      try {
         setUiState("idle");
         setDebug((d) => ({ ...d, lastEvent: "disconnect" }));
         const secs = sessionStartRef.current ? Math.round((Date.now() - sessionStartRef.current) / 1000) : 0;
