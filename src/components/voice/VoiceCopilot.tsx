@@ -648,81 +648,94 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       </div>
 
       {/* ============ MAIN AREA ============ */}
-      <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative`}>
-        {/* LEFT: Orb + transcript */}
-        <div className="flex flex-col items-center justify-center px-6 py-6 gap-6 relative overflow-hidden">
-          <OrbStage state={uiState} compact={compact} />
+      <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative min-h-0`}>
+        {/* LEFT: Orb + transcript + pinned control bar (bar never overlapped) */}
+        <div className="flex flex-col items-center px-6 pt-4 pb-3 relative overflow-hidden min-h-0 h-full">
+          {/* Center stack: orb + live transcript. Shrinks so the bottom bar stays visible. */}
+          <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
+            <div className="shrink-0"><OrbStage state={uiState} compact={compact} /></div>
 
-          {/* Live subtitle / status */}
-          <div className="text-center min-h-[4rem] max-w-xl px-4">
-            {error ? (
-              <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in">
-                <AlertCircle className="w-5 h-5" /> {error}
-              </div>
-            ) : uiState === "thinking" ? (
-              <div className="voice-shimmer-text text-lg font-medium tracking-wide">
-                {statusLabel}
-              </div>
-            ) : transcript && active ? (
-              <div className="voice-fade-in text-white/95 text-lg leading-relaxed">
-                {transcript}
-              </div>
-            ) : (
-              <div className="text-white/40 text-sm uppercase tracking-[0.25em]">{statusLabel}</div>
-            )}
+            {/* Live transcript — fixed height, auto-scroll, older lines fade upward. */}
+            <div
+              ref={transcriptScrollRef}
+              className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
+              style={{
+                maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+              }}
+            >
+              {error ? (
+                <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
+                  <AlertCircle className="w-5 h-5" /> {error}
+                </div>
+              ) : uiState === "thinking" ? (
+                <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
+                  {statusLabel}
+                </div>
+              ) : transcript && active ? (
+                <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
+                  {transcript}
+                </div>
+              ) : (
+                <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
+              )}
+            </div>
           </div>
 
-          {/* Action bar / Start / Retry button */}
-          {uiState === "error" ? (
-            <div className="flex flex-col items-center gap-2 voice-fade-in">
-              <button
-                onClick={start}
-                disabled={!access.hasAccess}
-                className="group relative h-16 px-8 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
-                  boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
-                }}
-              >
-                <RefreshCw className="w-5 h-5" strokeWidth={2} />
-                <span className="text-base">Yeniden Dene</span>
-              </button>
-              <button onClick={() => { setError(null); setUiState("idle"); }}
-                className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
-                Vazgeç
-              </button>
-            </div>
-          ) : uiState === "idle" ? (
-            <StartButton onStart={start} disabled={!access.hasAccess} />
-          ) : (
-            <ActionBar
-              muted={muted}
-              paused={paused}
-              pushToTalk={settings.pushToTalk}
-              ptt={ptt}
-              onPttDown={pttPress}
-              onPttUp={pttRelease}
-              onSettings={() => setShowSettings(true)}
-              onMute={toggleMute}
-              onPause={togglePause}
-              onStop={stop}
-              onKeyboard={() => { stop(); onClose(); }}
-              onRepeat={repeatAnswer}
-              onHistory={() => setShowHistory((v) => !v)}
-            />
-          )}
+          {/* Pinned bottom control zone */}
+          <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2">
+            {uiState === "error" ? (
+              <div className="flex flex-col items-center gap-2 voice-fade-in">
+                <button
+                  onClick={start}
+                  disabled={!access.hasAccess}
+                  className="group relative h-14 px-7 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+                    boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
+                  }}
+                >
+                  <RefreshCw className="w-5 h-5" strokeWidth={2} />
+                  <span className="text-base">Yeniden Dene</span>
+                </button>
+                <button onClick={() => { setError(null); setUiState("idle"); }}
+                  className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
+                  Vazgeç
+                </button>
+              </div>
+            ) : uiState === "idle" ? (
+              <StartButton onStart={start} disabled={!access.hasAccess} />
+            ) : (
+              <ActionBar
+                muted={muted}
+                paused={paused}
+                pushToTalk={settings.pushToTalk}
+                ptt={ptt}
+                onPttDown={pttPress}
+                onPttUp={pttRelease}
+                onSettings={() => setShowSettings(true)}
+                onMute={toggleMute}
+                onPause={togglePause}
+                onStop={stop}
+                onKeyboard={() => { stop(); onClose(); }}
+                onRepeat={repeatAnswer}
+                onHistory={() => setShowHistory((v) => !v)}
+              />
+            )}
 
-          {access.hasAccess && access.remainingSeconds !== null && (
-            <div className="text-[11px] text-white/30 tabular-nums">
-              Kalan süre: {Math.floor(access.remainingSeconds / 60)} dk {access.remainingSeconds % 60} sn
-            </div>
-          )}
-          {!access.hasAccess && (
-            <div className="text-[11px] text-white/40 text-center max-w-xs">
-              Ücretsiz planda günlük 10 dk. Sınırsız için Premium'a geçin.
-            </div>
-          )}
+            {access.hasAccess && access.remainingSeconds !== null && (
+              <div className="text-[11px] text-white/30 tabular-nums">
+                Kalan süre: {Math.floor(access.remainingSeconds / 60)} dk {access.remainingSeconds % 60} sn
+              </div>
+            )}
+            {!access.hasAccess && (
+              <div className="text-[11px] text-white/40 text-center max-w-xs">
+                Ücretsiz planda günlük 10 dk. Sınırsız için Premium'a geçin.
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* RIGHT: Dashboard rail (desktop) */}
         {!compact && (
