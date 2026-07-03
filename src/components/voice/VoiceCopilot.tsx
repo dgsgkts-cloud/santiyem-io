@@ -218,6 +218,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       query_project_data: async (params: { intent?: string; keyword?: string }) => {
         const t0 = performance.now();
         console.log("[voice][tool] query_project_data CALLED", params);
+        setDebug((d) => ({ ...d, toolCalls: d.toolCalls + 1, lastEvent: "tool:query_project_data" }));
         setUiState("thinking");
         try {
           const { data: sess } = await supabase.auth.getSession();
