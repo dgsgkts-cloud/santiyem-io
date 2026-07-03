@@ -17,6 +17,7 @@ const TABS = [
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "team", label: "Ekip", icon: Users },
   { id: "security", label: "Güvenlik", icon: Shield },
+  { id: "demo", label: "Demo Veri", icon: Sparkles },
 ];
 
 const DesktopSettingsPage = () => {
