@@ -435,7 +435,6 @@ serve(async (req) => {
     // --- RAG: Search user's documents for context ---
     let ragContext = "";
     const authHeader = req.headers.get("Authorization");
-    const authHeader = req.headers.get("Authorization");
     if (authHeader && !voiceMode) {
 
       try {
