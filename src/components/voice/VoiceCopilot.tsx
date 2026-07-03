@@ -102,12 +102,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
-          setBubbles((prev) => [...prev, { id: `${Date.now()}-u`, role: "user", text: msg.message, ts: Date.now() }].slice(-40));
+          setBubbles((prev) => [...prev, { id: `${Date.now()}-u`, role: "user" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
         if (msg?.source === "ai" && typeof msg.message === "string") {
           setTranscript(msg.message);
           lastAiMessageRef.current = msg.message;
-          setBubbles((prev) => [...prev, { id: `${Date.now()}-a`, role: "ai", text: msg.message, ts: Date.now() }].slice(-40));
+          setBubbles((prev) => [...prev, { id: `${Date.now()}-a`, role: "ai" as const, text: msg.message, ts: Date.now() }].slice(-40));
         }
       } catch (e) { console.error("onMessage handler failed", e); }
     },
