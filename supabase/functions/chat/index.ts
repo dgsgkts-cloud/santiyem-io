@@ -661,8 +661,9 @@ serve(async (req) => {
                     content:
                       `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
                       `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                      `Şema: {"intent": one of ["LIVE_PERSONNEL","ATTENDANCE","PAYMENT_QUERY","OVERDUE_PAYMENTS","UPCOMING_PAYMENTS","SUBCONTRACTOR","FINANCIAL_SUMMARY","EXECUTIVE_BRIEFING","PROJECT_QUERY","PROJECT_OVERVIEW","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
+                      `Şema: {"intent": one of ["LIVE_PERSONNEL","LIVE_PERSONNEL_COUNT","ATTENDANCE","PERSONNEL_OVERTIME","PAYMENT_QUERY","PAYMENT_STATUS","OVERDUE_PAYMENTS","UPCOMING_PAYMENTS","SUBCONTRACTOR","SUBCONTRACTOR_STATUS","FINANCIAL_SUMMARY","EXECUTIVE_BRIEFING","PROJECT_QUERY","PROJECT_OVERVIEW","PROJECT_PROGRESS","PROJECT_HEALTH","PROJECT_RISKS","TASK_QUERY","TODAYS_TASKS","HAKEDIS_QUERY","HAKEDIS_STATUS","SITE_DIARY_QUERY","SITE_DIARY","DOCUMENT_QUERY","DOCUMENT_SEARCH","MATERIAL_QUERY","LOW_STOCK","CONTRACT_QUERY","PERSONNEL_QUERY","MEETING_SUMMARY","GENERAL_CHAT"], ` +
                       `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
+
                   },
                   { role: "user", content: userQuery },
                 ],
