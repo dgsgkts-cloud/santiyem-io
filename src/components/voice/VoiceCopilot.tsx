@@ -183,6 +183,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
     onConnect: (info?: unknown) => {
       console.log("[voice][SDK] ✅ onConnect fired", info);
+      tl("connected", "onConnect fired");
       try {
         connectWaiterRef.current?.resolve();
         connectWaiterRef.current = null;
@@ -192,18 +193,25 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         firstReplyPendingRef.current = Date.now();
         setUiState("listening");
 
+        // Dump the first-5-seconds timeline automatically.
+        if (tlDumpTimerRef.current) window.clearTimeout(tlDumpTimerRef.current);
+        tlDumpTimerRef.current = window.setTimeout(() => tlDump("first 5s"), 5500);
+
         // === GREETING PROTECTION ================================
         // Lock the mic & server-side VAD until the greeting has fully played.
         // Released later in the SPEAKING → LISTENING transition below.
         greetingProtectedRef.current = true;
         setGreetingProtected(true);
         console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
-        try { conversation.setMuted(true); console.log("[voice][DIAG] 🎙️→OFF (greeting) SDK.setMuted(true)"); } catch { /* noop */ }
+        try {
+          conversation.setMuted(true);
+          tl("setMuted(true)", "onConnect / greeting protection");
+        } catch { /* noop */ }
         try {
           for (const t of micTracksRef.current) {
             if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
           }
-          console.log("[voice][DIAG] 🎙️→OFF (greeting) local tracks disabled");
+          tl("mic tracks OFF", "onConnect / greeting protection");
         } catch { /* noop */ }
         // ========================================================
 
@@ -217,10 +225,13 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onStatusChange: (v: unknown) => {
       console.log("[voice][SDK] onStatusChange →", v);
+      tl("onStatusChange", String((v as any)?.status ?? v));
       setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
     onDisconnect: (details?: unknown) => {
       console.log("[voice][SDK] 🔌 onDisconnect", details);
+      tl("disconnect", JSON.stringify(details ?? {}).slice(0, 120));
+      tlDump("on disconnect");
       try {
         setUiState("idle");
         setDebug((d) => ({ ...d, lastEvent: "disconnect" }));
