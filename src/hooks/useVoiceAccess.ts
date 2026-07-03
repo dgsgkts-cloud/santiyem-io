@@ -57,7 +57,15 @@ export function useVoiceAccess(): VoiceAccess {
 
   useEffect(() => {
     load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
+    // IMPORTANT: never run supabase queries synchronously inside the
+    // onAuthStateChange callback — supabase-js holds an internal auth lock
+    // while dispatching the event, and awaiting auth/getUser/queries inside
+    // the callback deadlocks (page hangs on loading forever).
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+        setTimeout(() => { load(); }, 0);
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 

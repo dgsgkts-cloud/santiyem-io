@@ -337,43 +337,49 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         },
       } as const;
 
-      const waitForConnect = () =>
+      const waitForConnect = (ms: number) =>
         withTimeout(
           new Promise<void>((resolve, reject) => { connectWaiterRef.current = { resolve, reject }; }),
-          CONNECT_TIMEOUT_MS, "Ses bağlantısı"
+          ms, "Ses bağlantısı"
         ).finally(() => { connectWaiterRef.current = null; });
 
-      if (token) {
+      // Give the SDK provider a moment to release its internal start lock
+      // after a failed attempt — otherwise the next startSession() silently
+      // no-ops and we'd wait forever (this was the root cause of the
+      // infinite "Bağlanıyor…" hang).
+      const waitForDisconnected = async (maxMs: number) => {
+        const t0 = Date.now();
+        while (Date.now() - t0 < maxMs) {
+          if (conversation.status === "disconnected") return;
+          await new Promise((r) => setTimeout(r, 150));
+        }
+      };
+
+      // PRIMARY: WebSocket (signed URL). Verified to connect in <1s and it
+      // works through firewalls/carrier NAT where WebRTC data channels hang.
+      if (signed_url) {
         try {
-          console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
-          const connected = waitForConnect();
-          try {
-            conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
-          } catch (syncErr) {
-            console.error("[voice][start] startSession threw synchronously:", syncErr);
-            throw syncErr;
-          }
-          console.log("[voice][start] startSession() returned, waiting for onConnect…");
+          console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
+          const connected = waitForConnect(CONNECT_TIMEOUT_MS);
+          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
+          console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
-          console.log("[voice][start] ✅ WebRTC connected");
+          console.log("[voice][start] ✅ WebSocket connected");
           return;
         } catch (e) {
-          console.warn("[voice][start] ⚠️ WebRTC failed, trying WebSocket fallback:", e);
-          try { await conversation.endSession(); } catch { /* noop */ }
+          console.warn("[voice][start] ⚠️ WebSocket failed, trying WebRTC fallback:", e);
+          try { conversation.endSession(); } catch { /* noop */ }
+          await waitForDisconnected(3000);
         }
       }
-      if (signed_url) {
-        console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
-        const connected = waitForConnect();
-        try {
-          conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides });
-        } catch (syncErr) {
-          console.error("[voice][start] startSession threw synchronously (ws):", syncErr);
-          throw syncErr;
-        }
-        console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
+      // FALLBACK: WebRTC (lower latency, but can hang behind restrictive networks).
+      if (token) {
+        console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
+        const connected = waitForConnect(CONNECT_TIMEOUT_MS);
+        conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides });
+        console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
-        console.log("[voice][start] ✅ WebSocket connected");
+        console.log("[voice][start] ✅ WebRTC connected");
         return;
       }
       throw new Error("Ses bağlantısı kurulamadı: token endpoint boş yanıt döndü.");
