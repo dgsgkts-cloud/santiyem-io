@@ -512,8 +512,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             <ActionBar
               muted={muted}
               paused={paused}
-              siteMode={siteMode}
-              onSiteMode={() => setSiteMode((v) => !v)}
+              pushToTalk={settings.pushToTalk}
+              ptt={ptt}
+              onPttDown={pttPress}
+              onPttUp={pttRelease}
+              onSettings={() => setShowSettings(true)}
               onMute={toggleMute}
               onPause={togglePause}
               onStop={stop}
