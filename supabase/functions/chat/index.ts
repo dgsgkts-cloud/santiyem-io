@@ -349,8 +349,13 @@ serve(async (req) => {
                     `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
                     `Bugün: ${now.toISOString().slice(0, 10)}. ` +
                     `Şema: {"intent": one of ["PAYMENT_QUERY","PROJECT_QUERY","TASK_QUERY","HAKEDIS_QUERY","SITE_DIARY_QUERY","DOCUMENT_QUERY","MATERIAL_QUERY","CONTRACT_QUERY","PERSONNEL_QUERY","GENERAL_CHAT"], ` +
-                    `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "limit": number | null}}. ` +
-                    `"Bu ay" → içinde bulunulan ay başı-sonu. "Geçen ay" → önceki ay. "Bu hafta" → pazartesi-pazar. "En son" / "son yüklenen" → limit=1. "Bekleyen" → status filter için ismi filters.name'e "bekliyor" koy. Sadece JSON döndür.`,
+                    `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. ` +
+                    `"Bu ay" → içinde bulunulan ay başı-sonu. "Geçen ay" → önceki ay. "Bu hafta" → pazartesi-pazar. ` +
+                    `"En son" / "son yüklenen" → limit=1, aggregate="latest". ` +
+                    `"Ne kadar / toplam / kaç ton / kaç m3" → aggregate="sum". ` +
+                    `"En çok ... yaptığımız" → aggregate="top_by_recipient". ` +
+                    `"Beton dökümü / kalıp / demir / hafriyat" gibi iş kalemi geçerse SITE_DIARY_QUERY için keyword'e yaz. ` +
+                    `"Bekleyen" → filters.name = "bekliyor". "Geciken" → filters.name = "gecikti". Sadece JSON döndür.`,
                 },
                 { role: "user", content: userQuery },
               ],
@@ -375,6 +380,8 @@ serve(async (req) => {
           const dt = filters.date_to as string | null;
           const nameFilter = (filters.name as string | null)?.toLowerCase() || null;
           const projectName = (filters.project_name as string | null) || null;
+          const keyword = (filters.keyword as string | null) || null;
+          const aggregate = (filters.aggregate as string | null) || null;
           const limit = Math.min(Number(filters.limit) || 10, 25);
 
           // Helper: resolve project_id from name
@@ -417,6 +424,20 @@ serve(async (req) => {
             const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
             lines.push(`TAŞERON ÖDEMELERİ (${rows.length} kayıt, toplam ${fmt(total)}):`);
             rows.forEach((r: any) => lines.push(`- ${r.payment_date} · ${r.subcontractors?.name || "?"} · ${fmt(Number(r.amount))} · ${r.payment_method}${r.description ? " · " + r.description : ""}`));
+
+            // Top-by-recipient aggregation: "en çok ödeme yaptığımız taşeron"
+            if (aggregate === "top_by_recipient" || /en\s+(cok|çok)/.test(qText)) {
+              const agg = new Map<string, number>();
+              rows.forEach((r: any) => {
+                const k = r.subcontractors?.name || "?";
+                agg.set(k, (agg.get(k) || 0) + Number(r.amount || 0));
+              });
+              const top = [...agg.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+              if (top.length) {
+                lines.push(`\nTAŞERON BAZINDA SIRALAMA:`);
+                top.forEach(([n, v], i) => lines.push(`${i + 1}. ${n} · ${fmt(v)}`));
+              }
+            }
 
             if (subcontractorScope) {
               // Also pull cash_payments explicitly categorized as Taşeron Ödemesi that AREN'T mirrors
@@ -467,14 +488,27 @@ serve(async (req) => {
             lines.push(`HAKEDİŞLER (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.period} · ${fmt(Number(r.net_total || r.amount))} · durum: ${r.status}/${r.approval_status} · ${r.created_at.slice(0, 10)}`));
           } else if (intent === "PROJECT_QUERY") {
-            let q = sb.from("projects").select("name, client, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(limit);
+            let q = sb.from("projects").select("id, name, client, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(limit);
             if (projectName) q = q.ilike("name", `%${projectName}%`);
             const { data } = await q;
-            lines.push(`PROJELER (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.name} · müşteri: ${r.client || "-"} · durum: ${r.status} · ilerleme: %${r.progress} · sözleşme: ${fmt(Number(r.contract_amount || 0))}`));
+            const projRows = data || [];
+            lines.push(`PROJELER (${projRows.length} kayıt):`);
+            projRows.forEach((r: any) => lines.push(`- ${r.name} · müşteri: ${r.client || "-"} · durum: ${r.status} · ilerleme: %${r.progress} · sözleşme: ${fmt(Number(r.contract_amount || 0))}`));
+            // Aggregate: toplam proje maliyeti / sözleşme
+            if (aggregate === "sum" || /toplam|maliyet/.test((userQuery || "").toLowerCase())) {
+              const pids = projRows.map((p: any) => p.id);
+              let expTotal = 0;
+              if (pids.length) {
+                const { data: exps } = await sb.from("project_expenses").select("amount").in("project_id", pids);
+                expTotal = (exps || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              }
+              const contractTotal = projRows.reduce((s: number, r: any) => s + Number(r.contract_amount || 0), 0);
+              lines.push(`\nTOPLAM SÖZLEŞME BEDELİ: ${fmt(contractTotal)}`);
+              lines.push(`TOPLAM PROJE GİDERİ: ${fmt(expTotal)}`);
+            }
           } else if (intent === "TASK_QUERY") {
             const today = now.toISOString().slice(0, 10);
-            let q = sb.from("tasks").select("title, status, priority, due_date, project_id").order("due_date", { ascending: true }).limit(limit);
+            let q = sb.from("tasks").select("title, status, priority, due_date, project_id, assigned_to").order("due_date", { ascending: true }).limit(limit);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
             if (nameFilter && (nameFilter.includes("gecik") || nameFilter.includes("geç"))) q = q.lt("due_date", today).neq("status", "done");
             if (df) q = q.gte("due_date", df);
@@ -489,13 +523,15 @@ serve(async (req) => {
             if (df) q = q.gte("entry_date", df);
             if (dt) q = q.lte("entry_date", dt);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            if (keyword) q = q.ilike("work_done", `%${keyword}%`);
             const { data } = await q;
-            lines.push(`ŞANTİYE GÜNLÜĞÜ (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.entry_date} ${r.weather_icon} · ${r.work_status} · ${(r.work_done || "").slice(0, 200)}`));
+            lines.push(`ŞANTİYE GÜNLÜĞÜ${keyword ? ` (anahtar: "${keyword}")` : ""} (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.entry_date} ${r.weather_icon || ""} · ${r.work_status} · ${(r.work_done || "").slice(0, 200)}`));
           } else if (intent === "DOCUMENT_QUERY") {
+            const effectiveLimit = aggregate === "latest" ? 1 : limit;
             const { data } = await sb.from("documents")
               .select("name, page_count, status, created_at").eq("user_id", uid)
-              .order("created_at", { ascending: false }).limit(limit);
+              .order("created_at", { ascending: false }).limit(effectiveLimit);
             lines.push(`YÜKLÜ EVRAKLAR (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.name} · ${r.page_count} sayfa · ${r.status} · ${r.created_at.slice(0, 10)}`));
           } else if (intent === "MATERIAL_QUERY") {
@@ -576,7 +612,7 @@ serve(async (req) => {
       const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
       const rawText = (lastUserMsg?.content || "").toString().toLowerCase();
       const ACTION_RE =
-        /\b(kaydet|ekle|oluştur|olustur|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|gir(?:iş|is)?|ata(?:y[ıi]m)?|başlat|baslat|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not))\b/;
+        /\b(kaydet|ekle|oluştur|olustur|aç(?:al[ıi]m)?|yap(?:ay[ıi]m|al[ıi]m)?|öde|ode|ödeme yap|odeme yap|gir(?:iş|is)?|ata(?:y[ıi]m|n[ıi]r)?|görev\s+ver|başlat|baslat|düzenle|duzenle|not düş|not dus|sözleşme|sozlesme|hakediş(?:\s+oluştur|\s+olustur)?|hakedis|beton döküm|beton dokum|malzeme (girişi|girisi|ekle)|personel (ekle|kaydet)|yeni\s+(görev|gorev|hakedi[şs]|ödeme|odeme|kay[ıi]t|malzeme|not|personel|sözleşme|sozlesme))\b/;
       const CONFIRM_RE = /\b(evet|onayl[ıi]yorum|onayla|onay|tamam|kaydet|geç|gec|ilerle|olur|hadi)\b/;
       const isAction = ACTION_RE.test(rawText) || (CONFIRM_RE.test(rawText) && messages.length >= 3);
 
@@ -702,6 +738,48 @@ serve(async (req) => {
                     unit_price: { type: "number" },
                     supplier: { type: "string" },
                     entry_date: { type: "string" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_personnel",
+                description: "Create a new personnel (worker/foreman) record. Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["full_name", "confirmed"],
+                  properties: {
+                    full_name: { type: "string" },
+                    occupation: { type: "string" },
+                    phone: { type: "string" },
+                    employment_type: { type: "string", enum: ["daily_wage", "monthly_salary", "subcontractor"] },
+                    daily_wage: { type: "number" },
+                    monthly_salary: { type: "number" },
+                    confirmed: { type: "boolean" },
+                  },
+                },
+              },
+            },
+            {
+              type: "function",
+              function: {
+                name: "save_contract",
+                description: "Create a new contract (sözleşme). Preview first with confirmed=false.",
+                parameters: {
+                  type: "object",
+                  required: ["name", "counterparty", "amount", "confirmed"],
+                  properties: {
+                    name: { type: "string" },
+                    counterparty: { type: "string", description: "Karşı taraf (taşeron/müşteri)" },
+                    amount: { type: "number" },
+                    contract_type: { type: "string", description: "yapim_isleri, taseronluk, hizmet, vb." },
+                    project_id: { type: "string" },
+                    start_date: { type: "string" },
+                    end_date: { type: "string" },
+                    notes: { type: "string" },
                     confirmed: { type: "boolean" },
                   },
                 },
@@ -903,6 +981,68 @@ serve(async (req) => {
                 return { status: "OK", id: data?.id, summary };
               }
 
+              if (name === "save_personnel") {
+                const missing: string[] = [];
+                if (!args.full_name) missing.push("ad soyad");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const empType = args.employment_type || "daily_wage";
+                const summary = {
+                  action: "Yeni Personel",
+                  ad_soyad: args.full_name,
+                  meslek: args.occupation || "-",
+                  telefon: args.phone || "-",
+                  çalışma_türü: empType,
+                  yevmiye: args.daily_wage ? fmtTRY(Number(args.daily_wage)) : "-",
+                  maaş: args.monthly_salary ? fmtTRY(Number(args.monthly_salary)) : "-",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("personnel").insert({
+                  user_id: uid,
+                  full_name: args.full_name,
+                  occupation: args.occupation || null,
+                  phone: args.phone || null,
+                  employment_type: empType,
+                  daily_wage: args.daily_wage || 0,
+                  monthly_salary: args.monthly_salary || 0,
+                  is_active: true,
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
+              if (name === "save_contract") {
+                const missing: string[] = [];
+                if (!args.name) missing.push("sözleşme adı");
+                if (!args.counterparty) missing.push("karşı taraf");
+                if (!(args.amount > 0)) missing.push("tutar");
+                if (missing.length) return { status: "MISSING_FIELDS", missing };
+                const summary = {
+                  action: "Sözleşme",
+                  ad: args.name,
+                  karşı_taraf: args.counterparty,
+                  tutar: fmtTRY(Number(args.amount)),
+                  tür: args.contract_type || "yapim_isleri",
+                  başlangıç: args.start_date || "-",
+                  bitiş: args.end_date || "-",
+                  proje_id: args.project_id || "-",
+                };
+                if (!args.confirmed) return { status: "CONFIRM_REQUIRED", summary };
+                const { data, error } = await sb.from("contracts").insert({
+                  user_id: uid,
+                  name: args.name,
+                  counterparty: args.counterparty,
+                  amount: args.amount,
+                  contract_type: args.contract_type || "yapim_isleri",
+                  project_id: args.project_id || null,
+                  start_date: args.start_date || null,
+                  end_date: args.end_date || null,
+                  notes: args.notes || "",
+                  status: "aktif",
+                }).select("id").maybeSingle();
+                if (error) return { status: "ERROR", error: error.message };
+                return { status: "OK", id: data?.id, summary };
+              }
+
               return { status: "ERROR", error: "Unknown tool" };
             } catch (e) {
               return { status: "ERROR", error: e instanceof Error ? e.message : "tool failed" };
@@ -912,28 +1052,34 @@ serve(async (req) => {
           const ACTION_SYSTEM = `${SYSTEM_PROMPT}${ragContext}${projectDataContext}
 
 =================================================== EYLEM MODU (ACTION ASSISTANT)
-Şu anda EYLEM MODUNDASIN. Kullanıcı bir işlem yapmak istiyor (ödeme, görev, hakediş, günlük, malzeme).
+Şu anda EYLEM MODUNDASIN. Kullanıcı bir işlem yapmak istiyor (ödeme, görev, hakediş, şantiye günlüğü, malzeme, personel, sözleşme).
+
+Rolün: Deneyimli inşaat şirketi operasyon müdürüsün. Kısa, net, operasyonel konuşursun. Chatbot havası verme, gereksiz nezaket cümleleri kurma.
 
 KURALLAR:
-1. Önce eksik bilgileri sor (tek tek, kısa cümlelerle). Mesela "Tutar ne kadar?", "Hangi projeye?".
-2. İnsan ismini (proje, taşeron, personel) UUID'ye çevirmek için önce 'resolve_lookups' aracını çağır.
-3. Tüm bilgiler tamamlanınca, ilgili save_* aracını **confirmed=false** ile çağır → araç sana özet döndürecek.
-4. Bu özeti kullanıcıya sun ve **"Onaylıyor musunuz?"** diye sor. Örnek format:
+1. Bir mutasyon aracı çağırmadan önce ZORUNLU alanların hepsinin dolu olduğundan emin ol. Eksikse tek tek kısa sorularla iste: "Hangi proje?", "Tutar?", "Hangi tarih?", "Hangi ödeme yöntemi?".
+2. Kullanıcı bir isim (proje, taşeron, personel) verdiyse ÖNCE 'resolve_lookups' aracını çağır ve UUID'ye çevir. Birden fazla eşleşme dönerse kullanıcıya seçenekleri sun; sıfır eşleşme dönerse "Kayıtlı [şey] bulunamadı" de.
+3. Tüm bilgiler tamamlanınca save_* aracını **confirmed=false** ile çağır. Araç sana özet döndürecek.
+4. Özeti kullanıcıya AYNEN bu formatta göster:
 
-   📋 **Onay bekliyor:**
-   - Taşeron: Mehmet Usta
-   - Tutar: 15.000 ₺
-   - Yöntem: Nakit
-   - Tarih: 2026-07-03
-   
-   Kaydetmek için "evet" yazın.
+   **Onay Bekliyor**
 
-5. Kullanıcı 'evet/onaylıyorum/tamam' derse, AYNI aracı bu kez **confirmed=true** ile çağır ve kaydı yap.
-6. Kullanıcı onaylamadan ASLA confirmed=true kullanma. Bu kural mutlaktır.
-7. MISSING_FIELDS dönerse, eksikleri kullanıcıya sor. ERROR dönerse hatayı açıkla.
-8. Kayıt başarılı olunca "✅ Kaydedildi." de ve kısa özet ver.
+   | Alan | Değer |
+   | --- | --- |
+   | Taşeron | Mehmet Usta |
+   | Tutar | 150.000 ₺ |
+   | Yöntem | Nakit |
+   | Tarih | 03.07.2026 |
+   | Proje | Villa 24 |
 
-Cevabın Türkçe, kısa ve profesyonel olsun. Gereksiz sohbet etme.`;
+   Onaylıyor musunuz?
+
+5. Kullanıcı 'evet/onaylıyorum/tamam/onayla' derse AYNI aracı **confirmed=true** ile tekrar çağır. Kullanıcı onaylamadan ASLA confirmed=true kullanma. Bu kural mutlaktır.
+6. Kullanıcı iptal ederse ("hayır", "vazgeç") aracı çağırma; "Tamam, iptal edildi." de.
+7. MISSING_FIELDS dönerse eksik alanları kısa cümleyle sor. ERROR dönerse hatayı sade Türkçe ile açıkla, tekrar denemeyi öner.
+8. Kayıt başarılı olunca sadece "Kaydedildi." + tek satır özet (ör. "Mehmet Usta'ya 150.000 ₺ ödeme eklendi.") ver. Hiç emoji, hiç uyarı, hiç disclaimer ekleme.
+9. Bir konuşma içinde önceki cevapları hatırla — "bugün olsun" dediyse bugünün tarihini kullan, "aynı projeye" dediyse önceki project_id'yi kullan.
+10. Rakam veya tarih uydurma. Bilinmeyeni her zaman sor.`;
 
           // --- Tool-calling loop ---
           const convo: any[] = [
