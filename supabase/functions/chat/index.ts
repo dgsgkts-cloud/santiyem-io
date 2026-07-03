@@ -81,10 +81,16 @@ function classifyIntentHeuristic(
   else if (/\ben\s+(çok|cok)\b/.test(q)) filters.aggregate = "top_by_recipient";
   else if (/\ben son\b|\bson\s+(yüklenen|yuklenen|eklenen)\b/.test(q)) { filters.aggregate = "latest"; filters.limit = 1; }
 
-  // Project name match against cached list
-  for (const p of projectNames) {
-    const pn = (p.name || "").toLowerCase().trim();
-    if (pn && pn.length >= 3 && q.includes(pn)) { filters.project_name = p.name; break; }
+  // Project name match — normalized + fuzzy (Turkish char folding, voice corrections)
+  {
+    const candidates: EntityCandidate[] = projectNames.map(p => ({ id: p.id, name: p.name }));
+    const outcome = resolveEntity(rawQuery, candidates, { autoSelectThreshold: 0.85, suggestThreshold: 0.62 });
+    if (outcome.status === "auto") {
+      filters.project_name = outcome.match.name;
+    } else if (outcome.status === "ambiguous") {
+      filters.project_name = outcome.matches[0].candidate.name;
+      filters.project_ambiguous = outcome.matches.map(m => m.candidate.name);
+    }
   }
 
   let intent = "GENERAL_CHAT";
