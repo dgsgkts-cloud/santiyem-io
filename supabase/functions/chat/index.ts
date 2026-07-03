@@ -488,21 +488,34 @@ serve(async (req) => {
             lines.push(`HAKEDİŞLER (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.period} · ${fmt(Number(r.net_total || r.amount))} · durum: ${r.status}/${r.approval_status} · ${r.created_at.slice(0, 10)}`));
           } else if (intent === "PROJECT_QUERY") {
-            let q = sb.from("projects").select("name, client, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(limit);
+            let q = sb.from("projects").select("id, name, client, status, progress, start_date, end_date, contract_amount").eq("user_id", uid).limit(limit);
             if (projectName) q = q.ilike("name", `%${projectName}%`);
             const { data } = await q;
-            lines.push(`PROJELER (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.name} · müşteri: ${r.client || "-"} · durum: ${r.status} · ilerleme: %${r.progress} · sözleşme: ${fmt(Number(r.contract_amount || 0))}`));
+            const projRows = data || [];
+            lines.push(`PROJELER (${projRows.length} kayıt):`);
+            projRows.forEach((r: any) => lines.push(`- ${r.name} · müşteri: ${r.client || "-"} · durum: ${r.status} · ilerleme: %${r.progress} · sözleşme: ${fmt(Number(r.contract_amount || 0))}`));
+            // Aggregate: toplam proje maliyeti / sözleşme
+            if (aggregate === "sum" || /toplam|maliyet/.test((userQuery || "").toLowerCase())) {
+              const pids = projRows.map((p: any) => p.id);
+              let expTotal = 0;
+              if (pids.length) {
+                const { data: exps } = await sb.from("project_expenses").select("amount").in("project_id", pids);
+                expTotal = (exps || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+              }
+              const contractTotal = projRows.reduce((s: number, r: any) => s + Number(r.contract_amount || 0), 0);
+              lines.push(`\nTOPLAM SÖZLEŞME BEDELİ: ${fmt(contractTotal)}`);
+              lines.push(`TOPLAM PROJE GİDERİ: ${fmt(expTotal)}`);
+            }
           } else if (intent === "TASK_QUERY") {
             const today = now.toISOString().slice(0, 10);
-            let q = sb.from("tasks").select("title, status, priority, due_date, project_id").order("due_date", { ascending: true }).limit(limit);
+            let q = sb.from("tasks").select("title, status, priority, due_date, project_id, assignee_name").order("due_date", { ascending: true }).limit(limit);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
             if (nameFilter && (nameFilter.includes("gecik") || nameFilter.includes("geç"))) q = q.lt("due_date", today).neq("status", "done");
             if (df) q = q.gte("due_date", df);
             if (dt) q = q.lte("due_date", dt);
             const { data } = await q;
             lines.push(`GÖREVLER (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.title} · durum: ${r.status} · öncelik: ${r.priority} · termin: ${r.due_date || "-"}`));
+            (data || []).forEach((r: any) => lines.push(`- ${r.title} · durum: ${r.status} · öncelik: ${r.priority} · termin: ${r.due_date || "-"}${r.assignee_name ? " · " + r.assignee_name : ""}`));
           } else if (intent === "SITE_DIARY_QUERY") {
             let q = sb.from("site_diary_entries")
               .select("entry_date, work_status, work_done, weather_icon, project_id")
@@ -510,13 +523,15 @@ serve(async (req) => {
             if (df) q = q.gte("entry_date", df);
             if (dt) q = q.lte("entry_date", dt);
             if (projectIdFilter) q = q.eq("project_id", projectIdFilter);
+            if (keyword) q = q.ilike("work_done", `%${keyword}%`);
             const { data } = await q;
-            lines.push(`ŞANTİYE GÜNLÜĞÜ (${(data || []).length} kayıt):`);
-            (data || []).forEach((r: any) => lines.push(`- ${r.entry_date} ${r.weather_icon} · ${r.work_status} · ${(r.work_done || "").slice(0, 200)}`));
+            lines.push(`ŞANTİYE GÜNLÜĞÜ${keyword ? ` (anahtar: "${keyword}")` : ""} (${(data || []).length} kayıt):`);
+            (data || []).forEach((r: any) => lines.push(`- ${r.entry_date} ${r.weather_icon || ""} · ${r.work_status} · ${(r.work_done || "").slice(0, 200)}`));
           } else if (intent === "DOCUMENT_QUERY") {
+            const effectiveLimit = aggregate === "latest" ? 1 : limit;
             const { data } = await sb.from("documents")
               .select("name, page_count, status, created_at").eq("user_id", uid)
-              .order("created_at", { ascending: false }).limit(limit);
+              .order("created_at", { ascending: false }).limit(effectiveLimit);
             lines.push(`YÜKLÜ EVRAKLAR (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.name} · ${r.page_count} sayfa · ${r.status} · ${r.created_at.slice(0, 10)}`));
           } else if (intent === "MATERIAL_QUERY") {
