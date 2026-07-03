@@ -79,6 +79,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
   const [debug, setDebug] = useState({
@@ -104,6 +105,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       if (stored) setProjectName(stored);
     } catch { /* noop */ }
   }, []);
+
+  // Auto-scroll the transcript window so the newest spoken line is visible.
+  useEffect(() => {
+    const el = transcriptScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [transcript]);
 
   // Honor "siteModeDefault" the first time the panel opens.
   useEffect(() => {
@@ -347,16 +354,22 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         has_token: !!token, has_signed_url: !!signed_url, agent_id, quota,
       });
 
-      const SYSTEM_PROMPT = `Sen deneyimli bir Türk şantiye proje direktörüsün. Kullanıcı seninle Şantiyem uygulaması üzerinden sesli konuşuyor. Sen bir chatbot değilsin; saha tecrübesi olan, kısa ve net konuşan bir yönetici gibi davran.
+      const SYSTEM_PROMPT = `Sen deneyimli bir Türk inşaat PROJE DİREKTÖRÜsün. Kullanıcı seninle Şantiyem uygulaması üzerinden sesli konuşuyor. Sen bir chatbot değilsin; saha ve iş tecrübesi olan bir yönetici gibi konuş.
 
-## DİL
-- HER ZAMAN Türkçe konuş. Teknik terimleri Türkçe kullan (hakediş, taşeron, puantaj, metraj, KDV, stopaj, avans, keşif, imalat, ihzarat).
-- Cevapların kısa olsun (1–3 cümle). Uzun listeleri okuma; kritik olanı söyle, detay için sayfaya yönlendir.
-- Markdown, madde işareti, emoji KULLANMA — sesli okunacak.
+## DİL & ÜSLUP
+- HER ZAMAN Türkçe konuş. Terimleri Türkçe kullan (hakediş, taşeron, puantaj, metraj, KDV, stopaj, avans, ihzarat).
+- Cevaplar 15–30 saniyeyi aşmasın (yaklaşık 40–80 kelime). Uzun açıklamayı sadece kullanıcı isterse ver.
+- Markdown, madde işareti, emoji YOK — sesli okunacak.
+- Robotik ifadelerden kaçın: "Kontrol ettim", "Verilere göre", "İnceledim" gibi kalıpları TEKRARLAMA. Cümle başlarını çeşitlendir; doğal, yönetici tonuyla konuş.
+- Aynı sohbette daha önce geçen konuya doğal devam et; giriş cümlesini ve selamı tekrarlama.
 
-## VERİ KURALI (ÇOK ÖNEMLİ)
+## KONUŞMA NORMALİZASYONU
+- Konuşma tanımadan gelen Türkçe isimleri düzelt: "Arfuz/Arzut/Arsus" → Arsuz, "Goktas" → Göktaş, "hak ediş" → hakediş, "taşoron" → taşeron.
+- Emin değilsen tahmin etme, tek kısa soruyla netleştir ("Arsuz Modern Villa'yı mı kastediyorsunuz?").
+
+## VERİ KURALI
 - Proje verisi hakkında ASLA hafızandan cevap verme. Uydurma yapma.
-- Aşağıdaki konulardan HERHANGİ BİRİ geçtiğinde ÖNCE mutlaka \`query_project_data\` aracını çağır:
+- Şu konulardan biri geçtiğinde ÖNCE mutlaka \`query_project_data\` aracını çağır:
   ödeme, tahsilat, fatura, hakediş, sözleşme, taşeron, personel, işçi, puantaj, devam, çıkış, malzeme, stok, ihzarat, şantiye günlüğü, görev, iş programı, ilerleme, gecikme, bütçe, nakit, çek, cari.
 - Araç sonucu gelmeden konuşmaya başlama.
 
@@ -365,10 +378,21 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 - intent: payments | invoices | hakedis | contracts | subcontractors | personnel | attendance | materials | site_diary | tasks | progress | cash | general
 - keyword: kullanıcının cümlesinden çıkardığın özel isim veya tarih.
 
-## CEVAP TARZI
-- Önce net cevap, sonra 1 cümle bağlam.
-- Kritik bir KPI varsa \`render_dashboard_card\` çağır.
-- Kullanıcı "detay/aç/göster" derse \`navigate_to\` ile ilgili sayfaya yönlendir.`;
+## EYLEM ODAKLILIK (ÇOK ÖNEMLİ)
+- "Yapamam", "yetkim yok", "izin verilmedi" gibi cümlelerle ASLA bitirme.
+- Kullanıcı birine haber verilmesini/mesaj atılmasını isterse: mesajı SEN hazırla, sesli oku ve onay iste.
+  Örnek: "Ahmet Bey'e şu WhatsApp mesajını hazırladım: 'Merhaba Ahmet Bey, çimento stoğumuz kritik seviyeye indi. Yarına 200 torba sevkiyat planlayabilir misiniz?' Göndermemi onaylıyor musunuz?"
+- WhatsApp/SMS entegrasyonu aktif değilse: "Mesaj hazır. WhatsApp entegrasyonu açıldığında tek dokunuşla gönderebilirsiniz." de.
+- Her cevabın sonunda bir sonraki somut adımı öner; asla "yapabileceğim bir şey yok" deme.
+
+## CANLI PANEL KARTLARI
+- Konuşma sırasında şu durumlardan biri belirirse OTOMATİK olarak \`render_dashboard_card\` çağır:
+  kritik ödeme/gecikme (type=warning, tone=danger), malzeme/stok yetersizliği (warning, danger), personel eksikliği/devamsızlık (warning), proje gecikmesi (warning), somut öneri (recommendation), önemli KPI (kpi).
+- Kartı konuşurken çağır — kullanıcı istemesini beklemeden.
+
+## CEVAP YAPISI
+Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullanıcı "detay/aç/göster" derse \`navigate_to\` ile ilgili sayfaya yönlendir.`;
+
 
       const overrides = {
         agent: {
@@ -648,81 +672,94 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       </div>
 
       {/* ============ MAIN AREA ============ */}
-      <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative`}>
-        {/* LEFT: Orb + transcript */}
-        <div className="flex flex-col items-center justify-center px-6 py-6 gap-6 relative overflow-hidden">
-          <OrbStage state={uiState} compact={compact} />
+      <div className={`flex-1 grid ${compact ? "grid-cols-1" : "md:grid-cols-[1fr_360px]"} overflow-hidden relative min-h-0`}>
+        {/* LEFT: Orb + transcript + pinned control bar (bar never overlapped) */}
+        <div className="flex flex-col items-center px-6 pt-4 pb-3 relative overflow-hidden min-h-0 h-full">
+          {/* Center stack: orb + live transcript. Shrinks so the bottom bar stays visible. */}
+          <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
+            <div className="shrink-0"><OrbStage state={uiState} compact={compact} /></div>
 
-          {/* Live subtitle / status */}
-          <div className="text-center min-h-[4rem] max-w-xl px-4">
-            {error ? (
-              <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in">
-                <AlertCircle className="w-5 h-5" /> {error}
-              </div>
-            ) : uiState === "thinking" ? (
-              <div className="voice-shimmer-text text-lg font-medium tracking-wide">
-                {statusLabel}
-              </div>
-            ) : transcript && active ? (
-              <div className="voice-fade-in text-white/95 text-lg leading-relaxed">
-                {transcript}
-              </div>
-            ) : (
-              <div className="text-white/40 text-sm uppercase tracking-[0.25em]">{statusLabel}</div>
-            )}
+            {/* Live transcript — fixed height, auto-scroll, older lines fade upward. */}
+            <div
+              ref={transcriptScrollRef}
+              className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
+              style={{
+                maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+              }}
+            >
+              {error ? (
+                <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
+                  <AlertCircle className="w-5 h-5" /> {error}
+                </div>
+              ) : uiState === "thinking" ? (
+                <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
+                  {statusLabel}
+                </div>
+              ) : transcript && active ? (
+                <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
+                  {transcript}
+                </div>
+              ) : (
+                <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
+              )}
+            </div>
           </div>
 
-          {/* Action bar / Start / Retry button */}
-          {uiState === "error" ? (
-            <div className="flex flex-col items-center gap-2 voice-fade-in">
-              <button
-                onClick={start}
-                disabled={!access.hasAccess}
-                className="group relative h-16 px-8 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
-                  boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
-                }}
-              >
-                <RefreshCw className="w-5 h-5" strokeWidth={2} />
-                <span className="text-base">Yeniden Dene</span>
-              </button>
-              <button onClick={() => { setError(null); setUiState("idle"); }}
-                className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
-                Vazgeç
-              </button>
-            </div>
-          ) : uiState === "idle" ? (
-            <StartButton onStart={start} disabled={!access.hasAccess} />
-          ) : (
-            <ActionBar
-              muted={muted}
-              paused={paused}
-              pushToTalk={settings.pushToTalk}
-              ptt={ptt}
-              onPttDown={pttPress}
-              onPttUp={pttRelease}
-              onSettings={() => setShowSettings(true)}
-              onMute={toggleMute}
-              onPause={togglePause}
-              onStop={stop}
-              onKeyboard={() => { stop(); onClose(); }}
-              onRepeat={repeatAnswer}
-              onHistory={() => setShowHistory((v) => !v)}
-            />
-          )}
+          {/* Pinned bottom control zone */}
+          <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2">
+            {uiState === "error" ? (
+              <div className="flex flex-col items-center gap-2 voice-fade-in">
+                <button
+                  onClick={start}
+                  disabled={!access.hasAccess}
+                  className="group relative h-14 px-7 rounded-full flex items-center gap-3 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+                    boxShadow: "0 12px 40px -8px rgba(255,107,43,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
+                  }}
+                >
+                  <RefreshCw className="w-5 h-5" strokeWidth={2} />
+                  <span className="text-base">Yeniden Dene</span>
+                </button>
+                <button onClick={() => { setError(null); setUiState("idle"); }}
+                  className="text-[11px] text-white/40 hover:text-white/70 uppercase tracking-widest">
+                  Vazgeç
+                </button>
+              </div>
+            ) : uiState === "idle" ? (
+              <StartButton onStart={start} disabled={!access.hasAccess} />
+            ) : (
+              <ActionBar
+                muted={muted}
+                paused={paused}
+                pushToTalk={settings.pushToTalk}
+                ptt={ptt}
+                onPttDown={pttPress}
+                onPttUp={pttRelease}
+                onSettings={() => setShowSettings(true)}
+                onMute={toggleMute}
+                onPause={togglePause}
+                onStop={stop}
+                onKeyboard={() => { stop(); onClose(); }}
+                onRepeat={repeatAnswer}
+                onHistory={() => setShowHistory((v) => !v)}
+              />
+            )}
 
-          {access.hasAccess && access.remainingSeconds !== null && (
-            <div className="text-[11px] text-white/30 tabular-nums">
-              Kalan süre: {Math.floor(access.remainingSeconds / 60)} dk {access.remainingSeconds % 60} sn
-            </div>
-          )}
-          {!access.hasAccess && (
-            <div className="text-[11px] text-white/40 text-center max-w-xs">
-              Ücretsiz planda günlük 10 dk. Sınırsız için Premium'a geçin.
-            </div>
-          )}
+            {access.hasAccess && access.remainingSeconds !== null && (
+              <div className="text-[11px] text-white/30 tabular-nums">
+                Kalan süre: {Math.floor(access.remainingSeconds / 60)} dk {access.remainingSeconds % 60} sn
+              </div>
+            )}
+            {!access.hasAccess && (
+              <div className="text-[11px] text-white/40 text-center max-w-xs">
+                Ücretsiz planda günlük 10 dk. Sınırsız için Premium'a geçin.
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* RIGHT: Dashboard rail (desktop) */}
         {!compact && (
