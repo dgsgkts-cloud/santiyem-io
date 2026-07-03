@@ -79,6 +79,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
   const [debug, setDebug] = useState({
