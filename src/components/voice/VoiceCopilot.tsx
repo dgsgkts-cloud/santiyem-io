@@ -154,6 +154,11 @@ export function VoiceCopilot({ onClose, access, compact = false, autoStart = fal
     setError(null);
     setUiState("connecting");
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError("Bu cihaz/tarayıcı mikrofon erişimini desteklemiyor.");
+        setUiState("error");
+        return;
+      }
       await navigator.mediaDevices.getUserMedia({ audio: true });
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
