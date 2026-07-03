@@ -748,6 +748,34 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
           onClose={() => setShowSettings(false)}
         />
       )}
+
+      {/* Dev-only debug panel */}
+      {import.meta.env.DEV && (
+        <DebugPanel
+          open={showDebug}
+          onToggle={() => setShowDebug((v) => !v)}
+          data={{
+            uiState,
+            sdkStatus: String(conversation.status),
+            isSpeaking: conversation.isSpeaking,
+            isMuted: muted,
+            pushToTalk: settings.pushToTalk,
+            ptt,
+            mode: settings.mode,
+            micTracks: micTracksRef.current.size,
+            speakerVolume: settings.speakerVolume,
+            paused,
+            bubbles: bubbles.length,
+            cards: cards.length,
+            connectLatencyMs: debug.connectLatencyMs,
+            firstReplyLatencyMs: debug.firstReplyLatencyMs,
+            toolCalls: debug.toolCalls,
+            lastEvent: debug.lastEvent,
+            lastError: debug.lastError || error || "",
+            agent: "elevenlabs",
+          }}
+        />
+      )}
     </div>
   );
 }
