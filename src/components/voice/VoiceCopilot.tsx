@@ -808,6 +808,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const toggleMute = () => {
     const next = !muted;
+    tl(`setMuted(${next})`, "user toggled mute button");
     console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
     try {
       // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
