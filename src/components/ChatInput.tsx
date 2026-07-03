@@ -26,6 +26,18 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     }
   }, [value]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<string>).detail;
+      if (typeof text === "string") {
+        setValue(text);
+        textareaRef.current?.focus();
+      }
+    };
+    window.addEventListener("chat-prefill", handler);
+    return () => window.removeEventListener("chat-prefill", handler);
+  }, []);
+
   const handleSubmit = () => {
     const trimmed = value.trim();
     if ((!trimmed && attachments.length === 0) || disabled) return;
