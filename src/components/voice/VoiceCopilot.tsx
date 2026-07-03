@@ -47,6 +47,7 @@ type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 export function VoiceCopilot(props: Props) {
+  console.log("[voice][mount] VoiceCopilot → ConversationProvider mounted");
   return (
     <ConversationProvider>
       <VoiceCopilotInner {...props} />
