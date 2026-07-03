@@ -188,16 +188,42 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         return;
       }
 
-      // Check (don't request) mic permission — the SDK will request it once itself.
+      // Check (don't request) mic permission first for a fast, clear error.
       try {
         const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
         console.log("[voice] mic permission state:", perm?.state);
         if (perm?.state === "denied") {
-          setError("Mikrofon izni reddedilmiş. Cihaz ayarlarından uygulamaya mikrofon izni verin.");
+          setError("Mikrofon izni reddedilmiş. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açın.");
           setUiState("error");
           return;
         }
-      } catch { /* permissions API not supported everywhere — SDK will prompt */ }
+      } catch { /* permissions API not supported everywhere */ }
+
+      // Actively open the mic once (triggers the permission prompt) and release
+      // it immediately. This catches permission/hardware failures early instead
+      // of the SDK silently hanging in "connecting".
+      try {
+        console.log("[voice] requesting microphone…");
+        const stream = await withTimeout(
+          navigator.mediaDevices.getUserMedia({ audio: true }),
+          CONNECT_TIMEOUT_MS,
+          "Mikrofon izni"
+        );
+        stream.getTracks().forEach((t) => t.stop());
+        console.log("[voice] microphone OK");
+      } catch (micErr) {
+        console.error("[voice] getUserMedia failed:", micErr);
+        const name = (micErr as DOMException)?.name;
+        if (name === "NotAllowedError" || name === "SecurityError") {
+          setError("Mikrofon izni gerekli. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açıp tekrar deneyin.");
+        } else if (name === "NotFoundError") {
+          setError("Mikrofon bulunamadı. Cihazınızın mikrofonunu kontrol edin.");
+        } else {
+          setError("Mikrofon açılamadı. Lütfen tekrar deneyin.");
+        }
+        setUiState("error");
+        return;
+      }
 
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
