@@ -183,8 +183,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         console.error("[voice][SDK] 🔌 onDisconnect payload", { reason, closeCode, closeReason, error, event });
         if (reason === undefined && closeCode === undefined && closeReason === undefined && error === undefined && event === undefined) {
           console.error("[voice][SDK] 🔌 onDisconnect RAW arg:");
-          // eslint-disable-next-line prefer-rest-params
-          console.dir(arguments[0], { depth: null } as any);
+          console.dir(details, { depth: null } as any);
         }
       } catch (e) { console.error("[voice][SDK] onDisconnect logger failed", e); }
       try {
