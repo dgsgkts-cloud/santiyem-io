@@ -67,11 +67,21 @@ export function VoiceOrb() {
           </div>
         </div>
       </button>
-      {open && (
-        <VoiceErrorBoundary onClose={() => setOpen(false)}>
-          <VoiceCopilot onClose={() => setOpen(false)} access={access} />
-        </VoiceErrorBoundary>
-      )}
+      {open && (() => {
+        // Consume any pending briefing hand-off from MorningBriefingCard.
+        const brief = (window as unknown as { __briefingText?: string }).__briefingText;
+        if (brief) {
+          try { delete (window as unknown as { __briefingText?: string }).__briefingText; } catch { /* noop */ }
+        }
+        const initialContext = brief
+          ? `SABAH YÖNETİCİ BRİFİNGİ (sesli oku ve ardından tek bir eyleme yönelik soruyla bitir; bu bir yönetici brifingidir, standart selamlama YAPMA): ${brief}`
+          : undefined;
+        return (
+          <VoiceErrorBoundary onClose={() => setOpen(false)}>
+            <VoiceCopilot onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
+          </VoiceErrorBoundary>
+        );
+      })()}
     </>
   );
 }
