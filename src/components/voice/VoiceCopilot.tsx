@@ -521,10 +521,14 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         conversation: {
           turn_detection: {
             type: "server_vad",
-            threshold: 0.75,              // higher = less sensitive to noise
-            prefix_padding_ms: 400,
-            silence_duration_ms: 900,
-            min_speech_duration_ms: 700,  // ignore utterances shorter than this
+            // Higher threshold → ignores breaths, taps, keyboard, echo.
+            threshold: 0.85,
+            prefix_padding_ms: 500,
+            // Wait ~1s of silence before ending the user's turn.
+            silence_duration_ms: 1000,
+            // Ignore utterances shorter than this (hmm, ıı, evet, öksürük).
+            min_speech_duration_ms: 900,
+            // Interruptions still allowed after greeting (protected via mic-mute).
             interrupt_response: true,
           },
         },
