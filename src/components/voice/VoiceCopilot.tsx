@@ -85,12 +85,6 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const lastUserTranscriptRef = useRef<string>("");
   const wasSpeakingRef = useRef<boolean>(false);
   const greetingStartRef = useRef<number | null>(null);
-  // Greeting-protection state: true from onConnect until the first agent turn
-  // finishes speaking (plus a small grace). While true, the mic is force-muted
-  // and server-side VAD is disabled so the greeting cannot be interrupted.
-  const greetingProtectedRef = useRef<boolean>(false);
-  const greetingReleaseTimerRef = useRef<number | null>(null);
-  const [greetingProtected, setGreetingProtected] = useState<boolean>(false);
   // ── SESSION TIMELINE (root-cause instrumentation) ──────────────────
   // Every lifecycle event is stamped relative to startSession() so the
   // first-5-seconds timeline can be read straight off the console.
@@ -197,23 +191,10 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         if (tlDumpTimerRef.current) window.clearTimeout(tlDumpTimerRef.current);
         tlDumpTimerRef.current = window.setTimeout(() => tlDump("first 5s"), 5500);
 
-        // === GREETING PROTECTION ================================
-        // Lock the mic & server-side VAD until the greeting has fully played.
-        // Released later in the SPEAKING → LISTENING transition below.
-        greetingProtectedRef.current = true;
-        setGreetingProtected(true);
-        console.log("[voice][DIAG] 🛡️  GREETING PROTECTION enabled");
-        try {
-          conversation.setMuted(true);
-          tl("setMuted(true)", "onConnect / greeting protection");
-        } catch { /* noop */ }
-        try {
-          for (const t of micTracksRef.current) {
-            if (t.readyState === "live" && t.kind === "audio") t.enabled = false;
-          }
-          tl("mic tracks OFF", "onConnect / greeting protection");
-        } catch { /* noop */ }
-        // ========================================================
+        // NOTE: No greeting is generated. The agent stays silent until the
+        // user speaks first (ChatGPT Voice style). Mic is live from the start.
+
+
 
         if (initialContext) {
           queueMicrotask(() => {
@@ -544,26 +525,19 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 - Emin değilsen konuşmaya devam et; cümleyi yarıda bırakma. Kullanıcı bir sonraki nefeste tekrar deneyecektir.
 - Kullanıcı seni yanlışlıkla kestiğini düşünürsen ("devam et", "bitir cümleni" derse) kaldığın yerden devam et.
 
-## İLK İZLENİM (ÇOK ÖNEMLİ — KENDİNİ TANITMA)
-- Kendini ASLA tanıtma. "Ben Şantiyem AI", "Size nasıl yardımcı olabilirim", "Hangi projede yardımcı olayım" gibi cümleleri YASAK.
-- Kullanıcı seni zaten tanıyor. Güvenli, doğrudan ve proaktif konuş — bir chatbot değil, şirketin AI Proje Direktörüsün.
-- Açılış cümlesi kısa olmalı ve mümkünse hemen değer sunmalı ("Bugün dikkatimi çeken iki konu var…", "Bir projede gecikme riski oluşmaya başladı…").
-- Selamlama tek kelimeyi geçmesin ("Merhaba Doğuş.", "Günaydın Doğuş.", "Tekrar hoş geldin."). Aynı cümleyi arka arkaya kullanma; varyasyon yap.
-- İlk konuşmadan sonra ilk fırsatta \`query_project_data\` çağır ve en kritik 1–3 bulguyu (gecikme, kritik ödeme, stok riski) proaktif olarak söyle. Kullanıcının sormasını bekleme.
-- MOD'a göre uzunluk:
-  • OFİS: analitik ve profesyonel, 2 cümle.
-  • SAHA: operasyonel ve kısa, 1–2 cümle.
-  • SÜRÜŞ: çok kısa, tek nefeslik cümle, maksimum 15 saniye.`;
+## AÇILIŞ DAVRANIŞI (ÇOK ÖNEMLİ)
+- ASLA kendiliğinden konuşma başlatma. Selamlama, tanıtım veya proaktif açılış cümlesi YOK.
+- Bağlantı kurulduktan sonra SESSİZCE bekle. Sadece kullanıcı ilk cümlesini söylediğinde cevap ver.
+- İlk cevabın her zaman kullanıcının ilk mesajına yanıt olmalıdır — kendiliğinden söylenen bir açılış değil.`;
 
 
-      // NOTE: `agent.firstMessage` is intentionally NOT overridden here — the
-      // greeting must come solely from the ElevenLabs dashboard configuration.
-      // (Previous mode-based openers were removed on purpose.)
-
+      // Suppress any dashboard-configured firstMessage. The agent must stay
+      // silent after connection and only respond to the user's first utterance.
       const overrides = {
         agent: {
           language: "tr",
           prompt: { prompt: SYSTEM_PROMPT },
+          firstMessage: "",
         },
         // Reduce accidental barge-in from short sounds / brief utterances.
         // Forwarded to server-side turn detection when agent overrides are
@@ -676,29 +650,8 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         "\n         last AI text  :", lastAiMessageRef.current,
         "\n         last user text:", lastUserTranscriptRef.current);
       greetingStartRef.current = null;
+      // Greeting protection removed — no automatic greeting to protect.
 
-      // === GREETING PROTECTION — release ===============================
-      // First time the agent finishes speaking, un-mute after a small grace
-      // so that tail-end TTS audio doesn't self-trigger VAD on re-open.
-      if (greetingProtectedRef.current) {
-        if (greetingReleaseTimerRef.current) window.clearTimeout(greetingReleaseTimerRef.current);
-        greetingReleaseTimerRef.current = window.setTimeout(() => {
-          greetingProtectedRef.current = false;
-          setGreetingProtected(false);
-          try {
-            if (!settingsRef.current.pushToTalk) {
-              conversation.setMuted(false);
-              tl("setMuted(false)", "greeting-release timer (intended)");
-              for (const t of micTracksRef.current) {
-                if (t.readyState === "live" && t.kind === "audio") t.enabled = true;
-              }
-              console.log("[voice][DIAG] 🎙️→ON  (greeting released) local tracks enabled");
-            }
-          } catch { /* noop */ }
-          console.log("[voice][DIAG] 🛡️  GREETING PROTECTION released — VAD active");
-        }, 450);
-      }
-      // =================================================================
     }
     wasSpeakingRef.current = nowSpeaking;
     // ======================================================================
@@ -796,13 +749,11 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           }
         }, 350);
       };
-    } else if (!settings.pushToTalk && !greetingProtectedRef.current) {
-      // Don't re-enable while the greeting is still protected — the
-      // greeting-release timer owns un-muting in that case.
+    } else if (!settings.pushToTalk) {
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted, greetingProtected]);
+  }, [conversation.isSpeaking, settings.mode, settings.interruptionSensitivity, settings.pushToTalk, uiState, muted]);
 
 
 
@@ -850,16 +801,6 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   // Enforce PTT mute state whenever the toggle changes or the session opens.
-  //
-  // ⚠️ ROOT CAUSE (identified during greeting-truncation investigation):
-  // This effect re-runs on EVERY `uiState` change. Right after onConnect,
-  // uiState flips to "listening" (and again to "speaking"), and with
-  // pushToTalk=false the else-branch called `setMuted(false)` +
-  // re-enabled the mic tracks — silently UNDOING the greeting protection
-  // that onConnect had just applied. The mic went hot during the greeting,
-  // speaker echo hit server-side VAD and the server barge-in truncated the
-  // greeting right after the first word. The timeline instrumentation
-  // below flags this exact call if it ever fires while protected.
   useEffect(() => {
     if (uiState === "idle" || uiState === "error") return;
     if (settings.pushToTalk) {
@@ -867,18 +808,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
     } else {
-      if (greetingProtectedRef.current) {
-        // 🚨 This was the callback that terminated greeting playback.
-        tl("🚨 setMuted(false) BLOCKED", `EFFECT[ptt-enforce] tried to unmute during protected greeting (uiState=${uiState})`);
-        console.warn("[voice][DIAG] 🚨 EFFECT[ptt-enforce] attempted setMuted(false) DURING GREETING — blocked (this was the interruption root cause)");
-        return;
-      }
       tl("setMuted(false)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.pushToTalk, uiState, greetingProtected]);
+  }, [settings.pushToTalk, uiState]);
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
