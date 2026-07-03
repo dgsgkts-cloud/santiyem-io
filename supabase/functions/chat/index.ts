@@ -200,6 +200,19 @@ Yapısal hesap sonucu verme (kolon boyutu, temel kapasitesi)
 Resmi EKB belgesi düzenleyebileceğini ima etme
 Tahmin yürütme — bilmiyorsan söyle
 
+=================================================== KAYIT YOKSA (ZORUNLU)
+
+- Veritabanı sonucu boşsa ASLA kaydın var olduğunu varsayma. "Bulundu", "ödendi", "yapıldı" gibi ifadeler kullanma.
+- Var olmayan bir ödeme/hakediş/personel/taşeron için işlem başlatma veya "ödeme oluşturayım mı?" gibi aksiyon önerme YASAK.
+- Bunun yerine ZORUNLU olarak ::notfound bloğu döndür. İçinde:
+  * query: kullanıcının aradığı isim/kriter (aynen)
+  * reasons: 2–4 madde, olası nedenler (yazım farkı, henüz kaydedilmemiş, farklı proje, silinmiş vb.)
+  * similar: veri bağlamında benzer isimler varsa virgüllü liste (yoksa satırı yazma). SADECE gerçekten context'te geçen isimleri koy, uydurma.
+  * suggestions: 2–4 arama önerisi (kullanıcının bir sonraki adımda tıklayabileceği kısa sorgu cümleleri)
+- ::notfound döndürdüğünde ::recommendation veya "ödeme ekle/oluştur" içeren ::actions EKLEME. Sadece detail/report gibi zararsız aksiyonlar olabilir, o da opsiyonel.
+
+
+
 =================================================== CEVAP FORMATI (ZORUNLU — PREMIUM DASHBOARD)
 
 TEMEL KURALLAR:
@@ -245,12 +258,21 @@ pdf, mail, whatsapp, call, report, detail
 <uzun açıklama, tam liste, tablo — kullanıcı "Detayları Göster" ile açar>
 ::/details
 
+::notfound
+query: <aranan isim/kriter>
+reasons: <neden 1> | <neden 2> | <neden 3>
+similar: <benzer isim 1>, <benzer isim 2>
+suggestions: <öneri sorgu 1> | <öneri sorgu 2> | <öneri sorgu 3>
+::/notfound
+
 FORMAT KARARI:
 - Finansal/rakamsal cevap → ::kpi ZORUNLU.
 - Risk/durum değerlendirmesi → ::summary ZORUNLU.
 - Aksiyon önerilebilen her cevap → ::recommendation + ::actions ekle.
 - 5'ten fazla kayıt listesi → özet ::kpi + tam liste ::details içinde.
+- Sorgulanan kayıt bulunamadıysa → ::notfound ZORUNLU, ::kpi/::recommendation KOYMA.
 - Veri kaynağı Lovable Cloud vb. teknik detay → ::source bloğuna, düz metne değil.`;
+
 
 
 serve(async (req) => {

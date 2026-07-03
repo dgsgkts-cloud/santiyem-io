@@ -18,6 +18,7 @@ import {
   BarChart3,
   Search,
   Database,
+  SearchX,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -77,9 +78,10 @@ type Block =
   | { kind: "recommendation"; title?: string; impact?: string; priority?: string; gain?: string; duration?: string; detail?: string }
   | { kind: "actions"; items: string[] }
   | { kind: "source"; content: string }
-  | { kind: "details"; content: string };
+  | { kind: "details"; content: string }
+  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] };
 
-const BLOCK_RE = /::(summary|kpi|recommendation|actions|source|details|answer)\s*\n([\s\S]*?)\n?::\/\1/g;
+const BLOCK_RE = /::(summary|kpi|recommendation|actions|source|details|answer|notfound)\s*\n([\s\S]*?)\n?::\/\1/g;
 
 const parseBlocks = (raw: string): Block[] => {
   const blocks: Block[] = [];
@@ -130,6 +132,18 @@ const parseBlocks = (raw: string): Block[] => {
       blocks.push({ kind: "source", content: inner });
     } else if (kind === "details") {
       blocks.push({ kind: "details", content: inner });
+    } else if (kind === "notfound") {
+      const nf: any = { kind: "notfound", reasons: [], similar: [], suggestions: [] };
+      inner.split("\n").forEach((ln) => {
+        const mm = ln.match(/^\s*(query|reasons|similar|suggestions)\s*:\s*(.+)$/i);
+        if (!mm) return;
+        const key = mm[1].toLowerCase();
+        const val = mm[2].trim();
+        if (key === "query") nf.query = val;
+        else if (key === "similar") nf.similar = val.split(",").map((s) => s.trim()).filter(Boolean);
+        else nf[key] = val.split("|").map((s) => s.trim()).filter(Boolean);
+      });
+      blocks.push(nf);
     }
     last = m.index + m[0].length;
   }
@@ -432,6 +446,81 @@ const MarkdownBody = ({ content }: { content: string }) => (
   </ReactMarkdown>
 );
 
+const NotFoundCard = ({
+  query,
+  reasons,
+  similar,
+  suggestions,
+}: {
+  query?: string;
+  reasons: string[];
+  similar: string[];
+  suggestions: string[];
+}) => (
+  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 shadow-sm space-y-3">
+    <div className="flex items-start gap-2.5">
+      <SearchX className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-500">Kayıt Bulunamadı</div>
+        <div className="text-sm text-foreground">
+          {query ? <>"<span className="font-semibold">{query}</span>" için eşleşen kayıt yok.</> : "Bu kriterlere uygun kayıt bulunamadı."}
+        </div>
+      </div>
+    </div>
+
+    {reasons.length > 0 && (
+      <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+        <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Olası Nedenler</div>
+        <ul className="space-y-1 text-xs text-foreground/90">
+          {reasons.map((r, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="text-amber-500">•</span>
+              <span>{r}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {similar.length > 0 && (
+      <div>
+        <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Benzer Kayıtlar</div>
+        <div className="flex flex-wrap gap-1.5">
+          {similar.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => dispatchPrefill(s)}
+              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] font-medium text-foreground/80 shadow-sm hover:bg-primary/10 hover:text-primary hover:border-primary/40"
+            >
+              <Search className="h-3 w-3" />
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {suggestions.length > 0 && (
+      <div>
+        <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Arama Önerileri</div>
+        <div className="flex flex-wrap gap-1.5">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => dispatchPrefill(s)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-[11px] font-medium text-primary shadow-sm hover:bg-primary/15"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 const AssistantContent = ({ content }: { content: string }) => {
   // Extract professional-advice disclaimer as neutral info card
   const disclaimerRe = /\n?\s*Bilgi:\s*Bu değerlendirme[^\n]*?yetkili uzman tarafından verilmelidir\.?\s*$/;
@@ -468,6 +557,7 @@ const AssistantContent = ({ content }: { content: string }) => {
               <div className="text-xs text-muted-foreground whitespace-pre-wrap">{b.content}</div>
             </Collapsible>
           );
+        if (b.kind === "notfound") return <NotFoundCard key={i} query={b.query} reasons={b.reasons} similar={b.similar} suggestions={b.suggestions} />;
         return null;
       })}
 
