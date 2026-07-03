@@ -531,30 +531,14 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 - İlk cevabın her zaman kullanıcının ilk mesajına yanıt olmalıdır — kendiliğinden söylenen bir açılış değil.`;
 
 
-      // Suppress any dashboard-configured firstMessage. The agent must stay
-      // silent after connection and only respond to the user's first utterance.
+      // Language + system prompt overrides only. Do NOT override firstMessage
+      // or turn_detection here — those were the Sprint 3.2 changes that made
+      // the session close ~1s after connect. Let the ElevenLabs dashboard
+      // control greeting + VAD defaults.
       const overrides = {
         agent: {
           language: "tr",
           prompt: { prompt: SYSTEM_PROMPT },
-          firstMessage: "",
-        },
-        // Reduce accidental barge-in from short sounds / brief utterances.
-        // Forwarded to server-side turn detection when agent overrides are
-        // enabled in the ElevenLabs dashboard.
-        conversation: {
-          turn_detection: {
-            type: "server_vad",
-            // Higher threshold → ignores breaths, taps, keyboard, echo.
-            threshold: 0.85,
-            prefix_padding_ms: 500,
-            // Wait ~1s of silence before ending the user's turn.
-            silence_duration_ms: 1000,
-            // Ignore utterances shorter than this (hmm, ıı, evet, öksürük).
-            min_speech_duration_ms: 900,
-            // Interruptions still allowed after greeting (protected via mic-mute).
-            interrupt_response: true,
-          },
         },
       } as any;
 
@@ -800,20 +784,20 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     }, 250);
   };
 
-  // Enforce PTT mute state whenever the toggle changes or the session opens.
+  // Enforce PTT mute only when the PTT setting itself changes. Do NOT depend
+  // on `uiState` — that made the effect re-run on every SPEAKING/LISTENING
+  // transition and stomped mute mid-session (Sprint 3.2 regression).
   useEffect(() => {
     if (uiState === "idle" || uiState === "error") return;
     if (settings.pushToTalk) {
-      tl("setMuted(true)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
     } else {
-      tl("setMuted(false)", `EFFECT[ptt-enforce] uiState=${uiState}`);
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.pushToTalk, uiState]);
+  }, [settings.pushToTalk]);
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
