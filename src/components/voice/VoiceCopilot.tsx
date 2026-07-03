@@ -615,9 +615,31 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       const dur = greetingStartRef.current ? Date.now() - greetingStartRef.current : -1;
       console.warn("[voice][DIAG] 🔇 SPEAKING → LISTENING after " + dur + "ms",
         "\n         last AI text  :", lastAiMessageRef.current,
-        "\n         last user text:", lastUserTranscriptRef.current,
-        "\n         (if last user text is non-empty and this happened <5s in, the greeting was BARGE-IN interrupted)");
+        "\n         last user text:", lastUserTranscriptRef.current);
       greetingStartRef.current = null;
+
+      // === GREETING PROTECTION — release ===============================
+      // First time the agent finishes speaking, un-mute after a small grace
+      // so that tail-end TTS audio doesn't self-trigger VAD on re-open.
+      if (greetingProtectedRef.current) {
+        if (greetingReleaseTimerRef.current) window.clearTimeout(greetingReleaseTimerRef.current);
+        greetingReleaseTimerRef.current = window.setTimeout(() => {
+          greetingProtectedRef.current = false;
+          setGreetingProtected(false);
+          try {
+            if (!settingsRef.current.pushToTalk) {
+              conversation.setMuted(false);
+              console.log("[voice][DIAG] 🎙️→ON  (greeting released) SDK.setMuted(false)");
+              for (const t of micTracksRef.current) {
+                if (t.readyState === "live" && t.kind === "audio") t.enabled = true;
+              }
+              console.log("[voice][DIAG] 🎙️→ON  (greeting released) local tracks enabled");
+            }
+          } catch { /* noop */ }
+          console.log("[voice][DIAG] 🛡️  GREETING PROTECTION released — VAD active");
+        }, 450);
+      }
+      // =================================================================
     }
     wasSpeakingRef.current = nowSpeaking;
     // ======================================================================
