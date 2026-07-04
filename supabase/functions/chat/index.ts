@@ -1430,6 +1430,8 @@ serve(async (req) => {
               TODAYS_TASKS: { reason: "Bugün için planlı görev bulunmuyor.", alt: "Bu haftanın açık görevlerini veya geciken işleri listeleyebilirim." },
               LOW_STOCK: { reason: "Malzeme norm tanımlı değil ya da stok verisi henüz girilmemiş; kritik stok analizi yapılamıyor.", alt: "Malzeme normlarını tanımlayıp giriş/çıkış kayıtlarını ekledikten sonra kritik stokları çıkarabilirim." },
               PERSONNEL_OVERTIME: { reason: "Seçili aralıkta 9 saati aşan vardiya kaydı bulunmuyor.", alt: "Genel yoklama özetini veya bu haftaki toplam adam/saat dağılımını gösterebilirim." },
+              WAGE_ANALYSIS: { reason: "Seçili dönemde ne puantaj (attendance_records) ne de QR (worker_attendance) kaydı bulunamadı — 'veri yok' değil, dönemde yevmiyeli çalışma girişi yapılmamış.", alt: "Farklı bir tarih aralığına bakabilirim ya da tanımlı yevmiyeli personel listesini çıkarabilirim." },
+
               MEETING_SUMMARY: { reason: "Toplantı kaydı bulunmuyor.", alt: "Toplantı Merkezi'nde yeni bir toplantı başlattığında transkript ve karar özetini otomatik çıkarabilirim." },
               PROJECT_PROGRESS: { reason: "İlerleme kıyaslaması için başlangıç/bitiş tarihi olan proje yok.", alt: "Aktif proje listesini veya sözleşme özetini gösterebilirim." },
               PROJECT_HEALTH: { reason: "Sağlık skoru hesaplamak için yeterli proje verisi yok.", alt: "İlk projeni oluşturup görev/ödeme kayıtlarını girdiğinde skorları çıkarabilirim." },
