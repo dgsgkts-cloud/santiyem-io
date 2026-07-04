@@ -68,6 +68,19 @@ Deno.serve(async (req) => {
       if (txn) {
         await supabaseAdmin.from('profiles').update({ plan: PLAN_MAP[txn.plan_name] || txn.plan_name, updated_at: new Date().toISOString() }).eq('user_id', txn.user_id)
 
+        // Sprint 11.1 — record plan change in usage audit log (best-effort).
+        try {
+          const teamRes = await supabaseAdmin.rpc('get_user_team_id', { _user_id: txn.user_id })
+          const teamId = (teamRes as any)?.data ?? null
+          await supabaseAdmin.from('usage_audit_log').insert({
+            team_id: teamId,
+            user_id: txn.user_id,
+            metric_key: 'plan_change',
+            delta: 0,
+            reason: `iyzico:${txn.plan_name}`,
+          })
+        } catch (_) { /* ignore */ }
+
         // Determine subscription type from URL params
         const subType = url.searchParams.get('subType') || 'monthly'
         const nextPayment = subType === 'yearly'

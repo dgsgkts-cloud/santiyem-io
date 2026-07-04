@@ -94,7 +94,7 @@ const PricingPanel = () => {
   const plans = [
     {
       id: "free",
-      name: "Başlangıç",
+      name: "Starter",
       monthlyPrice: 0,
       yearlyPrice: 0,
       subtitle: "Sonsuza kadar ücretsiz",
@@ -116,7 +116,7 @@ const PricingPanel = () => {
     },
     {
       id: "pro",
-      name: "Profesyonel",
+      name: "Starter Pro",
       monthlyPrice: 499,
       yearlyPrice: 399,
       subtitle: "Serbest mühendis ve mimarlar için",
@@ -142,7 +142,7 @@ const PricingPanel = () => {
     },
     {
       id: "team",
-      name: "Ekip",
+      name: "Professional",
       monthlyPrice: 1499,
       yearlyPrice: 1199,
       subtitle: "Küçük mühendislik ofisleri için",
@@ -165,7 +165,7 @@ const PricingPanel = () => {
     },
     {
       id: "enterprise",
-      name: "Kurumsal",
+      name: "Enterprise",
       monthlyPrice: 4999,
       yearlyPrice: 3999,
       subtitle: "Büyük mühendislik firmaları ve müteahhitler için",
@@ -296,7 +296,7 @@ const PricingPanel = () => {
     return <span className="text-[12px] text-foreground">{val}</span>;
   };
 
-  const planHeaders = ["Başlangıç", "Profesyonel", "Ekip", "Kurumsal"];
+  const planHeaders = ["Starter", "Starter Pro", "Professional", "Enterprise"];
 
   const faqs = [
     { q: "14 günlük deneme gerçekten ücretsiz mi?", a: "Evet. 14 gün boyunca kartınızdan hiçbir ücret alınmaz. Sadece kartınız doğrulama amaçlı kaydedilir ve 1₺'lik doğrulama tutarı anında iade edilir. 15. günden itibaren plan ücreti otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz." },

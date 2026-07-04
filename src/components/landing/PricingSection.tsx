@@ -12,23 +12,23 @@ import { formatNumber0 } from "@/lib/formatCurrency";
 
 const PLANS = [
   {
-    name: "Başlangıç", monthlyPrice: 0, yearlyPrice: 0, popular: false,
+    name: "Starter", monthlyPrice: 0, yearlyPrice: 0, popular: false,
     features: ["1 kullanıcı hesabı · 1 proje", "1 hakediş/ay", "AI Asistan — günde 3 soru", "Hesap araçları — sınırsız", "Şantiye günlüğü — günde 1 kayıt"],
     cta: "Ücretsiz Başla", ctaStyle: { background: "transparent", border: "1px solid #1E2732", color: "#fff" },
   },
   {
-    name: "Profesyonel", monthlyPrice: 499, yearlyPrice: 399, popular: false,
+    name: "Starter Pro", monthlyPrice: 499, yearlyPrice: 399, popular: false,
     features: ["1 kullanıcı hesabı · Sınırsız aktif proje", "3 hakediş/ay + AI analizi", "AI Asistan — sınırsız", "Şantiye günlüğü + fotoğraf rapor", "PDF — sınırsız + firma başlığı"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
-    name: "Ekip", monthlyPrice: 1499, yearlyPrice: 1199, popular: true,
-    features: ["5 kullanıcı hesabı · Sınırsız aktif proje", "Profesyonel'deki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
+    name: "Professional", monthlyPrice: 1499, yearlyPrice: 1199, popular: true,
+    features: ["5 kullanıcı hesabı · Sınırsız aktif proje", "Starter Pro'daki her şey", "Ekip görevi atama + takip", "Ortak proje ve hakediş", "Öncelikli e-posta desteği"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
   {
-    name: "Kurumsal", monthlyPrice: 4999, yearlyPrice: 3999, popular: false, isPremium: true,
-    features: ["Sınırsız kullanıcı hesabı · Sınırsız aktif proje", "Ekip'teki her şey", "Gelişmiş yetki rolleri", "AI Bütçe Sapma Analizi", "Tel + WhatsApp + özel onboarding"],
+    name: "Enterprise", monthlyPrice: 4999, yearlyPrice: 3999, popular: false, isPremium: true,
+    features: ["Sınırsız kullanıcı hesabı · Sınırsız aktif proje", "Professional'daki her şey", "Gelişmiş yetki rolleri", "AI Bütçe Sapma Analizi", "Tel + WhatsApp + özel onboarding"],
     cta: "14 Gün Ücretsiz Dene", ctaStyle: { background: "#FF6B2B", border: "none", color: "#fff" },
   },
 ];

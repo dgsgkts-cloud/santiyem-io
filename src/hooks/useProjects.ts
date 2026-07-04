@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { assertQuotaOrToast } from "@/lib/quotaClient";
+
 
 export interface UserProject {
   id: string;
@@ -43,6 +45,7 @@ export function useProjects() {
 
   const addProject = async (p: Omit<UserProject, "id" | "created_at" | "progress" | "status" | "status_color">) => {
     if (!user) return null;
+    if (!(await assertQuotaOrToast("projects", 1))) return null;
     const { data, error } = await supabase.from("projects").insert({
       user_id: user.id,
       name: p.name,

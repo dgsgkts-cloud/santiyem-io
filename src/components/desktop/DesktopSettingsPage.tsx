@@ -4,7 +4,9 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles } from "lucide-react";
+import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
+import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +17,8 @@ const TABS = [
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
+  { id: "plan", label: "Plan ve Kullanım", icon: Gauge },
+  { id: "org", label: "Kuruluş", icon: Building },
   { id: "team", label: "Ekip", icon: Users },
   { id: "security", label: "Güvenlik", icon: Shield },
   { id: "demo", label: "Demo Veri", icon: Sparkles },
@@ -77,6 +81,8 @@ const DesktopSettingsPage = () => {
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
           {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
+          {activeTab === "plan" && <PlanLimitsPanel />}
+          {activeTab === "org" && <OrgAdminPanel />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">

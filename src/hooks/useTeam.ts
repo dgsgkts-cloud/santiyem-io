@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { assertQuotaOrToast } from "@/lib/quotaClient";
 
 export interface TeamMember {
   id: string;
@@ -141,6 +142,10 @@ export function useTeam() {
       toast.error(`Maksimum ${team.max_members} kişi davet edebilirsiniz`);
       return null;
     }
+
+    // Sprint 11.1 — org-level users quota (hard).
+    if (!(await assertQuotaOrToast("users", 1))) return null;
+
 
     const { data, error } = await supabase
       .from("office_invitations")
