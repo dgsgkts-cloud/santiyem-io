@@ -21,10 +21,10 @@ async function fetchAttachment(a: { url?: string; content?: string; filename: st
   const resp = await fetch(a.url);
   if (!resp.ok) throw new Error(`Ek indirilemedi: ${a.filename} (${resp.status})`);
   const buf = new Uint8Array(await resp.arrayBuffer());
-  // denomailer accepts Uint8Array directly
   return {
     filename: a.filename,
     content: buf,
+    encoding: "binary" as const,
     contentType: a.mime || resp.headers.get("Content-Type") || "application/octet-stream",
   };
 }
