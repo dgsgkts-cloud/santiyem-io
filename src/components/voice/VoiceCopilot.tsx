@@ -658,14 +658,30 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const toggleMute = () => {
     const next = !muted;
-    console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
-    try {
-      // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
-      conversation.setMuted(next);
-    } catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
-    // 2) Local track flag — makes sure iOS Safari really stops streaming.
-    setLocalTracksEnabled(!next);
+    console.log(next ? "[MUTE] enabled" : "[MUTE] disabled", { tracks: micTracksRef.current.size });
+    // Sync the ref immediately so setLocalTracksEnabled's guard sees the new
+    // state before any of the effects below react.
+    mutedRef.current = next;
+    // 1) Local track flag first — iOS Safari actually stops the uplink here.
+    //    Do this before the SDK call so no frame slips through.
+    if (next) {
+      // Force-disable regardless of ref guard (guard only blocks re-enable).
+      try {
+        for (const t of micTracksRef.current) {
+          if (t.readyState === "live" && t.kind === "audio" && t.enabled) {
+            t.enabled = false;
+            console.log("[MUTE] microphone track stopped", { id: t.id });
+          }
+        }
+      } catch (e) { console.warn("[voice] track disable failed", e); }
+    } else {
+      setLocalTracksEnabled(true);
+    }
+    // 2) SDK — ElevenLabs InputController stops uplink + disables VAD server-side.
+    try { conversation.setMuted(next); }
+    catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
   };
+
   const togglePause = async () => {
     // Best-effort pause via volume (SDK has no native pause for realtime).
     try { await conversation.setVolume({ volume: paused ? 1 : 0 }); setPaused(!paused); }
