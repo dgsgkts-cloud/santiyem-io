@@ -294,6 +294,13 @@ const Index = () => {
     }
   };
 
+  const handleFirstRunClose = () => {
+    setShowFirstRun(false);
+    if (shouldShowThemeModal()) {
+      setTimeout(() => setShowThemeModal(true), 300);
+    }
+  };
+
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
     const handler = () => setIsLg(mql.matches);
