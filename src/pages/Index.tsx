@@ -428,6 +428,7 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
+        <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
         <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
         <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
