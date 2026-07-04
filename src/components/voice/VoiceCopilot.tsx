@@ -573,7 +573,10 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   // opens, so we can flip `track.enabled = false/true` ourselves. This is what
   // iOS Safari actually respects even when a transport keeps the pipe open.
   const muted = conversation.isMuted;
+  const mutedRef = useRef(muted);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
   const micTracksRef = useRef<Set<MediaStreamTrack>>(new Set());
+
 
   useEffect(() => {
     if (!navigator?.mediaDevices?.getUserMedia) return;
