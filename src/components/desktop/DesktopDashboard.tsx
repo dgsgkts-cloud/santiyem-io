@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { MorningBriefingCard } from "@/components/voice/MorningBriefingCard";
+import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
 import {
   useUser,
   canAccessProjects,
@@ -447,6 +448,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
+
+      <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 
       <MorningBriefingCard />
 

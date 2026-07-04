@@ -319,7 +319,7 @@ const Index = () => {
             return [...prev, { id: assistantId, role: "assistant", content: assistantContent }];
           });
         },
-        onDone: () => setIsTyping(false),
+        onDone: () => { setIsTyping(false); window.dispatchEvent(new CustomEvent("executive-brief-refresh")); },
         onError: (error) => {
           setIsTyping(false);
           toast.error(error);
