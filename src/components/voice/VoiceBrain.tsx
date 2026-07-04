@@ -148,7 +148,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
     } catch (err) {
       console.error("[VoiceBrain] mic denied", err);
       setError("Mikrofon izni gerekli.");
-      toast({ variant: "destructive" as any, title: "Mikrofon erişimi reddedildi" });
+      toast.error("Mikrofon erişimi reddedildi");
       setState("error");
     }
   }, [state]);
@@ -168,7 +168,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
     const wav = encodeWav(chunks, sampleRate, 16000);
     console.log(`[VoiceBrain] recording stopped → wav ${wav.size} bytes`);
     if (wav.size < 3000) {
-      toast({ title: "Ses çok kısa", description: "Tekrar deneyin." });
+      toast("Ses çok kısa — tekrar deneyin.");
       setState("idle");
       return;
     }
@@ -192,7 +192,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
       transcript = String(sttJson?.text ?? "").trim();
       console.log("[VoiceBrain] transcript:", transcript);
       if (!transcript) {
-        toast({ title: "Söylediğinizi anlayamadım", description: "Tekrar deneyin." });
+        toast("Söylediğinizi anlayamadım — tekrar deneyin.");
         setState("idle");
         return;
       }
