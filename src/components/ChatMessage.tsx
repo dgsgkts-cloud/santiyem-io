@@ -227,6 +227,24 @@ const parseBlocks = (raw: string): Block[] => {
         else nf[key] = val.split("|").map((s) => s.trim()).filter(Boolean);
       });
       blocks.push(nf);
+    } else if (kind === "chart") {
+      blocks.push({ kind: "chart", ...parseChart(header || "", inner) });
+    } else if (kind === "timeline") {
+      blocks.push({ kind: "timeline", ...parseTimeline(header || "", inner) });
+    } else if (kind === "progress") {
+      blocks.push({ kind: "progress", ...parseProgress(header || "", inner) });
+    } else if (kind === "datatable") {
+      blocks.push({ kind: "datatable", ...parseDataTable(header || "", inner) });
+    } else if (kind === "risks") {
+      blocks.push({ kind: "risks", rows: parseRisks(inner) });
+    } else if (kind === "financial") {
+      blocks.push({ kind: "financial", rows: parseFinancial(inner) });
+    } else if (kind === "personnel") {
+      blocks.push({ kind: "personnel", rows: parseEntity(inner) });
+    } else if (kind === "materials") {
+      blocks.push({ kind: "materials", rows: parseEntity(inner) });
+    } else if (kind === "projects") {
+      blocks.push({ kind: "projects", rows: parseEntity(inner) });
     }
     last = m.index + m[0].length;
   }
