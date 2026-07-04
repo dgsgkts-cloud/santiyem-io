@@ -175,6 +175,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     <Icon className="w-4 h-4 shrink-0" />
                     {!collapsed && <span className="text-[13px] font-medium whitespace-nowrap">{item.label}</span>}
                     {!collapsed && isLocked && <Lock className="w-3 h-3 ml-auto shrink-0" style={{ color: "#475569" }} />}
+                    {!collapsed && (item as any).soon && !isLocked && (
+                      <span className="ml-auto text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                        Yakında
+                      </span>
+                    )}
                   </button>
                 );
 
