@@ -141,6 +141,11 @@ const TAB_TITLES: Record<string, string> = {
   personnel: "Puantaj & Personel",
   meetings: "Toplantı Merkezi",
   settings: "Ayarlar",
+  "company-memory": "🧠 Company Memory",
+  "company-kb": "🧠 Knowledge Base",
+  "ai-decisions": "🧠 AI Decisions",
+  "decision-history": "🧠 Decision History",
+  "company-docs": "🧠 Documents",
   
   hakkimizda: "Hakkımızda",
 };
