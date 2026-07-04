@@ -2055,6 +2055,13 @@ export type Database = {
             referencedRelation: "office_teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "meetings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       memory_dismissed_categories: {
@@ -2222,6 +2229,13 @@ export type Database = {
             referencedRelation: "office_teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "office_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       office_members: {
@@ -2254,6 +2268,13 @@ export type Database = {
             referencedRelation: "office_teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "office_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       office_teams: {
@@ -2279,6 +2300,108 @@ export type Database = {
           owner_id?: string
         }
         Relationships: []
+      }
+      organization_feature_overrides: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          expires_at: string | null
+          feature_key: string
+          id: string
+          reason: string | null
+          set_by: string | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          expires_at?: string | null
+          feature_key: string
+          id?: string
+          reason?: string | null
+          set_by?: string | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          expires_at?: string | null
+          feature_key?: string
+          id?: string
+          reason?: string | null
+          set_by?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_feature_overrides_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_feature_overrides_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_limit_overrides: {
+        Row: {
+          created_at: string
+          enforcement: string | null
+          expires_at: string | null
+          grace_pct: number | null
+          id: string
+          limit_key: string
+          limit_value: number
+          reason: string | null
+          set_by: string | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          enforcement?: string | null
+          expires_at?: string | null
+          grace_pct?: number | null
+          id?: string
+          limit_key: string
+          limit_value: number
+          reason?: string | null
+          set_by?: string | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          enforcement?: string | null
+          expires_at?: string | null
+          grace_pct?: number | null
+          id?: string
+          limit_key?: string
+          limit_value?: number
+          reason?: string | null
+          set_by?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_limit_overrides_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_limit_overrides_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_transactions: {
         Row: {
@@ -2427,6 +2550,97 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_features: {
+        Row: {
+          enabled: boolean
+          feature_key: string
+          plan_internal_key: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          feature_key: string
+          plan_internal_key: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          feature_key?: string
+          plan_internal_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_plan_internal_key_fkey"
+            columns: ["plan_internal_key"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["internal_key"]
+          },
+        ]
+      }
+      plan_limits: {
+        Row: {
+          enforcement: string
+          grace_pct: number
+          limit_key: string
+          limit_value: number
+          plan_internal_key: string
+          updated_at: string
+        }
+        Insert: {
+          enforcement?: string
+          grace_pct?: number
+          limit_key: string
+          limit_value: number
+          plan_internal_key: string
+          updated_at?: string
+        }
+        Update: {
+          enforcement?: string
+          grace_pct?: number
+          limit_key?: string
+          limit_value?: number
+          plan_internal_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_limits_plan_internal_key_fkey"
+            columns: ["plan_internal_key"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["internal_key"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          display_name: string
+          internal_key: string
+          is_public: boolean
+          public_key: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          internal_key: string
+          is_public?: boolean
+          public_key: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          internal_key?: string
+          is_public?: boolean
+          public_key?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -3266,6 +3480,100 @@ export type Database = {
             referencedRelation: "office_teams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_audit_log: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          metric_key: string
+          reason: string | null
+          team_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delta?: number
+          id?: string
+          metric_key: string
+          reason?: string | null
+          team_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          metric_key?: string
+          reason?: string | null
+          team_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_audit_log_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_audit_log_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_counters: {
+        Row: {
+          id: string
+          metric_key: string
+          period_start: string
+          team_id: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          metric_key: string
+          period_start: string
+          team_id: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          id?: string
+          metric_key?: string
+          period_start?: string
+          team_id?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_counters_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_counters_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_calculations: {
@@ -3524,6 +3832,18 @@ export type Database = {
       }
     }
     Views: {
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          internal_plan_key: string | null
+          name: string | null
+          owner_id: string | null
+          plan_display: string | null
+          public_plan: string | null
+        }
+        Relationships: []
+      }
       unmatched_qr_checkins: {
         Row: {
           check_in: string | null
@@ -3581,10 +3901,12 @@ export type Database = {
         Args: { _accessor_id: string; _owner_id: string }
         Returns: boolean
       }
+      check_feature: { Args: { _key: string }; Returns: boolean }
       check_pending_invitations: {
         Args: { _email: string; _user_id: string }
         Returns: undefined
       }
+      check_quota: { Args: { _key: string }; Returns: Json }
       compute_project_labor_cost: {
         Args: { _month: string; _project: string }
         Returns: Json
@@ -3603,6 +3925,7 @@ export type Database = {
         Returns: number
       }
       get_hakedis_by_approval_token: { Args: { _token: string }; Returns: Json }
+      get_org_plan_summary: { Args: never; Returns: Json }
       get_project_name_by_qr_token: {
         Args: { _token: string }
         Returns: string
@@ -3633,6 +3956,10 @@ export type Database = {
       has_project_permission: {
         Args: { _key: string; _project: string; _user: string }
         Returns: boolean
+      }
+      increment_usage: {
+        Args: { _delta?: number; _metric: string; _reason?: string }
+        Returns: number
       }
       is_project_manager_or_owner: {
         Args: { _project: string; _user: string }
@@ -3777,6 +4104,15 @@ export type Database = {
       remove_project_member: {
         Args: { _project: string; _user: string }
         Returns: undefined
+      }
+      resolve_org_plan: {
+        Args: { _user: string }
+        Returns: {
+          display_name: string
+          internal_plan: string
+          public_plan: string
+          team_id: string
+        }[]
       }
       role_default_permission: {
         Args: {

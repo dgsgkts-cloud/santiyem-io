@@ -1,114 +1,158 @@
+# Sprint 11.1 — Subscription & Licensing
 
-# Sprint 8.1 — Construction Brain Modularization
+Turn Şantiyem into a commercial SaaS layer on top of existing `office_teams` / `office_members` / `profiles.plan` / `user_subscriptions`. No changes to Construction Brain, Company Brain, VoiceCopilot, Executive Dashboard or Action Executor.
 
-Pure refactor of `supabase/functions/chat/index.ts` (2,485 lines) into the target module layout. **Zero behavior change**: same prompts (byte-for-byte), same intent flow, same DB queries, same streamed output, same action schemas, same error paths.
+## Public vs internal plans
 
-## Guardrails
+UI, pricing page, onboarding, upgrade CTAs use ONLY:
+- **Starter**
+- **Professional**
+- **Enterprise**
 
-- No prompt edits — the `SYSTEM_PROMPT` (lines 167–685), voice prompt (~2279), action prompt (~2175), and every embedded fragment are moved verbatim.
-- No new dependencies, no runtime shape changes to the request/response contract.
-- No touching VoiceCopilot, Executive Dashboard, Company Memory (features), Knowledge Base features — only the chat function internals.
-- Public HTTP contract (`Deno.serve` handler in `index.ts`, SSE stream format, headers) stays identical.
-
-## Target layout
+Internal identifiers stay untouched. Mapping lives in DB (`plans.internal_key → plans.public_key`) and one helper (`src/lib/plans.ts`):
 
 ```text
-supabase/functions/chat/
-  index.ts                       # thin entry: CORS, auth, request parse, orchestration
-  prompt/
-    systemPrompt.ts              # SYSTEM_PROMPT verbatim
-    voicePrompt.ts               # voice-mode lean prompt verbatim
-    explainabilityPrompt.ts      # explainability instructions extracted from SYSTEM_PROMPT tail
-    fragments.ts                 # shared reusable snippets referenced by the above
-  intents/
-    classifyIntent.ts            # classifyIntentHeuristic + extractPriorProject
-    types.ts                     # IntentName, IntentContext, IntentResult
-    registry.ts                  # name -> handler map (single source of truth)
-    handlers/
-      projectStatus.ts
-      financeQuery.ts
-      hakedisQuery.ts
-      subcontractorQuery.ts
-      siteDiaryQuery.ts
-      knowledgeQuery.ts
-      generalChat.ts             # fallback
-      # ...one file per intent already present in current if/else
-  retrieval/
-    companyMemory.ts             # memory fetch + memoryContext string builder
-    knowledgeBase.ts             # RAG search + ragContext builder
-    projectData.ts               # DB pulls for project/finance/hakedis/etc.
-    executiveContext.ts          # dashboard/exec brief context (read-only)
-  actions/
-    buildActions.ts              # ACTION_SYSTEM builder + tool-loop wiring
-    actionSchemas.ts             # JSON schemas for exposed tools
-  ui/
-    buildUiPayload.ts            # ::summary/::table/::chart block assembly helpers
-  explainability/
-    buildExplainability.ts       # ::queries/::memories/::documents block assembly
-  streaming/
-    streamResponse.ts            # SSE writer, delta chunking, [DONE], abort handling
-  tools/
-    queryProjectData.ts          # supabase-side tool implementations invoked by the model
-  utils/
-    parsing.ts                   # normalizeQuery, extractDateWindow, cacheGet/cacheSet, JSON parsers
-    formatting.ts                # currency/date/number formatters used inside prompts & payloads
-    validation.ts                # zod schemas for incoming request body + tool args
+free       -> starter
+pro        -> starter
+team       -> professional
+enterprise -> enterprise
 ```
 
-## Phased execution
+Nothing hard-codes plan names for gating. All checks go through `plan_limits` + `plan_features`.
 
-Each phase is a self-contained edit set that leaves the function green. I stop between phases only if signals fail.
+## Database (migration)
 
-1. **Scaffold + utils extraction (safe)**
-   - Create `utils/parsing.ts`, `utils/formatting.ts`, `utils/validation.ts`.
-   - Move `cacheGet/cacheSet`, `normalizeQuery`, `extractDateWindow`, small helpers.
-   - `index.ts` imports them; no logic changes.
+New tables — all with GRANTs + RLS:
 
-2. **Prompt extraction**
-   - Move `SYSTEM_PROMPT` (167–685) into `prompt/systemPrompt.ts` as `export const SYSTEM_PROMPT`.
-   - Move voice-mode prompt (~2279) to `prompt/voicePrompt.ts`.
-   - Move explainability tail instructions to `prompt/explainabilityPrompt.ts`; re-compose the exact same string in `systemPrompt.ts` so the concatenated prompt is byte-identical.
-   - Diff check: run a script that reconstructs the pre-refactor string and asserts equality.
+- `plans` — canonical catalog. Columns: `internal_key` (PK, matches `profiles.plan`), `public_key` (starter/professional/enterprise), `display_name`, `sort_order`, `is_public`.
+- `plan_limits` — `plan_internal_key`, `limit_key`, `limit_value bigint`, `enforcement` (`hard`|`soft`), `grace_pct int default 0`. Keys: `users`, `projects`, `storage_mb`, `kb_storage_mb`, `company_memory_writes_month`, `voice_minutes_month`, `ai_requests_month`, `comm_messages_month`.
+- `plan_features` — `plan_internal_key`, `feature_key`, `enabled bool`. Feature keys: `voice_copilot`, `executive_brief`, `company_memory`, `knowledge_base`, `communication_hub`, `email_accounts`, `whatsapp`, `meetings`, `hakedis_ai`, `contracts_ai`, `gayrimenkul360`, `demo_seed`, `advanced_reports`, `api_access`, `sso`.
+- `organization_feature_overrides` — `team_id`, `feature_key`, `enabled`, `expires_at`, `reason`, `set_by`, `created_at`. Read wins over `plan_features`; expiry ignored when past.
+- `organization_limit_overrides` — same shape for numeric quotas.
+- `usage_counters` — `team_id`, `period_start date`, `metric_key`, `value bigint`, unique (`team_id`,`period_start`,`metric_key`). Monthly window = first of month.
+- `usage_audit_log` — append-only: `team_id`, `user_id`, `metric_key`, `delta`, `reason`, `created_at`.
 
-3. **Retrieval modules**
-   - Move memory fetch + `memoryContext` builder → `retrieval/companyMemory.ts`.
-   - Move RAG search + `ragContext` builder → `retrieval/knowledgeBase.ts`.
-   - Move project/finance/hakedis DB reads + `projectDataContext` builder → `retrieval/projectData.ts`.
-   - Executive/dashboard context → `retrieval/executiveContext.ts`.
+`profiles.plan` remains the billing truth (updated by `iyzico-callback`). `organizations` is a thin **view** over `office_teams` joined to owner's `profiles.plan`:
 
-4. **Intent registry**
-   - Move `classifyIntentHeuristic` + `extractPriorProject` → `intents/classifyIntent.ts`.
-   - Extract each branch of the current handling block into `intents/handlers/<name>.ts` implementing a shared `IntentHandler` signature: `(ctx: IntentContext) => Promise<IntentResult>`.
-   - `intents/registry.ts` maps intent name → handler; `index.ts` looks up + invokes.
+```sql
+create view public.organizations as
+  select t.id, t.name, t.owner_id, p.plan as internal_plan_key,
+         pl.public_key as public_plan, pl.display_name as plan_display
+    from office_teams t
+    join profiles p  on p.user_id = t.owner_id
+    left join plans pl on pl.internal_key = p.plan;
+```
 
-5. **Actions module**
-   - Move `ACTION_SYSTEM` + tool-loop into `actions/buildActions.ts`, schemas into `actions/actionSchemas.ts`.
+Seed rows: 4 plans (free/pro/team/enterprise) mapped to 3 public tiers, with limits/features per the matrix below.
 
-6. **UI + explainability builders**
-   - Extract the `::summary` / `::table` / `::chart` / `::kpi` block builders into `ui/buildUiPayload.ts`.
-   - Extract `::queries` / `::memories` / `::documents` builders into `explainability/buildExplainability.ts`.
+## Limits matrix (seed)
 
-7. **Streaming**
-   - Move SSE writer, chunk framing, `[DONE]`, abort handling → `streaming/streamResponse.ts`.
+| metric | Starter (free/pro) | Professional (team) | Enterprise |
+|---|---|---|---|
+| users | 3 / 10 | 25 | 500 |
+| projects | 2 / 15 | 75 | unlimited (`-1`) |
+| storage_mb | 200 / 5000 | 25000 | unlimited |
+| kb_storage_mb | 100 / 2000 | 10000 | unlimited |
+| company_memory_writes_month | 50 / 500 | 5000 | unlimited |
+| voice_minutes_month | 10 / 300 | 1500 | unlimited |
+| ai_requests_month | 100 / 2000 | 15000 | unlimited |
+| comm_messages_month | 20 / 500 | 5000 | unlimited |
 
-8. **Thin `index.ts`**
-   - Final `index.ts`: CORS preflight, JWT check, body parse (via `utils/validation.ts`), classify → registry lookup → handler → stream. Target < 200 lines.
+Enforcement per user's spec:
+- **Hard** (`users`, `projects`, `storage_mb`, `kb_storage_mb`)
+- **Soft with 10% grace** (`ai_requests_month`, `voice_minutes_month`, `comm_messages_month`, `company_memory_writes_month`)
 
-## Verification (must pass before ship)
+## Server helpers
 
-- **Prompt equality**: a Deno test asserts `assembledSystemPrompt === legacySystemPrompt` (snapshot of pre-refactor string).
-- **Type check**: `tsgo` clean over `supabase/functions/chat/**`.
-- **Edge function smoke tests** via `supabase--test_edge_functions` for chat: intent classification, RAG path, memory path, action path, voice path — asserting the same block markers appear in the response.
-- **Live smoke** in the preview: one project-status question, one finance question, one action-mode ("hakediş oluştur"), one voice request — compare streamed output shape to a pre-refactor capture.
+`supabase/functions/_shared/licensing.ts`:
+- `getOrgContext(supabase, userId)` — returns `{ team_id, internal_plan, public_plan }`.
+- `getFeature(team_id, feature_key)` — override → plan_features → false.
+- `getLimit(team_id, metric_key)` — override → plan_limits.
+- `getUsage(team_id, metric_key, period)` — reads `usage_counters`.
+- `assertQuota(team_id, metric_key, delta=1)` — hard: throws 402 if `value+delta > limit`. Soft: allows up to `limit*(1+grace)`, then throws 402. Writes to `usage_audit_log`.
+- `incrementUsage(team_id, metric_key, delta)` — upserts counter for current month.
 
-## Notes / trade-offs
+RPCs (SECURITY DEFINER) for client-side reads:
+- `get_org_plan_summary()` → plan + limits + current usage.
+- `check_feature(_key)` → bool.
+- `check_quota(_key)` → `{limit, used, remaining, enforcement, over}`.
 
-- Total edit volume is large but mechanical. I will do it in the phases above rather than a single mega-edit so any regression is bisectable to one phase.
-- The `intents/handlers/` file list will match whatever branches actually exist in the current control flow — I finalize that list during Phase 4 after mapping every branch; the plan does not invent intents.
-- No changes to `supabase/config.toml`, no new secrets, no DB migrations.
+## Wiring (surgical — no Brain changes)
 
-## Out of scope (explicit)
+Insert quota checks at existing write paths only:
 
-- Any prompt wording change, even whitespace normalization.
-- Any change to Voice, Executive Dashboard, Company Memory UI, Knowledge Base UI, Communication Hub, or WhatsApp provider.
-- Performance tuning, caching strategy changes, model swaps.
+- `useProjects.createProject` → `check_quota('projects')` before insert (hard).
+- `useTeam.invite` → `check_quota('users')` (hard).
+- Storage upload helpers (`useDocuments`, `useProjectFiles`) → sum current storage vs `storage_mb` / `kb_storage_mb` (hard).
+- `chat/index.ts`: after successful response, call `incrementUsage('ai_requests_month')`. Pre-flight `assertQuota` at very top — this is the only chat/index.ts touch, does NOT alter prompts, intents, retrieval, payload, or streaming format.
+- `voice-usage-track` edge function → also increments `voice_minutes_month`.
+- `communication-hub` `create` action → `assertQuota('comm_messages_month')` + increment.
+- `company-memory` writes → `assertQuota('company_memory_writes_month')` + increment.
+
+VoiceCopilot behaviour unchanged — the existing `useVoiceAccess` daily cap stays; monthly org quota is additive and enforced at the same edge that already tracks seconds.
+
+## Frontend
+
+- `src/lib/plans.ts` — `PUBLIC_PLAN_LABELS`, `toPublicPlan(internal)`.
+- `src/hooks/useOrgPlan.ts` — loads `get_org_plan_summary` RPC; exposes plan, limits, usage, refresh.
+- `src/hooks/useFeature.ts` — `useFeature('voice_copilot') → boolean`.
+- `src/hooks/useQuota.ts` — `useQuota('projects')`.
+- `src/components/billing/PlanBadge.tsx`, `UsageBar.tsx`, `QuotaWarningBanner.tsx` (80/95/100% states with Upgrade CTA; native app hides CTA per `isNativeApp`).
+- `src/components/billing/PlanLimitsPanel.tsx` — visible in Settings → Plans; renders every metric with progress bar and hard/soft badge.
+- `src/components/billing/FeatureGate.tsx` — wraps disabled features with upgrade prompt.
+- Update `PricingPanel` + `PricingSection` (landing) to use `PUBLIC_PLAN_LABELS` only. Internal keys still sent to `create-iyzico-payment` unchanged.
+- Warning banner mounts once in `Index.tsx` header, driven by `useOrgPlan` — appears at 80% / 95% / blocked.
+
+## Admin
+
+- `src/components/billing/OrgAdminPanel.tsx` (Settings → Kuruluş):
+  - list `office_members` with roles (owner/admin/member — reuse existing `office_members.role`).
+  - toggle role admin ↔ member (owner only).
+  - view + set `organization_feature_overrides` and `organization_limit_overrides` (owner only, with expiry + reason).
+- No cross-tenant admin; superadmin remains the existing `profiles.role='admin'` short-circuit.
+
+## Billing (unchanged surface)
+
+`iyzico-callback` continues to write `profiles.plan`. Adds one line: on successful upgrade, insert a `usage_audit_log` row `{metric:'plan_change', reason:'iyzico:'||plan_name}`. Trial / renewal / cancellation flows untouched.
+
+## Files
+
+New:
+- `supabase/migrations/<ts>_sprint_11_1_licensing.sql`
+- `supabase/functions/_shared/licensing.ts`
+- `src/lib/plans.ts`
+- `src/hooks/useOrgPlan.ts`, `useFeature.ts`, `useQuota.ts`
+- `src/components/billing/{PlanBadge,UsageBar,QuotaWarningBanner,PlanLimitsPanel,FeatureGate,OrgAdminPanel}.tsx`
+
+Edited (thin, mechanical):
+- `src/hooks/useProjects.ts`, `useTeam.ts`, `useDocuments.ts`, `useProjectFiles.ts`
+- `supabase/functions/chat/index.ts` (top-of-handler quota only)
+- `supabase/functions/voice-usage-track/index.ts`
+- `supabase/functions/communication-hub/index.ts`
+- `supabase/functions/company-memory/index.ts`
+- `supabase/functions/iyzico-callback/index.ts`
+- `src/components/PricingPanel.tsx`, `src/components/landing/PricingSection.tsx`
+- `src/pages/Index.tsx` (mount `QuotaWarningBanner`)
+
+## Explicitly untouched
+
+- `supabase/functions/chat/prompt/*`, `intents/*`, `utils/*` — no prompt/intent/retrieval/payload/streaming diff.
+- `supabase/functions/company-memory` retrieval path (read-only paths).
+- `VoiceCopilot`, `VoiceBrain`, `voice-stt`, `voice-tts` — behaviour identical; only usage counter added at existing tracker.
+- Executive Dashboard, Action Executor, Company Brain widgets.
+
+## Parity checks
+
+After each migration + wiring commit:
+1. Chat parity test still passes (intent/SQL/memory/KB/UI/actions/explainability/streaming byte-identical for non-quota'd users).
+2. Voice: existing free-tier daily cap behaviour unchanged for users within org quota.
+3. Iyzico success flow still flips `profiles.plan` and preserves trial dates.
+
+Stop and report diff if anything drifts.
+
+## Out of scope (future sprints)
+
+- Per-user seat billing.
+- Metered add-on packs (extra voice minutes, AI credits).
+- Superadmin tenant console.
+- Migration of `office_teams` → dedicated `organizations` table (view is enough now).
