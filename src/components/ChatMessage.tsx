@@ -64,6 +64,8 @@ import {
   parseEntity,
 } from "./chat/VisualBlocks";
 import { SmartVisual, SmartDataTable, extractUiPayloads } from "./chat/SmartVisual";
+import { AIResponseRenderer } from "./ai/AIResponseRenderer";
+import { parseAIResponse } from "@/hooks/useAIResponse";
 
 export interface Message {
   id: string;
@@ -841,10 +843,13 @@ const AssistantContent = ({ content }: { content: string }) => {
   const bodyRaw = match ? content.replace(disclaimerRe, "").trimEnd() : content;
   const disclaimer = match?.[0]?.replace(/^\s*Bilgi:\s*/, "").trim();
 
-  // Universal engine: extract any inline JSON `ui` payloads embedded in the
-  // response (```json ui ...``` fences or trailing {"ui": ...}), then parse
-  // the classic block syntax.
-  const { text: body, payloads } = extractUiPayloads(bodyRaw);
+  // Universal AI Response Engine: run the raw body through useAIResponse's
+  // parser so every ui payload shape (```json ui```, ::ui blocks, trailing
+  // {"ui": ...}, or object-shaped speech/ui) is normalized. The resulting
+  // `uiPayloads` render through <AIResponseRenderer /> (AITable, AIKpiCards,
+  // AIBarChart, AILineChart, AIPieChart, AITimeline, AIProgress).
+  const { speech: bodyAfterUi, ui: uiPayloads } = parseAIResponse(bodyRaw);
+  const { text: body, payloads } = extractUiPayloads(bodyAfterUi);
   const blocks = parseBlocks(body);
 
   return (
@@ -897,6 +902,8 @@ const AssistantContent = ({ content }: { content: string }) => {
       {payloads.map((p, i) => (
         <SmartVisual key={`ui-${i}`} payload={p} />
       ))}
+
+      {uiPayloads.length > 0 && <AIResponseRenderer ui={uiPayloads} />}
 
       {disclaimer && (
         <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
