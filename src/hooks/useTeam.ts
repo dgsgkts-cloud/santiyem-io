@@ -143,6 +143,10 @@ export function useTeam() {
       return null;
     }
 
+    // Sprint 11.1 — org-level users quota (hard).
+    if (!(await assertQuotaOrToast("users", 1))) return null;
+
+
     const { data, error } = await supabase
       .from("office_invitations")
       .insert({
