@@ -49,7 +49,7 @@ import {
   ChartBlock,
   TimelineBlock,
   ProgressBlock,
-  DataTableBlock,
+  
   RiskCardsBlock,
   FinancialCardsBlock,
   PersonnelCardsBlock,
