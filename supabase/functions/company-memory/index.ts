@@ -105,6 +105,17 @@ serve(async (req) => {
       const { data, error } = await sb.from("company_memories")
         .insert(row).select().single();
       if (error) throw error;
+      // Sprint 11.1 — count Company Memory writes toward monthly quota (soft).
+      try {
+        const asUser = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        await asUser.rpc("increment_usage", {
+          _metric: "company_memory_writes_month",
+          _delta: 1,
+          _reason: "company-memory:upsert",
+        });
+      } catch (_) { /* ignore */ }
       return json({ memory: data });
     }
 
