@@ -13,6 +13,7 @@ import RemindersPanel from "@/components/RemindersPanel";
 import PricingPanel from "@/components/PricingPanel";
 import DailyKnowledgePanel from "@/components/DailyKnowledgePanel";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
+import { QuotaWarningBanner } from "@/components/billing/QuotaWarningBanner";
 import DesktopSidebar from "@/components/desktop/DesktopSidebar";
 import DesktopTopBar from "@/components/desktop/DesktopTopBar";
 import DesktopDashboard from "@/components/desktop/DesktopDashboard";
