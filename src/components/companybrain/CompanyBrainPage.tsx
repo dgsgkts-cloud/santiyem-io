@@ -1,12 +1,13 @@
-import { Brain, Pin, Sparkles, BookOpen, FileText, History, ArrowRight } from "lucide-react";
+import { Brain, Sparkles, BookOpen, FileText, History, ArrowRight } from "lucide-react";
 import CompanyMemoryPanel from "@/components/memory/CompanyMemoryPanel";
+import KnowledgeBasePanel from "@/components/companybrain/KnowledgeBasePanel";
 
 export type CompanyBrainSection =
   | "memory" | "knowledge-base" | "ai-decisions" | "decision-history" | "documents";
 
 const TABS: { id: CompanyBrainSection; label: string; icon: React.ElementType; soon?: boolean }[] = [
   { id: "memory", label: "Company Memory", icon: Brain },
-  { id: "knowledge-base", label: "Knowledge Base", icon: BookOpen, soon: true },
+  { id: "knowledge-base", label: "Knowledge Base", icon: BookOpen },
   { id: "ai-decisions", label: "AI Decisions", icon: Sparkles },
   { id: "decision-history", label: "Decision History", icon: History },
   { id: "documents", label: "Documents", icon: FileText, soon: true },
@@ -100,12 +101,7 @@ export default function CompanyBrainPage({
         {section === "memory" && <CompanyMemoryPanel />}
         {section === "ai-decisions" && <AIDecisions />}
         {section === "decision-history" && <DecisionHistory />}
-        {section === "knowledge-base" && (
-          <ComingSoon
-            label="Bilgi Tabanı"
-            description="Şirketine özel prosedürler, checklist'ler, standartlar ve dahili SSS. AI bunları otomatik referans alacak."
-          />
-        )}
+        {section === "knowledge-base" && <KnowledgeBasePanel />}
         {section === "documents" && (
           <ComingSoon
             label="Belgeler"

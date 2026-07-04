@@ -48,7 +48,7 @@ const NAV_SECTIONS = [
     label: "🧠 COMPANY BRAIN",
     items: [
       { id: "company-memory" as Tab, label: "Company Memory", icon: Brain },
-      { id: "company-kb" as Tab, label: "Knowledge Base", icon: Library, soon: true },
+      { id: "company-kb" as Tab, label: "Knowledge Base", icon: Library },
       { id: "ai-decisions" as Tab, label: "AI Decisions", icon: Sparkles },
       { id: "decision-history" as Tab, label: "Decision History", icon: History },
       { id: "company-docs" as Tab, label: "Documents", icon: FileText, soon: true },
