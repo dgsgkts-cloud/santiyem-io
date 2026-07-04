@@ -230,6 +230,8 @@ const Index = () => {
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showFirstRun, setShowFirstRun] = useState(false);
+  const { projects, loading: projectsLoading } = useProjects();
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
 
   // Persist active tab
