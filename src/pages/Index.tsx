@@ -743,6 +743,17 @@ const Index = () => {
 
       {activeTab === "chat" && (
         <>
+          {memoryExtractor.proposals.length > 0 && (
+            <div className="px-4 pt-3">
+              <MemorySuggestionBanner
+                proposals={memoryExtractor.proposals}
+                busy={memoryExtractor.busy}
+                onRemember={memoryExtractor.remember}
+                onDismiss={memoryExtractor.dismiss}
+                onNeverAgain={memoryExtractor.neverAgain}
+              />
+            </div>
+          )}
           <UsageLimitBanner type="aiQuestions" />
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
