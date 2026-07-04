@@ -361,7 +361,11 @@ const Index = () => {
             return [...prev, { id: assistantId, role: "assistant", content: assistantContent }];
           });
         },
-        onDone: () => { setIsTyping(false); window.dispatchEvent(new CustomEvent("executive-brief-refresh")); },
+        onDone: () => {
+          setIsTyping(false);
+          window.dispatchEvent(new CustomEvent("executive-brief-refresh"));
+          if (assistantContent) memoryExtractor.extractFromTurn(text, assistantContent);
+        },
         onError: (error) => {
           setIsTyping(false);
           toast.error(error);
