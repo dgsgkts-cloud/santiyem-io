@@ -235,6 +235,42 @@ export default function CommunicationCenterPage() {
       </header>
 
       <WhatsAppSetupCard />
+      <EmailAccountsPanel />
+
+      <div className="rounded-lg border bg-card p-3 flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <Label className="text-xs">Ara</Label>
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Konu, içerik, alıcı…" className="pl-8 h-9" />
+          </div>
+        </div>
+        <div className="w-40">
+          <Label className="text-xs">Kanal</Label>
+          <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as "all" | Channel)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="email">E-posta</SelectItem>
+              <SelectItem value="sms">SMS</SelectItem>
+              <SelectItem value="push">Push</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
+          <Label className="text-xs">Proje ID</Label>
+          <Input value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}
+            placeholder="proje…" className="h-9" />
+        </div>
+        <div className="w-52">
+          <Label className="text-xs">Alıcı</Label>
+          <Input value={recipientFilter} onChange={(e) => setRecipientFilter(e.target.value)}
+            placeholder="e-posta / telefon" className="h-9" />
+        </div>
+      </div>
+
 
       <Tabs defaultValue="pending">
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
