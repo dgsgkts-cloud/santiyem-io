@@ -164,7 +164,7 @@ export function useExecutiveBrief() {
     const upcomingChecks = data.checks.filter((c) => {
       const dt = new Date(String(c.due_date));
       const paid = c.status === "odendi" || c.status === "tahsil_edildi";
-      return !paid && dt >= now && dt <= in7 && (c.direction === "out" || !c.direction);
+      return !paid && dt >= now && dt <= in7;
     });
     const overdueChecks = data.checks.filter((c) => {
       const dt = new Date(String(c.due_date));
