@@ -55,6 +55,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: "İLETİŞİM",
+    items: [
+      { id: "communication" as Tab, label: "İletişim Merkezi", icon: Send },
+    ],
+  },
+  {
     label: "İÇERİK",
     items: [
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
