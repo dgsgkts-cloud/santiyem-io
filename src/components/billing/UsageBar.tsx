@@ -1,4 +1,4 @@
-import { Progress } from "@/components/ui/progress";
+// Small progress bar for a single metric.
 
 export interface UsageBarProps {
   label: string;
