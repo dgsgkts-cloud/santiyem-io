@@ -99,10 +99,13 @@ function classifyIntentHeuristic(
   // broader family intents (MATERIAL_QUERY, TASK_QUERY, PROJECT_OVERVIEW).
   if (/(kaç|kac|ne kadar|kimler)\s+(kişi|kisi|işçi|isci|adam|personel).*(şantiye|santiye|sahada|iş\s*başı|is\s*basi|giriş yaptı|giris yapti|check[- ]?in)|şu an.*(sahada|şantiyede|santiyede)|(sahada|şantiyede|santiyede).*(şu an|bugün|bugun|kim|kaç|kac)|puantaj|yoklama|(check[- ]?in|check[- ]?out)/.test(q))
     intent = "LIVE_PERSONNEL";
+  else if (/(yevmiye|yevmiyeli|daily\s*wage|günlük\s*ücret|gunluk\s*ucret)|(kaç|kac|toplam|ortalama|en\s*(fazla|yüksek|yuksek|çok|cok))\s*(yevmiyeli|işçi|isci|çalışan|calisan|maliyet)/.test(q))
+    intent = "WAGE_ANALYSIS";
   else if (/(fazla\s*mesai|overtime|uzun\s*(mesai|shift)|gece\s*mesai)/.test(q))
     intent = "PERSONNEL_OVERTIME";
   else if (/devamsız|devamsiz|geç kaldı|gec kaldi|(giriş|giris|çıkış|cikis)\s*(kayd|saat)|attendance|\bmesai\b/.test(q))
     intent = "ATTENDANCE";
+
   else if (/(brifing|briefing|günaydın özet|gunaydin ozet|executive|yönetici özeti|yonetici ozeti|günlük\s*özet|gunluk\s*ozet)/.test(q)) intent = "EXECUTIVE_BRIEFING";
   else if (/(proje\s*(sağlık|saglik|health)|health\s*score|risk\s*skor|genel\s*sağlık|genel\s*saglik|proje\s*durumu\s*(nasıl|nasil))/.test(q)) intent = "PROJECT_HEALTH";
   else if (/(en\s*büyük\s*risk|en\s*buyuk\s*risk|(hangi|neler).*risk|risk\s*var\s*mı|risk\s*var\s*mi|kritik\s*(durum|sorun)|tehlike)/.test(q)) intent = "PROJECT_RISKS";
