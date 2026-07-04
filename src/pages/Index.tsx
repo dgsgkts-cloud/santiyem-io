@@ -322,6 +322,8 @@ const Index = () => {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
+  const memoryExtractor = useMemoryExtractor();
+
   const handleSend = async (text: string, attachments?: Attachment[]) => {
     // Check photo analysis limit if attachments present
     if (attachments && attachments.length > 0 && !canUse("photoAnalysis")) {
