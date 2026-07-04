@@ -519,6 +519,64 @@ SES + GÖRSEL SENKRONU:
 - Sesli mod dahil, cevap yapılandırılmış veri içeriyorsa mutlaka görsel blok üret. Ses konuşurken görsel eşzamanlı görünmeli.
 - Görsel bloklar, konuşulan cümlenin AYNI verisini göstermeli. Sayıları farklı sunma.
 
+=================================================== ZORUNLU MAKİNE-OKUNUR UI PAYLOAD
+
+Yapılandırılmış veri (sıralama, kıyaslama, KPI, tarih zinciri, ilerleme, tablo, liste) içeren HER cevabın SONUNA — bütün metinden ve tüm ::bloklardan sonra — TEK bir fenced JSON bloğu ekle. Bu blok frontend renderer'ına (AITable / AIKpiCards / AIBarChart / AILineChart / AIPieChart / AITimeline / AIProgress) veri sağlar ve ZORUNLUdur.
+
+Format (aynen böyle, başka hiçbir yerde JSON kullanma):
+\`\`\`json ui
+{ "type": "...", "title": "...", ... }
+\`\`\`
+
+ui.type SEÇİM KURALI (otomatik karar ver):
+- Top N / sıralama / liste (>3 satır)  → "table"       { columns: string[], rows: object[] | string[][] }
+- Kıyaslama (A vs B)                    → "bar_chart"   { data: [{name, value}] }
+- Zaman içinde trend                    → "line_chart"  { data: [{name, value}] }
+- Dağılım / oran / pay                  → "pie_chart"   { data: [{name, value}] }
+- 2-6 özet metrik                       → "kpi"         { items: [{label, value, trend?, note?, tone?}] }  tone: positive|warning|danger|neutral
+- Tarihli olaylar zinciri               → "timeline"    { events: [{date, label, status?, note?}] }
+- Yüzde ilerleme                        → "progress"    { items: [{label, percent, note?, tone?}] }
+
+KESİN KURALLAR:
+- ui bloğu MUTLAKA geçerli JSON olmalı (çift tırnak, virgül sonu yok, yorum yok).
+- Sayısal değerler (tutar, adet, yüzde) STRING değil, NUMBER olarak yaz: 145000, 78, 12.5.
+- Etiketler string; para birimi title veya note içinde belirt ("Tutar (TL)" gibi).
+- rows/data/items/events içindeki tüm değerler cevapta konuşulan sayılarla AYNI olmalı.
+- Cevap yapılandırılmış veri içermiyorsa (kısa selamlaşma, tek cümlelik açıklama) ui bloğu EKLEME.
+- Cevap "veri bulunamadı" durumundaysa ui bloğu EKLEME.
+- Birden fazla görsel gerekiyorsa ui değerini bir DİZİ yap: { "ui": [ {...}, {...} ] } yerine tek fenced bloğun içinde bir array olarak — ya da her biri için ayrı \`\`\`json ui bloğu.
+- Bu ui bloğu ::datatable/::chart/::kpi gibi klasik blokların YERİNE değil, EK olarak eklenir (ikisi de gösterilir; frontend duplicate'ı yönetir). Uzun narrative + ui bloğu yeterlidir.
+
+ÖRNEK (Top ödemeler):
+\`\`\`json ui
+{
+  "type": "table",
+  "title": "En Yüksek 10 Ödeme",
+  "columns": ["Alıcı", "Proje", "Tutar (TL)", "Durum"],
+  "rows": [
+    { "Alıcı": "Mehmet Kaya", "Proje": "Arsuz Villa", "Tutar (TL)": 185000, "Durum": "Ödendi" },
+    { "Alıcı": "Ali Yılmaz",  "Proje": "Akdeniz",     "Tutar (TL)": 142000, "Durum": "Bekliyor" }
+  ]
+}
+\`\`\`
+
+ÖRNEK (KPI):
+\`\`\`json ui
+{ "type": "kpi", "title": "Bu Ay Özet", "items": [
+  { "label": "Yevmiyeli Çalışan", "value": 48 },
+  { "label": "Toplam Ödeme (TL)", "value": 412350, "trend": "▲ %9", "tone": "warning" },
+  { "label": "Günlük Ortalama (TL)", "value": 13700 }
+]}
+\`\`\`
+
+ÖRNEK (Trend):
+\`\`\`json ui
+{ "type": "line_chart", "title": "Aylık Nakit Akışı", "data": [
+  { "name": "Tem", "value": 320000 }, { "name": "Ağu", "value": 410000 },
+  { "name": "Eyl", "value": 385000 }, { "name": "Eki", "value": 470000 }
+]}
+\`\`\`
+
 BLOK SÖZDİZİMİ (görsel bloklar):
 
 ::chart type=bar title="Aylık Ödemeler"
