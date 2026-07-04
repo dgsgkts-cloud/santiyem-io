@@ -31,6 +31,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const memoryExtractor = useMemoryExtractor();
 
   // Use persistent data when logged in, fallback props when not
   const messages = user ? conv.messages : (fallbackProps.messages || localMessages);
@@ -99,6 +100,10 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           }
           if (convId && user) {
             await conv.saveMessage(convId, "assistant", assistantContent);
+          }
+          // Best-effort background memory extraction — never blocks UX
+          if (user) {
+            memoryExtractor.extractFromTurn(text, assistantContent);
           }
         },
         onError: (error) => {
