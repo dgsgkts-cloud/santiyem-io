@@ -251,14 +251,20 @@ const Index = () => {
     }
   }, [location.pathname]);
 
-  // Show onboarding for new users
+  // First-run wizard: empty workspace + not completed
   useEffect(() => {
-    if (user?.created_at && shouldShowOnboarding(user.created_at)) {
+    if (!user || projectsLoading) return;
+    if (!isFirstRunDone() && projects.length === 0) {
+      setShowFirstRun(true);
+      return;
+    }
+    // Legacy time-based fallback for users already past first-run
+    if (user?.created_at && shouldShowOnboarding(user.created_at) && isFirstRunDone()) {
       setShowOnboarding(true);
     } else if (user && shouldShowThemeModal()) {
       setShowThemeModal(true);
     }
-  }, [user]);
+  }, [user, projects.length, projectsLoading]);
 
   // Initialize push notifications (native only, respects user preference)
   useEffect(() => {
