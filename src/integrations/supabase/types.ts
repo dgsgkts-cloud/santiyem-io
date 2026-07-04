@@ -420,13 +420,19 @@ export type Database = {
           channel: Database["public"]["Enums"]["comm_channel"]
           created_at: string
           created_from: string | null
+          delivered_at: string | null
           error: string | null
+          failed_at: string | null
           id: string
           max_retries: number
+          media_caption: string | null
+          media_url: string | null
+          message_type: string
           metadata: Json
           priority: Database["public"]["Enums"]["comm_priority"]
           provider: string | null
           provider_message_id: string | null
+          read_at: string | null
           recipient: string
           recipient_name: string | null
           retry_count: number
@@ -434,6 +440,9 @@ export type Database = {
           sent_at: string | null
           status: Database["public"]["Enums"]["comm_status"]
           subject: string | null
+          template_language: string | null
+          template_name: string | null
+          template_variables: Json
           updated_at: string
           user_id: string
         }
@@ -443,13 +452,19 @@ export type Database = {
           channel: Database["public"]["Enums"]["comm_channel"]
           created_at?: string
           created_from?: string | null
+          delivered_at?: string | null
           error?: string | null
+          failed_at?: string | null
           id?: string
           max_retries?: number
+          media_caption?: string | null
+          media_url?: string | null
+          message_type?: string
           metadata?: Json
           priority?: Database["public"]["Enums"]["comm_priority"]
           provider?: string | null
           provider_message_id?: string | null
+          read_at?: string | null
           recipient: string
           recipient_name?: string | null
           retry_count?: number
@@ -457,6 +472,9 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["comm_status"]
           subject?: string | null
+          template_language?: string | null
+          template_name?: string | null
+          template_variables?: Json
           updated_at?: string
           user_id: string
         }
@@ -466,13 +484,19 @@ export type Database = {
           channel?: Database["public"]["Enums"]["comm_channel"]
           created_at?: string
           created_from?: string | null
+          delivered_at?: string | null
           error?: string | null
+          failed_at?: string | null
           id?: string
           max_retries?: number
+          media_caption?: string | null
+          media_url?: string | null
+          message_type?: string
           metadata?: Json
           priority?: Database["public"]["Enums"]["comm_priority"]
           provider?: string | null
           provider_message_id?: string | null
+          read_at?: string | null
           recipient?: string
           recipient_name?: string | null
           retry_count?: number
@@ -480,6 +504,9 @@ export type Database = {
           sent_at?: string | null
           status?: Database["public"]["Enums"]["comm_status"]
           subject?: string | null
+          template_language?: string | null
+          template_name?: string | null
+          template_variables?: Json
           updated_at?: string
           user_id?: string
         }

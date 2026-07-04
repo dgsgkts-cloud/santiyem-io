@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, XCircle, RefreshCw, Eye, Ban, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
-type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "failed" | "cancelled";
+type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
 
 interface CommMessage {
@@ -22,11 +25,16 @@ interface CommMessage {
   status: Status;
   scheduled_at: string | null;
   sent_at: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+  failed_at: string | null;
   provider: string | null;
   error: string | null;
   retry_count: number;
   created_from: string | null;
   created_at: string;
+  message_type: string | null;
+  template_name: string | null;
 }
 
 const CHANNEL_ICON: Record<Channel, React.ElementType> = {
@@ -43,6 +51,8 @@ const STATUS_META: Record<Status, { label: string; cls: string; icon: React.Elem
   queued: { label: "Kuyrukta", cls: "bg-sky-500/15 text-sky-600 border-sky-500/30", icon: Clock },
   sending: { label: "Gönderiliyor", cls: "bg-primary/15 text-primary border-primary/30", icon: Loader2 },
   sent: { label: "Gönderildi", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", icon: CheckCircle2 },
+  delivered: { label: "İletildi", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: CheckCheck },
+  read: { label: "Okundu", cls: "bg-blue-500/15 text-blue-600 border-blue-500/30", icon: CheckCheck },
   failed: { label: "Başarısız", cls: "bg-red-500/15 text-red-600 border-red-500/30", icon: XCircle },
   cancelled: { label: "İptal", cls: "bg-muted text-muted-foreground", icon: Ban },
 };

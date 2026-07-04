@@ -11,8 +11,12 @@ export type CommStatus =
   | "queued"
   | "sending"
   | "sent"
+  | "delivered"
+  | "read"
   | "failed"
   | "cancelled";
+
+export type CommMessageType = "text" | "template" | "image" | "document" | "location";
 
 export interface CommAttachment {
   name: string;
@@ -31,8 +35,17 @@ export interface CommMessage {
   attachments: CommAttachment[];
   priority: CommPriority;
   status: CommStatus;
+  message_type?: CommMessageType;
+  template_name?: string | null;
+  template_language?: string | null;
+  template_variables?: Record<string, unknown>;
+  media_url?: string | null;
+  media_caption?: string | null;
   scheduled_at?: string | null;
   sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  failed_at?: string | null;
   provider?: string | null;
   provider_message_id?: string | null;
   error?: string | null;

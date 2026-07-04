@@ -50,18 +50,34 @@ serve(async (req) => {
           channel, recipient, recipient_name, subject, body,
           attachments = [], priority = "normal", scheduled_at,
           created_from, metadata, auto_send = false,
+          message_type = "text",
+          template_name, template_language, template_variables,
+          media_url, media_caption,
         } = payload;
-        if (!channel || !recipient || !body) {
-          return json({ error: "channel, recipient, body zorunlu" }, 400);
+        if (!channel || !recipient) {
+          return json({ error: "channel, recipient zorunlu" }, 400);
+        }
+        // Body optional for template / media messages, mandatory for text
+        if (message_type === "text" && !body) {
+          return json({ error: "text mesaj için body zorunlu" }, 400);
+        }
+        if (message_type === "template" && !template_name) {
+          return json({ error: "template mesaj için template_name zorunlu" }, 400);
         }
         const status: CommStatus = scheduled_at
           ? "scheduled"
           : auto_send ? "queued" : "pending_approval";
         const { data, error } = await sb.from("communication_messages").insert({
           user_id: userId,
-          channel, recipient, recipient_name, subject, body,
+          channel, recipient, recipient_name, subject, body: body || "",
           attachments, priority, scheduled_at, status,
           created_from, metadata: metadata || {},
+          message_type,
+          template_name: template_name || null,
+          template_language: template_language || null,
+          template_variables: template_variables || {},
+          media_url: media_url || null,
+          media_caption: media_caption || null,
         }).select("*").single();
         if (error) return json({ error: error.message }, 400);
         return json({ message: data });
