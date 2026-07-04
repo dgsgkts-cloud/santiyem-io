@@ -6,6 +6,7 @@ import {
   buildClarification,
   type EntityCandidate,
 } from "../_shared/entityResolver.ts";
+import { embedText } from "../_shared/embeddings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -816,6 +817,7 @@ serve(async (req) => {
 
     // --- CONSTRUCTION BRAIN: Intent detection + database-first data retrieval ---
     let projectDataContext = "";
+    let memoryContext = "";
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -853,6 +855,37 @@ serve(async (req) => {
               .select("id, name").eq("user_id", uid).limit(50);
             projList = (pl || []) as any;
             cacheSet(projectListCache, uid, projList!, 60_000);
+          }
+
+          // Company Memory — semantic retrieval (non-fatal)
+          try {
+            const memEmbed = await embedText(userQuery);
+            const { data: mems } = await sb.rpc("match_company_memories", {
+              _user_id: uid,
+              _query_embedding: memEmbed,
+              _match_count: 5,
+              _min_similarity: 0.6,
+              _type: null,
+            });
+            if (mems && mems.length > 0) {
+              const lines = (mems as any[]).map((m) => {
+                const upd = m.updated_at ? new Date(m.updated_at).toISOString().slice(0, 10) : "";
+                const sim = typeof m.similarity === "number" ? m.similarity.toFixed(2) : "";
+                const conf = typeof m.confidence === "number" ? m.confidence.toFixed(2) : "";
+                const pin = m.pinned ? " 📌" : "";
+                const title = m.title ? `${m.title}: ` : "";
+                return `- [${m.type}${pin}] ${title}${m.content} (source: ${m.source}, confidence: ${conf}, similarity: ${sim}, updated: ${upd})`;
+              }).join("\n");
+              memoryContext =
+                "\n\n=== ŞİRKET HAFIZASI (uzun vadeli bağlam) ===\n" +
+                "Aşağıdaki bilgiler geçmiş konuşmalardan/kayıtlardan öğrenildi. " +
+                "Uygunsa doğal biçimde kullan (\"Daha önce belirttiğiniz gibi...\"). " +
+                "Alakasızsa yok say. Rakam uydurma.\n" +
+                lines + "\n";
+              console.log(`[Memory] retrieved ${mems.length} memories`);
+            }
+          } catch (memErr) {
+            console.warn("[Memory] retrieval failed (non-fatal):", (memErr as Error).message);
           }
 
           // 2) Heuristic intent classifier (fast, no LLM)
@@ -1671,7 +1704,7 @@ serve(async (req) => {
       return { role: m.role, content: m.content };
     });
 
-    const systemPrompt = SYSTEM_PROMPT + ragContext + projectDataContext;
+    const systemPrompt = SYSTEM_PROMPT + ragContext + memoryContext + projectDataContext;
 
     // ============================================================
     // ACTION ASSISTANT — tool-calling with confirmation gating

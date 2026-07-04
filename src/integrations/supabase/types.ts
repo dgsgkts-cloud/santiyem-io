@@ -375,6 +375,54 @@ export type Database = {
           },
         ]
       }
+      company_memories: {
+        Row: {
+          confidence: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          pinned: boolean
+          source: string
+          team_id: string | null
+          title: string | null
+          type: Database["public"]["Enums"]["memory_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          pinned?: boolean
+          source?: string
+          team_id?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["memory_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          pinned?: boolean
+          source?: string
+          team_id?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["memory_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contract_activity_log: {
         Row: {
           action: string
@@ -3353,6 +3401,27 @@ export type Database = {
           title: string
         }[]
       }
+      match_company_memories: {
+        Args: {
+          _match_count?: number
+          _min_similarity?: number
+          _query_embedding: string
+          _type?: Database["public"]["Enums"]["memory_type"]
+          _user_id: string
+        }
+        Returns: {
+          confidence: number
+          content: string
+          id: string
+          metadata: Json
+          pinned: boolean
+          similarity: number
+          source: string
+          title: string
+          type: Database["public"]["Enums"]["memory_type"]
+          updated_at: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3479,6 +3548,14 @@ export type Database = {
       attendance_source: "manual" | "qr"
       attendance_status: "full_day" | "half_day" | "absent" | "leave"
       employment_type: "daily_wage" | "monthly_salary" | "subcontractor_crew"
+      memory_type:
+        | "company"
+        | "project"
+        | "personnel"
+        | "supplier"
+        | "decision"
+        | "preference"
+        | "other"
       project_role:
         | "owner"
         | "manager"
@@ -3617,6 +3694,15 @@ export const Constants = {
       attendance_source: ["manual", "qr"],
       attendance_status: ["full_day", "half_day", "absent", "leave"],
       employment_type: ["daily_wage", "monthly_salary", "subcontractor_crew"],
+      memory_type: [
+        "company",
+        "project",
+        "personnel",
+        "supplier",
+        "decision",
+        "preference",
+        "other",
+      ],
       project_role: [
         "owner",
         "manager",
