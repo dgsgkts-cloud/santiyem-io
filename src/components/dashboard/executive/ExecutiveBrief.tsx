@@ -116,29 +116,12 @@ export function ExecutiveBrief({ onTabChange, onProjectSelect }: ExecutiveBriefP
                       {sevLabel[sev]}
                     </span>
                   </div>
-                  <ul className="space-y-1.5">
+                  <div className="space-y-2">
                     {list.map((f) => (
-                      <li
-                        key={f.id}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-border/50 bg-card px-3 py-2.5"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-[13.5px] text-foreground">{f.title}</div>
-                          {f.detail && (
-                            <div className="text-[12px] text-muted-foreground mt-0.5">{f.detail}</div>
-                          )}
-                        </div>
-                        {f.action && (
-                          <button
-                            onClick={() => handleAction(f)}
-                            className="text-[12px] text-primary hover:underline shrink-0"
-                          >
-                            {f.action.label || "Aç"}
-                          </button>
-                        )}
-                      </li>
+                      <ActionCard key={f.id} finding={f} ctx={{ onTabChange, onProjectSelect }} />
                     ))}
-                  </ul>
+                  </div>
+
                 </div>
               );
             })}
