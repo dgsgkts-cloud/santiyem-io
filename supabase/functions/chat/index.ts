@@ -6,6 +6,7 @@ import {
   buildClarification,
   type EntityCandidate,
 } from "../_shared/entityResolver.ts";
+import { embedText } from "../_shared/embeddings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
