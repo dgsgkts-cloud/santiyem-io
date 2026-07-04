@@ -162,6 +162,11 @@ const TAB_TO_PATH: Record<string, string> = {
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
   settings: "/settings",
+  "company-memory": "/company-brain/memory",
+  "company-kb": "/company-brain/knowledge-base",
+  "ai-decisions": "/company-brain/ai-decisions",
+  "decision-history": "/company-brain/decision-history",
+  "company-docs": "/company-brain/documents",
 };
 
 const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
