@@ -70,6 +70,23 @@ serve(async (req) => {
   try {
     const { messages, voice_mode: voiceMode = false } = await req.json();
 
+    // Sprint 11.1 — track AI request in org monthly counter (soft quota).
+    // Fire-and-forget: no preflight, no output change, no failure path.
+    // Preserves byte-identical streaming/intent/retrieval/payload behaviour.
+    try {
+      const _usageClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      _usageClient.rpc("increment_usage", {
+        _metric: "ai_requests_month",
+        _delta: 1,
+        _reason: voiceMode ? "chat:voice" : "chat:text",
+      }).then(() => {}, () => {});
+    } catch (_) { /* ignore */ }
+
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
