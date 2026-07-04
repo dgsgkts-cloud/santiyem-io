@@ -86,7 +86,7 @@ export function useExecutiveBrief() {
     ] = await Promise.all([
       q(supabase.from("projects").select("id,name,status,progress,end_date").eq("user_id", user.id)),
       q(supabase.from("cash_accounts").select("id,balance,name").eq("user_id", user.id)),
-      q(supabase.from("cash_checks").select("id,amount,due_date,status,direction").eq("user_id", user.id)),
+      q(supabase.from("cash_checks").select("id,amount,due_date,status").eq("user_id", user.id)),
       q(supabase.from("project_hakedis").select("id,project_id,amount,net,status,payment_date,expected_payment_date,approval_status,approval_sent_at,created_at").eq("user_id", user.id)),
       q(supabase.from("subcontractor_payments").select("id,amount,status,payment_date,planned_date,subcontractor_id").eq("user_id", user.id)),
       q(supabase.from("project_expenses").select("id,amount,expense_date").eq("user_id", user.id).gte("expense_date", iso(prevMonthStart))),
