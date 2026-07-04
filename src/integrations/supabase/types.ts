@@ -735,31 +735,49 @@ export type Database = {
         Row: {
           chunk_index: number
           content: string
+          content_hash: string | null
           created_at: string
           document_id: string
+          embedding: string | null
+          embedding_created_at: string | null
+          embedding_model: string | null
+          embedding_model_version: string | null
           id: string
           is_global: boolean
           page_number: number
+          token_count: number | null
           user_id: string | null
         }
         Insert: {
           chunk_index?: number
           content: string
+          content_hash?: string | null
           created_at?: string
           document_id: string
+          embedding?: string | null
+          embedding_created_at?: string | null
+          embedding_model?: string | null
+          embedding_model_version?: string | null
           id?: string
           is_global?: boolean
           page_number?: number
+          token_count?: number | null
           user_id?: string | null
         }
         Update: {
           chunk_index?: number
           content?: string
+          content_hash?: string | null
           created_at?: string
           document_id?: string
+          embedding?: string | null
+          embedding_created_at?: string | null
+          embedding_model?: string | null
+          embedding_model_version?: string | null
           id?: string
           is_global?: boolean
           page_number?: number
+          token_count?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -3446,6 +3464,37 @@ export type Database = {
           updated_at: string
         }[]
       }
+      match_document_chunks: {
+        Args: {
+          _date_from?: string
+          _date_to?: string
+          _doc_type?: string
+          _language?: string
+          _match_count?: number
+          _min_similarity?: number
+          _project_id?: string
+          _query_embedding: string
+          _query_text?: string
+          _supplier?: string
+          _tags?: string[]
+          _user_id: string
+        }
+        Returns: {
+          chunk_id: string
+          content: string
+          doc_type: string
+          document_id: string
+          document_name: string
+          fts_rank: number
+          is_global: boolean
+          page_number: number
+          pinned: boolean
+          score: number
+          similarity: number
+          supplier: string
+          tags: string[]
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3520,6 +3569,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      touch_documents_used: { Args: { _doc_ids: string[] }; Returns: undefined }
       update_hakedis_approval: {
         Args: {
           _approval_status: string
