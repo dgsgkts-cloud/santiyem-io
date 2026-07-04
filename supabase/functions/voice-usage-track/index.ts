@@ -36,6 +36,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Sprint 11.1 — mirror voice usage to the org monthly counter.
+    // Fire-and-forget: never let this break voice tracking.
+    try {
+      const minutes = Math.max(1, Math.round(secondsInt / 60));
+      await client.rpc("increment_usage", {
+        _metric: "voice_minutes_month",
+        _delta: minutes,
+        _reason: "voice-session",
+      });
+    } catch (_) { /* ignore */ }
+
     return new Response(JSON.stringify({ ok: true, total: data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
