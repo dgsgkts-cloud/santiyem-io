@@ -99,10 +99,13 @@ function classifyIntentHeuristic(
   // broader family intents (MATERIAL_QUERY, TASK_QUERY, PROJECT_OVERVIEW).
   if (/(kaç|kac|ne kadar|kimler)\s+(kişi|kisi|işçi|isci|adam|personel).*(şantiye|santiye|sahada|iş\s*başı|is\s*basi|giriş yaptı|giris yapti|check[- ]?in)|şu an.*(sahada|şantiyede|santiyede)|(sahada|şantiyede|santiyede).*(şu an|bugün|bugun|kim|kaç|kac)|puantaj|yoklama|(check[- ]?in|check[- ]?out)/.test(q))
     intent = "LIVE_PERSONNEL";
+  else if (/(yevmiye|yevmiyeli|daily\s*wage|günlük\s*ücret|gunluk\s*ucret)|(kaç|kac|toplam|ortalama|en\s*(fazla|yüksek|yuksek|çok|cok))\s*(yevmiyeli|işçi|isci|çalışan|calisan|maliyet)/.test(q))
+    intent = "WAGE_ANALYSIS";
   else if (/(fazla\s*mesai|overtime|uzun\s*(mesai|shift)|gece\s*mesai)/.test(q))
     intent = "PERSONNEL_OVERTIME";
   else if (/devamsız|devamsiz|geç kaldı|gec kaldi|(giriş|giris|çıkış|cikis)\s*(kayd|saat)|attendance|\bmesai\b/.test(q))
     intent = "ATTENDANCE";
+
   else if (/(brifing|briefing|günaydın özet|gunaydin ozet|executive|yönetici özeti|yonetici ozeti|günlük\s*özet|gunluk\s*ozet)/.test(q)) intent = "EXECUTIVE_BRIEFING";
   else if (/(proje\s*(sağlık|saglik|health)|health\s*score|risk\s*skor|genel\s*sağlık|genel\s*saglik|proje\s*durumu\s*(nasıl|nasil))/.test(q)) intent = "PROJECT_HEALTH";
   else if (/(en\s*büyük\s*risk|en\s*buyuk\s*risk|(hangi|neler).*risk|risk\s*var\s*mı|risk\s*var\s*mi|kritik\s*(durum|sorun)|tehlike)/.test(q)) intent = "PROJECT_RISKS";
@@ -675,7 +678,7 @@ serve(async (req) => {
                     content:
                       `Sen bir intent sınıflandırıcısın. Türkçe kullanıcı sorusundan JSON çıkar. ` +
                       `Bugün: ${now.toISOString().slice(0, 10)}. ` +
-                      `Şema: {"intent": one of ["LIVE_PERSONNEL","LIVE_PERSONNEL_COUNT","ATTENDANCE","PERSONNEL_OVERTIME","PAYMENT_QUERY","PAYMENT_STATUS","OVERDUE_PAYMENTS","UPCOMING_PAYMENTS","SUBCONTRACTOR","SUBCONTRACTOR_STATUS","FINANCIAL_SUMMARY","EXECUTIVE_BRIEFING","PROJECT_QUERY","PROJECT_OVERVIEW","PROJECT_PROGRESS","PROJECT_HEALTH","PROJECT_RISKS","TASK_QUERY","TODAYS_TASKS","HAKEDIS_QUERY","HAKEDIS_STATUS","SITE_DIARY_QUERY","SITE_DIARY","DOCUMENT_QUERY","DOCUMENT_SEARCH","MATERIAL_QUERY","LOW_STOCK","CONTRACT_QUERY","PERSONNEL_QUERY","MEETING_SUMMARY","GENERAL_CHAT"], ` +
+                      `Şema: {"intent": one of ["LIVE_PERSONNEL","LIVE_PERSONNEL_COUNT","ATTENDANCE","WAGE_ANALYSIS","PERSONNEL_OVERTIME","PAYMENT_QUERY","PAYMENT_STATUS","OVERDUE_PAYMENTS","UPCOMING_PAYMENTS","SUBCONTRACTOR","SUBCONTRACTOR_STATUS","FINANCIAL_SUMMARY","EXECUTIVE_BRIEFING","PROJECT_QUERY","PROJECT_OVERVIEW","PROJECT_PROGRESS","PROJECT_HEALTH","PROJECT_RISKS","TASK_QUERY","TODAYS_TASKS","HAKEDIS_QUERY","HAKEDIS_STATUS","SITE_DIARY_QUERY","SITE_DIARY","DOCUMENT_QUERY","DOCUMENT_SEARCH","MATERIAL_QUERY","LOW_STOCK","CONTRACT_QUERY","PERSONNEL_QUERY","MEETING_SUMMARY","GENERAL_CHAT"], ` +
                       `"filters": {"date_from": "YYYY-MM-DD" | null, "date_to": "YYYY-MM-DD" | null, "name": string | null, "project_name": string | null, "keyword": string | null, "limit": number | null, "aggregate": "sum" | "top_by_recipient" | "latest" | null}}. Sadece JSON döndür.`,
 
                   },
@@ -930,19 +933,124 @@ serve(async (req) => {
             const { data } = await q;
             lines.push(`PERSONEL (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.full_name} · ${r.occupation || "-"} · ${r.employment_type} · yevmiye ${fmt(Number(r.daily_wage || 0))} · maaş ${fmt(Number(r.monthly_salary || 0))} · aktif: ${r.is_active}`));
+          } else if (intent === "WAGE_ANALYSIS") {
+            // Yevmiye analizi — attendance_records (manuel/QR eşleşmeli puantaj) +
+            // personnel (daily_wage) üzerinden gerçek maliyet hesabı. Ayrıca eşleşmeyen
+            // QR girişleri de sayılır ki "veri yok" hatası oluşmasın.
+            const monthStart = (() => { const d = new Date(now); d.setDate(1); return d.toISOString().slice(0, 10); })();
+            const fromDate = df || monthStart;
+            const toDate   = dt || now.toISOString().slice(0, 10);
+            const dFrom = new Date(fromDate + "T00:00:00Z");
+            const dTo   = new Date(toDate   + "T00:00:00Z");
+            const spanMs = Math.max(86400000, dTo.getTime() - dFrom.getTime());
+            const prevTo   = new Date(dFrom.getTime() - 86400000);
+            const prevFrom = new Date(prevTo.getTime() - spanMs);
+            const pFrom = prevFrom.toISOString().slice(0, 10);
+            const pTo   = prevTo.toISOString().slice(0, 10);
+
+            const wageMult = (s: string) => s === "full_day" ? 1 : s === "half_day" ? 0.5 : 0;
+
+            let arq = sb.from("attendance_records")
+              .select("work_date, status, project_id, personnel:personnel_id(full_name, daily_wage, employment_type)")
+              .eq("user_id", uid)
+              .gte("work_date", fromDate).lte("work_date", toDate)
+              .limit(5000);
+            if (projectIdFilter) arq = arq.eq("project_id", projectIdFilter);
+            const { data: ar, error: arErr } = await arq;
+
+            let arqPrev = sb.from("attendance_records")
+              .select("status, personnel:personnel_id(daily_wage, employment_type)")
+              .eq("user_id", uid)
+              .gte("work_date", pFrom).lte("work_date", pTo)
+              .limit(5000);
+            if (projectIdFilter) arqPrev = arqPrev.eq("project_id", projectIdFilter);
+            const { data: arPrev } = await arqPrev;
+
+            const dailies = (ar || []).filter((r: any) => r.personnel?.employment_type === "daily_wage");
+            const byWorker = new Map<string, { name: string; days: number; wage: number; total: number }>();
+            const daysActive = new Set<string>();
+            let totalCost = 0, totalDays = 0;
+            for (const r of dailies) {
+              const mult = wageMult(r.status);
+              if (mult === 0) continue;
+              const wage = Number(r.personnel?.daily_wage || 0);
+              const name = r.personnel?.full_name || "?";
+              const cur = byWorker.get(name) || { name, days: 0, wage, total: 0 };
+              cur.days += mult; cur.total += mult * wage; cur.wage = wage;
+              byWorker.set(name, cur);
+              totalCost += mult * wage; totalDays += mult;
+              daysActive.add(r.work_date);
+            }
+            const prevTotal = (arPrev || [])
+              .filter((r: any) => r.personnel?.employment_type === "daily_wage")
+              .reduce((s: number, r: any) => s + wageMult(r.status) * Number(r.personnel?.daily_wage || 0), 0);
+
+            lines.push(`YEVMİYE ANALİZİ (${fromDate} → ${toDate}${projectIdFilter ? " · proje süzülü" : ""}):`);
+            if (dailies.length === 0) {
+              // Fallback: QR check-ins (personel listesinde olmayanlar dahil) —
+              // "kayıt yok" demek yerine tam olarak neyin eksik olduğunu söyle.
+              let waq = sb.from("worker_attendance")
+                .select("full_name, check_in, project_id")
+                .eq("user_id", uid)
+                .gte("check_in", fromDate + "T00:00:00")
+                .lte("check_in", toDate + "T23:59:59")
+                .limit(2000);
+              if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
+              const { data: wa } = await waq;
+              const wrows = wa || [];
+              const distinctQr = new Set(wrows.map((r: any) => r.full_name)).size;
+              if (wrows.length > 0) {
+                lines.push(`- Puantajda yevmiyeli (daily_wage) personel bulunamadı; ancak QR ile ${distinctQr} farklı kişi toplam ${wrows.length} giriş yapmış.`);
+                lines.push(`- Yevmiye maliyeti hesaplanabilmesi için bu kişilerin personel listesine eklenip günlük ücretlerinin girilmesi gerekiyor.`);
+              } else {
+                lines.push(`- Bu dönemde ne puantaj ne de QR giriş kaydı bulundu — "veri yok" değil, dönemde hiç çalışma girişi yapılmamış.`);
+              }
+            } else {
+              const workers = [...byWorker.values()].sort((a, b) => b.total - a.total);
+              const top = workers[0];
+              const bottom = workers.filter(w => w.total > 0).slice(-1)[0];
+              const avg = daysActive.size > 0 ? totalCost / daysActive.size : 0;
+              const trendPct = prevTotal > 0 ? ((totalCost - prevTotal) / prevTotal) * 100 : null;
+
+              lines.push(`- Farklı yevmiyeli sayısı: ${byWorker.size}`);
+              lines.push(`- Toplam yevmiye maliyeti: ${fmt(totalCost)}`);
+              lines.push(`- Tam gün eşdeğeri çalışma: ${totalDays.toFixed(1)} gün`);
+              lines.push(`- Aktif iş günü sayısı: ${daysActive.size}`);
+              lines.push(`- Günlük ortalama maliyet: ${fmt(avg)}`);
+              if (top)    lines.push(`- En yüksek ödeme: ${top.name} · ${top.days.toFixed(1)} gün × ${fmt(top.wage)} = ${fmt(top.total)}`);
+              if (bottom && bottom.name !== top?.name) lines.push(`- En düşük ödeme: ${bottom.name} · ${bottom.days.toFixed(1)} gün × ${fmt(bottom.wage)} = ${fmt(bottom.total)}`);
+              if (trendPct !== null) {
+                const sign = trendPct >= 0 ? "+" : "";
+                lines.push(`- Önceki dönem (${pFrom} → ${pTo}) toplam: ${fmt(prevTotal)} · değişim: ${sign}${trendPct.toFixed(1)}%`);
+              } else {
+                lines.push(`- Önceki dönemde karşılaştırılacak yevmiye kaydı yok.`);
+              }
+              lines.push(`\nEN ÇOK YEVMİYE ALAN İLK 10:`);
+              workers.slice(0, 10).forEach((w, i) => lines.push(`${i + 1}. ${w.name} · ${w.days.toFixed(1)} gün × ${fmt(w.wage)} = ${fmt(w.total)}`));
+            }
+            if (arErr) lines.push(`(uyarı: ${arErr.message})`);
           } else if (intent === "LIVE_PERSONNEL" || intent === "ATTENDANCE") {
             const today = now.toISOString().slice(0, 10);
             const fromDate = df || today;
             const toDate = dt || today;
+            // worker_attendance has NO `work_date` or `status` columns — it's a
+            // QR check-in log keyed by `full_name` + `check_in` timestamp.
+            // Filter by the `check_in` date range and rename `full_name` to
+            // `worker_name` locally for the rest of the block.
             let waq = sb.from("worker_attendance")
-              .select("worker_name, check_in, check_out, work_date, project_id, status")
+              .select("full_name, check_in, check_out, project_id")
               .eq("user_id", uid)
-              .gte("work_date", fromDate)
-              .lte("work_date", toDate)
+              .gte("check_in", fromDate + "T00:00:00")
+              .lte("check_in", toDate + "T23:59:59")
               .order("check_in", { ascending: false }).limit(200);
             if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
             const { data: wa, error: waErr } = await waq;
-            const rows = wa || [];
+            const rows = (wa || []).map((r: any) => ({
+              ...r,
+              worker_name: r.full_name,
+              work_date: String(r.check_in || "").slice(0, 10),
+              status: r.check_out ? "çıkış yaptı" : "sahada",
+            }));
             if (intent === "LIVE_PERSONNEL") {
               const onSite = rows.filter((r: any) => r.check_in && !r.check_out);
               lines.push(`CANLI SAHA DURUMU (${today}):`);
@@ -950,12 +1058,26 @@ serve(async (req) => {
               lines.push(`- Şu an sahada (çıkış yapılmamış): ${onSite.length}`);
               onSite.slice(0, 15).forEach((r: any) => lines.push(`  · ${r.worker_name} · giriş ${String(r.check_in).slice(11, 16)}`));
               if (rows.length === 0 && !waErr) {
-                lines.push(`NOT: Bu proje için bugün QR/puantaj kaydı yok — canlı personel sayısı belirlenemez.`);
+                // Also cross-check attendance_records so we don't say "no data"
+                // when the office pattern is manual puantaj (no QR).
+                let arq2 = sb.from("attendance_records")
+                  .select("status, personnel:personnel_id(full_name)")
+                  .eq("user_id", uid).eq("work_date", today).limit(200);
+                if (projectIdFilter) arq2 = arq2.eq("project_id", projectIdFilter);
+                const { data: ar2 } = await arq2;
+                const present = (ar2 || []).filter((r: any) => r.status === "full_day" || r.status === "half_day");
+                if (present.length > 0) {
+                  lines.push(`- Manuel puantajda bugün ${present.length} kişi çalışıyor gözüküyor (QR girişi olmayabilir).`);
+                  present.slice(0, 10).forEach((r: any) => lines.push(`  · ${r.personnel?.full_name || "?"} · ${r.status}`));
+                } else {
+                  lines.push(`NOT: Bu proje için bugün QR ya da manuel puantaj kaydı bulunamadı.`);
+                }
               }
             } else {
               lines.push(`YOKLAMA (${fromDate} → ${toDate}, ${rows.length} kayıt):`);
-              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status || "-"}`));
+              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status}`));
             }
+
           } else if (intent === "SUBCONTRACTOR") {
             let sq = sb.from("subcontractors").select("id, name, trade, contact_person, phone, is_active").eq("user_id", uid).limit(limit);
             if (nameFilter) sq = sq.ilike("name", `%${nameFilter}%`);
@@ -1110,9 +1232,10 @@ serve(async (req) => {
             const fromDate = df || (() => { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); })();
             const toDate = dt || now.toISOString().slice(0, 10);
             let waq = sb.from("worker_attendance")
-              .select("worker_name, check_in, check_out, work_date, project_id, projects(name)")
+              .select("full_name, check_in, check_out, project_id, projects(name)")
               .eq("user_id", uid)
-              .gte("work_date", fromDate).lte("work_date", toDate)
+              .gte("check_in", fromDate + "T00:00:00")
+              .lte("check_in", toDate + "T23:59:59")
               .not("check_out", "is", null)
               .limit(500);
             if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
@@ -1122,7 +1245,7 @@ serve(async (req) => {
               const inMs = new Date(r.check_in).getTime();
               const outMs = new Date(r.check_out).getTime();
               const hours = (outMs - inMs) / 3600_000;
-              return { ...r, hours };
+              return { ...r, worker_name: r.full_name, work_date: String(r.check_in || "").slice(0, 10), hours };
             }).filter(r => r.hours >= 9).sort((a, b) => b.hours - a.hours);
             lines.push(`FAZLA MESAİ (${fromDate} → ${toDate}) · ≥ 9 saat vardiyalar: ${overtime.length}`);
             overtime.slice(0, 15).forEach(r =>
@@ -1130,6 +1253,7 @@ serve(async (req) => {
             );
             const byWorker = new Map<string, number>();
             overtime.forEach(r => byWorker.set(r.worker_name, (byWorker.get(r.worker_name) || 0) + (r.hours - 8)));
+
             const top = [...byWorker.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
             if (top.length) {
               lines.push(`\nEN YOĞUN İŞÇİLER (fazla saat toplamı):`);
@@ -1306,6 +1430,8 @@ serve(async (req) => {
               TODAYS_TASKS: { reason: "Bugün için planlı görev bulunmuyor.", alt: "Bu haftanın açık görevlerini veya geciken işleri listeleyebilirim." },
               LOW_STOCK: { reason: "Malzeme norm tanımlı değil ya da stok verisi henüz girilmemiş; kritik stok analizi yapılamıyor.", alt: "Malzeme normlarını tanımlayıp giriş/çıkış kayıtlarını ekledikten sonra kritik stokları çıkarabilirim." },
               PERSONNEL_OVERTIME: { reason: "Seçili aralıkta 9 saati aşan vardiya kaydı bulunmuyor.", alt: "Genel yoklama özetini veya bu haftaki toplam adam/saat dağılımını gösterebilirim." },
+              WAGE_ANALYSIS: { reason: "Seçili dönemde ne puantaj (attendance_records) ne de QR (worker_attendance) kaydı bulunamadı — 'veri yok' değil, dönemde yevmiyeli çalışma girişi yapılmamış.", alt: "Farklı bir tarih aralığına bakabilirim ya da tanımlı yevmiyeli personel listesini çıkarabilirim." },
+
               MEETING_SUMMARY: { reason: "Toplantı kaydı bulunmuyor.", alt: "Toplantı Merkezi'nde yeni bir toplantı başlattığında transkript ve karar özetini otomatik çıkarabilirim." },
               PROJECT_PROGRESS: { reason: "İlerleme kıyaslaması için başlangıç/bitiş tarihi olan proje yok.", alt: "Aktif proje listesini veya sözleşme özetini gösterebilirim." },
               PROJECT_HEALTH: { reason: "Sağlık skoru hesaplamak için yeterli proje verisi yok.", alt: "İlk projeni oluşturup görev/ödeme kayıtlarını girdiğinde skorları çıkarabilirim." },
