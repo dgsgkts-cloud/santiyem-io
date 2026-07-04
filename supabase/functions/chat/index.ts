@@ -816,6 +816,7 @@ serve(async (req) => {
 
     // --- CONSTRUCTION BRAIN: Intent detection + database-first data retrieval ---
     let projectDataContext = "";
+    let memoryContext = "";
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
