@@ -867,6 +867,17 @@ const AssistantContent = ({ content }: { content: string }) => {
           );
         if (b.kind === "notfound")
           return <NotFoundCard key={i} query={b.query} reasons={b.reasons} similar={b.similar} suggestions={b.suggestions} />;
+        if (b.kind === "chart")
+          return <ChartBlock key={i} chartType={b.chartType} title={b.title} data={b.data} />;
+        if (b.kind === "timeline") return <TimelineBlock key={i} title={b.title} events={b.events} />;
+        if (b.kind === "progress") return <ProgressBlock key={i} title={b.title} rows={b.rows} />;
+        if (b.kind === "datatable")
+          return <DataTableBlock key={i} title={b.title} headers={b.headers} rows={b.rows} />;
+        if (b.kind === "risks") return <RiskCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "financial") return <FinancialCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "personnel") return <PersonnelCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "materials") return <MaterialCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "projects") return <ProjectCardsBlock key={i} rows={b.rows} />;
         return null;
       })}
 
