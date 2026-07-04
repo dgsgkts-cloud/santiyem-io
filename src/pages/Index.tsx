@@ -399,6 +399,18 @@ const Index = () => {
     }
   };
 
+  // After first-run completion, auto-ask the AI to summarize what it knows
+  useEffect(() => {
+    if (!user || showFirstRun || isTyping) return;
+    if (!shouldShowWelcomeBrief()) return;
+    clearWelcomeBrief();
+    const prompt = "Kurulumum yeni tamamlandı. Lütfen kısaca özetle: (1) şu ana kadar şirketim, projelerim, personelim, tedarikçilerim ve belgelerim hakkında ne biliyorsun, (2) verimli çalışmam için hâlâ neler eksik, (3) sonraki 3 önerilen adım nedir?";
+    setTimeout(() => {
+      goToTab("chat");
+      setTimeout(() => handleSend(prompt), 400);
+    }, 300);
+  }, [user, showFirstRun, isTyping]);
+
   const handleReset = () => {
     setMessages([]);
     setIsTyping(false);
