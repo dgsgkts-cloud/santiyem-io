@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,11 +6,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import EmailAccountsPanel from "./EmailAccountsPanel";
 
 type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
@@ -35,6 +36,8 @@ interface CommMessage {
   created_at: string;
   message_type: string | null;
   template_name: string | null;
+  project_id: string | null;
+  related_action: string | null;
 }
 
 const CHANNEL_ICON: Record<Channel, React.ElementType> = {
@@ -120,6 +123,10 @@ export default function CommunicationCenterPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [preview, setPreview] = useState<CommMessage | null>(null);
+  const [channelFilter, setChannelFilter] = useState<"all" | Channel>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("");
+  const [recipientFilter, setRecipientFilter] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,10 +189,29 @@ export default function CommunicationCenterPage() {
     finally { setBusy(null); }
   };
 
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const pf = projectFilter.trim().toLowerCase();
+    const rf = recipientFilter.trim().toLowerCase();
+    return messages.filter((m) => {
+      if (channelFilter !== "all" && m.channel !== channelFilter) return false;
+      if (pf && (m.project_id || "").toLowerCase().indexOf(pf) === -1) return false;
+      if (rf) {
+        const hay = `${m.recipient} ${m.recipient_name || ""}`.toLowerCase();
+        if (hay.indexOf(rf) === -1) return false;
+      }
+      if (s) {
+        const hay = `${m.subject || ""} ${m.body || ""} ${m.recipient} ${m.recipient_name || ""}`.toLowerCase();
+        if (hay.indexOf(s) === -1) return false;
+      }
+      return true;
+    });
+  }, [messages, channelFilter, projectFilter, recipientFilter, search]);
+
   const buckets: Record<Bucket, CommMessage[]> = {
     pending: [], sent: [], failed: [], scheduled: [],
   };
-  messages.forEach((m) => {
+  filtered.forEach((m) => {
     const b = bucketOf(m.status);
     if (b) buckets[b].push(m);
   });
@@ -209,6 +235,42 @@ export default function CommunicationCenterPage() {
       </header>
 
       <WhatsAppSetupCard />
+      <EmailAccountsPanel />
+
+      <div className="rounded-lg border bg-card p-3 flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <Label className="text-xs">Ara</Label>
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Konu, içerik, alıcı…" className="pl-8 h-9" />
+          </div>
+        </div>
+        <div className="w-40">
+          <Label className="text-xs">Kanal</Label>
+          <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as "all" | Channel)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="email">E-posta</SelectItem>
+              <SelectItem value="sms">SMS</SelectItem>
+              <SelectItem value="push">Push</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
+          <Label className="text-xs">Proje ID</Label>
+          <Input value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}
+            placeholder="proje…" className="h-9" />
+        </div>
+        <div className="w-52">
+          <Label className="text-xs">Alıcı</Label>
+          <Input value={recipientFilter} onChange={(e) => setRecipientFilter(e.target.value)}
+            placeholder="e-posta / telefon" className="h-9" />
+        </div>
+      </div>
+
 
       <Tabs defaultValue="pending">
         <TabsList className="grid w-full max-w-2xl grid-cols-4">

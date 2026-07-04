@@ -1,7 +1,8 @@
 // Built-in providers for the Communication Hub.
 // WhatsApp = official Meta WhatsApp Business Cloud API (Graph v20).
 // Falls back to a wa.me deep-link when Cloud API credentials are not configured.
-// Email routes through the existing send-transactional-email edge function.
+// Email routes through the enterprise EmailProvider (SMTP + future drivers)
+// defined in ./email/index.ts — see Sprint 9.1.
 
 import type {
   CommMessage,
@@ -9,6 +10,7 @@ import type {
   ProviderPreview,
   ProviderSendResult,
 } from "./types.ts";
+import { emailProvider } from "./email/index.ts";
 
 const sanitizePhone = (raw: string) => raw.replace(/[^\d+]/g, "").replace(/^\+/, "");
 
@@ -153,63 +155,10 @@ export const whatsappProvider: CommunicationProvider = {
   },
 };
 
-export const emailProvider: CommunicationProvider = {
-  channel: "email",
-  name: "lovable-email",
-  async previewMessage(msg: CommMessage): Promise<ProviderPreview> {
-    return {
-      channel: "email",
-      recipient: msg.recipient,
-      subject: msg.subject || "(konu yok)",
-      body: msg.body,
-      attachments: msg.attachments,
-      render_notes: "Şirket alan adınızdan gönderilecek. Alt bilgi ve unsubscribe otomatik eklenir.",
-    };
-  },
-  async sendMessage(msg: CommMessage): Promise<ProviderSendResult> {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    try {
-      const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          templateName: "generic-message",
-          recipientEmail: msg.recipient,
-          idempotencyKey: `comm-${msg.id}`,
-          templateData: { subject: msg.subject, body: msg.body, name: msg.recipient_name },
-        }),
-      });
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        const status = resp.status;
-        return {
-          success: false,
-          provider: "lovable-email",
-          error: data?.error || `HTTP ${status}`,
-          retryable: status >= 500 || status === 429,
-          raw: data,
-        };
-      }
-      return {
-        success: true,
-        provider: "lovable-email",
-        provider_message_id: data?.messageId || data?.id,
-        raw: data,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        provider: "lovable-email",
-        error: (err as Error).message,
-        retryable: true,
-      };
-    }
-  },
-};
+// Email is now handled by the modular EmailProvider (SMTP + Lovable + stubs
+// for Microsoft Graph, Gmail, SendGrid, SES, Mailgun) — see ./email/index.ts.
+// The interface is unchanged so the Communication Hub keeps routing uniformly.
+export { emailProvider };
 
 export const providerRegistry: Record<string, CommunicationProvider> = {
   whatsapp: whatsappProvider,

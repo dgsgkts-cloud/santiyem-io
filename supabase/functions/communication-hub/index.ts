@@ -53,6 +53,9 @@ serve(async (req) => {
           message_type = "text",
           template_name, template_language, template_variables,
           media_url, media_caption,
+          // Sprint 9.1 — email fields
+          cc = [], bcc = [], email_account_id,
+          project_id, related_action,
         } = payload;
         if (!channel || !recipient) {
           return json({ error: "channel, recipient zorunlu" }, 400);
@@ -63,6 +66,9 @@ serve(async (req) => {
         }
         if (message_type === "template" && !template_name) {
           return json({ error: "template mesaj için template_name zorunlu" }, 400);
+        }
+        if (channel === "email" && !subject) {
+          return json({ error: "e-posta için konu (subject) zorunlu" }, 400);
         }
         const status: CommStatus = scheduled_at
           ? "scheduled"
@@ -78,6 +84,11 @@ serve(async (req) => {
           template_variables: template_variables || {},
           media_url: media_url || null,
           media_caption: media_caption || null,
+          cc: Array.isArray(cc) ? cc : [],
+          bcc: Array.isArray(bcc) ? bcc : [],
+          email_account_id: email_account_id || null,
+          project_id: project_id || null,
+          related_action: related_action || null,
         }).select("*").single();
         if (error) return json({ error: error.message }, 400);
         return json({ message: data });
@@ -163,15 +174,93 @@ serve(async (req) => {
       }
 
       case "list": {
-        const { status, channel, limit = 50 } = payload;
+        const { status, channel, limit = 50, project_id, recipient, search } = payload;
         let q = sb.from("communication_messages")
           .select("*").eq("user_id", userId)
           .order("created_at", { ascending: false }).limit(limit);
         if (status) q = q.eq("status", status);
         if (channel) q = q.eq("channel", channel);
+        if (project_id) q = q.eq("project_id", project_id);
+        if (recipient) q = q.ilike("recipient", `%${recipient}%`);
+        if (search && typeof search === "string" && search.trim()) {
+          const s = `%${search.trim()}%`;
+          q = q.or(
+            `subject.ilike.${s},body.ilike.${s},recipient.ilike.${s},recipient_name.ilike.${s}`,
+          );
+        }
         const { data, error } = await q;
         if (error) return json({ error: error.message }, 400);
         return json({ messages: data || [] });
+      }
+
+      // ============================================================
+      // Sprint 9.1 — Email account management (per-tenant)
+      // Credentials are stored in Supabase Secrets; only env-var *names*
+      // and non-secret config live in email_accounts.config.
+      // ============================================================
+      case "email-accounts.list": {
+        const { data, error } = await sb.from("email_accounts")
+          .select("*").eq("user_id", userId)
+          .order("is_default", { ascending: false })
+          .order("created_at", { ascending: false });
+        if (error) return json({ error: error.message }, 400);
+        return json({ accounts: data || [] });
+      }
+      case "email-accounts.upsert": {
+        const { id, display_name, from_email, reply_to, signature, provider, config, is_default } = payload;
+        if (!display_name || !from_email || !provider) {
+          return json({ error: "display_name, from_email, provider zorunlu" }, 400);
+        }
+        // Enforce single default per user
+        if (is_default) {
+          await sb.from("email_accounts").update({ is_default: false })
+            .eq("user_id", userId).neq("id", id || "00000000-0000-0000-0000-000000000000");
+        }
+        const row = {
+          user_id: userId,
+          display_name, from_email,
+          reply_to: reply_to || null,
+          signature: signature || null,
+          provider,
+          config: config || {},
+          is_default: !!is_default,
+        };
+        const query = id
+          ? sb.from("email_accounts").update(row).eq("id", id).eq("user_id", userId).select("*").single()
+          : sb.from("email_accounts").insert(row).select("*").single();
+        const { data, error } = await query;
+        if (error) return json({ error: error.message }, 400);
+        return json({ account: data });
+      }
+      case "email-accounts.delete": {
+        const { id } = payload;
+        const { error } = await sb.from("email_accounts")
+          .delete().eq("id", id).eq("user_id", userId);
+        if (error) return json({ error: error.message }, 400);
+        return json({ ok: true });
+      }
+      case "email-accounts.set-default": {
+        const { id } = payload;
+        await sb.from("email_accounts").update({ is_default: false }).eq("user_id", userId);
+        const { data, error } = await sb.from("email_accounts")
+          .update({ is_default: true }).eq("id", id).eq("user_id", userId).select("*").single();
+        if (error) return json({ error: error.message }, 400);
+        return json({ account: data });
+      }
+      case "email-accounts.verify": {
+        const { id } = payload;
+        const { data: acc } = await sb.from("email_accounts")
+          .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
+        if (!acc) return json({ error: "Hesap bulunamadı" }, 404);
+        const { emailDriverRegistry } = await import("../_shared/communication/email/index.ts");
+        const driver = emailDriverRegistry[acc.provider as keyof typeof emailDriverRegistry];
+        const result = driver.verify ? await driver.verify(acc) : { ok: true };
+        await sb.from("email_accounts").update({
+          status: result.ok ? "active" : "error",
+          last_sync_at: new Date().toISOString(),
+          last_error: result.ok ? null : (result.error || null),
+        }).eq("id", id);
+        return json(result);
       }
 
       default:

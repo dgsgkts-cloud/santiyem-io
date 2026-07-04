@@ -416,11 +416,14 @@ export type Database = {
       communication_messages: {
         Row: {
           attachments: Json
+          bcc: Json
           body: string
+          cc: Json
           channel: Database["public"]["Enums"]["comm_channel"]
           created_at: string
           created_from: string | null
           delivered_at: string | null
+          email_account_id: string | null
           error: string | null
           failed_at: string | null
           id: string
@@ -429,12 +432,15 @@ export type Database = {
           media_url: string | null
           message_type: string
           metadata: Json
+          opened_at: string | null
           priority: Database["public"]["Enums"]["comm_priority"]
+          project_id: string | null
           provider: string | null
           provider_message_id: string | null
           read_at: string | null
           recipient: string
           recipient_name: string | null
+          related_action: string | null
           retry_count: number
           scheduled_at: string | null
           sent_at: string | null
@@ -448,11 +454,14 @@ export type Database = {
         }
         Insert: {
           attachments?: Json
+          bcc?: Json
           body: string
+          cc?: Json
           channel: Database["public"]["Enums"]["comm_channel"]
           created_at?: string
           created_from?: string | null
           delivered_at?: string | null
+          email_account_id?: string | null
           error?: string | null
           failed_at?: string | null
           id?: string
@@ -461,12 +470,15 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           metadata?: Json
+          opened_at?: string | null
           priority?: Database["public"]["Enums"]["comm_priority"]
+          project_id?: string | null
           provider?: string | null
           provider_message_id?: string | null
           read_at?: string | null
           recipient: string
           recipient_name?: string | null
+          related_action?: string | null
           retry_count?: number
           scheduled_at?: string | null
           sent_at?: string | null
@@ -480,11 +492,14 @@ export type Database = {
         }
         Update: {
           attachments?: Json
+          bcc?: Json
           body?: string
+          cc?: Json
           channel?: Database["public"]["Enums"]["comm_channel"]
           created_at?: string
           created_from?: string | null
           delivered_at?: string | null
+          email_account_id?: string | null
           error?: string | null
           failed_at?: string | null
           id?: string
@@ -493,12 +508,15 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           metadata?: Json
+          opened_at?: string | null
           priority?: Database["public"]["Enums"]["comm_priority"]
+          project_id?: string | null
           provider?: string | null
           provider_message_id?: string | null
           read_at?: string | null
           recipient?: string
           recipient_name?: string | null
+          related_action?: string | null
           retry_count?: number
           scheduled_at?: string | null
           sent_at?: string | null
@@ -510,7 +528,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "communication_messages_email_account_id_fkey"
+            columns: ["email_account_id"]
+            isOneToOne: false
+            referencedRelation: "email_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_memories: {
         Row: {
@@ -1125,6 +1151,57 @@ export type Database = {
           il_ilce?: string
           mesaj?: string | null
           telefon?: string
+        }
+        Relationships: []
+      }
+      email_accounts: {
+        Row: {
+          config: Json
+          created_at: string
+          display_name: string
+          from_email: string
+          id: string
+          is_default: boolean
+          last_error: string | null
+          last_sync_at: string | null
+          provider: Database["public"]["Enums"]["email_provider"]
+          reply_to: string | null
+          signature: string | null
+          status: Database["public"]["Enums"]["email_account_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          display_name: string
+          from_email: string
+          id?: string
+          is_default?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          provider?: Database["public"]["Enums"]["email_provider"]
+          reply_to?: string | null
+          signature?: string | null
+          status?: Database["public"]["Enums"]["email_account_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          display_name?: string
+          from_email?: string
+          id?: string
+          is_default?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          provider?: Database["public"]["Enums"]["email_provider"]
+          reply_to?: string | null
+          signature?: string | null
+          status?: Database["public"]["Enums"]["email_account_status"]
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -3806,6 +3883,15 @@ export type Database = {
         | "sent"
         | "failed"
         | "cancelled"
+      email_account_status: "active" | "disabled" | "error" | "unverified"
+      email_provider:
+        | "smtp"
+        | "microsoft_graph"
+        | "gmail"
+        | "sendgrid"
+        | "ses"
+        | "mailgun"
+        | "lovable"
       employment_type: "daily_wage" | "monthly_salary" | "subcontractor_crew"
       memory_type:
         | "company"
@@ -3963,6 +4049,16 @@ export const Constants = {
         "sent",
         "failed",
         "cancelled",
+      ],
+      email_account_status: ["active", "disabled", "error", "unverified"],
+      email_provider: [
+        "smtp",
+        "microsoft_graph",
+        "gmail",
+        "sendgrid",
+        "ses",
+        "mailgun",
+        "lovable",
       ],
       employment_type: ["daily_wage", "monthly_salary", "subcontractor_crew"],
       memory_type: [
