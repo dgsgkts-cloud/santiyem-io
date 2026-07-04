@@ -2367,6 +2367,7 @@ KURALLAR:
 
         // Parse ui payloads (mirrors frontend useAIResponse contract)
         const uiPayloads: any[] = [];
+        const actionPayloads: any[] = [];
         let speech = raw;
         speech = speech.replace(/```(?:json)?\s*ui\s*\n([\s\S]*?)```/gi, (_m, body) => {
           try {
@@ -2374,6 +2375,15 @@ KURALLAR:
             (Array.isArray(p) ? p : [p]).forEach((x) => uiPayloads.push(x));
           } catch (e) {
             console.warn("[Brain] ui block JSON parse failed:", (e as Error).message);
+          }
+          return "";
+        });
+        speech = speech.replace(/```(?:json)?\s*actions\s*\n([\s\S]*?)```/gi, (_m, body) => {
+          try {
+            const p = JSON.parse(body);
+            (Array.isArray(p) ? p : [p]).forEach((x) => actionPayloads.push(x));
+          } catch (e) {
+            console.warn("[Brain] actions block JSON parse failed:", (e as Error).message);
           }
           return "";
         });
