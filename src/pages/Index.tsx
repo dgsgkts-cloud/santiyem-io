@@ -180,6 +180,7 @@ const TAB_TO_PATH: Record<string, string> = {
   "ai-decisions": "/company-brain/ai-decisions",
   "decision-history": "/company-brain/decision-history",
   "company-docs": "/company-brain/documents",
+  "communication": "/iletisim",
 };
 
 const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
