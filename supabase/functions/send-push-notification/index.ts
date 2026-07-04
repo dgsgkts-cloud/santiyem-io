@@ -255,19 +255,19 @@ Deno.serve(async req => {
     }
 
     if (mode === "send") {
-      const { user_id, title, body, data, pref_key } = payload;
-      if (!user_id || !title || !body) {
-        return new Response(JSON.stringify({ error: "user_id, title, body required" }), {
+      const { title, body, data, pref_key } = payload;
+      // Authenticated callers: identity ALWAYS resolved from JWT — payload user_id is ignored.
+      // Service-role callers may target any user by passing user_id.
+      const targetUserId =
+        callerRole === "service_role"
+          ? String(payload.user_id || callerSub)
+          : callerSub!;
+      if (!targetUserId || !title || !body) {
+        return new Response(JSON.stringify({ error: "title, body required" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Authenticated users may only send pushes to themselves; service-role can target anyone.
-      if (callerRole === "authenticated" && user_id !== callerSub) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const r = await sendToUser(client, user_id, title, body, data || {}, pref_key);
+      const r = await sendToUser(client, targetUserId, title, body, data || {}, pref_key);
       return new Response(JSON.stringify({ ok: true, ...r }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
