@@ -30,7 +30,7 @@ export function useVoiceAccess(): VoiceAccess {
         return;
       }
       const [{ data: profile }, { data: usage }] = await Promise.all([
-        supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("plan, role").eq("user_id", user.id).maybeSingle(),
         supabase
           .from("voice_usage")
           .select("seconds_used")
