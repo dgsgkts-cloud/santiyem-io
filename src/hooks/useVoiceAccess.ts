@@ -47,7 +47,7 @@ export function useVoiceAccess(): VoiceAccess {
         .maybeSingle();
       const trialActive =
         sub?.trial_end && new Date(sub.trial_end as string).getTime() > Date.now();
-      const premium = isActivePlan(plan) || sub?.status === "active" || sub?.status === "trialing" || !!trialActive;
+      const premium = (profile as any)?.role === "admin" || isActivePlan(plan) || sub?.status === "active" || sub?.status === "trialing" || !!trialActive;
       setIsPremium(premium);
       setSeconds((usage?.seconds_used as number | undefined) ?? 0);
     } finally {
