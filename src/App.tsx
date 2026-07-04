@@ -14,6 +14,7 @@ import CookieBanner from "@/components/CookieBanner";
 import DeepLinkHandler from "@/components/DeepLinkHandler";
 import NativeSetup from "@/components/NativeSetup";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
+import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
 
