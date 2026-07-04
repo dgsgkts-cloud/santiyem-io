@@ -102,6 +102,7 @@ const App = () => (
           <DeepLinkHandler />
           <NativeSetup />
         </BrowserRouter>
+        </ActionExecutorProvider>
         </ThemeProvider>
       </UserProvider>
     </TooltipProvider>
