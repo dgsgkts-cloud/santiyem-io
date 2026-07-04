@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     // Check subscription + quota using service role
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const [{ data: sub }, { data: usage }] = await Promise.all([
+    const [{ data: sub }, { data: usage }, { data: profile }] = await Promise.all([
       admin
         .from("user_subscriptions")
         .select("status, trial_end, plan_id")
@@ -56,11 +56,17 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .eq("usage_date", new Date().toISOString().slice(0, 10))
         .maybeSingle(),
+      admin
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
     const now = Date.now();
     const trialActive = sub?.trial_end && new Date(sub.trial_end as string).getTime() > now;
-    const isPremium = sub?.status === "active" || sub?.status === "trialing" || Boolean(trialActive);
+    const isAdmin = (profile?.role as string | undefined) === "admin";
+    const isPremium = isAdmin || sub?.status === "active" || sub?.status === "trialing" || Boolean(trialActive);
     const secondsUsed = (usage?.seconds_used as number | undefined) ?? 0;
     const remaining = isPremium ? Infinity : Math.max(0, FREE_DAILY_LIMIT_SECONDS - secondsUsed);
 
