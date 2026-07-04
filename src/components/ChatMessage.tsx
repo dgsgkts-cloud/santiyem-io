@@ -218,6 +218,12 @@ const parseBlocks = (raw: string): Block[] => {
     } else if (kind === "reasoning") {
       const kv = parseKeyLines(inner);
       blocks.push({ kind: "reasoning", ...(kv as any) });
+    } else if (kind === "queries" || kind === "memories" || kind === "documents") {
+      const items = inner
+        .split("\n")
+        .map((l) => l.replace(/^\s*[-*•]\s*/, "").trim())
+        .filter(Boolean);
+      blocks.push({ kind, items } as Block);
     } else if (kind === "source") {
       blocks.push({ kind: "source", content: inner });
     } else if (kind === "details") {
