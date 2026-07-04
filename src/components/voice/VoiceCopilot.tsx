@@ -573,7 +573,10 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   // opens, so we can flip `track.enabled = false/true` ourselves. This is what
   // iOS Safari actually respects even when a transport keeps the pipe open.
   const muted = conversation.isMuted;
+  const mutedRef = useRef(muted);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
   const micTracksRef = useRef<Set<MediaStreamTrack>>(new Set());
+
 
   useEffect(() => {
     if (!navigator?.mediaDevices?.getUserMedia) return;
@@ -613,12 +616,22 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   }, []);
 
   const setLocalTracksEnabled = (enabled: boolean) => {
+    // Hard-mute guard: while the user has muted the mic, refuse any request
+    // to re-enable the local tracks. Anti-barge-in, PTT effect, wake-word,
+    // etc. can all race with a user mute — this keeps the mute absolute.
+    if (enabled && mutedRef.current) return;
     try {
       for (const t of micTracksRef.current) {
-        if (t.readyState === "live" && t.kind === "audio") t.enabled = enabled;
+        if (t.readyState === "live" && t.kind === "audio") {
+          if (t.enabled !== enabled) {
+            t.enabled = enabled;
+            console.log(enabled ? "[MUTE] microphone track resumed" : "[MUTE] microphone track stopped", { id: t.id });
+          }
+        }
       }
     } catch (e) { console.warn("[voice] track toggle failed", e); }
   };
+
 
   // ============ ANTI-BARGE-IN (Construction Site Mode) ============
   // While the agent is speaking AND site mode is on, silence the mic so
@@ -645,14 +658,30 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const toggleMute = () => {
     const next = !muted;
-    console.log("[voice] toggleMute →", next, "tracks:", micTracksRef.current.size);
-    try {
-      // 1) SDK — updates ElevenLabs InputController; also disables VAD server-side.
-      conversation.setMuted(next);
-    } catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
-    // 2) Local track flag — makes sure iOS Safari really stops streaming.
-    setLocalTracksEnabled(!next);
+    console.log(next ? "[MUTE] enabled" : "[MUTE] disabled", { tracks: micTracksRef.current.size });
+    // Sync the ref immediately so setLocalTracksEnabled's guard sees the new
+    // state before any of the effects below react.
+    mutedRef.current = next;
+    // 1) Local track flag first — iOS Safari actually stops the uplink here.
+    //    Do this before the SDK call so no frame slips through.
+    if (next) {
+      // Force-disable regardless of ref guard (guard only blocks re-enable).
+      try {
+        for (const t of micTracksRef.current) {
+          if (t.readyState === "live" && t.kind === "audio" && t.enabled) {
+            t.enabled = false;
+            console.log("[MUTE] microphone track stopped", { id: t.id });
+          }
+        }
+      } catch (e) { console.warn("[voice] track disable failed", e); }
+    } else {
+      setLocalTracksEnabled(true);
+    }
+    // 2) SDK — ElevenLabs InputController stops uplink + disables VAD server-side.
+    try { conversation.setMuted(next); }
+    catch (e) { console.warn("[voice] conversation.setMuted failed", e); }
   };
+
   const togglePause = async () => {
     // Best-effort pause via volume (SDK has no native pause for realtime).
     try { await conversation.setVolume({ volume: paused ? 1 : 0 }); setPaused(!paused); }
@@ -691,12 +720,14 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (settings.pushToTalk) {
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
-    } else {
+    } else if (!mutedRef.current) {
+      // Respect explicit user mute — don't auto-unmute here.
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.pushToTalk, uiState]);
+
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
@@ -705,10 +736,13 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.speakerVolume, paused]);
 
-  // Wake-phrase: only active in driving mode while a session is running.
+  // Wake-phrase: only active in driving mode while a session is running,
+  // AND while the user hasn't hard-muted the mic. Hard mute must silence
+  // every listener, including the local SpeechRecognition wake tap.
   useWakeWord({
-    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error",
+    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error" && !muted,
     onWake: () => {
+      if (mutedRef.current) return; // safety: never unmute a hard-muted mic
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
       try { conversation.sendUserActivity?.(); } catch { /* noop */ }
@@ -716,10 +750,11 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     },
   });
 
+
   const active = uiState !== "idle" && uiState !== "error";
 
   const statusLabel = useMemo(() => {
-    if (muted && active) return "Mikrofon kapalı";
+    if (muted && active) return "🎤❌ Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
       case "listening": return "Dinleniyor";
