@@ -27,6 +27,7 @@ import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
 import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
+import CommunicationCenterPage from "@/components/communication/CommunicationCenterPage";
 
 
 import { useUser } from "@/contexts/UserContext";
