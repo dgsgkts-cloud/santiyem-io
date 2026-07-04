@@ -53,6 +53,9 @@ serve(async (req) => {
           message_type = "text",
           template_name, template_language, template_variables,
           media_url, media_caption,
+          // Sprint 9.1 — email fields
+          cc = [], bcc = [], email_account_id,
+          project_id, related_action,
         } = payload;
         if (!channel || !recipient) {
           return json({ error: "channel, recipient zorunlu" }, 400);
@@ -63,6 +66,9 @@ serve(async (req) => {
         }
         if (message_type === "template" && !template_name) {
           return json({ error: "template mesaj için template_name zorunlu" }, 400);
+        }
+        if (channel === "email" && !subject) {
+          return json({ error: "e-posta için konu (subject) zorunlu" }, 400);
         }
         const status: CommStatus = scheduled_at
           ? "scheduled"
@@ -78,6 +84,11 @@ serve(async (req) => {
           template_variables: template_variables || {},
           media_url: media_url || null,
           media_caption: media_caption || null,
+          cc: Array.isArray(cc) ? cc : [],
+          bcc: Array.isArray(bcc) ? bcc : [],
+          email_account_id: email_account_id || null,
+          project_id: project_id || null,
+          related_action: related_action || null,
         }).select("*").single();
         if (error) return json({ error: error.message }, 400);
         return json({ message: data });
