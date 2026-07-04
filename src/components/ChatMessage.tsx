@@ -838,9 +838,13 @@ const MarkdownBody = ({ content }: { content: string }) => (
 const AssistantContent = ({ content }: { content: string }) => {
   const disclaimerRe = /\n?\s*Bilgi:\s*Bu değerlendirme[^\n]*?yetkili uzman tarafından verilmelidir\.?\s*$/;
   const match = content.match(disclaimerRe);
-  const body = match ? content.replace(disclaimerRe, "").trimEnd() : content;
+  const bodyRaw = match ? content.replace(disclaimerRe, "").trimEnd() : content;
   const disclaimer = match?.[0]?.replace(/^\s*Bilgi:\s*/, "").trim();
 
+  // Universal engine: extract any inline JSON `ui` payloads embedded in the
+  // response (```json ui ...``` fences or trailing {"ui": ...}), then parse
+  // the classic block syntax.
+  const { text: body, payloads } = extractUiPayloads(bodyRaw);
   const blocks = parseBlocks(body);
 
   return (
@@ -880,14 +884,19 @@ const AssistantContent = ({ content }: { content: string }) => {
         if (b.kind === "timeline") return <TimelineBlock key={i} title={b.title} events={b.events} />;
         if (b.kind === "progress") return <ProgressBlock key={i} title={b.title} rows={b.rows} />;
         if (b.kind === "datatable")
-          return <DataTableBlock key={i} title={b.title} headers={b.headers} rows={b.rows} />;
+          return <SmartDataTable key={i} title={b.title} headers={b.headers} rows={b.rows} />;
         if (b.kind === "risks") return <RiskCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "financial") return <FinancialCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "personnel") return <PersonnelCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "materials") return <MaterialCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "projects") return <ProjectCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "ui") return <SmartVisual key={i} payload={b.payload} />;
         return null;
       })}
+
+      {payloads.map((p, i) => (
+        <SmartVisual key={`ui-${i}`} payload={p} />
+      ))}
 
       {disclaimer && (
         <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
