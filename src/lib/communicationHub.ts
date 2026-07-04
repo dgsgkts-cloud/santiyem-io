@@ -65,7 +65,7 @@ export const communicationHub = {
   cancel: (id: string) => call("cancel", { id }),
   schedule: (id: string, scheduled_at: string) => call("schedule", { id, scheduled_at }),
   status: (id: string) => call("status", { id }),
-  list: (filter: ListFilter = {}) => call("list", filter),
+  list: (filter: ListFilter = {}) => call("list", { ...filter }),
 
   // Email account management (Sprint 9.1)
   emailAccounts: {
