@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { assertQuotaOrToast } from "@/lib/quotaClient";
 
 export interface TeamMember {
   id: string;
