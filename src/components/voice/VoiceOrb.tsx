@@ -78,7 +78,7 @@ export function VoiceOrb() {
           : undefined;
         return (
           <VoiceErrorBoundary onClose={() => setOpen(false)}>
-            <VoiceBrain onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
+            <VoiceCopilot onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
           </VoiceErrorBoundary>
         );
       })()}
