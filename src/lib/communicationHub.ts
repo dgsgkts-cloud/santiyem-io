@@ -30,7 +30,7 @@ async function call(action: string, payload: Record<string, unknown>) {
 }
 
 export const communicationHub = {
-  create: (input: CreateMessageInput) => call("create", input),
+  create: (input: CreateMessageInput) => call("create", { ...input }),
   preview: (id: string) => call("preview", { id }),
   send: (id: string) => call("send", { id }),
   retry: (id: string) => call("retry", { id }),
