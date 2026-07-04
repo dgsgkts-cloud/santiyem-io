@@ -635,6 +635,62 @@ Hazır Beton C25 | 320 m³ | 5.100 TL/m³ | Yeterli |
 Akdeniz Residence | Konut - Antalya | 78% | Zamanında | Teslim: 2026-03
 Arsuz Modern Villa | Villa - Hatay | 45% | 12 gün gecikme | Teslim: 2026-05
 ::/projects
+
+=================================================== ZORUNLU MAKİNE-OKUNUR ACTIONS PAYLOAD
+
+Aksiyon önerilebilen HER cevabın SONUNA — ui bloğundan sonra — ayrı bir fenced JSON bloğu ekle. Bu blok frontend Action Center'a (WhatsApp, E-posta, Görev, Satın Alma, Rapor, Takvim) veri sağlar. Eski istemciler bu bloğu yok sayabilir; ZORUNLU değil, ama uygun her cevapta üretilmeli.
+
+Format (aynen böyle):
+\`\`\`json actions
+[
+  {
+    "id": "unique-slug",
+    "label": "Ödemeyi Aç",
+    "type": "open_payment",
+    "priority": "critical",
+    "icon": "wallet",
+    "description": "Bekleyen 185.000 TL ödeme detayına git",
+    "confirmationRequired": false,
+    "route": "/payments-kasa",
+    "payload": { "paymentId": "..." },
+    "expectedImpact": "Tedarikçi gecikmesini önler"
+  }
+]
+\`\`\`
+
+DESTEKLENEN type DEĞERLERİ:
+open_project, open_payment, open_material, open_personnel, open_task,
+create_task, create_purchase_request, create_meeting,
+send_whatsapp, send_email,
+export_pdf, export_excel,
+open_inventory, open_report
+
+ALAN KURALLARI:
+- id: kısa, benzersiz slug (örn. "open-payment-mehmet-kaya").
+- label: kullanıcıya görünen buton metni (Türkçe, 1-3 kelime).
+- type: yukarıdaki listeden BİRİ. Farklı değer üretme.
+- priority: "critical" | "high" | "medium" | "low" — aksiyonun aciliyeti.
+- icon: lucide isim (wallet, package, users, folder-open, list-plus, bell, send, mail, phone, calendar-plus, file-text, alert-triangle, search).
+- description: 1 cümle, aksiyonun ne yapacağını açıklar.
+- confirmationRequired: geri alınamaz/mutasyon içeren aksiyonlarda true (create_task, send_whatsapp, send_email, mark_resolved vb.). Salt-okunur açma aksiyonları için false.
+- route: mümkünse uygulama içi rota ("/payments-kasa", "/projects", "/materials", "/tasks", "/reports"). Bilinmiyorsa boş string.
+- payload: aksiyona özgü serbest JSON (paymentId, projectId, workerId, phone, subject, body, materialId, taskTitle, dueDate, ...). String/number/boolean değerler kullan.
+- expectedImpact: 1 cümle iş etkisi ("Tedarikçi gecikmesini önler", "Malzeme sıkışmasını azaltır", "Proje ilerlemesini hızlandırır").
+
+ÖRÜNTÜ REHBERİ (aksiyon setleri):
+- Kritik ödeme → [open_payment (critical), create_task (high, confirm), send_whatsapp (high, confirm)]
+- Malzeme sıkışması → [open_inventory (high), create_purchase_request (critical, confirm), send_email (medium, confirm)]
+- Gecikmiş proje → [open_project (high), open_personnel (medium), create_meeting (medium, confirm)]
+- İş güvenliği/olay → [open_report (critical), create_task (critical, confirm), send_whatsapp (critical, confirm)]
+- Rapor/analiz → [export_pdf (low), export_excel (low)]
+
+KESİN KURALLAR:
+- actions bloğu MUTLAKA geçerli JSON dizisi olmalı (çift tırnak, virgül sonu yok).
+- Hiç aksiyon yoksa (selamlaşma, veri bulunamadı) bloğu KOYMA.
+- Aksiyonları önem sırasına göre diz (critical → low).
+- Aynı cevapta maksimum 5 aksiyon. Anlamsız aksiyon uydurma.
+- Aksiyon türlerini uydurma; sadece yukarıdaki 14 tipten birini kullan.
+- Bu blok speech ve ui bloklarının YERİNE değil, EK olarak eklenir.
 `;
 
 
