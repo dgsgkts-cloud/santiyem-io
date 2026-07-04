@@ -2406,6 +2406,7 @@ KURALLAR:
         console.log("[Brain] RAW LLM OUTPUT:\n" + raw);
         console.log("[Brain] PARSED SPEECH:\n" + speech.trim());
         console.log("[Brain] PARSED UI PAYLOAD: " + JSON.stringify(uiPayloads));
+        console.log("[Brain] PARSED ACTIONS PAYLOAD: " + JSON.stringify(actionPayloads));
         if (uiPayloads.length === 0) {
           console.warn("[Brain] ⚠️  NO UI PAYLOAD emitted by the model for this response.");
         }
