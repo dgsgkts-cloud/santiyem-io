@@ -695,6 +695,186 @@ const ReasoningAccordion = ({
   </Collapsible>
 );
 
+// Unified "How did I reach this answer?" panel — evidence & sources only,
+// never chain-of-thought. Aggregates queries, memories, KB docs, confidence,
+// reasoning summary, and action recommendations into a single collapsible.
+const ACTION_LABELS: Record<string, string> = {
+  task: "Görev Oluştur",
+  pdf: "PDF Oluştur",
+  email: "Mail Gönder",
+  call: "Taşeronu Ara",
+  related: "İlgili Kayıtları Aç",
+  whatsapp: "WhatsApp",
+  report: "Rapor",
+  detail: "Detay",
+};
+
+const ExplainabilityPanel = ({
+  queries,
+  memories,
+  documents,
+  confidence,
+  reasoning,
+  actions,
+}: {
+  queries?: string[];
+  memories?: string[];
+  documents?: string[];
+  confidence?: { percent?: string; sources?: string; updated?: string };
+  reasoning?: { tables?: string; records?: string; path?: string; sources?: string };
+  actions?: string[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const pct = confidence
+    ? Math.max(0, Math.min(100, Number((confidence.percent || "").replace(/[^\d.]/g, "")) || 0))
+    : null;
+  const tone = pct === null ? "" : pct >= 80 ? "text-emerald-500" : pct >= 50 ? "text-amber-500" : "text-red-500";
+  const bar = pct === null ? "" : pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
+
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/[0.03] shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-primary"
+      >
+        <span className="flex items-center gap-2">
+          <BrainCircuit className="h-4 w-4" />
+          🧠 Bu cevaba nasıl ulaştım?
+          {pct !== null && (
+            <span className={`ml-1 font-mono tabular-nums ${tone}`}>%{pct}</span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-primary/15 px-3 py-3 text-xs">
+          {confidence && pct !== null && (
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Güven</div>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
+                </div>
+                <span className={`font-mono text-xs font-semibold tabular-nums ${tone}`}>%{pct}</span>
+              </div>
+              {(confidence.sources || confidence.updated) && (
+                <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                  {confidence.sources && (
+                    <span className="inline-flex items-center gap-1">
+                      <Layers className="h-3 w-3" /> {confidence.sources} kaynak
+                    </span>
+                  )}
+                  {confidence.updated && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {confidence.updated}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {reasoning?.path && (
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Karar Özeti</div>
+              <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{reasoning.path}</div>
+            </div>
+          )}
+
+          {queries && queries.length > 0 && (
+            <div>
+              <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Database className="h-3 w-3" /> Kullanılan Sorgular
+              </div>
+              <ul className="space-y-1 text-foreground/90">
+                {queries.map((q, i) => (
+                  <li key={i} className="flex gap-2 font-mono text-[11px]">
+                    <span className="text-primary/60">›</span>
+                    <span>{q}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {reasoning?.tables && (
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Sorgulanan Tablolar {reasoning.records && <span className="text-foreground">· {reasoning.records} kayıt</span>}
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {reasoning.tables.split(",").map((t, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-[10px]">
+                    <Database className="h-2.5 w-2.5" />
+                    {t.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {memories && memories.length > 0 && (
+            <div>
+              <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <BrainCircuit className="h-3 w-3" /> Şirket Hafızası ({memories.length})
+              </div>
+              <ul className="space-y-1 text-foreground/90">
+                {memories.map((m, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-primary/60">•</span>
+                    <span>{m}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {documents && documents.length > 0 && (
+            <div>
+              <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <FileText className="h-3 w-3" /> Bilgi Bankası ({documents.length})
+              </div>
+              <ul className="space-y-1 text-foreground/90">
+                {documents.map((d, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-primary/60">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {reasoning?.sources && (
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Kaynak Referansları</div>
+              <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{reasoning.sources}</div>
+            </div>
+          )}
+
+          {actions && actions.length > 0 && (
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Üretilen Aksiyon Önerileri</div>
+              <div className="flex flex-wrap gap-1">
+                {actions.map((a, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/60 px-2 py-0.5 text-[10px]">
+                    {ACTION_LABELS[a] || a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-1 text-[10px] text-muted-foreground/70 italic">
+            Not: Yalnızca kullanılan veri kaynakları ve karar özeti gösterilir. AI'ın düşünce zinciri paylaşılmaz.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const NotFoundCard = ({
   query,
   reasons,
