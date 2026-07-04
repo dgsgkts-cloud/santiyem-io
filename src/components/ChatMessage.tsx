@@ -142,10 +142,11 @@ type Block =
   | { kind: "financial"; rows: any[] }
   | { kind: "personnel"; rows: any[] }
   | { kind: "materials"; rows: any[] }
-  | { kind: "projects"; rows: any[] };
+  | { kind: "projects"; rows: any[] }
+  | { kind: "ui"; payload: any };
 
 const BLOCK_RE =
-  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
+  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects|ui)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
 
 const parseKeyLines = (inner: string): Record<string, string> => {
   const out: Record<string, string> = {};
