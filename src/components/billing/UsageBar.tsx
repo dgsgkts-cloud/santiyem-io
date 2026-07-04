@@ -34,7 +34,12 @@ export function UsageBar({ label, used, limit, enforcement = "soft", unit }: Usa
         </span>
       </div>
       {!unlimited && (
-        <Progress value={pct} className="h-2" indicatorClassName={color} />
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full transition-all ${color}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       )}
     </div>
   );
