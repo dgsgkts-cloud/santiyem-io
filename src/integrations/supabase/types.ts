@@ -775,37 +775,61 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          doc_date: string | null
+          doc_type: string | null
           file_path: string | null
           file_size: number
           id: string
           is_global: boolean
+          language: string | null
+          last_used_at: string | null
           name: string
           page_count: number
+          pinned: boolean
+          project_id: string | null
           status: string
+          supplier: string | null
+          tags: string[]
           updated_at: string
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          doc_date?: string | null
+          doc_type?: string | null
           file_path?: string | null
           file_size?: number
           id?: string
           is_global?: boolean
+          language?: string | null
+          last_used_at?: string | null
           name: string
           page_count?: number
+          pinned?: boolean
+          project_id?: string | null
           status?: string
+          supplier?: string | null
+          tags?: string[]
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          doc_date?: string | null
+          doc_type?: string | null
           file_path?: string | null
           file_size?: number
           id?: string
           is_global?: boolean
+          language?: string | null
+          last_used_at?: string | null
           name?: string
           page_count?: number
+          pinned?: boolean
+          project_id?: string | null
           status?: string
+          supplier?: string | null
+          tags?: string[]
           updated_at?: string
           user_id?: string | null
         }
