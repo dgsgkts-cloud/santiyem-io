@@ -437,6 +437,11 @@ const Index = () => {
                   <PersonnelPage />
                 ) : activeTab === "meetings" ? (
                   <MeetingCenterPage />
+                ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
+                  <CompanyBrainPage
+                    section={TAB_TO_BRAIN_SECTION[activeTab]}
+                    onSectionChange={(s) => handleDesktopTabChange(BRAIN_SECTION_TO_TAB[s])}
+                  />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
