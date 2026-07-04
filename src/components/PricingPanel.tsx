@@ -116,7 +116,7 @@ const PricingPanel = () => {
     },
     {
       id: "pro",
-      name: "Profesyonel",
+      name: "Starter Pro",
       monthlyPrice: 499,
       yearlyPrice: 399,
       subtitle: "Serbest mühendis ve mimarlar için",
