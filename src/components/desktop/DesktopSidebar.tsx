@@ -5,13 +5,18 @@ import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, TrendingUp, Calculator,
   Bell, Crown, FileSignature, Wallet, Mic,
-  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, FileSpreadsheet
+  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, FileSpreadsheet,
+  Brain, Sparkles, History, FileText, Library,
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings";
+type Tab =
+  | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
+  | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
+  | "e-invoices" | "personnel" | "meetings"
+  | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 interface DesktopSidebarProps {
   activeTab: Tab;
@@ -40,6 +45,16 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: "🧠 COMPANY BRAIN",
+    items: [
+      { id: "company-memory" as Tab, label: "Company Memory", icon: Brain },
+      { id: "company-kb" as Tab, label: "Knowledge Base", icon: Library, soon: true },
+      { id: "ai-decisions" as Tab, label: "AI Decisions", icon: Sparkles },
+      { id: "decision-history" as Tab, label: "Decision History", icon: History },
+      { id: "company-docs" as Tab, label: "Documents", icon: FileText, soon: true },
+    ],
+  },
+  {
     label: "İÇERİK",
     items: [
       { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
@@ -47,7 +62,7 @@ const NAV_SECTIONS = [
       ...(isNativeApp() ? [] : [{ id: "pricing" as Tab, label: "Planlar", icon: Crown }]),
     ],
   },
-];
+] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean }> }>;
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
@@ -160,6 +175,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     <Icon className="w-4 h-4 shrink-0" />
                     {!collapsed && <span className="text-[13px] font-medium whitespace-nowrap">{item.label}</span>}
                     {!collapsed && isLocked && <Lock className="w-3 h-3 ml-auto shrink-0" style={{ color: "#475569" }} />}
+                    {!collapsed && (item as any).soon && !isLocked && (
+                      <span className="ml-auto text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                        Yakında
+                      </span>
+                    )}
                   </button>
                 );
 

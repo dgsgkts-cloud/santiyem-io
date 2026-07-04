@@ -26,6 +26,7 @@ import EInvoicesPage from "@/components/desktop/EInvoicesPage";
 import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
+import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
 
 
 import { useUser } from "@/contexts/UserContext";
@@ -48,7 +49,7 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -77,7 +78,30 @@ const NAVIGABLE_TABS: Tab[] = [
   "e-invoices",
   "personnel",
   "meetings",
+  "company-memory",
+  "company-kb",
+  "ai-decisions",
+  "decision-history",
+  "company-docs",
 ];
+
+const COMPANY_BRAIN_TABS = new Set<Tab>([
+  "company-memory", "company-kb", "ai-decisions", "decision-history", "company-docs",
+]);
+const TAB_TO_BRAIN_SECTION: Record<string, "memory" | "knowledge-base" | "ai-decisions" | "decision-history" | "documents"> = {
+  "company-memory": "memory",
+  "company-kb": "knowledge-base",
+  "ai-decisions": "ai-decisions",
+  "decision-history": "decision-history",
+  "company-docs": "documents",
+};
+const BRAIN_SECTION_TO_TAB: Record<string, Tab> = {
+  "memory": "company-memory",
+  "knowledge-base": "company-kb",
+  "ai-decisions": "ai-decisions",
+  "decision-history": "decision-history",
+  "documents": "company-docs",
+};
 
 // Mobile drawer menu items
 const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }[] = [
@@ -92,6 +116,10 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }
   { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
   { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "company-memory", label: "🧠 Company Memory", icon: MessageSquare },
+  { id: "ai-decisions", label: "🧠 AI Decisions", icon: Zap },
+  { id: "decision-history", label: "🧠 Decision History", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
   
   
@@ -118,6 +146,11 @@ const TAB_TITLES: Record<string, string> = {
   personnel: "Puantaj & Personel",
   meetings: "Toplantı Merkezi",
   settings: "Ayarlar",
+  "company-memory": "🧠 Company Memory",
+  "company-kb": "🧠 Knowledge Base",
+  "ai-decisions": "🧠 AI Decisions",
+  "decision-history": "🧠 Decision History",
+  "company-docs": "🧠 Documents",
   
   hakkimizda: "Hakkımızda",
 };
@@ -139,6 +172,11 @@ const TAB_TO_PATH: Record<string, string> = {
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
   settings: "/settings",
+  "company-memory": "/company-brain/memory",
+  "company-kb": "/company-brain/knowledge-base",
+  "ai-decisions": "/company-brain/ai-decisions",
+  "decision-history": "/company-brain/decision-history",
+  "company-docs": "/company-brain/documents",
 };
 
 const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
@@ -404,6 +442,11 @@ const Index = () => {
                   <PersonnelPage />
                 ) : activeTab === "meetings" ? (
                   <MeetingCenterPage />
+                ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
+                  <CompanyBrainPage
+                    section={TAB_TO_BRAIN_SECTION[activeTab]}
+                    onSectionChange={(s) => handleDesktopTabChange(BRAIN_SECTION_TO_TAB[s])}
+                  />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
                 ) : activeTab === "pricing" ? (
