@@ -1704,7 +1704,7 @@ serve(async (req) => {
       return { role: m.role, content: m.content };
     });
 
-    const systemPrompt = SYSTEM_PROMPT + ragContext + projectDataContext;
+    const systemPrompt = SYSTEM_PROMPT + ragContext + memoryContext + projectDataContext;
 
     // ============================================================
     // ACTION ASSISTANT — tool-calling with confirmation gating
