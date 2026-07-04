@@ -1,7 +1,8 @@
 // Built-in providers for the Communication Hub.
 // WhatsApp = official Meta WhatsApp Business Cloud API (Graph v20).
 // Falls back to a wa.me deep-link when Cloud API credentials are not configured.
-// Email routes through the existing send-transactional-email edge function.
+// Email routes through the enterprise EmailProvider (SMTP + future drivers)
+// defined in ./email/index.ts — see Sprint 9.1.
 
 import type {
   CommMessage,
@@ -9,6 +10,7 @@ import type {
   ProviderPreview,
   ProviderSendResult,
 } from "./types.ts";
+import { emailProvider } from "./email/index.ts";
 
 const sanitizePhone = (raw: string) => raw.replace(/[^\d+]/g, "").replace(/^\+/, "");
 
