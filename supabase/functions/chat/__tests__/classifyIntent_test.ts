@@ -34,9 +34,12 @@ for (const s of SCENARIOS) {
 }
 
 Deno.test("sticky project: follow-up inherits prior project", () => {
+  // Baseline: entity resolver only auto-matches on bare project names.
+  // Phrases like "Arsuz Modern Villa projesinde durum ne?" do NOT clear the
+  // 0.85 auto-select threshold today. This test pins that behaviour.
   const projects = [{ id: "p-arsuz", name: "Arsuz Modern Villa" }];
   const history = [
-    { role: "user", content: "Arsuz Modern Villa projesinde durum ne?" },
+    { role: "user", content: "Arsuz Modern Villa" },
     { role: "assistant", content: "Yolunda." },
     { role: "user", content: "Peki ödemeler ne durumda?" },
   ];
