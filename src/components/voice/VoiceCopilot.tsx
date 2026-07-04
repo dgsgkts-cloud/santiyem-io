@@ -720,12 +720,14 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (settings.pushToTalk) {
       try { conversation.setMuted(true); } catch { /* noop */ }
       setLocalTracksEnabled(false);
-    } else {
+    } else if (!mutedRef.current) {
+      // Respect explicit user mute — don't auto-unmute here.
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.pushToTalk, uiState]);
+
 
   // Speaker volume follows setting (unless paused).
   useEffect(() => {
