@@ -77,7 +77,30 @@ const NAVIGABLE_TABS: Tab[] = [
   "e-invoices",
   "personnel",
   "meetings",
+  "company-memory",
+  "company-kb",
+  "ai-decisions",
+  "decision-history",
+  "company-docs",
 ];
+
+const COMPANY_BRAIN_TABS = new Set<Tab>([
+  "company-memory", "company-kb", "ai-decisions", "decision-history", "company-docs",
+]);
+const TAB_TO_BRAIN_SECTION: Record<string, "memory" | "knowledge-base" | "ai-decisions" | "decision-history" | "documents"> = {
+  "company-memory": "memory",
+  "company-kb": "knowledge-base",
+  "ai-decisions": "ai-decisions",
+  "decision-history": "decision-history",
+  "company-docs": "documents",
+};
+const BRAIN_SECTION_TO_TAB: Record<string, Tab> = {
+  "memory": "company-memory",
+  "knowledge-base": "company-kb",
+  "ai-decisions": "ai-decisions",
+  "decision-history": "decision-history",
+  "documents": "company-docs",
+};
 
 // Mobile drawer menu items
 const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }[] = [
