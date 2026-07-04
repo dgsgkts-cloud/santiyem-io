@@ -453,6 +453,8 @@ const Index = () => {
                   <PersonnelPage />
                 ) : activeTab === "meetings" ? (
                   <MeetingCenterPage />
+                ) : activeTab === "communication" ? (
+                  <CommunicationCenterPage />
                 ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
                   <CompanyBrainPage
                     section={TAB_TO_BRAIN_SECTION[activeTab]}
