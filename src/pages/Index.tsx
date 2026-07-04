@@ -27,6 +27,7 @@ import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
 import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
+import CommunicationCenterPage from "@/components/communication/CommunicationCenterPage";
 
 
 import { useUser } from "@/contexts/UserContext";
@@ -51,7 +52,7 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -80,6 +81,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "e-invoices",
   "personnel",
   "meetings",
+  "communication",
   "company-memory",
   "company-kb",
   "ai-decisions",
@@ -147,6 +149,7 @@ const TAB_TITLES: Record<string, string> = {
   "e-invoices": "E-Fatura / E-Arşiv",
   personnel: "Puantaj & Personel",
   meetings: "Toplantı Merkezi",
+  communication: "İletişim Merkezi",
   settings: "Ayarlar",
   "company-memory": "🧠 Company Memory",
   "company-kb": "🧠 Knowledge Base",
@@ -179,6 +182,7 @@ const TAB_TO_PATH: Record<string, string> = {
   "ai-decisions": "/company-brain/ai-decisions",
   "decision-history": "/company-brain/decision-history",
   "company-docs": "/company-brain/documents",
+  "communication": "/iletisim",
 };
 
 const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
@@ -450,6 +454,8 @@ const Index = () => {
                   <PersonnelPage />
                 ) : activeTab === "meetings" ? (
                   <MeetingCenterPage />
+                ) : activeTab === "communication" ? (
+                  <CommunicationCenterPage />
                 ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
                   <CompanyBrainPage
                     section={TAB_TO_BRAIN_SECTION[activeTab]}

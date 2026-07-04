@@ -375,6 +375,116 @@ export type Database = {
           },
         ]
       }
+      communication_delivery_attempts: {
+        Row: {
+          attempted_at: string
+          error: string | null
+          id: string
+          message_id: string
+          provider: string | null
+          response: Json | null
+          status: Database["public"]["Enums"]["comm_status"]
+        }
+        Insert: {
+          attempted_at?: string
+          error?: string | null
+          id?: string
+          message_id: string
+          provider?: string | null
+          response?: Json | null
+          status: Database["public"]["Enums"]["comm_status"]
+        }
+        Update: {
+          attempted_at?: string
+          error?: string | null
+          id?: string
+          message_id?: string
+          provider?: string | null
+          response?: Json | null
+          status?: Database["public"]["Enums"]["comm_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_delivery_attempts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "communication_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_messages: {
+        Row: {
+          attachments: Json
+          body: string
+          channel: Database["public"]["Enums"]["comm_channel"]
+          created_at: string
+          created_from: string | null
+          error: string | null
+          id: string
+          max_retries: number
+          metadata: Json
+          priority: Database["public"]["Enums"]["comm_priority"]
+          provider: string | null
+          provider_message_id: string | null
+          recipient: string
+          recipient_name: string | null
+          retry_count: number
+          scheduled_at: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["comm_status"]
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: Json
+          body: string
+          channel: Database["public"]["Enums"]["comm_channel"]
+          created_at?: string
+          created_from?: string | null
+          error?: string | null
+          id?: string
+          max_retries?: number
+          metadata?: Json
+          priority?: Database["public"]["Enums"]["comm_priority"]
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          recipient_name?: string | null
+          retry_count?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["comm_status"]
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string
+          channel?: Database["public"]["Enums"]["comm_channel"]
+          created_at?: string
+          created_from?: string | null
+          error?: string | null
+          id?: string
+          max_retries?: number
+          metadata?: Json
+          priority?: Database["public"]["Enums"]["comm_priority"]
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          recipient_name?: string | null
+          retry_count?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["comm_status"]
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_memories: {
         Row: {
           category: string | null
@@ -3658,6 +3768,17 @@ export type Database = {
     Enums: {
       attendance_source: "manual" | "qr"
       attendance_status: "full_day" | "half_day" | "absent" | "leave"
+      comm_channel: "whatsapp" | "email" | "sms" | "push" | "teams" | "slack"
+      comm_priority: "low" | "normal" | "high" | "urgent"
+      comm_status:
+        | "draft"
+        | "pending_approval"
+        | "scheduled"
+        | "queued"
+        | "sending"
+        | "sent"
+        | "failed"
+        | "cancelled"
       employment_type: "daily_wage" | "monthly_salary" | "subcontractor_crew"
       memory_type:
         | "company"
@@ -3804,6 +3925,18 @@ export const Constants = {
     Enums: {
       attendance_source: ["manual", "qr"],
       attendance_status: ["full_day", "half_day", "absent", "leave"],
+      comm_channel: ["whatsapp", "email", "sms", "push", "teams", "slack"],
+      comm_priority: ["low", "normal", "high", "urgent"],
+      comm_status: [
+        "draft",
+        "pending_approval",
+        "scheduled",
+        "queued",
+        "sending",
+        "sent",
+        "failed",
+        "cancelled",
+      ],
       employment_type: ["daily_wage", "monthly_salary", "subcontractor_crew"],
       memory_type: [
         "company",

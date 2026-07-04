@@ -6,7 +6,7 @@ import {
   BookOpen, TrendingUp, Calculator,
   Bell, Crown, FileSignature, Wallet, Mic,
   Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, FileSpreadsheet,
-  Brain, Sparkles, History, FileText, Library,
+  Brain, Sparkles, History, FileText, Library, Send,
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,7 +15,7 @@ import { isNativeApp } from "@/lib/nativeGuards";
 type Tab =
   | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
-  | "e-invoices" | "personnel" | "meetings"
+  | "e-invoices" | "personnel" | "meetings" | "communication"
   | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 interface DesktopSidebarProps {
@@ -52,6 +52,12 @@ const NAV_SECTIONS = [
       { id: "ai-decisions" as Tab, label: "AI Decisions", icon: Sparkles },
       { id: "decision-history" as Tab, label: "Decision History", icon: History },
       { id: "company-docs" as Tab, label: "Documents", icon: FileText, soon: true },
+    ],
+  },
+  {
+    label: "İLETİŞİM",
+    items: [
+      { id: "communication" as Tab, label: "İletişim Merkezi", icon: Send },
     ],
   },
   {
