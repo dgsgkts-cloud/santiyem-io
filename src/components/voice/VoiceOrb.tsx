@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Mic, Lock } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
-import { VoiceCopilot } from "./VoiceCopilot";
+import { VoiceBrain } from "./VoiceBrain";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
@@ -78,7 +78,7 @@ export function VoiceOrb() {
           : undefined;
         return (
           <VoiceErrorBoundary onClose={() => setOpen(false)}>
-            <VoiceCopilot onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
+            <VoiceBrain onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
           </VoiceErrorBoundary>
         );
       })()}
