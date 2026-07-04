@@ -80,6 +80,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "e-invoices",
   "personnel",
   "meetings",
+  "communication",
   "company-memory",
   "company-kb",
   "ai-decisions",
