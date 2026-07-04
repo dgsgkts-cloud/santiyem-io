@@ -165,7 +165,7 @@ const PricingPanel = () => {
     },
     {
       id: "enterprise",
-      name: "Kurumsal",
+      name: "Enterprise",
       monthlyPrice: 4999,
       yearlyPrice: 3999,
       subtitle: "Büyük mühendislik firmaları ve müteahhitler için",
