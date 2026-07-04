@@ -40,6 +40,8 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
+import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
+import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
