@@ -792,6 +792,7 @@ const Index = () => {
               />
             </div>
           )}
+          <QuotaWarningBanner onUpgrade={() => goToTab("pricing")} />
           <UsageLimitBanner type="aiQuestions" />
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>
