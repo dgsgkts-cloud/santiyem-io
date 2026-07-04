@@ -2280,7 +2280,75 @@ KURALLAR:
       );
     }
 
-    return new Response(response.body, {
+    // Tee the SSE stream so we can log the assembled assistant output
+    // (raw text + parsed speech/ui) while still forwarding it to the client.
+    const [clientStream, logStream] = response.body!.tee();
+
+    (async () => {
+      try {
+        const reader = logStream.getReader();
+        const decoder = new TextDecoder();
+        let raw = "";
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+          for (const line of lines) {
+            const l = line.trim();
+            if (!l.startsWith("data:")) continue;
+            const data = l.slice(5).trim();
+            if (!data || data === "[DONE]") continue;
+            try {
+              const json = JSON.parse(data);
+              const delta = json?.choices?.[0]?.delta?.content;
+              if (typeof delta === "string") raw += delta;
+            } catch { /* ignore partial */ }
+          }
+        }
+
+        // Parse ui payloads (mirrors frontend useAIResponse contract)
+        const uiPayloads: any[] = [];
+        let speech = raw;
+        speech = speech.replace(/```(?:json)?\s*ui\s*\n([\s\S]*?)```/gi, (_m, body) => {
+          try {
+            const p = JSON.parse(body);
+            (Array.isArray(p) ? p : [p]).forEach((x) => uiPayloads.push(x));
+          } catch (e) {
+            console.warn("[Brain] ui block JSON parse failed:", (e as Error).message);
+          }
+          return "";
+        });
+        speech = speech.replace(/::ui[^\n]*\n([\s\S]*?)\n?::\/ui/gi, (_m, body) => {
+          try {
+            const p = JSON.parse(body);
+            (Array.isArray(p) ? p : [p]).forEach((x) => uiPayloads.push(x));
+          } catch { /* ignore */ }
+          return "";
+        });
+        const tail = speech.match(/\{\s*"ui"\s*:\s*(\{[\s\S]*\}|\[[\s\S]*\])\s*\}\s*$/);
+        if (tail) {
+          try {
+            const p = JSON.parse(tail[0]);
+            if (p?.ui) (Array.isArray(p.ui) ? p.ui : [p.ui]).forEach((x: any) => uiPayloads.push(x));
+            speech = speech.slice(0, tail.index).trimEnd();
+          } catch { /* ignore */ }
+        }
+
+        console.log("[Brain] RAW LLM OUTPUT:\n" + raw);
+        console.log("[Brain] PARSED SPEECH:\n" + speech.trim());
+        console.log("[Brain] PARSED UI PAYLOAD: " + JSON.stringify(uiPayloads));
+        if (uiPayloads.length === 0) {
+          console.warn("[Brain] ⚠️  NO UI PAYLOAD emitted by the model for this response.");
+        }
+      } catch (err) {
+        console.error("[Brain] stream logger failed:", err);
+      }
+    })();
+
+    return new Response(clientStream, {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/event-stream",
