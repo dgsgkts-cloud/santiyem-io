@@ -15,6 +15,7 @@ const suggestions = [
 ];
 
 const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
+  const [showLibrary, setShowLibrary] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 animate-fade-in pt-8 sm:pt-0">
       <img src={logo} alt="Şantiyem Logo" width={80} height={80} className="mb-4 mt-4 sm:mt-0" />
