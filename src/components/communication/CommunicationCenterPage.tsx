@@ -36,6 +36,8 @@ interface CommMessage {
   created_at: string;
   message_type: string | null;
   template_name: string | null;
+  project_id: string | null;
+  related_action: string | null;
 }
 
 const CHANNEL_ICON: Record<Channel, React.ElementType> = {
