@@ -449,6 +449,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
       <TrialBanner />
 
+      <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
+
       <MorningBriefingCard />
 
 
