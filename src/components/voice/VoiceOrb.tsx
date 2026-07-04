@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Mic, Lock } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
-import { VoiceBrain } from "./VoiceBrain";
+import { VoiceCopilot } from "./VoiceCopilot";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
