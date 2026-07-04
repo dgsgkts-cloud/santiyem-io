@@ -132,10 +132,19 @@ type Block =
   | { kind: "warning"; problem?: string; impact?: string; action?: string }
   | { kind: "confidence"; percent?: string; sources?: string; updated?: string }
   | { kind: "reasoning"; tables?: string; records?: string; path?: string; sources?: string }
-  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] };
+  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] }
+  | { kind: "chart"; chartType: "bar" | "pie" | "line"; title?: string; data: { name: string; value: number }[] }
+  | { kind: "timeline"; title?: string; events: { date: string; label: string; status?: string; note?: string }[] }
+  | { kind: "progress"; title?: string; rows: { label: string; percent: number; note?: string; tone?: string }[] }
+  | { kind: "datatable"; title?: string; headers: string[]; rows: string[][] }
+  | { kind: "risks"; rows: { severity: string; title: string; detail?: string; action?: string }[] }
+  | { kind: "financial"; rows: any[] }
+  | { kind: "personnel"; rows: any[] }
+  | { kind: "materials"; rows: any[] }
+  | { kind: "projects"; rows: any[] };
 
 const BLOCK_RE =
-  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning)\s*\n([\s\S]*?)\n?::\/\1/g;
+  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
 
 const parseKeyLines = (inner: string): Record<string, string> => {
   const out: Record<string, string> = {};
