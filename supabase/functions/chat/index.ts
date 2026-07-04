@@ -1232,9 +1232,10 @@ serve(async (req) => {
             const fromDate = df || (() => { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); })();
             const toDate = dt || now.toISOString().slice(0, 10);
             let waq = sb.from("worker_attendance")
-              .select("worker_name, check_in, check_out, work_date, project_id, projects(name)")
+              .select("full_name, check_in, check_out, project_id, projects(name)")
               .eq("user_id", uid)
-              .gte("work_date", fromDate).lte("work_date", toDate)
+              .gte("check_in", fromDate + "T00:00:00")
+              .lte("check_in", toDate + "T23:59:59")
               .not("check_out", "is", null)
               .limit(500);
             if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
@@ -1244,7 +1245,7 @@ serve(async (req) => {
               const inMs = new Date(r.check_in).getTime();
               const outMs = new Date(r.check_out).getTime();
               const hours = (outMs - inMs) / 3600_000;
-              return { ...r, hours };
+              return { ...r, worker_name: r.full_name, work_date: String(r.check_in || "").slice(0, 10), hours };
             }).filter(r => r.hours >= 9).sort((a, b) => b.hours - a.hours);
             lines.push(`FAZLA MESAİ (${fromDate} → ${toDate}) · ≥ 9 saat vardiyalar: ${overtime.length}`);
             overtime.slice(0, 15).forEach(r =>
@@ -1252,6 +1253,7 @@ serve(async (req) => {
             );
             const byWorker = new Map<string, number>();
             overtime.forEach(r => byWorker.set(r.worker_name, (byWorker.get(r.worker_name) || 0) + (r.hours - 8)));
+
             const top = [...byWorker.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
             if (top.length) {
               lines.push(`\nEN YOĞUN İŞÇİLER (fazla saat toplamı):`);
