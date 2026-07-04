@@ -14,6 +14,7 @@ import CookieBanner from "@/components/CookieBanner";
 import DeepLinkHandler from "@/components/DeepLinkHandler";
 import NativeSetup from "@/components/NativeSetup";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
+import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
 
@@ -51,6 +52,7 @@ const App = () => (
     <TooltipProvider>
       <UserProvider>
         <ThemeProvider>
+        <ActionExecutorProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -100,6 +102,7 @@ const App = () => (
           <DeepLinkHandler />
           <NativeSetup />
         </BrowserRouter>
+        </ActionExecutorProvider>
         </ThemeProvider>
       </UserProvider>
     </TooltipProvider>

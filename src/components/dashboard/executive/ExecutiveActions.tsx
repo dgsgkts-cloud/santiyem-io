@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Eye,
   ListPlus,
@@ -16,8 +15,12 @@ import {
   CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
-import { executeAction, type ActionDef, type ExecuteContext } from "@/lib/actionRegistry";
-import { toast } from "sonner";
+import {
+  useActionExecutor,
+  type AIAction,
+  type AIActionPriority,
+  type AIActionType,
+} from "@/hooks/useActionExecutor";
 
 export type ExecutiveCardType =
   | "payment"
@@ -26,7 +29,7 @@ export type ExecutiveCardType =
   | "project"
   | "risk";
 
-export interface ExecutiveActionsContext extends ExecuteContext {
+export interface ExecutiveActionsContext {
   /** Optional project scope for the card. */
   projectId?: string;
   /** Optional label/title used for created tasks & messages. */
@@ -40,242 +43,192 @@ interface ButtonSpec {
   label: string;
   icon: LucideIcon;
   variant?: "primary" | "default" | "danger";
-  confirm?: boolean;
-  build: (ctx: ExecutiveActionsContext) => ActionDef;
+  build: (ctx: ExecutiveActionsContext) => AIAction;
 }
 
-const PLACEHOLDER = (id: string, label: string, msg: string, icon: LucideIcon, variant?: ButtonSpec["variant"]): ButtonSpec => ({
-  id,
-  label,
-  icon,
-  variant,
-  build: () => ({
-    id,
-    label,
-    kind: "custom",
-    variant,
-    payload: { run: () => toast.info(msg) },
-  }),
-});
-
-const openTab = (
+const mk = (
   id: string,
   label: string,
-  tab: string,
+  type: AIActionType,
+  priority: AIActionPriority,
   icon: LucideIcon,
-  variant?: ButtonSpec["variant"],
+  opts: {
+    variant?: ButtonSpec["variant"];
+    confirmationRequired?: boolean;
+    description?: string;
+    route?: string;
+    expectedImpact?: string;
+    payload?: (ctx: ExecutiveActionsContext) => Record<string, unknown>;
+  } = {},
 ): ButtonSpec => ({
   id,
   label,
   icon,
-  variant,
-  build: () => ({ id, label, kind: "open-tab", variant, payload: { tab } }),
+  variant: opts.variant,
+  build: (ctx) => ({
+    id: `${id}-${ctx.projectId ?? "root"}`,
+    label,
+    type,
+    priority,
+    icon: icon.displayName?.toLowerCase(),
+    description: opts.description,
+    confirmationRequired: opts.confirmationRequired,
+    route: opts.route,
+    expectedImpact: opts.expectedImpact,
+    payload: {
+      ...(opts.payload?.(ctx) ?? {}),
+      projectId: ctx.projectId,
+      subject: ctx.subject,
+    },
+  }),
 });
 
 const CARD_ACTIONS: Record<ExecutiveCardType, ButtonSpec[]> = {
   payment: [
-    {
-      id: "pay-view",
-      label: "Detay",
-      icon: Eye,
+    mk("pay-view", "Detay", "open_payment", "critical", Eye, {
       variant: "primary",
-      build: (ctx) => ({
-        id: "pay-view",
-        label: "Detay",
-        kind: ctx.projectId ? "open-project" : "open-tab",
-        variant: "primary",
-        payload: { tab: "payments-kasa", projectId: ctx.projectId },
+      route: "/odemeler-kasa",
+      description: "Bekleyen ödeme detayına git",
+      expectedImpact: "Tedarikçi gecikmesini önler",
+      payload: (c) => ({ paymentId: (c as any).paymentId }),
+    }),
+    mk("pay-task", "Görev Oluştur", "create_task", "high", ListPlus, {
+      confirmationRequired: true,
+      description: "Ödeme takibi görevi oluştur",
+      expectedImpact: "Ödeme takibi netleşir",
+      payload: (c) => ({
+        title: c.subject ? `Ödeme takibi: ${c.subject}` : "Ödeme takibi",
+        priority: "high",
       }),
-    },
-    {
-      id: "pay-task",
-      label: "Görev Oluştur",
-      icon: ListPlus,
-      build: (ctx) => ({
-        id: "pay-task",
-        label: "Görev Oluştur",
-        kind: "create-task",
-        payload: {
-          title: ctx.subject ? `Ödeme takibi: ${ctx.subject}` : "Ödeme takibi",
-          projectId: ctx.projectId,
-          priority: "high",
-        },
+    }),
+    mk("pay-remind", "Hatırlatma Gönder", "send_whatsapp", "high", Bell, {
+      confirmationRequired: true,
+      description: "İlgili taşerona WhatsApp hatırlatması gönder",
+      expectedImpact: "Tahsilat/ödeme hızlanır",
+      payload: (c) => ({
+        phone: c.contact?.phone,
+        body: `Merhaba, ${c.subject ?? "ödeme"} hakkında hatırlatmak isterim.`,
       }),
-    },
-    {
-      id: "pay-remind",
-      label: "Hatırlatma Gönder",
-      icon: Bell,
-      build: (ctx) => ({
-        id: "pay-remind",
-        label: "Hatırlatma Gönder",
-        kind: ctx.contact?.phone ? "whatsapp" : "custom",
-        payload: ctx.contact?.phone
-          ? {
-              phone: ctx.contact.phone,
-              text: `Merhaba, ${ctx.subject ?? "ödeme"} hakkında hatırlatmak isterim.`,
-            }
-          : { run: () => toast.info("Hatırlatma modülü yakında hazır") },
-      }),
-    },
-    openTab("pay-open", "Ödemeyi Aç", "payments-kasa", Wallet),
+    }),
+    mk("pay-open", "Ödemeyi Aç", "open_payment", "medium", Wallet, {
+      route: "/odemeler-kasa",
+      description: "Ödemeler & Kasa ekranını aç",
+      expectedImpact: "Genel ödeme durumunu görürsün",
+    }),
   ],
   material: [
-    openTab("mat-view", "Stoğu Gör", "materials", Package, "primary"),
-    {
-      id: "mat-purchase",
-      label: "Satın Alma Talebi",
-      icon: ShoppingCart,
-      build: (ctx) => ({
-        id: "mat-purchase",
-        label: "Satın Alma Talebi",
-        kind: "create-task",
-        payload: {
-          title: ctx.subject ? `Satın alma: ${ctx.subject}` : "Satın alma talebi",
-          projectId: ctx.projectId,
-          priority: "high",
-        },
+    mk("mat-view", "Stoğu Gör", "open_inventory", "high", Package, {
+      variant: "primary",
+      route: "/malzemeler",
+      description: "Malzeme envanterine git",
+      expectedImpact: "Stok durumunu değerlendirirsin",
+    }),
+    mk("mat-purchase", "Satın Alma Talebi", "create_purchase_request", "critical", ShoppingCart, {
+      confirmationRequired: true,
+      description: "Satın alma talebi başlat",
+      expectedImpact: "Malzeme sıkışmasını azaltır",
+      payload: (c) => ({
+        title: c.subject ? `Satın alma: ${c.subject}` : "Satın alma talebi",
       }),
-    },
-    PLACEHOLDER(
-      "mat-notify",
-      "Satın Almaya Bildir",
-      "Satın alma bildirim akışı yakında hazır",
-      Send,
-    ),
+    }),
+    mk("mat-notify", "Satın Almaya Bildir", "send_email", "medium", Send, {
+      confirmationRequired: true,
+      description: "Satın alma sorumlusuna bilgi e-postası gönder",
+      expectedImpact: "Tedarik sürecini hızlandırır",
+      payload: (c) => ({
+        email: c.contact?.email,
+        subject: c.subject ? `Kritik stok: ${c.subject}` : "Kritik stok bildirimi",
+      }),
+    }),
   ],
   personnel: [
-    openTab("per-view", "Personeli Gör", "workers", Users, "primary"),
-    {
-      id: "per-assign",
-      label: "İşçi Ata",
-      icon: UserPlus,
-      build: (ctx) => ({
-        id: "per-assign",
-        label: "İşçi Ata",
-        kind: "create-task",
-        payload: {
-          title: ctx.subject ? `Ekip ataması: ${ctx.subject}` : "Ekip ataması",
-          projectId: ctx.projectId,
-          priority: "medium",
-        },
+    mk("per-view", "Personeli Gör", "open_personnel", "high", Users, {
+      variant: "primary",
+      route: "/personel",
+      description: "Personel listesine git",
+    }),
+    mk("per-assign", "İşçi Ata", "create_task", "medium", UserPlus, {
+      confirmationRequired: true,
+      description: "Ekip ataması için görev oluştur",
+      expectedImpact: "Sahaya kaynak yönlendirir",
+      payload: (c) => ({
+        title: c.subject ? `Ekip ataması: ${c.subject}` : "Ekip ataması",
+        priority: "medium",
       }),
-    },
-    PLACEHOLDER(
-      "per-meeting",
-      "Toplantı Oluştur",
-      "Takvim entegrasyonu yakında hazır",
-      CalendarPlus,
-    ),
+    }),
+    mk("per-meeting", "Toplantı Oluştur", "create_meeting", "medium", CalendarPlus, {
+      confirmationRequired: true,
+      description: "Takvim üzerinde toplantı planla",
+      expectedImpact: "Ekip koordinasyonu artar",
+    }),
   ],
   project: [
-    {
-      id: "prj-open",
-      label: "Projeyi Aç",
-      icon: FolderOpen,
+    mk("prj-open", "Projeyi Aç", "open_project", "high", FolderOpen, {
       variant: "primary",
-      build: (ctx) => ({
-        id: "prj-open",
-        label: "Projeyi Aç",
-        kind: ctx.projectId ? "open-project" : "open-tab",
-        variant: "primary",
-        payload: { tab: "projects", projectId: ctx.projectId },
+      route: "/projeler",
+      description: "Proje detayına git",
+      expectedImpact: "Proje ilerlemesini görürsün",
+    }),
+    mk("prj-timeline", "Zaman Çizelgesi", "open_task", "medium", GanttChartSquare, {
+      description: "Görev/zaman çizelgesini aç",
+    }),
+    mk("prj-task", "Görev Ata", "create_task", "medium", ListPlus, {
+      confirmationRequired: true,
+      description: "Proje için yeni görev oluştur",
+      expectedImpact: "İlerlemeyi hızlandırır",
+      payload: (c) => ({
+        title: c.subject ? `İş: ${c.subject}` : "Yeni proje görevi",
+        priority: "medium",
       }),
-    },
-    openTab("prj-timeline", "Zaman Çizelgesi", "tasks", GanttChartSquare),
-    {
-      id: "prj-task",
-      label: "Görev Ata",
-      icon: ListPlus,
-      build: (ctx) => ({
-        id: "prj-task",
-        label: "Görev Ata",
-        kind: "create-task",
-        payload: {
-          title: ctx.subject ? `İş: ${ctx.subject}` : "Yeni proje görevi",
-          projectId: ctx.projectId,
-          priority: "medium",
-        },
-      }),
-    },
+    }),
   ],
   risk: [
-    openTab("risk-inv", "İncele", "reports", Search, "primary"),
-    {
-      id: "risk-task",
-      label: "Görev Oluştur",
-      icon: ListPlus,
-      build: (ctx) => ({
-        id: "risk-task",
-        label: "Görev Oluştur",
-        kind: "create-task",
-        payload: {
-          title: ctx.subject ? `Risk: ${ctx.subject}` : "Risk aksiyonu",
-          projectId: ctx.projectId,
-          priority: "high",
-        },
+    mk("risk-inv", "İncele", "open_report", "high", Search, {
+      variant: "primary",
+      route: "/dashboard",
+      description: "Rapor ekranında ilgili riski incele",
+    }),
+    mk("risk-task", "Görev Oluştur", "create_task", "critical", ListPlus, {
+      confirmationRequired: true,
+      description: "Risk için aksiyon görevi oluştur",
+      expectedImpact: "Risk mitigasyonu başlar",
+      payload: (c) => ({
+        title: c.subject ? `Risk: ${c.subject}` : "Risk aksiyonu",
+        priority: "high",
       }),
-    },
-    {
-      id: "risk-resolve",
-      label: "Çözüldü İşaretle",
-      icon: CheckCircle2,
+    }),
+    mk("risk-resolve", "Çözüldü İşaretle", "open_report", "low", CheckCircle2, {
       variant: "danger",
-      confirm: true,
-      build: () => ({
-        id: "risk-resolve",
-        label: "Çözüldü İşaretle",
-        kind: "custom",
-        variant: "danger",
-        confirm: true,
-        payload: {
-          run: () => {
-            toast.success("Risk çözüldü olarak işaretlendi");
-            window.dispatchEvent(new CustomEvent("executive-brief-refresh"));
-          },
-        },
-      }),
-    },
+      confirmationRequired: true,
+      description: "Riski çözüldü olarak işaretle",
+      expectedImpact: "Risk listesinden düşer",
+    }),
   ],
 };
 
 interface ExecutiveActionsProps {
   type: ExecutiveCardType;
   ctx: ExecutiveActionsContext;
-  /** Optional extra actions appended after the presets. */
   extra?: ButtonSpec[];
   className?: string;
 }
 
 /**
- * Reusable inline action bar for executive cards. The button set is
- * driven entirely by `type`, so future WhatsApp/Email/Calendar/ERP
- * integrations can be plugged in via the actionRegistry without touching
- * this component's UI contract.
+ * Reusable inline action bar. Buttons are declarative; execution
+ * flows through the single `useActionExecutor()` engine so future
+ * WhatsApp/Email/Calendar/ERP integrations plug in without any
+ * change to this component.
  */
 export function ExecutiveActions({ type, ctx, extra, className }: ExecutiveActionsProps) {
   const specs = [...CARD_ACTIONS[type], ...(extra ?? [])];
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-
-  const run = async (spec: ButtonSpec) => {
-    const action = spec.build(ctx);
-    if ((spec.confirm || action.confirm) && confirmingId !== spec.id) {
-      setConfirmingId(spec.id);
-      return;
-    }
-    setConfirmingId(null);
-    setBusyId(spec.id);
-    await executeAction(action, ctx);
-    setBusyId(null);
-  };
+  const { execute, isBusy } = useActionExecutor();
 
   return (
     <div className={`flex flex-wrap gap-1.5 ${className ?? ""}`}>
       {specs.map((spec) => {
         const Icon = spec.icon;
-        const confirming = confirmingId === spec.id;
-        const busy = busyId === spec.id;
+        const action = spec.build(ctx);
+        const busy = isBusy(action.id);
         const primary = spec.variant === "primary";
         const danger = spec.variant === "danger";
         const base =
@@ -289,25 +242,16 @@ export function ExecutiveActions({ type, ctx, extra, className }: ExecutiveActio
           <button
             key={spec.id}
             type="button"
-            onClick={() => run(spec)}
+            onClick={() => execute(action)}
             disabled={busy}
             className={`${base} ${style}`}
             title={spec.label}
           >
             <Icon className="w-3.5 h-3.5" />
-            {busy ? "…" : confirming ? "Onayla" : spec.label}
+            {busy ? "…" : spec.label}
           </button>
         );
       })}
-      {confirmingId && (
-        <button
-          type="button"
-          onClick={() => setConfirmingId(null)}
-          className="text-[12px] px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground"
-        >
-          Vazgeç
-        </button>
-      )}
     </div>
   );
 }
