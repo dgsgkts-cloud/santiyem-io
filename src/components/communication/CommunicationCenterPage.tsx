@@ -123,6 +123,10 @@ export default function CommunicationCenterPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [preview, setPreview] = useState<CommMessage | null>(null);
+  const [channelFilter, setChannelFilter] = useState<"all" | Channel>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("");
+  const [recipientFilter, setRecipientFilter] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
   const load = useCallback(async () => {
     setLoading(true);
