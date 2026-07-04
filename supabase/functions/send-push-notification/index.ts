@@ -277,8 +277,8 @@ Deno.serve(async req => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error(e);
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
+    console.error("[send-push-notification]", e);
+    return new Response(JSON.stringify({ error: "internal_error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
