@@ -45,6 +45,24 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import type { Attachment } from "./ChatInput";
+import {
+  ChartBlock,
+  TimelineBlock,
+  ProgressBlock,
+  DataTableBlock,
+  RiskCardsBlock,
+  FinancialCardsBlock,
+  PersonnelCardsBlock,
+  MaterialCardsBlock,
+  ProjectCardsBlock,
+  parseChart,
+  parseTimeline,
+  parseProgress,
+  parseDataTable,
+  parseRisks,
+  parseFinancial,
+  parseEntity,
+} from "./chat/VisualBlocks";
 
 export interface Message {
   id: string;
