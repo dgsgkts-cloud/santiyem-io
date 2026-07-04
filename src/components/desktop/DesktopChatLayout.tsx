@@ -269,6 +269,17 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           )}
         </div>
 
+        {memoryExtractor.proposals.length > 0 && (
+          <div className="px-5 pt-3 shrink-0">
+            <MemorySuggestionBanner
+              proposals={memoryExtractor.proposals}
+              busy={memoryExtractor.busy}
+              onRemember={memoryExtractor.remember}
+              onDismiss={memoryExtractor.dismiss}
+              onNeverAgain={memoryExtractor.neverAgain}
+            />
+          </div>
+        )}
         <UsageLimitBanner type="aiQuestions" />
         <div className="shrink-0 border-t border-border">
           <ChatInput onSend={handleSend} disabled={isTyping} />
