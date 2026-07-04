@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import DemoDataPanel from "./DemoDataPanel";
 
 /**
  * "Demo Proje Oluştur" — populates the workspace with a realistic construction
@@ -41,6 +42,8 @@ const DemoDataTab = () => {
 
   return (
     <div className="space-y-5 lg:space-y-6">
+      <DemoDataPanel />
+      <div className="border-t border-border" />
       <div>
         <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: "#FF6B2B" }} />
