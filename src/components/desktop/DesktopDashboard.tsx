@@ -454,6 +454,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
       <MorningBriefingCard />
 
+      <CompanyBrainWidget onOpen={() => onTabChange("company-memory")} />
+
+
 
 
       {/* ─────────────────────────  GREETING  ───────────────────────── */}
