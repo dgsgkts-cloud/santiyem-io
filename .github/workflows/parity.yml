@@ -1,0 +1,39 @@
+name: parity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+
+      # Offline Construction Brain parity — locks intent classification and
+      # filter shape against a committed snapshot per scenario. Any drift
+      # (intent rename, added/removed filter, aggregate/date-window change,
+      # project-name resolution) fails CI.
+      - name: Construction Brain — offline parity
+        run: |
+          cd supabase/functions/chat/__tests__
+          deno test --allow-read --allow-env \
+            classifyIntent_test.ts sse_test.ts intent_snapshot_test.ts
+
+      # End-to-end parity (SSE stream diff) — opt-in. Runs only when the
+      # workflow has PARITY_CHAT_URL + PARITY_CHAT_TOKEN configured as
+      # repository secrets. Skipped otherwise so PRs from forks stay green.
+      - name: Construction Brain — end-to-end parity
+        if: ${{ env.PARITY_CHAT_URL != '' && env.PARITY_CHAT_TOKEN != '' }}
+        env:
+          PARITY_CHAT_URL: ${{ secrets.PARITY_CHAT_URL }}
+          PARITY_CHAT_TOKEN: ${{ secrets.PARITY_CHAT_TOKEN }}
+          PARITY_MODE: verify
+        run: |
+          cd supabase/functions/chat/__tests__
+          deno test --allow-net --allow-env --allow-read parity_test.ts
