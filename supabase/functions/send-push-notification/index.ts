@@ -191,42 +191,29 @@ async function dailyScan(client: ReturnType<typeof createClient>) {
 }
 
 // ───────────────────────── Handler ─────────────────────────
+// Timing-safe string equality — avoids leaking secret length via early exit.
+function safeEquals(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async req => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  // Parse JWT claims from Authorization header (no anon allowed)
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  let callerRole: string | null = null;
-  let callerSub: string | null = null;
-  try {
-    const part = authHeader.slice(7).split(".")[1];
-    const claims = JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/")));
-    callerRole = claims?.role ?? null;
-    callerSub = claims?.sub ?? null;
-  } catch {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  if (callerRole !== "authenticated" && callerRole !== "service_role") {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   try {
     const client = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
     const payload = await req.json().catch(() => ({}));
     const mode = payload.mode || "send";
 
+    // ─── scan mode: shared-secret only (cron path). Never accepts a user JWT. ───
     if (mode === "scan") {
-      // Scan mode is a system-wide job — restrict to service-role callers (cron).
-      if (callerRole !== "service_role") {
+      const expected = Deno.env.get("CRON_SECRET") || "";
+      const presented =
+        req.headers.get("x-cron-secret") ||
+        (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+      if (!expected || !presented || !safeEquals(expected, presented)) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -234,6 +221,36 @@ Deno.serve(async req => {
       const result = await dailyScan(client);
       return new Response(JSON.stringify({ ok: true, ...result }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ─── send mode: user JWT required, identity resolved from the token ───
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let callerRole: string | null = null;
+    let callerSub: string | null = null;
+    try {
+      const part = authHeader.slice(7).split(".")[1];
+      const claims = JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/")));
+      callerRole = claims?.role ?? null;
+      callerSub = claims?.sub ?? null;
+    } catch {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (callerRole !== "authenticated" && callerRole !== "service_role") {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!callerSub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
