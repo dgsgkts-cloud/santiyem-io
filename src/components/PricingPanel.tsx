@@ -296,7 +296,7 @@ const PricingPanel = () => {
     return <span className="text-[12px] text-foreground">{val}</span>;
   };
 
-  const planHeaders = ["Başlangıç", "Profesyonel", "Ekip", "Kurumsal"];
+  const planHeaders = ["Starter", "Starter Pro", "Professional", "Enterprise"];
 
   const faqs = [
     { q: "14 günlük deneme gerçekten ücretsiz mi?", a: "Evet. 14 gün boyunca kartınızdan hiçbir ücret alınmaz. Sadece kartınız doğrulama amaçlı kaydedilir ve 1₺'lik doğrulama tutarı anında iade edilir. 15. günden itibaren plan ücreti otomatik tahsil edilir. İstediğiniz zaman iptal edebilirsiniz." },
