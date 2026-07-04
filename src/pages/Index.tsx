@@ -149,6 +149,7 @@ const TAB_TITLES: Record<string, string> = {
   "e-invoices": "E-Fatura / E-Arşiv",
   personnel: "Puantaj & Personel",
   meetings: "Toplantı Merkezi",
+  communication: "İletişim Merkezi",
   settings: "Ayarlar",
   "company-memory": "🧠 Company Memory",
   "company-kb": "🧠 Knowledge Base",
