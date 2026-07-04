@@ -44,7 +44,7 @@ serve(async (req) => {
     if (action === "list") {
       const { data, error } = await sb
         .from("company_memories")
-        .select("id,type,title,content,metadata,source,confidence,pinned,updated_at,created_at,user_id")
+        .select("id,type,category,title,content,metadata,source,confidence,pinned,usage_count,last_used_at,created_from,user_confirmed,updated_at,created_at,user_id")
         .order("pinned", { ascending: false })
         .order("updated_at", { ascending: false })
         .limit(200);
@@ -67,6 +67,10 @@ serve(async (req) => {
         _type: type,
       });
       if (error) throw error;
+      const ids = (data ?? []).map((m: any) => m.id).filter(Boolean);
+      if (ids.length) {
+        sb.rpc("touch_memories_used", { _ids: ids }).then(() => {});
+      }
       return json({ memories: data ?? [] });
     }
 
@@ -75,16 +79,21 @@ serve(async (req) => {
       const content = String(body.content || "").trim();
       if (!content) return json({ error: "content required" }, 400);
       const type = MEMORY_TYPES.has(body.type) ? body.type : "other";
+      const category = typeof body.category === "string" ? body.category.slice(0, 40) : null;
       const title = body.title ? String(body.title).slice(0, 200) : null;
       const metadata = body.metadata && typeof body.metadata === "object" ? body.metadata : {};
       const source = body.source ? String(body.source).slice(0, 60) : "manual";
+      const createdFrom = body.created_from ? String(body.created_from).slice(0, 40) : source;
       const confidence = Math.min(Math.max(Number(body.confidence ?? 0.8), 0), 1);
       const pinned = !!body.pinned;
+      const userConfirmed = body.user_confirmed === false ? false : true;
 
       const embedding = await embedText(`${title ? title + "\n" : ""}${content}`);
-      const row = {
+      const row: Record<string, unknown> = {
         user_id: userId,
-        type, title, content, metadata, source, confidence, pinned,
+        type, category, title, content, metadata, source, confidence, pinned,
+        created_from: createdFrom,
+        user_confirmed: userConfirmed,
         embedding: embedding as unknown as number[],
       };
       if (id) {
@@ -98,6 +107,7 @@ serve(async (req) => {
       if (error) throw error;
       return json({ memory: data });
     }
+
 
     if (action === "update") {
       const id = String(body.id || "");
@@ -136,9 +146,37 @@ serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "list_dismissed") {
+      const { data, error } = await sb
+        .from("memory_dismissed_categories")
+        .select("category, created_at")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return json({ categories: (data ?? []).map((r: any) => r.category) });
+    }
+
+    if (action === "dismiss_category") {
+      const category = String(body.category || "").slice(0, 40);
+      if (!category) return json({ error: "category required" }, 400);
+      const { error } = await sb.from("memory_dismissed_categories")
+        .upsert({ user_id: userId, category }, { onConflict: "user_id,category" });
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
+    if (action === "restore_category") {
+      const category = String(body.category || "").slice(0, 40);
+      if (!category) return json({ error: "category required" }, 400);
+      const { error } = await sb.from("memory_dismissed_categories")
+        .delete().eq("user_id", userId).eq("category", category);
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
     return json({ error: `unknown action: ${action}` }, 400);
   } catch (e) {
     console.error("[company-memory] error:", e);
     return json({ error: (e as Error).message || "error" }, 500);
   }
 });
+

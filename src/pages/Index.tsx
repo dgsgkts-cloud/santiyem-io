@@ -40,6 +40,8 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
+import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
+import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
@@ -320,6 +322,8 @@ const Index = () => {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
+  const memoryExtractor = useMemoryExtractor();
+
   const handleSend = async (text: string, attachments?: Attachment[]) => {
     // Check photo analysis limit if attachments present
     if (attachments && attachments.length > 0 && !canUse("photoAnalysis")) {
@@ -357,7 +361,11 @@ const Index = () => {
             return [...prev, { id: assistantId, role: "assistant", content: assistantContent }];
           });
         },
-        onDone: () => { setIsTyping(false); window.dispatchEvent(new CustomEvent("executive-brief-refresh")); },
+        onDone: () => {
+          setIsTyping(false);
+          window.dispatchEvent(new CustomEvent("executive-brief-refresh"));
+          if (assistantContent) memoryExtractor.extractFromTurn(text, assistantContent);
+        },
         onError: (error) => {
           setIsTyping(false);
           toast.error(error);
@@ -735,6 +743,17 @@ const Index = () => {
 
       {activeTab === "chat" && (
         <>
+          {memoryExtractor.proposals.length > 0 && (
+            <div className="px-4 pt-3">
+              <MemorySuggestionBanner
+                proposals={memoryExtractor.proposals}
+                busy={memoryExtractor.busy}
+                onRemember={memoryExtractor.remember}
+                onDismiss={memoryExtractor.dismiss}
+                onNeverAgain={memoryExtractor.neverAgain}
+              />
+            </div>
+          )}
           <UsageLimitBanner type="aiQuestions" />
           <ChatInput onSend={handleSend} disabled={isTyping} />
         </>

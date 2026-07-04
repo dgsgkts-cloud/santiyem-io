@@ -10,6 +10,8 @@ import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
 import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
+import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
+import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
 import { toast } from "sonner";
 
 interface DesktopChatLayoutProps {
@@ -29,6 +31,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const memoryExtractor = useMemoryExtractor();
 
   // Use persistent data when logged in, fallback props when not
   const messages = user ? conv.messages : (fallbackProps.messages || localMessages);
@@ -97,6 +100,10 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           }
           if (convId && user) {
             await conv.saveMessage(convId, "assistant", assistantContent);
+          }
+          // Best-effort background memory extraction — never blocks UX
+          if (user) {
+            memoryExtractor.extractFromTurn(text, assistantContent);
           }
         },
         onError: (error) => {
@@ -262,6 +269,17 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
           )}
         </div>
 
+        {memoryExtractor.proposals.length > 0 && (
+          <div className="px-5 pt-3 shrink-0">
+            <MemorySuggestionBanner
+              proposals={memoryExtractor.proposals}
+              busy={memoryExtractor.busy}
+              onRemember={memoryExtractor.remember}
+              onDismiss={memoryExtractor.dismiss}
+              onNeverAgain={memoryExtractor.neverAgain}
+            />
+          </div>
+        )}
         <UsageLimitBanner type="aiQuestions" />
         <div className="shrink-0 border-t border-border">
           <ChatInput onSend={handleSend} disabled={isTyping} />

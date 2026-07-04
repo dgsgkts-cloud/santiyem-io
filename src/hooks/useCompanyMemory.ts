@@ -8,12 +8,17 @@ export type MemoryType =
 export interface CompanyMemory {
   id: string;
   type: MemoryType;
+  category?: string | null;
   title: string | null;
   content: string;
   metadata: Record<string, unknown>;
   source: string;
   confidence: number;
   pinned: boolean;
+  usage_count?: number;
+  last_used_at?: string | null;
+  created_from?: string | null;
+  user_confirmed?: boolean;
   updated_at: string;
   created_at?: string;
   similarity?: number;

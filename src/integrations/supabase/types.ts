@@ -377,11 +377,14 @@ export type Database = {
       }
       company_memories: {
         Row: {
+          category: string | null
           confidence: number
           content: string
           created_at: string
+          created_from: string
           embedding: string | null
           id: string
+          last_used_at: string | null
           metadata: Json
           pinned: boolean
           source: string
@@ -389,14 +392,19 @@ export type Database = {
           title: string | null
           type: Database["public"]["Enums"]["memory_type"]
           updated_at: string
+          usage_count: number
+          user_confirmed: boolean
           user_id: string
         }
         Insert: {
+          category?: string | null
           confidence?: number
           content: string
           created_at?: string
+          created_from?: string
           embedding?: string | null
           id?: string
+          last_used_at?: string | null
           metadata?: Json
           pinned?: boolean
           source?: string
@@ -404,14 +412,19 @@ export type Database = {
           title?: string | null
           type?: Database["public"]["Enums"]["memory_type"]
           updated_at?: string
+          usage_count?: number
+          user_confirmed?: boolean
           user_id: string
         }
         Update: {
+          category?: string | null
           confidence?: number
           content?: string
           created_at?: string
+          created_from?: string
           embedding?: string | null
           id?: string
+          last_used_at?: string | null
           metadata?: Json
           pinned?: boolean
           source?: string
@@ -419,6 +432,8 @@ export type Database = {
           title?: string | null
           type?: Database["public"]["Enums"]["memory_type"]
           updated_at?: string
+          usage_count?: number
+          user_confirmed?: boolean
           user_id?: string
         }
         Relationships: []
@@ -1827,6 +1842,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      memory_dismissed_categories: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       notification_history: {
         Row: {
@@ -3570,6 +3606,7 @@ export type Database = {
         Returns: undefined
       }
       touch_documents_used: { Args: { _doc_ids: string[] }; Returns: undefined }
+      touch_memories_used: { Args: { _ids: string[] }; Returns: undefined }
       update_hakedis_approval: {
         Args: {
           _approval_status: string
