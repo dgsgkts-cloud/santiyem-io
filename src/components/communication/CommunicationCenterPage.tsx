@@ -61,11 +61,59 @@ type Bucket = "pending" | "sent" | "failed" | "scheduled";
 
 const bucketOf = (s: Status): Bucket | null => {
   if (s === "pending_approval" || s === "queued" || s === "sending" || s === "draft") return "pending";
-  if (s === "sent") return "sent";
+  if (s === "sent" || s === "delivered" || s === "read") return "sent";
   if (s === "failed") return "failed";
   if (s === "scheduled") return "scheduled";
   return null;
 };
+
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+const WHATSAPP_WEBHOOK_URL = SUPABASE_PROJECT_ID
+  ? `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/whatsapp-webhook`
+  : "";
+
+function WhatsAppSetupCard() {
+  const [open, setOpen] = useState(false);
+  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success("Kopyalandı"); };
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Settings2 className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold">WhatsApp Business Cloud API Kurulumu</span>
+        </div>
+        <span className="text-xs text-muted-foreground">{open ? "Gizle" : "Göster"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3 text-xs">
+          <p className="text-muted-foreground leading-relaxed">
+            Resmi Meta WhatsApp Business API'sini kullanmak için Meta Business Suite'te bir uygulama oluşturun ve aşağıdaki bilgileri Şantiyem'e ekleyin:
+            <br /><b>WHATSAPP_PHONE_NUMBER_ID</b>, <b>WHATSAPP_BUSINESS_ACCOUNT_ID</b>, <b>WHATSAPP_ACCESS_TOKEN</b> (Kalıcı), <b>WHATSAPP_VERIFY_TOKEN</b> (siz belirlersiniz), opsiyonel <b>WHATSAPP_APP_SECRET</b> (imza doğrulama için).
+          </p>
+          <div>
+            <Label className="text-[10px] uppercase text-muted-foreground">Webhook Callback URL</Label>
+            <div className="flex gap-1 mt-1">
+              <Input readOnly value={WHATSAPP_WEBHOOK_URL} className="text-xs font-mono h-8" />
+              <Button size="sm" variant="outline" onClick={() => copy(WHATSAPP_WEBHOOK_URL)}>
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Meta → WhatsApp → Configuration → Webhook alanına yapıştırın. Verify Token'ı da orada girin. Abone olun: <code>messages</code>.
+            </p>
+          </div>
+          <p className="text-muted-foreground">
+            Kimlik bilgileri yapılandırılmadığında sistem otomatik olarak <code>wa.me</code> bağlantısına düşer — mevcut akış çalışmaya devam eder.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CommunicationCenterPage() {
   const [messages, setMessages] = useState<CommMessage[]>([]);
@@ -159,6 +207,8 @@ export default function CommunicationCenterPage() {
           Yenile
         </Button>
       </header>
+
+      <WhatsAppSetupCard />
 
       <Tabs defaultValue="pending">
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
