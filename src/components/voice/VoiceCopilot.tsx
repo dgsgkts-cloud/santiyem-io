@@ -736,16 +736,20 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.speakerVolume, paused]);
 
-  // Wake-phrase: only active in driving mode while a session is running.
+  // Wake-phrase: only active in driving mode while a session is running,
+  // AND while the user hasn't hard-muted the mic. Hard mute must silence
+  // every listener, including the local SpeechRecognition wake tap.
   useWakeWord({
-    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error",
+    enabled: settings.mode === "driving" && uiState !== "idle" && uiState !== "error" && !muted,
     onWake: () => {
+      if (mutedRef.current) return; // safety: never unmute a hard-muted mic
       try { conversation.setMuted(false); } catch { /* noop */ }
       setLocalTracksEnabled(true);
       try { conversation.sendUserActivity?.(); } catch { /* noop */ }
       toast.success("Dinliyorum…", { duration: 1500 });
     },
   });
+
 
   const active = uiState !== "idle" && uiState !== "error";
 
