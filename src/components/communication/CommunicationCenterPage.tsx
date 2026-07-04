@@ -189,10 +189,29 @@ export default function CommunicationCenterPage() {
     finally { setBusy(null); }
   };
 
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const pf = projectFilter.trim().toLowerCase();
+    const rf = recipientFilter.trim().toLowerCase();
+    return messages.filter((m) => {
+      if (channelFilter !== "all" && m.channel !== channelFilter) return false;
+      if (pf && (m.project_id || "").toLowerCase().indexOf(pf) === -1) return false;
+      if (rf) {
+        const hay = `${m.recipient} ${m.recipient_name || ""}`.toLowerCase();
+        if (hay.indexOf(rf) === -1) return false;
+      }
+      if (s) {
+        const hay = `${m.subject || ""} ${m.body || ""} ${m.recipient} ${m.recipient_name || ""}`.toLowerCase();
+        if (hay.indexOf(s) === -1) return false;
+      }
+      return true;
+    });
+  }, [messages, channelFilter, projectFilter, recipientFilter, search]);
+
   const buckets: Record<Bucket, CommMessage[]> = {
     pending: [], sent: [], failed: [], scheduled: [],
   };
-  messages.forEach((m) => {
+  filtered.forEach((m) => {
     const b = bucketOf(m.status);
     if (b) buckets[b].push(m);
   });
