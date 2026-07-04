@@ -81,6 +81,8 @@ const DesktopSettingsPage = () => {
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
           {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
+          {activeTab === "plan" && <PlanLimitsPanel />}
+          {activeTab === "org" && <OrgAdminPanel />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "security" && (
             <div className="text-center py-8 lg:py-12">
