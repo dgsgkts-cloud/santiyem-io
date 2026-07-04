@@ -63,6 +63,7 @@ import {
   parseFinancial,
   parseEntity,
 } from "./chat/VisualBlocks";
+import { SmartVisual, SmartDataTable, extractUiPayloads } from "./chat/SmartVisual";
 
 export interface Message {
   id: string;
