@@ -1,0 +1,14 @@
+{
+  "id": "13-ui-payload-chart",
+  "prompt": "Antalya Otel Projesi ilerleme durumu",
+  "intent": "PROJECT_PROGRESS",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null,
+    "project_name": "Antalya Otel Projesi",
+    "project_ambiguous": [
+      "Antalya Otel Projesi"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "03-executive-brief",
+  "prompt": "Günaydın özet ver bana",
+  "intent": "EXECUTIVE_BRIEFING",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

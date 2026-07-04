@@ -1,0 +1,11 @@
+{
+  "id": "01-general-qa",
+  "prompt": "Merhaba, bugün nasıl yardımcı olabilirsin?",
+  "intent": "GENERAL_CHAT",
+  "confident": false,
+  "filters": {
+    "date_from": "<date>",
+    "date_to": "<date>",
+    "date_window_single_day": true
+  }
+}

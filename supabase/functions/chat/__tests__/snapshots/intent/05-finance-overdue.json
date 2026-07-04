@@ -1,0 +1,10 @@
+{
+  "id": "05-finance-overdue",
+  "prompt": "Vadesi geçen ödemeler var mı?",
+  "intent": "OVERDUE_PAYMENTS",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

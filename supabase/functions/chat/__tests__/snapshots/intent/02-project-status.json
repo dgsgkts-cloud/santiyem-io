@@ -1,0 +1,10 @@
+{
+  "id": "02-project-status",
+  "prompt": "Arsuz Modern Villa projesinde genel durum nedir?",
+  "intent": "PROJECT_OVERVIEW",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}
