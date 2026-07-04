@@ -140,6 +140,23 @@ serve(async (req) => {
           retry_count: retry,
         }).eq("id", id).select("*").single();
 
+        // Sprint 11.1 — track org monthly comm messages on success.
+        if (result.success) {
+          try {
+            const authHeader = req.headers.get("Authorization")!;
+            const asUser = createClient(
+              Deno.env.get("SUPABASE_URL")!,
+              Deno.env.get("SUPABASE_ANON_KEY")!,
+              { global: { headers: { Authorization: authHeader } } },
+            );
+            await asUser.rpc("increment_usage", {
+              _metric: "comm_messages_month",
+              _delta: 1,
+              _reason: `comm:${msg.channel}`,
+            });
+          } catch (_) { /* ignore */ }
+        }
+
         return json({ message: updated, result });
       }
 
