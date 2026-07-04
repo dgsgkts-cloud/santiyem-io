@@ -116,6 +116,10 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }
   { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
   { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+  { id: "company-memory", label: "🧠 Company Memory", icon: MessageSquare },
+  { id: "ai-decisions", label: "🧠 AI Decisions", icon: Zap },
+  { id: "decision-history", label: "🧠 Decision History", icon: FileText },
   { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
   
   
