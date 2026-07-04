@@ -4,6 +4,7 @@ import { useExecutiveBrief, Finding, Severity } from "@/hooks/useExecutiveBrief"
 import { HealthScoreCard } from "./HealthScoreCard";
 import { KpiTile } from "./KpiTile";
 import { InsightList } from "./InsightList";
+import { ActionCard } from "./ActionCard";
 import { formatCurrencyShort as fc } from "@/lib/formatCurrency";
 
 interface ExecutiveBriefProps {
