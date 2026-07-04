@@ -49,7 +49,7 @@ import {
   ChartBlock,
   TimelineBlock,
   ProgressBlock,
-  DataTableBlock,
+  
   RiskCardsBlock,
   FinancialCardsBlock,
   PersonnelCardsBlock,
@@ -63,6 +63,7 @@ import {
   parseFinancial,
   parseEntity,
 } from "./chat/VisualBlocks";
+import { SmartVisual, SmartDataTable, extractUiPayloads } from "./chat/SmartVisual";
 
 export interface Message {
   id: string;
@@ -141,10 +142,11 @@ type Block =
   | { kind: "financial"; rows: any[] }
   | { kind: "personnel"; rows: any[] }
   | { kind: "materials"; rows: any[] }
-  | { kind: "projects"; rows: any[] };
+  | { kind: "projects"; rows: any[] }
+  | { kind: "ui"; payload: any };
 
 const BLOCK_RE =
-  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
+  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects|ui)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
 
 const parseKeyLines = (inner: string): Record<string, string> => {
   const out: Record<string, string> = {};
@@ -245,6 +247,12 @@ const parseBlocks = (raw: string): Block[] => {
       blocks.push({ kind: "materials", rows: parseEntity(inner) });
     } else if (kind === "projects") {
       blocks.push({ kind: "projects", rows: parseEntity(inner) });
+    } else if (kind === "ui") {
+      try {
+        blocks.push({ kind: "ui", payload: JSON.parse(inner) });
+      } catch {
+        // ignore malformed JSON payloads silently
+      }
     }
     last = m.index + m[0].length;
   }
@@ -830,9 +838,13 @@ const MarkdownBody = ({ content }: { content: string }) => (
 const AssistantContent = ({ content }: { content: string }) => {
   const disclaimerRe = /\n?\s*Bilgi:\s*Bu değerlendirme[^\n]*?yetkili uzman tarafından verilmelidir\.?\s*$/;
   const match = content.match(disclaimerRe);
-  const body = match ? content.replace(disclaimerRe, "").trimEnd() : content;
+  const bodyRaw = match ? content.replace(disclaimerRe, "").trimEnd() : content;
   const disclaimer = match?.[0]?.replace(/^\s*Bilgi:\s*/, "").trim();
 
+  // Universal engine: extract any inline JSON `ui` payloads embedded in the
+  // response (```json ui ...``` fences or trailing {"ui": ...}), then parse
+  // the classic block syntax.
+  const { text: body, payloads } = extractUiPayloads(bodyRaw);
   const blocks = parseBlocks(body);
 
   return (
@@ -872,14 +884,19 @@ const AssistantContent = ({ content }: { content: string }) => {
         if (b.kind === "timeline") return <TimelineBlock key={i} title={b.title} events={b.events} />;
         if (b.kind === "progress") return <ProgressBlock key={i} title={b.title} rows={b.rows} />;
         if (b.kind === "datatable")
-          return <DataTableBlock key={i} title={b.title} headers={b.headers} rows={b.rows} />;
+          return <SmartDataTable key={i} title={b.title} headers={b.headers} rows={b.rows} />;
         if (b.kind === "risks") return <RiskCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "financial") return <FinancialCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "personnel") return <PersonnelCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "materials") return <MaterialCardsBlock key={i} rows={b.rows} />;
         if (b.kind === "projects") return <ProjectCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "ui") return <SmartVisual key={i} payload={b.payload} />;
         return null;
       })}
+
+      {payloads.map((p, i) => (
+        <SmartVisual key={`ui-${i}`} payload={p} />
+      ))}
 
       {disclaimer && (
         <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
