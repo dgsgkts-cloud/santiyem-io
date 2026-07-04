@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
+import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
+import { useProjects } from "@/hooks/useProjects";
 import ThemeSelectionModal, { shouldShowThemeModal, markThemeModalDone } from "@/components/desktop/ThemeSelectionModal";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ChatMessage, { Message } from "@/components/ChatMessage";
@@ -228,6 +230,8 @@ const Index = () => {
   const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showFirstRun, setShowFirstRun] = useState(false);
+  const { projects, loading: projectsLoading } = useProjects();
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
 
   // Persist active tab
@@ -247,14 +251,20 @@ const Index = () => {
     }
   }, [location.pathname]);
 
-  // Show onboarding for new users
+  // First-run wizard: empty workspace + not completed
   useEffect(() => {
-    if (user?.created_at && shouldShowOnboarding(user.created_at)) {
+    if (!user || projectsLoading) return;
+    if (!isFirstRunDone() && projects.length === 0) {
+      setShowFirstRun(true);
+      return;
+    }
+    // Legacy time-based fallback for users already past first-run
+    if (user?.created_at && shouldShowOnboarding(user.created_at) && isFirstRunDone()) {
       setShowOnboarding(true);
     } else if (user && shouldShowThemeModal()) {
       setShowThemeModal(true);
     }
-  }, [user]);
+  }, [user, projects.length, projectsLoading]);
 
   // Initialize push notifications (native only, respects user preference)
   useEffect(() => {
@@ -279,6 +289,13 @@ const Index = () => {
   const handleOnboardingClose = () => {
     setShowOnboarding(false);
     // After onboarding, show theme modal if not yet shown
+    if (shouldShowThemeModal()) {
+      setTimeout(() => setShowThemeModal(true), 300);
+    }
+  };
+
+  const handleFirstRunClose = () => {
+    setShowFirstRun(false);
     if (shouldShowThemeModal()) {
       setTimeout(() => setShowThemeModal(true), 300);
     }
@@ -382,6 +399,18 @@ const Index = () => {
     }
   };
 
+  // After first-run completion, auto-ask the AI to summarize what it knows
+  useEffect(() => {
+    if (!user || showFirstRun || isTyping) return;
+    if (!shouldShowWelcomeBrief()) return;
+    clearWelcomeBrief();
+    const prompt = "Kurulumum yeni tamamlandı. Lütfen kısaca özetle: (1) şu ana kadar şirketim, projelerim, personelim, tedarikçilerim ve belgelerim hakkında ne biliyorsun, (2) verimli çalışmam için hâlâ neler eksik, (3) sonraki 3 önerilen adım nedir?";
+    setTimeout(() => {
+      goToTab("chat");
+      setTimeout(() => handleSend(prompt), 400);
+    }, 300);
+  }, [user, showFirstRun, isTyping]);
+
   const handleReset = () => {
     setMessages([]);
     setIsTyping(false);
@@ -411,6 +440,7 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
+        <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
         <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
         <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
         <DesktopSidebar activeTab={activeTab} onTabChange={handleDesktopTabChange} />
@@ -490,6 +520,7 @@ const Index = () => {
 
   return (
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
+      <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
