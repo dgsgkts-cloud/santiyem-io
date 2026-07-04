@@ -94,7 +94,7 @@ const PricingPanel = () => {
   const plans = [
     {
       id: "free",
-      name: "Başlangıç",
+      name: "Starter",
       monthlyPrice: 0,
       yearlyPrice: 0,
       subtitle: "Sonsuza kadar ücretsiz",
