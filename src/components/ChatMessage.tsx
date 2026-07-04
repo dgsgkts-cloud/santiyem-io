@@ -166,7 +166,7 @@ const parseBlocks = (raw: string): Block[] => {
   while ((m = BLOCK_RE.exec(stripped)) !== null) {
     const before = stripped.slice(last, m.index).trim();
     if (before) blocks.push({ kind: "text", content: before });
-    const [, kind, body] = m;
+    const [, kind, header, body] = m;
     const inner = body.trim();
 
     if (kind === "answer") {
