@@ -616,12 +616,22 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   }, []);
 
   const setLocalTracksEnabled = (enabled: boolean) => {
+    // Hard-mute guard: while the user has muted the mic, refuse any request
+    // to re-enable the local tracks. Anti-barge-in, PTT effect, wake-word,
+    // etc. can all race with a user mute — this keeps the mute absolute.
+    if (enabled && mutedRef.current) return;
     try {
       for (const t of micTracksRef.current) {
-        if (t.readyState === "live" && t.kind === "audio") t.enabled = enabled;
+        if (t.readyState === "live" && t.kind === "audio") {
+          if (t.enabled !== enabled) {
+            t.enabled = enabled;
+            console.log(enabled ? "[MUTE] microphone track resumed" : "[MUTE] microphone track stopped", { id: t.id });
+          }
+        }
       }
     } catch (e) { console.warn("[voice] track toggle failed", e); }
   };
+
 
   // ============ ANTI-BARGE-IN (Construction Site Mode) ============
   // While the agent is speaking AND site mode is on, silence the mic so
