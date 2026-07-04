@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,11 +6,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import EmailAccountsPanel from "./EmailAccountsPanel";
 
 type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
