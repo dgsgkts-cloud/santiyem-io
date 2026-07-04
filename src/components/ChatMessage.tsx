@@ -1041,6 +1041,17 @@ const AssistantContent = ({ content }: { content: string }) => {
   const { text: body, payloads } = extractUiPayloads(bodyAfterUi);
   const blocks = parseBlocks(body);
 
+  // Extract evidence blocks — rendered as a single Explainability panel below.
+  const confidenceBlock = blocks.find((b) => b.kind === "confidence") as any;
+  const reasoningBlock = blocks.find((b) => b.kind === "reasoning") as any;
+  const queriesBlock = blocks.find((b) => b.kind === "queries") as any;
+  const memoriesBlock = blocks.find((b) => b.kind === "memories") as any;
+  const documentsBlock = blocks.find((b) => b.kind === "documents") as any;
+  const actionsBlock = blocks.find((b) => b.kind === "actions") as any;
+
+  const showExplain =
+    confidenceBlock || reasoningBlock || queriesBlock || memoriesBlock || documentsBlock || actionsBlock;
+
   return (
     <div className="max-w-[92%] w-full text-sm leading-relaxed text-foreground space-y-3">
       {blocks.map((b, i) => {
@@ -1056,9 +1067,17 @@ const AssistantContent = ({ content }: { content: string }) => {
         if (b.kind === "warning") return <WarningCard key={i} problem={b.problem} impact={b.impact} action={b.action} />;
         if (b.kind === "recommendation") return <RecommendationCard key={i} {...b} />;
         if (b.kind === "actions") return <QuickActions key={i} items={b.items} />;
-        if (b.kind === "confidence") return <ConfidenceBar key={i} percent={b.percent} sources={b.sources} updated={b.updated} />;
-        if (b.kind === "reasoning")
-          return <ReasoningAccordion key={i} tables={b.tables} records={b.records} path={b.path} sources={b.sources} />;
+        // confidence / reasoning / queries / memories / documents are folded
+        // into the Explainability panel below — do not render inline.
+        if (
+          b.kind === "confidence" ||
+          b.kind === "reasoning" ||
+          b.kind === "queries" ||
+          b.kind === "memories" ||
+          b.kind === "documents"
+        ) {
+          return null;
+        }
         if (b.kind === "details")
           return (
             <Collapsible key={i} label="Detayları Göster" icon={FileSpreadsheet}>
@@ -1093,6 +1112,17 @@ const AssistantContent = ({ content }: { content: string }) => {
       ))}
 
       {uiPayloads.length > 0 && <AIResponseRenderer ui={uiPayloads} />}
+
+      {showExplain && (
+        <ExplainabilityPanel
+          queries={queriesBlock?.items}
+          memories={memoriesBlock?.items}
+          documents={documentsBlock?.items}
+          confidence={confidenceBlock ? { percent: confidenceBlock.percent, sources: confidenceBlock.sources, updated: confidenceBlock.updated } : undefined}
+          reasoning={reasoningBlock ? { tables: reasoningBlock.tables, records: reasoningBlock.records, path: reasoningBlock.path, sources: reasoningBlock.sources } : undefined}
+          actions={actionsBlock?.items}
+        />
+      )}
 
       {disclaimer && (
         <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
