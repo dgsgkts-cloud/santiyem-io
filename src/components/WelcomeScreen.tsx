@@ -44,6 +44,42 @@ const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
         ))}
       </div>
 
+      <div className="w-full max-w-xl mt-6">
+        <button
+          onClick={() => setShowLibrary((v) => !v)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Sparkles className="w-4 h-4 text-[#FF6B2B]" />
+            50+ Örnek Soru Kütüphanesi
+          </span>
+          {showLibrary ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {showLibrary && (
+          <div className="mt-3 space-y-3 max-h-[420px] overflow-y-auto pr-1">
+            {EXAMPLE_QUESTION_GROUPS.map((g) => (
+              <div key={g.label} className="rounded-lg border border-border bg-card/60 p-3">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  <span className="mr-1">{g.emoji}</span> {g.label}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.questions.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => onSuggestionClick(q)}
+                      className="text-[11px] leading-tight text-left px-2 py-1.5 rounded-md bg-background border border-border hover:border-[#FF6B2B] hover:text-[#FF6B2B] transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
       <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <Wallet className="w-3.5 h-3.5" />
