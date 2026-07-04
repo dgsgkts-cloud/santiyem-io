@@ -10,6 +10,8 @@ import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
 import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
+import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
+import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
 import { toast } from "sonner";
 
 interface DesktopChatLayoutProps {
