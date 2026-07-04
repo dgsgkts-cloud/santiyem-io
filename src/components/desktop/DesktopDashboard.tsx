@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { MorningBriefingCard } from "@/components/voice/MorningBriefingCard";
 import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
+import CompanyBrainWidget from "@/components/companybrain/CompanyBrainWidget";
 import {
   useUser,
   canAccessProjects,
