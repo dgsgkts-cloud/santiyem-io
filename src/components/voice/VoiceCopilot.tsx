@@ -754,7 +754,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   const active = uiState !== "idle" && uiState !== "error";
 
   const statusLabel = useMemo(() => {
-    if (muted && active) return "Mikrofon kapalı";
+    if (muted && active) return "🎤❌ Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
       case "listening": return "Dinleniyor";
