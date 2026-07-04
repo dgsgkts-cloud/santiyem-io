@@ -1,0 +1,10 @@
+{
+  "id": "14-sticky-project",
+  "prompt": "Peki ödemeler ne durumda?",
+  "intent": "PAYMENT_QUERY",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

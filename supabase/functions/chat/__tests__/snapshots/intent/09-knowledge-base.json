@@ -1,0 +1,10 @@
+{
+  "id": "09-knowledge-base",
+  "prompt": "Beton döküm prosedürü belgesinde ne yazıyor?",
+  "intent": "SITE_DIARY_QUERY",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

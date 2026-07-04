@@ -1,0 +1,10 @@
+{
+  "id": "08-company-memory",
+  "prompt": "Tercih ettiğimiz demir tedarikçisi kimdi?",
+  "intent": "MATERIAL_QUERY",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

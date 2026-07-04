@@ -1,0 +1,11 @@
+{
+  "id": "07-attendance",
+  "prompt": "Bugün geç kalan işçi var mı?",
+  "intent": "PERSONNEL_QUERY",
+  "confident": true,
+  "filters": {
+    "date_from": "<date>",
+    "date_to": "<date>",
+    "date_window_single_day": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "10-voice-mode",
+  "prompt": "Bugünkü işler ne durumda?",
+  "intent": "TODAYS_TASKS",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null
+  }
+}

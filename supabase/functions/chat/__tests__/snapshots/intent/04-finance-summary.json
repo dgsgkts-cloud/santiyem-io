@@ -1,0 +1,11 @@
+{
+  "id": "04-finance-summary",
+  "prompt": "Bu ay nakit akış durumu nasıl?",
+  "intent": "FINANCIAL_SUMMARY",
+  "confident": true,
+  "filters": {
+    "date_from": "<date>",
+    "date_to": "<date>",
+    "date_window_single_day": false
+  }
+}

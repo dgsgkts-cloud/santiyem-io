@@ -1,0 +1,14 @@
+{
+  "id": "12-explainability",
+  "prompt": "Mersin Residence hakedişlerini göster",
+  "intent": "HAKEDIS_QUERY",
+  "confident": true,
+  "filters": {
+    "date_from": null,
+    "date_to": null,
+    "project_name": "Mersin Residence",
+    "project_ambiguous": [
+      "Mersin Residence"
+    ]
+  }
+}
