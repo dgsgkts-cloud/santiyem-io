@@ -135,6 +135,9 @@ type Block =
   | { kind: "warning"; problem?: string; impact?: string; action?: string }
   | { kind: "confidence"; percent?: string; sources?: string; updated?: string }
   | { kind: "reasoning"; tables?: string; records?: string; path?: string; sources?: string }
+  | { kind: "queries"; items: string[] }
+  | { kind: "memories"; items: string[] }
+  | { kind: "documents"; items: string[] }
   | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] }
   | { kind: "chart"; chartType: "bar" | "pie" | "line"; title?: string; data: { name: string; value: number }[] }
   | { kind: "timeline"; title?: string; events: { date: string; label: string; status?: string; note?: string }[] }
@@ -148,7 +151,7 @@ type Block =
   | { kind: "ui"; payload: any };
 
 const BLOCK_RE =
-  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects|ui)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
+  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|queries|memories|documents|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects|ui)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
 
 const parseKeyLines = (inner: string): Record<string, string> => {
   const out: Record<string, string> = {};
