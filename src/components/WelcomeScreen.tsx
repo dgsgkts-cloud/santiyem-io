@@ -1,5 +1,7 @@
-import { Wallet, FolderOpen, HardHat, TrendingUp, FileSearch, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { Wallet, FolderOpen, HardHat, TrendingUp, FileSearch, BarChart3, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
+import { EXAMPLE_QUESTION_GROUPS } from "@/lib/exampleQuestions";
 
 interface WelcomeScreenProps {
   onSuggestionClick: (text: string) => void;
