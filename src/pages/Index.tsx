@@ -26,6 +26,7 @@ import EInvoicesPage from "@/components/desktop/EInvoicesPage";
 import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
+import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
 
 
 import { useUser } from "@/contexts/UserContext";
