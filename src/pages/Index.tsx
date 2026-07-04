@@ -508,6 +508,7 @@ const Index = () => {
 
   return (
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
+      <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
