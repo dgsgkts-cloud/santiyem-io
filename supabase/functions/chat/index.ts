@@ -933,19 +933,124 @@ serve(async (req) => {
             const { data } = await q;
             lines.push(`PERSONEL (${(data || []).length} kayıt):`);
             (data || []).forEach((r: any) => lines.push(`- ${r.full_name} · ${r.occupation || "-"} · ${r.employment_type} · yevmiye ${fmt(Number(r.daily_wage || 0))} · maaş ${fmt(Number(r.monthly_salary || 0))} · aktif: ${r.is_active}`));
+          } else if (intent === "WAGE_ANALYSIS") {
+            // Yevmiye analizi — attendance_records (manuel/QR eşleşmeli puantaj) +
+            // personnel (daily_wage) üzerinden gerçek maliyet hesabı. Ayrıca eşleşmeyen
+            // QR girişleri de sayılır ki "veri yok" hatası oluşmasın.
+            const monthStart = (() => { const d = new Date(now); d.setDate(1); return d.toISOString().slice(0, 10); })();
+            const fromDate = df || monthStart;
+            const toDate   = dt || now.toISOString().slice(0, 10);
+            const dFrom = new Date(fromDate + "T00:00:00Z");
+            const dTo   = new Date(toDate   + "T00:00:00Z");
+            const spanMs = Math.max(86400000, dTo.getTime() - dFrom.getTime());
+            const prevTo   = new Date(dFrom.getTime() - 86400000);
+            const prevFrom = new Date(prevTo.getTime() - spanMs);
+            const pFrom = prevFrom.toISOString().slice(0, 10);
+            const pTo   = prevTo.toISOString().slice(0, 10);
+
+            const wageMult = (s: string) => s === "full_day" ? 1 : s === "half_day" ? 0.5 : 0;
+
+            let arq = sb.from("attendance_records")
+              .select("work_date, status, project_id, personnel:personnel_id(full_name, daily_wage, employment_type)")
+              .eq("user_id", uid)
+              .gte("work_date", fromDate).lte("work_date", toDate)
+              .limit(5000);
+            if (projectIdFilter) arq = arq.eq("project_id", projectIdFilter);
+            const { data: ar, error: arErr } = await arq;
+
+            let arqPrev = sb.from("attendance_records")
+              .select("status, personnel:personnel_id(daily_wage, employment_type)")
+              .eq("user_id", uid)
+              .gte("work_date", pFrom).lte("work_date", pTo)
+              .limit(5000);
+            if (projectIdFilter) arqPrev = arqPrev.eq("project_id", projectIdFilter);
+            const { data: arPrev } = await arqPrev;
+
+            const dailies = (ar || []).filter((r: any) => r.personnel?.employment_type === "daily_wage");
+            const byWorker = new Map<string, { name: string; days: number; wage: number; total: number }>();
+            const daysActive = new Set<string>();
+            let totalCost = 0, totalDays = 0;
+            for (const r of dailies) {
+              const mult = wageMult(r.status);
+              if (mult === 0) continue;
+              const wage = Number(r.personnel?.daily_wage || 0);
+              const name = r.personnel?.full_name || "?";
+              const cur = byWorker.get(name) || { name, days: 0, wage, total: 0 };
+              cur.days += mult; cur.total += mult * wage; cur.wage = wage;
+              byWorker.set(name, cur);
+              totalCost += mult * wage; totalDays += mult;
+              daysActive.add(r.work_date);
+            }
+            const prevTotal = (arPrev || [])
+              .filter((r: any) => r.personnel?.employment_type === "daily_wage")
+              .reduce((s: number, r: any) => s + wageMult(r.status) * Number(r.personnel?.daily_wage || 0), 0);
+
+            lines.push(`YEVMİYE ANALİZİ (${fromDate} → ${toDate}${projectIdFilter ? " · proje süzülü" : ""}):`);
+            if (dailies.length === 0) {
+              // Fallback: QR check-ins (personel listesinde olmayanlar dahil) —
+              // "kayıt yok" demek yerine tam olarak neyin eksik olduğunu söyle.
+              let waq = sb.from("worker_attendance")
+                .select("full_name, check_in, project_id")
+                .eq("user_id", uid)
+                .gte("check_in", fromDate + "T00:00:00")
+                .lte("check_in", toDate + "T23:59:59")
+                .limit(2000);
+              if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
+              const { data: wa } = await waq;
+              const wrows = wa || [];
+              const distinctQr = new Set(wrows.map((r: any) => r.full_name)).size;
+              if (wrows.length > 0) {
+                lines.push(`- Puantajda yevmiyeli (daily_wage) personel bulunamadı; ancak QR ile ${distinctQr} farklı kişi toplam ${wrows.length} giriş yapmış.`);
+                lines.push(`- Yevmiye maliyeti hesaplanabilmesi için bu kişilerin personel listesine eklenip günlük ücretlerinin girilmesi gerekiyor.`);
+              } else {
+                lines.push(`- Bu dönemde ne puantaj ne de QR giriş kaydı bulundu — "veri yok" değil, dönemde hiç çalışma girişi yapılmamış.`);
+              }
+            } else {
+              const workers = [...byWorker.values()].sort((a, b) => b.total - a.total);
+              const top = workers[0];
+              const bottom = workers.filter(w => w.total > 0).slice(-1)[0];
+              const avg = daysActive.size > 0 ? totalCost / daysActive.size : 0;
+              const trendPct = prevTotal > 0 ? ((totalCost - prevTotal) / prevTotal) * 100 : null;
+
+              lines.push(`- Farklı yevmiyeli sayısı: ${byWorker.size}`);
+              lines.push(`- Toplam yevmiye maliyeti: ${fmt(totalCost)}`);
+              lines.push(`- Tam gün eşdeğeri çalışma: ${totalDays.toFixed(1)} gün`);
+              lines.push(`- Aktif iş günü sayısı: ${daysActive.size}`);
+              lines.push(`- Günlük ortalama maliyet: ${fmt(avg)}`);
+              if (top)    lines.push(`- En yüksek ödeme: ${top.name} · ${top.days.toFixed(1)} gün × ${fmt(top.wage)} = ${fmt(top.total)}`);
+              if (bottom && bottom.name !== top?.name) lines.push(`- En düşük ödeme: ${bottom.name} · ${bottom.days.toFixed(1)} gün × ${fmt(bottom.wage)} = ${fmt(bottom.total)}`);
+              if (trendPct !== null) {
+                const sign = trendPct >= 0 ? "+" : "";
+                lines.push(`- Önceki dönem (${pFrom} → ${pTo}) toplam: ${fmt(prevTotal)} · değişim: ${sign}${trendPct.toFixed(1)}%`);
+              } else {
+                lines.push(`- Önceki dönemde karşılaştırılacak yevmiye kaydı yok.`);
+              }
+              lines.push(`\nEN ÇOK YEVMİYE ALAN İLK 10:`);
+              workers.slice(0, 10).forEach((w, i) => lines.push(`${i + 1}. ${w.name} · ${w.days.toFixed(1)} gün × ${fmt(w.wage)} = ${fmt(w.total)}`));
+            }
+            if (arErr) lines.push(`(uyarı: ${arErr.message})`);
           } else if (intent === "LIVE_PERSONNEL" || intent === "ATTENDANCE") {
             const today = now.toISOString().slice(0, 10);
             const fromDate = df || today;
             const toDate = dt || today;
+            // worker_attendance has NO `work_date` or `status` columns — it's a
+            // QR check-in log keyed by `full_name` + `check_in` timestamp.
+            // Filter by the `check_in` date range and rename `full_name` to
+            // `worker_name` locally for the rest of the block.
             let waq = sb.from("worker_attendance")
-              .select("worker_name, check_in, check_out, work_date, project_id, status")
+              .select("full_name, check_in, check_out, project_id")
               .eq("user_id", uid)
-              .gte("work_date", fromDate)
-              .lte("work_date", toDate)
+              .gte("check_in", fromDate + "T00:00:00")
+              .lte("check_in", toDate + "T23:59:59")
               .order("check_in", { ascending: false }).limit(200);
             if (projectIdFilter) waq = waq.eq("project_id", projectIdFilter);
             const { data: wa, error: waErr } = await waq;
-            const rows = wa || [];
+            const rows = (wa || []).map((r: any) => ({
+              ...r,
+              worker_name: r.full_name,
+              work_date: String(r.check_in || "").slice(0, 10),
+              status: r.check_out ? "çıkış yaptı" : "sahada",
+            }));
             if (intent === "LIVE_PERSONNEL") {
               const onSite = rows.filter((r: any) => r.check_in && !r.check_out);
               lines.push(`CANLI SAHA DURUMU (${today}):`);
@@ -953,12 +1058,26 @@ serve(async (req) => {
               lines.push(`- Şu an sahada (çıkış yapılmamış): ${onSite.length}`);
               onSite.slice(0, 15).forEach((r: any) => lines.push(`  · ${r.worker_name} · giriş ${String(r.check_in).slice(11, 16)}`));
               if (rows.length === 0 && !waErr) {
-                lines.push(`NOT: Bu proje için bugün QR/puantaj kaydı yok — canlı personel sayısı belirlenemez.`);
+                // Also cross-check attendance_records so we don't say "no data"
+                // when the office pattern is manual puantaj (no QR).
+                let arq2 = sb.from("attendance_records")
+                  .select("status, personnel:personnel_id(full_name)")
+                  .eq("user_id", uid).eq("work_date", today).limit(200);
+                if (projectIdFilter) arq2 = arq2.eq("project_id", projectIdFilter);
+                const { data: ar2 } = await arq2;
+                const present = (ar2 || []).filter((r: any) => r.status === "full_day" || r.status === "half_day");
+                if (present.length > 0) {
+                  lines.push(`- Manuel puantajda bugün ${present.length} kişi çalışıyor gözüküyor (QR girişi olmayabilir).`);
+                  present.slice(0, 10).forEach((r: any) => lines.push(`  · ${r.personnel?.full_name || "?"} · ${r.status}`));
+                } else {
+                  lines.push(`NOT: Bu proje için bugün QR ya da manuel puantaj kaydı bulunamadı.`);
+                }
               }
             } else {
               lines.push(`YOKLAMA (${fromDate} → ${toDate}, ${rows.length} kayıt):`);
-              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status || "-"}`));
+              rows.slice(0, 25).forEach((r: any) => lines.push(`- ${r.work_date} · ${r.worker_name} · giriş ${String(r.check_in || "-").slice(11, 16)} · çıkış ${String(r.check_out || "-").slice(11, 16)} · ${r.status}`));
             }
+
           } else if (intent === "SUBCONTRACTOR") {
             let sq = sb.from("subcontractors").select("id, name, trade, contact_person, phone, is_active").eq("user_id", uid).limit(limit);
             if (nameFilter) sq = sq.ilike("name", `%${nameFilter}%`);
