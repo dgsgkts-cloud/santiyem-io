@@ -45,6 +45,24 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import type { Attachment } from "./ChatInput";
+import {
+  ChartBlock,
+  TimelineBlock,
+  ProgressBlock,
+  DataTableBlock,
+  RiskCardsBlock,
+  FinancialCardsBlock,
+  PersonnelCardsBlock,
+  MaterialCardsBlock,
+  ProjectCardsBlock,
+  parseChart,
+  parseTimeline,
+  parseProgress,
+  parseDataTable,
+  parseRisks,
+  parseFinancial,
+  parseEntity,
+} from "./chat/VisualBlocks";
 
 export interface Message {
   id: string;
@@ -114,10 +132,19 @@ type Block =
   | { kind: "warning"; problem?: string; impact?: string; action?: string }
   | { kind: "confidence"; percent?: string; sources?: string; updated?: string }
   | { kind: "reasoning"; tables?: string; records?: string; path?: string; sources?: string }
-  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] };
+  | { kind: "notfound"; query?: string; reasons: string[]; similar: string[]; suggestions: string[] }
+  | { kind: "chart"; chartType: "bar" | "pie" | "line"; title?: string; data: { name: string; value: number }[] }
+  | { kind: "timeline"; title?: string; events: { date: string; label: string; status?: string; note?: string }[] }
+  | { kind: "progress"; title?: string; rows: { label: string; percent: number; note?: string; tone?: string }[] }
+  | { kind: "datatable"; title?: string; headers: string[]; rows: string[][] }
+  | { kind: "risks"; rows: { severity: string; title: string; detail?: string; action?: string }[] }
+  | { kind: "financial"; rows: any[] }
+  | { kind: "personnel"; rows: any[] }
+  | { kind: "materials"; rows: any[] }
+  | { kind: "projects"; rows: any[] };
 
 const BLOCK_RE =
-  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning)\s*\n([\s\S]*?)\n?::\/\1/g;
+  /::(summary|kpi|recommendation|actions|source|details|answer|notfound|warning|confidence|reasoning|chart|timeline|progress|datatable|risks|financial|personnel|materials|projects)([^\n]*)\n([\s\S]*?)\n?::\/\1/g;
 
 const parseKeyLines = (inner: string): Record<string, string> => {
   const out: Record<string, string> = {};
@@ -139,7 +166,7 @@ const parseBlocks = (raw: string): Block[] => {
   while ((m = BLOCK_RE.exec(stripped)) !== null) {
     const before = stripped.slice(last, m.index).trim();
     if (before) blocks.push({ kind: "text", content: before });
-    const [, kind, body] = m;
+    const [, kind, header, body] = m;
     const inner = body.trim();
 
     if (kind === "answer") {
@@ -200,6 +227,24 @@ const parseBlocks = (raw: string): Block[] => {
         else nf[key] = val.split("|").map((s) => s.trim()).filter(Boolean);
       });
       blocks.push(nf);
+    } else if (kind === "chart") {
+      blocks.push({ kind: "chart", ...parseChart(header || "", inner) });
+    } else if (kind === "timeline") {
+      blocks.push({ kind: "timeline", ...parseTimeline(header || "", inner) });
+    } else if (kind === "progress") {
+      blocks.push({ kind: "progress", ...parseProgress(header || "", inner) });
+    } else if (kind === "datatable") {
+      blocks.push({ kind: "datatable", ...parseDataTable(header || "", inner) });
+    } else if (kind === "risks") {
+      blocks.push({ kind: "risks", rows: parseRisks(inner) });
+    } else if (kind === "financial") {
+      blocks.push({ kind: "financial", rows: parseFinancial(inner) });
+    } else if (kind === "personnel") {
+      blocks.push({ kind: "personnel", rows: parseEntity(inner) });
+    } else if (kind === "materials") {
+      blocks.push({ kind: "materials", rows: parseEntity(inner) });
+    } else if (kind === "projects") {
+      blocks.push({ kind: "projects", rows: parseEntity(inner) });
     }
     last = m.index + m[0].length;
   }
@@ -822,6 +867,17 @@ const AssistantContent = ({ content }: { content: string }) => {
           );
         if (b.kind === "notfound")
           return <NotFoundCard key={i} query={b.query} reasons={b.reasons} similar={b.similar} suggestions={b.suggestions} />;
+        if (b.kind === "chart")
+          return <ChartBlock key={i} chartType={b.chartType} title={b.title} data={b.data} />;
+        if (b.kind === "timeline") return <TimelineBlock key={i} title={b.title} events={b.events} />;
+        if (b.kind === "progress") return <ProgressBlock key={i} title={b.title} rows={b.rows} />;
+        if (b.kind === "datatable")
+          return <DataTableBlock key={i} title={b.title} headers={b.headers} rows={b.rows} />;
+        if (b.kind === "risks") return <RiskCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "financial") return <FinancialCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "personnel") return <PersonnelCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "materials") return <MaterialCardsBlock key={i} rows={b.rows} />;
+        if (b.kind === "projects") return <ProjectCardsBlock key={i} rows={b.rows} />;
         return null;
       })}
 
