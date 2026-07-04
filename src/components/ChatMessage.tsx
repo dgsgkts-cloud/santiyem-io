@@ -247,6 +247,12 @@ const parseBlocks = (raw: string): Block[] => {
       blocks.push({ kind: "materials", rows: parseEntity(inner) });
     } else if (kind === "projects") {
       blocks.push({ kind: "projects", rows: parseEntity(inner) });
+    } else if (kind === "ui") {
+      try {
+        blocks.push({ kind: "ui", payload: JSON.parse(inner) });
+      } catch {
+        // ignore malformed JSON payloads silently
+      }
     }
     last = m.index + m[0].length;
   }
