@@ -536,10 +536,25 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       throw new Error("Ses bağlantısı kurulamadı: token endpoint boş yanıt döndü.");
     } catch (e) {
       console.error("[voice][start] ❌ FAILED:", e);
-      setError(e instanceof Error ? e.message : String(e));
+      // Detect mic-permission failures bubbling up from the SDK's own
+      // getUserMedia call (the ONE authoritative request) and show a
+      // friendly in-app screen instead of a raw DOMException message.
+      const name = (e as DOMException)?.name;
+      const msg = e instanceof Error ? e.message : String(e);
+      const isMicDenied = name === "NotAllowedError" || name === "SecurityError" ||
+        /permission|denied|not[- ]?allowed/i.test(msg);
+      const isMicMissing = name === "NotFoundError" || /device not found|no.*microphone/i.test(msg);
+      if (isMicDenied) {
+        setError("Mikrofon izni gerekli. Cihaz ayarlarından Şantiyem için mikrofon iznini açıp tekrar deneyin.");
+      } else if (isMicMissing) {
+        setError("Mikrofon bulunamadı. Cihazınızın mikrofonunu kontrol edin.");
+      } else {
+        setError(msg);
+      }
       setUiState("error");
-      toast.error("Sesli asistan başlatılamadı", { description: String(e) });
+      if (!isMicDenied && !isMicMissing) toast.error("Sesli asistan başlatılamadı", { description: msg });
     }
+
   };
 
   const stop = async () => {
