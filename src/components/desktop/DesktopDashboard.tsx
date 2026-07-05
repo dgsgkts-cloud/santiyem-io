@@ -64,6 +64,7 @@ import {
 } from "@/lib/formatCurrency";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import EmptyState from "./EmptyState";
+import PinnedInsights from "@/components/canvas/PinnedInsights";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
