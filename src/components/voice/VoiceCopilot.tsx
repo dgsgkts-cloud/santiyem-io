@@ -1166,6 +1166,67 @@ function ThinkingViz() {
 }
 
 /* =====================================================
+   POST-SESSION ACTIONS — Sprint 15.3 Voice Fix #4
+   Konuşma bittikten sonra ekran kapanmaz; kullanıcıya
+   bir sonraki adım seçenekleri gösterilir.
+   ===================================================== */
+function PostSessionActions({
+  onAgain,
+  onClose,
+  onNavigate,
+}: {
+  onAgain: () => void;
+  onClose: () => void;
+  onNavigate: (tab: string) => void;
+}) {
+  const actions: Array<{ label: string; tab: string; icon: React.ReactNode }> = [
+    { label: "Projeleri Aç", tab: "projects", icon: <HardHat className="w-4 h-4" /> },
+    { label: "Ödemeleri Gör", tab: "payments-kasa", icon: <TrendingUp className="w-4 h-4" /> },
+    { label: "Şantiye Günlüğü", tab: "site-diary", icon: <Activity className="w-4 h-4" /> },
+    { label: "Personel", tab: "personnel", icon: <Users className="w-4 h-4" /> },
+  ];
+  return (
+    <div className="w-full max-w-xl flex flex-col items-center gap-3 voice-fade-in">
+      <p className="text-[11px] uppercase tracking-[0.22em] text-white/50 font-semibold">
+        Şimdi ne yapmak istersiniz?
+      </p>
+      <div className="grid grid-cols-2 gap-2 w-full">
+        {actions.map((a) => (
+          <button
+            key={a.tab}
+            onClick={() => onNavigate(a.tab)}
+            className="voice-glass-btn h-12 rounded-xl flex items-center justify-center gap-2 text-white/90 text-sm font-medium transition-all active:scale-[0.98]"
+          >
+            {a.icon}
+            <span>{a.label}</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={onAgain}
+          className="h-11 px-5 rounded-full flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+            boxShadow: "0 8px 24px -6px rgba(255,107,43,0.55)",
+          }}
+        >
+          <Mic className="w-4 h-4" strokeWidth={2} />
+          <span>Tekrar Konuş</span>
+        </button>
+        <button
+          onClick={onClose}
+          className="h-11 px-4 rounded-full text-[12px] text-white/60 hover:text-white/90 uppercase tracking-widest"
+        >
+          Kapat
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =====================================================
    START BUTTON (idle state)
    ===================================================== */
 function StartButton({ onStart, disabled }: { onStart: () => void; disabled: boolean }) {
