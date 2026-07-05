@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
-  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
+  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus, Sparkles, X
 } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
@@ -11,6 +11,18 @@ import { useProjects, UserProject } from "@/hooks/useProjects";
 import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
+import { useLiveFilter } from "@/hooks/useLiveFilter";
+import { useWorkspaceHighlight } from "@/hooks/useWorkspaceHighlight";
+
+// Small row wrappers that opt into the workspace highlight pulse.
+const HRow = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLTableRowElement>) => {
+  const on = useWorkspaceHighlight("project", id);
+  return <tr {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</tr>;
+};
+const HCard = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) => {
+  const on = useWorkspaceHighlight("project", id);
+  return <div {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</div>;
+};
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
