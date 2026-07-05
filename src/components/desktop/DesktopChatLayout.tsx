@@ -95,6 +95,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         messages: chatMessages,
         onDelta: (chunk) => {
           assistantContent += chunk;
+          if (canvasStore.snapshot.status !== "speaking") canvasStore.setStatus("speaking", "chat");
           setMessages((prev: Message[]) => {
             const last = prev[prev.length - 1];
             if (last?.role === "assistant" && last.id === assistantId) {
@@ -106,10 +107,12 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         onDone: async () => {
           setLocalTyping(false);
           if (!assistantContent) {
+            canvasStore.setStatus("error", "chat");
             console.warn("[AI] Stream ended with empty content");
             toast.error("AI şu an yanıt veremiyor, lütfen tekrar dene");
             return;
           }
+          canvasStore.pushTurn({ question: text, raw: assistantContent, source: "chat" });
           if (convId && user) {
             await conv.saveMessage(convId, "assistant", assistantContent);
           }
@@ -120,6 +123,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         },
         onError: (error) => {
           setLocalTyping(false);
+          canvasStore.setStatus("error", "chat");
           toast.error(error);
         },
       });
