@@ -19,6 +19,7 @@ import { useWakeWord } from "./useWakeWord";
 import { ModeSelector, ModeHint, SettingsSheet } from "./VoiceModeUI";
 import "@/styles/voice.css";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { VoiceLivePanel } from "./VoiceLivePanel";
 
 interface Card {
   id: string;
