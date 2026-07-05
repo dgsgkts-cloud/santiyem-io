@@ -56,6 +56,16 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
       incrementUsage("photoAnalysis");
     }
 
+    // Canvas: kick off status + remember recent question
+    canvasStore.beginTurn(text, "chat");
+    canvasStore.setStatus("searching", "chat");
+    try {
+      const raw = localStorage.getItem("canvas_recent_questions");
+      const arr = raw ? (JSON.parse(raw) as string[]) : [];
+      const next = [text, ...arr.filter((q) => q !== text)].slice(0, 8);
+      localStorage.setItem("canvas_recent_questions", JSON.stringify(next));
+    } catch { /* noop */ }
+
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
     setMessages((prev: Message[]) => [...prev, userMsg]);
     setLocalTyping(true);
