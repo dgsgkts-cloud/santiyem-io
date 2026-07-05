@@ -889,6 +889,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
                   Vazgeç
                 </button>
               </div>
+            ) : uiState === "idle" && showPostSession ? (
+              <PostSessionActions
+                onAgain={() => { setShowPostSession(false); start(); }}
+                onClose={() => { setShowPostSession(false); onClose(); }}
+                onNavigate={(tab) => {
+                  setShowPostSession(false);
+                  window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+                  onClose();
+                }}
+              />
             ) : uiState === "idle" ? (
               <StartButton onStart={start} disabled={!access.hasAccess} />
             ) : (
