@@ -1108,6 +1108,30 @@ function Header({
 /* =====================================================
    ORB STAGE — 4 states with distinct visualizations
    ===================================================== */
+function VoiceStatePill({ state, label }: { state: UiState; label: string }) {
+  const map: Record<UiState, { color: string; ring: string; sub: string }> = {
+    idle:       { color: "#8A94A6", ring: "rgba(138,148,166,0.35)", sub: "Bir soru sor veya bir kart seç" },
+    connecting: { color: "#FBBF24", ring: "rgba(251,191,36,0.4)",   sub: "Ses bağlantısı kuruluyor" },
+    listening:  { color: "#34D399", ring: "rgba(52,211,153,0.4)",   sub: "Dinliyorum — konuşabilirsin" },
+    thinking:   { color: "#FF8F5A", ring: "rgba(255,143,90,0.45)",  sub: "Verileri analiz ediyorum" },
+    speaking:   { color: "#FF6B2B", ring: "rgba(255,107,43,0.5)",   sub: "Yanıt hazırlanıyor" },
+    error:      { color: "#FF6B6B", ring: "rgba(255,107,107,0.5)",  sub: "Bir sorun oluştu" },
+  };
+  const m = map[state];
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] uppercase tracking-[0.22em] font-semibold"
+        style={{ color: m.color, background: "rgba(255,255,255,0.04)", boxShadow: `inset 0 0 0 1px ${m.ring}` }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.color }} />
+        {label}
+      </span>
+      <span className="text-[11px] text-white/40">{m.sub}</span>
+    </div>
+  );
+}
+
 function OrbStage({ state, compact }: { state: UiState; compact: boolean }) {
   const size = compact ? "w-[280px] h-[280px]" : "w-[240px] h-[240px]";
   return (
