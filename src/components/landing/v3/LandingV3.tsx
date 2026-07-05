@@ -448,9 +448,30 @@ const VoiceSection = () => (
               </div>
             </div>
             <p className="mt-8 text-[11px] uppercase tracking-[0.3em] font-semibold" style={{ color: T.emberGlow, ...body }}>Dinliyor</p>
-            <p className="mt-3 text-center text-[14px] max-w-xs" style={{ color: T.muted, ...body }}>
-              "Bu ay en kârlı proje hangisi ve neden?"
-            </p>
+            <div className="mt-5 w-full max-w-sm space-y-2.5">
+              {/* User bubble */}
+              <div className="flex justify-end">
+                <div
+                  className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tr-sm text-[12.5px] leading-snug"
+                  style={{ background: T.ember, color: "#fff", ...body, boxShadow: `0 4px 16px ${T.ember}44` }}
+                >
+                  Bu ay en kârlı proje hangisi ve neden?
+                </div>
+              </div>
+              {/* AI bubble */}
+              <div className="flex justify-start items-start gap-2">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `linear-gradient(135deg, ${T.ember}, ${T.emberGlow})` }}>
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+                <div
+                  className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
+                  style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
+                >
+                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — ₺1.8M net kâr, %22 marj. Erken teslim primi belirleyici oldu.
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Live analysis panel */}
