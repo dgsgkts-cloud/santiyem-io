@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   FolderOpen, Clock, CheckCircle, AlertTriangle,
-  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus
+  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus, Sparkles, X
 } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
@@ -11,6 +11,18 @@ import { useProjects, UserProject } from "@/hooks/useProjects";
 import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
+import { useLiveFilter } from "@/hooks/useLiveFilter";
+import { useWorkspaceHighlight } from "@/hooks/useWorkspaceHighlight";
+
+// Small row wrappers that opt into the workspace highlight pulse.
+const HRow = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLTableRowElement>) => {
+  const on = useWorkspaceHighlight("project", id);
+  return <tr {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</tr>;
+};
+const HCard = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) => {
+  const on = useWorkspaceHighlight("project", id);
+  return <div {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</div>;
+};
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
@@ -55,9 +67,14 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     deleteProject(id);
   };
 
-  const allProjects: Project[] = dbProjects.map(dbToProject);
+  const rawProjects: Project[] = dbProjects.map(dbToProject);
+  const liveFilter = useLiveFilter("project");
+  const allProjects: Project[] = liveFilter.active
+    ? rawProjects.filter((p) => liveFilter.ids.has(p.id))
+    : rawProjects;
 
-  const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
+  const selectedProject = selectedProjectId ? rawProjects.find(p => p.id === selectedProjectId) : null;
+  
   
 
   if (selectedProject) {
@@ -109,7 +126,20 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
       {/* View toggle + Add button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
+          {liveFilter.active && (
+            <button
+              onClick={liveFilter.clear}
+              className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
+              aria-label="AI filtresini temizle"
+            >
+              <Sparkles className="w-3 h-3" />
+              {liveFilter.label ?? "AI filtresi"}
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           {user && (
             <button
@@ -155,7 +185,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               </thead>
               <tbody>
                 {allProjects.map((p) => (
-                  <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
+                  <HRow key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
                     <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
                     <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
@@ -176,7 +206,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                     </td>
-                  </tr>
+                  </HRow>
                 ))}
               </tbody>
             </table>
@@ -184,7 +214,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
             {/* Mobile/Tablet card list */}
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
               {allProjects.map((p) => (
-                <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+                <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                     <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
@@ -204,14 +234,14 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                     <span>→</span>
                     <span>{p.end}</span>
                   </div>
-                </div>
+                </HCard>
               ))}
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
             {allProjects.map((p) => (
-              <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
+              <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)}
                 className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
@@ -235,7 +265,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
                   <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
                 </div>
-              </div>
+              </HCard>
             ))}
           </div>
         )}

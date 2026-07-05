@@ -64,6 +64,7 @@ import {
 } from "@/lib/formatCurrency";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import EmptyState from "./EmptyState";
+import PinnedInsights from "@/components/canvas/PinnedInsights";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
@@ -449,6 +450,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
+
+      <PinnedInsights />
 
       <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 

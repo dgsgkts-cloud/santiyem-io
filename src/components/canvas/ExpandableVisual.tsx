@@ -5,9 +5,11 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 export const ExpandableVisual = ({
   title,
   children,
+  extra,
 }: {
   title?: string;
   children: ReactNode;
+  extra?: ReactNode;
 }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [full, setFull] = useState(false);
@@ -18,6 +20,7 @@ export const ExpandableVisual = ({
           {title || "Görsel"}
         </p>
         <div className="flex items-center gap-1">
+          {extra}
           <button
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? "Aç" : "Daralt"}
