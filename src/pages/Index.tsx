@@ -484,6 +484,7 @@ const Index = () => {
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto bg-background">
               <div className="flex min-h-full flex-col">
                 <div className="flex-1 pb-12">
+                <Suspense fallback={<TabFallback />}>
                 {activeTab === "dashboard" ? (
                   <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
                 ) : activeTab === "projects" ? (
@@ -527,7 +528,9 @@ const Index = () => {
                 ) : (
                   <RemindersPanel />
                 )}
+                </Suspense>
                 </div>
+
               </div>
               {!Capacitor.isNativePlatform() && <Footer />}
             </div>
