@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
 import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
 import { useProjects } from "@/hooks/useProjects";
@@ -19,20 +19,27 @@ import DesktopTopBar from "@/components/desktop/DesktopTopBar";
 import DesktopDashboard from "@/components/desktop/DesktopDashboard";
 import DesktopChatLayout from "@/components/desktop/DesktopChatLayout";
 import DesktopProjectsPage from "@/components/desktop/DesktopProjectsPage";
-import DesktopHakedisPage from "@/components/desktop/DesktopHakedisPage";
-import SiteDiaryPage from "@/components/desktop/SiteDiaryPage";
-
-import DesktopContractsPage from "@/components/desktop/DesktopContractsPage";
-import PaymentsKasaPage from "@/components/desktop/PaymentsKasaPage";
-import MaterialsPage from "@/components/desktop/MaterialsPage";
-import EInvoicesPage from "@/components/desktop/EInvoicesPage";
-import PersonnelPage from "@/pages/PersonnelPage";
-import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
-import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
-import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
 import ComingSoonScreen from "@/components/desktop/ComingSoonScreen";
-void CompanyBrainPage;
-import CommunicationCenterPage from "@/components/communication/CommunicationCenterPage";
+
+// Sprint 17.2 — Heavy pages (recharts, jspdf, xlsx, wizards) are lazy-loaded
+// so the dashboard opens instantly. Each pulls its own vendor chunk on demand.
+const DesktopHakedisPage = lazy(() => import("@/components/desktop/DesktopHakedisPage"));
+const SiteDiaryPage = lazy(() => import("@/components/desktop/SiteDiaryPage"));
+const DesktopContractsPage = lazy(() => import("@/components/desktop/DesktopContractsPage"));
+const PaymentsKasaPage = lazy(() => import("@/components/desktop/PaymentsKasaPage"));
+const MaterialsPage = lazy(() => import("@/components/desktop/MaterialsPage"));
+const EInvoicesPage = lazy(() => import("@/components/desktop/EInvoicesPage"));
+const PersonnelPage = lazy(() => import("@/pages/PersonnelPage"));
+const DesktopSettingsPage = lazy(() => import("@/components/desktop/DesktopSettingsPage"));
+const MeetingCenterPage = lazy(() => import("@/components/meetings/MeetingCenterPage"));
+const CommunicationCenterPage = lazy(() => import("@/components/communication/CommunicationCenterPage"));
+
+const TabFallback = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+    <div className="w-6 h-6 border-2 border-t-[#FF6B2B] border-white/10 rounded-full animate-spin" />
+  </div>
+);
+
 
 
 import { useUser } from "@/contexts/UserContext";
@@ -477,6 +484,7 @@ const Index = () => {
             <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto bg-background">
               <div className="flex min-h-full flex-col">
                 <div className="flex-1 pb-12">
+                <Suspense fallback={<TabFallback />}>
                 {activeTab === "dashboard" ? (
                   <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
                 ) : activeTab === "projects" ? (
@@ -520,7 +528,9 @@ const Index = () => {
                 ) : (
                   <RemindersPanel />
                 )}
+                </Suspense>
                 </div>
+
               </div>
               {!Capacitor.isNativePlatform() && <Footer />}
             </div>
@@ -751,6 +761,8 @@ const Index = () => {
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex min-h-full flex-col">
           <div className="flex-1 pb-8 md:pb-10">
+          <Suspense fallback={<TabFallback />}>
+
           {activeTab === "dashboard" ? (
             <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
           ) : activeTab === "chat" ? (
@@ -791,8 +803,10 @@ const Index = () => {
           ) : (
             <RemindersPanel />
           )}
+          </Suspense>
         </div>
         </div>
+
         {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer />}
       </div>
 
