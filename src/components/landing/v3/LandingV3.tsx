@@ -350,7 +350,7 @@ const AIExecutive = () => (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10.5px] uppercase tracking-widest" style={{ color: T.ember, ...body }}>Bu Sabah</p>
-                  <h3 className="text-xl font-semibold mt-1" style={{ color: T.text, ...heading }}>Günaydın, Mehmet Bey</h3>
+                  <h3 className="text-xl font-semibold mt-1" style={{ color: T.text, ...heading }}>Günaydın, hoş geldiniz</h3>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px]" style={{ color: T.faint, ...body }}>SAĞLIK SKORU</p>
