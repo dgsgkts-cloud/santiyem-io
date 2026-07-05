@@ -568,17 +568,29 @@ const OneAI = () => (
           {departments.map((d, i) => (
             <Reveal key={d.label} delay={i * 60}>
               <div
-                className="p-5 rounded-2xl transition-all hover:border-white/20 hover:-translate-y-0.5"
+                className="group p-5 rounded-2xl transition-all hover:-translate-y-0.5"
                 style={{ background: T.elev, border: `1px solid ${T.border}`, minHeight: 128 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = `${T.ember}55`;
+                  e.currentTarget.style.boxShadow = `0 12px 40px ${T.ember}22`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = T.border;
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: T.emberFaint }}>
-                  <d.icon className="w-4 h-4" style={{ color: T.ember }} />
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all group-hover:scale-110"
+                  style={{ background: T.emberFaint }}
+                >
+                  <d.icon className="w-[18px] h-[18px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(255,107,43,0.7)]" style={{ color: T.ember }} />
                 </div>
                 <p className="text-[15px] font-semibold" style={{ color: T.text, ...heading }}>{d.label}</p>
                 <p className="text-[12.5px] mt-1" style={{ color: T.muted, ...body }}>{d.d}</p>
               </div>
             </Reveal>
           ))}
+
         </div>
       </div>
     </div>
