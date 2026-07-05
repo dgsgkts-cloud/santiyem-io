@@ -314,45 +314,11 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         </div>
       </div>
 
-      {/* Right - Context panel */}
-      <div className="w-[280px] shrink-0 flex flex-col p-4 space-y-4 border-l border-border">
-        <h3 className="text-[14px] font-semibold text-foreground">Bu Sohbette</h3>
-        <div>
-          <p className="text-[11px] font-semibold uppercase mb-2 text-muted-foreground">Konular</p>
-          <div className="flex flex-wrap gap-1.5">
-            {["Hakediş", "Proje Takibi", "Şantiye Günlüğü", "Sözleşme"].map((tag) => (
-              <span key={tag} className="text-[11px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
-                {tag}
-              </span>
-            ))}
-          </div>
+      {/* Right - AI Canvas (primary visual output) */}
+      <div className="w-[380px] shrink-0 flex flex-col border-l border-border overflow-hidden bg-background">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <AICanvas />
         </div>
-        <div>
-          <p className="text-[11px] font-semibold uppercase mb-2 text-muted-foreground">İlgili Mevzuat</p>
-          <div className="space-y-1.5">
-            {["Hakediş Yönetmeliği", "İmar Kanunu", "İş Güvenliği"].map((link) => (
-              <button key={link} className="block text-[12px] hover-primary-text">
-                📖 {link}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-[11px] font-semibold uppercase mb-2 text-muted-foreground">Kısayollar</p>
-          <div className="space-y-1.5">
-            {["Hakediş hazırla", "Proje durumu özetle", "Nakit akışı analizi"].map((shortcut) => (
-              <button key={shortcut} className="block text-[12px] hover-primary-text">
-                ⚡ {shortcut}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button
-          className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-medium mt-auto hover-primary-text border border-border"
-          style={{ height: 32 }}
-        >
-          📄 Sohbeti PDF Kaydet
-        </button>
       </div>
     </div>
   );
