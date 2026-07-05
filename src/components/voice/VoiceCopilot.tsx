@@ -19,6 +19,7 @@ import { useWakeWord } from "./useWakeWord";
 import { ModeSelector, ModeHint, SettingsSheet } from "./VoiceModeUI";
 import "@/styles/voice.css";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { VoiceLivePanel } from "./VoiceLivePanel";
 
 interface Card {
   id: string;
@@ -95,6 +96,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  // Sprint 15.4 — question queued from an idle-panel chip/suggestion.
+  // Sent right after onConnect so the user can trigger flows from the rail.
+  const pendingQuestionRef = useRef<string | null>(null);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
@@ -186,6 +190,15 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
                 conversation.sendContextualUpdate(initialContext);
               }
             } catch (e) { console.warn("initial context dispatch failed", e); }
+          });
+        }
+        // Sprint 15.4 — flush queued question from idle Live Panel.
+        if (pendingQuestionRef.current) {
+          const q = pendingQuestionRef.current;
+          pendingQuestionRef.current = null;
+          queueMicrotask(() => {
+            try { conversation.sendUserMessage(q); }
+            catch (e) { console.warn("pending question dispatch failed", e); }
           });
         }
       } catch (e) { console.error("onConnect handler failed", e); }
@@ -734,6 +747,26 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     catch (e) { console.warn(e); }
   };
 
+  // Sprint 15.4 — trigger a question from the idle Live Panel or a quick chip.
+  // Live session → send immediately. Idle → queue then start the session so
+  // the SDK's single getUserMedia prompt still fires from a user gesture.
+  const askQuestion = (q: string) => {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (uiState !== "idle" && uiState !== "error") {
+      try { conversation.sendUserMessage(text); } catch (e) { console.warn(e); }
+      return;
+    }
+    if (!access.hasAccess) {
+      toast.error("Sesli asistan kotası dolu.");
+      return;
+    }
+    pendingQuestionRef.current = text;
+    setShowPostSession(false);
+    start();
+  };
+
+
   // ============ PUSH-TO-TALK ============
   // While PTT is on, keep mic muted by default. Unmute only while pressed.
   const pttReleaseTimer = useRef<number | null>(null);
@@ -843,32 +876,50 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
             <div className="shrink-0"><OrbStage state={uiState} compact={compact} /></div>
 
-            {/* Live transcript — fixed height, auto-scroll, older lines fade upward. */}
-            <div
-              ref={transcriptScrollRef}
-              className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
-              style={{
-                maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
-                WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
-              }}
-            >
-              {error ? (
-                <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
-                  <AlertCircle className="w-5 h-5" /> {error}
+            {/* Sprint 15.4 — on mobile idle, show the Live Panel instead of an empty transcript. */}
+            {compact && !active && !showPostSession && !error ? (
+              <div className="w-full max-w-xl flex-1 min-h-0 overflow-y-auto px-1 pb-2 voice-transcript-scroll">
+                <VoiceStatePill state={uiState} label={statusLabel} />
+                <div className="mt-3">
+                  <VoiceLivePanel
+                    compact
+                    onAsk={askQuestion}
+                    onNavigate={(tab) => {
+                      window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+                      onClose();
+                    }}
+                  />
                 </div>
-              ) : uiState === "thinking" ? (
-                <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
-                  {statusLabel}
-                </div>
-              ) : transcript && active ? (
-                <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
-                  {transcript}
-                </div>
-              ) : (
-                <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Live transcript — fixed height, auto-scroll, older lines fade upward. */
+              <div
+                ref={transcriptScrollRef}
+                className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
+                style={{
+                  maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                  WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                }}
+              >
+                {error ? (
+                  <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
+                    <AlertCircle className="w-5 h-5" /> {error}
+                  </div>
+                ) : uiState === "thinking" ? (
+                  <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
+                    {statusLabel}
+                  </div>
+                ) : transcript && active ? (
+                  <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
+                    {transcript}
+                  </div>
+                ) : (
+                  <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
+                )}
+              </div>
+            )}
           </div>
+
 
           {/* Pinned bottom control zone */}
           <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2">
@@ -937,7 +988,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
         {/* RIGHT: Dashboard rail (desktop) */}
         {!compact && (
-          <DashboardRail cards={cards} summary={showSummary ? bubbles : null} onClose={() => setShowSummary(false)} />
+          <DashboardRail
+            cards={cards}
+            summary={showSummary ? bubbles : null}
+            onClose={() => setShowSummary(false)}
+            onAsk={askQuestion}
+            onNavigate={(tab) => {
+              window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+              onClose();
+            }}
+          />
         )}
 
         {/* Slide-over history panel (mobile + desktop) */}
@@ -1048,6 +1108,30 @@ function Header({
 /* =====================================================
    ORB STAGE — 4 states with distinct visualizations
    ===================================================== */
+function VoiceStatePill({ state, label }: { state: UiState; label: string }) {
+  const map: Record<UiState, { color: string; ring: string; sub: string }> = {
+    idle:       { color: "#8A94A6", ring: "rgba(138,148,166,0.35)", sub: "Bir soru sor veya bir kart seç" },
+    connecting: { color: "#FBBF24", ring: "rgba(251,191,36,0.4)",   sub: "Ses bağlantısı kuruluyor" },
+    listening:  { color: "#34D399", ring: "rgba(52,211,153,0.4)",   sub: "Dinliyorum — konuşabilirsin" },
+    thinking:   { color: "#FF8F5A", ring: "rgba(255,143,90,0.45)",  sub: "Verileri analiz ediyorum" },
+    speaking:   { color: "#FF6B2B", ring: "rgba(255,107,43,0.5)",   sub: "Yanıt hazırlanıyor" },
+    error:      { color: "#FF6B6B", ring: "rgba(255,107,107,0.5)",  sub: "Bir sorun oluştu" },
+  };
+  const m = map[state];
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] uppercase tracking-[0.22em] font-semibold"
+        style={{ color: m.color, background: "rgba(255,255,255,0.04)", boxShadow: `inset 0 0 0 1px ${m.ring}` }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.color }} />
+        {label}
+      </span>
+      <span className="text-[11px] text-white/40">{m.sub}</span>
+    </div>
+  );
+}
+
 function OrbStage({ state, compact }: { state: UiState; compact: boolean }) {
   const size = compact ? "w-[280px] h-[280px]" : "w-[240px] h-[240px]";
   return (
@@ -1350,33 +1434,29 @@ function ActionBtn({ onClick, label, active, danger, children }: {
 /* =====================================================
    DASHBOARD RAIL (desktop right column)
    ===================================================== */
-function DashboardRail({ cards, summary, onClose }: { cards: Card[]; summary: Bubble[] | null; onClose: () => void }) {
+function DashboardRail({
+  cards, summary, onClose, onAsk, onNavigate,
+}: {
+  cards: Card[]; summary: Bubble[] | null; onClose: () => void;
+  onAsk: (q: string) => void; onNavigate: (tab: string) => void;
+}) {
+  const isLive = cards.length > 0;
   return (
     <aside className="border-l border-white/5 overflow-y-auto p-4 space-y-3 relative"
       style={{ background: "linear-gradient(180deg, rgba(15,20,25,0.9), rgba(6,9,13,0.95))" }}>
-      <div className="flex items-center justify-between px-1 pb-1">
-        <div className="flex items-center gap-2">
-          <Sparkle className="w-3.5 h-3.5 text-[#FF8F5A]" strokeWidth={2.2} />
-          <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">Canlı Panel</span>
-        </div>
-        <span className="text-[10px] text-white/30 tabular-nums">{cards.length}/8</span>
-      </div>
-
-      {cards.length === 0 ? (
-        <div className="voice-glass rounded-2xl p-6 text-center">
-          <div className="text-white/40 text-sm leading-relaxed">
-            AI konuşma sırasında burada KPI kartları, uyarılar ve öneriler oluşturur.
+      {isLive ? (
+        <>
+          <div className="flex items-center justify-between px-1 pb-1">
+            <div className="flex items-center gap-2">
+              <Sparkle className="w-3.5 h-3.5 text-[#FF8F5A]" strokeWidth={2.2} />
+              <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">Canlı Analiz</span>
+            </div>
+            <span className="text-[10px] text-white/30 tabular-nums">{cards.length}/8</span>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-white/25 uppercase tracking-widest">
-            <AlertTriangle className="w-3 h-3" /> Ödeme
-            <span>·</span>
-            <Package className="w-3 h-3" /> Stok
-            <span>·</span>
-            <Users className="w-3 h-3" /> Puantaj
-          </div>
-        </div>
+          {cards.map((c) => <PremiumCard key={c.id} card={c} />)}
+        </>
       ) : (
-        cards.map((c) => <PremiumCard key={c.id} card={c} />)
+        <VoiceLivePanel onAsk={onAsk} onNavigate={onNavigate} />
       )}
 
       {summary && summary.length >= 2 && (
@@ -1385,6 +1465,7 @@ function DashboardRail({ cards, summary, onClose }: { cards: Card[]; summary: Bu
     </aside>
   );
 }
+
 
 function PremiumCard({ card }: { card: Card }) {
   const tone = {
