@@ -163,8 +163,8 @@ export default function KnowledgeBasePanel() {
             <h1 className="text-lg font-semibold text-foreground">Bilgi Tabanı</h1>
           </div>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Yüklediğin belgeler AI'ın cevaplarına kaynaklık eder. Company Memory kısa
-            gerçekleri, Bilgi Tabanı ise uzun belgeleri saklar.
+            Yüklediğin belgeler Şantiyem AI'ın cevaplarına kaynaklık eder. Kısa gerçekler
+            Şirket Hafızasında, uzun belgeler ise Bilgi Tabanında saklanır.
           </p>
         </div>
         <div className="text-[11px] text-muted-foreground bg-muted/40 border border-border rounded-lg px-3 py-2">

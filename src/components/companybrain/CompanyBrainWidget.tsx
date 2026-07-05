@@ -27,7 +27,7 @@ export default function CompanyBrainWidget({ onOpen }: Props) {
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-              Company Brain
+              Şantiyem AI
             </p>
             <h3 className="text-[15px] font-semibold text-foreground">Şirket Hafızası</h3>
           </div>

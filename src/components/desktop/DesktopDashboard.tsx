@@ -543,7 +543,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#FF6B2B]/10 border border-[#FF6B2B]/20">
               <Sparkles className="w-3 h-3 text-[#FF6B2B]" />
             </div>
-            <h3 className="text-[13px] font-semibold tracking-tight text-foreground">AI İçgörüsü</h3>
+            <h3 className="text-[13px] font-semibold tracking-tight text-foreground">Şantiyem AI · İçgörü</h3>
             <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground/70 border border-border/50 rounded px-1.5 py-0.5">
               beta
             </span>
@@ -552,7 +552,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             onClick={() => onTabChange("chat")}
             className="flex items-center gap-1 text-[11.5px] font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Asistanı aç <ArrowUpRight className="w-3 h-3" />
+            Şantiyem AI'ı aç <ArrowUpRight className="w-3 h-3" />
           </button>
         </div>
 
@@ -1057,7 +1057,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         <div className="space-y-5">
           {/* AI quick composer */}
           <Card>
-            <SectionHeader icon={MessageSquare} title="AI Asistan" />
+            <SectionHeader icon={MessageSquare} title="Şantiyem AI" />
             <button
               onClick={() => onTabChange("chat")}
               className="w-full flex items-center gap-2 rounded-xl px-3 mb-3 bg-background/60 border border-border/60 hover:border-[#FF6B2B]/40 transition-colors"

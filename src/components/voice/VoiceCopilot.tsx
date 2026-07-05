@@ -1073,7 +1073,7 @@ function Header({
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-[0.22em] text-[#FF8F5A] font-semibold">ŞANTİYEM AI</span>
             <span className="text-[10px] text-white/30">·</span>
-            <span className="text-[10px] uppercase tracking-widest text-white/40">Construction Copilot</span>
+            <span className="text-[10px] uppercase tracking-widest text-white/40">Sesli Mod</span>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-sm text-white/85 font-medium truncate max-w-[40vw] md:max-w-none">{projectName}</span>

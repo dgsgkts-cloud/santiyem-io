@@ -51,7 +51,7 @@ const NAV_SECTIONS = [
   {
     label: "ZEKA",
     items: [
-      { id: "chat" as Tab, label: "AI Copilot", icon: MessageSquare },
+      { id: "chat" as Tab, label: "Şantiyem AI", icon: MessageSquare },
       { id: "reports" as Tab, label: "Raporlar", icon: BarChart3 },
     ],
   },

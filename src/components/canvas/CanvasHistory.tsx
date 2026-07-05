@@ -11,7 +11,7 @@ export const CanvasHistory = ({ turns }: { turns: CanvasTurn[] }) => {
   return (
     <div className="border-t border-border/60 mt-4 pt-4">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2 px-1">
-        Önceki Canvas Yanıtları
+        Önceki Yanıtlar
       </p>
       <div className="space-y-1.5">
         {turns
