@@ -30,6 +30,8 @@ import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
 import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
+import ComingSoonScreen from "@/components/desktop/ComingSoonScreen";
+void CompanyBrainPage;
 import CommunicationCenterPage from "@/components/communication/CommunicationCenterPage";
 
 
