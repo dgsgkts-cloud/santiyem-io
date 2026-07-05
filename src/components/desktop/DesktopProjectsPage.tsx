@@ -67,9 +67,14 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     deleteProject(id);
   };
 
-  const allProjects: Project[] = dbProjects.map(dbToProject);
+  const rawProjects: Project[] = dbProjects.map(dbToProject);
+  const liveFilter = useLiveFilter("project");
+  const allProjects: Project[] = liveFilter.active
+    ? rawProjects.filter((p) => liveFilter.ids.has(p.id))
+    : rawProjects;
 
-  const selectedProject = selectedProjectId ? allProjects.find(p => p.id === selectedProjectId) : null;
+  const selectedProject = selectedProjectId ? rawProjects.find(p => p.id === selectedProjectId) : null;
+  
   
 
   if (selectedProject) {
