@@ -747,6 +747,26 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     catch (e) { console.warn(e); }
   };
 
+  // Sprint 15.4 — trigger a question from the idle Live Panel or a quick chip.
+  // Live session → send immediately. Idle → queue then start the session so
+  // the SDK's single getUserMedia prompt still fires from a user gesture.
+  const askQuestion = (q: string) => {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (uiState !== "idle" && uiState !== "error") {
+      try { conversation.sendUserMessage(text); } catch (e) { console.warn(e); }
+      return;
+    }
+    if (!access.hasAccess) {
+      toast.error("Sesli asistan kotası dolu.");
+      return;
+    }
+    pendingQuestionRef.current = text;
+    setShowPostSession(false);
+    start();
+  };
+
+
   // ============ PUSH-TO-TALK ============
   // While PTT is on, keep mic muted by default. Unmute only while pressed.
   const pttReleaseTimer = useRef<number | null>(null);
