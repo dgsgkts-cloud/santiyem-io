@@ -8,6 +8,7 @@
 // payload generation stays in `supabase/functions/chat/index.ts` (Construction
 // Brain), so chat, voice, mobile and future API share the same brain.
 
+import { logger } from "@/lib/logger";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X, Mic, MicOff, Square, Loader2, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,7 +145,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
       source.connect(node);
       node.connect(ctx.destination);
       setState("recording");
-      console.log("[VoiceBrain] recording started");
+      logger.debug("[VoiceBrain] recording started");
     } catch (err) {
       console.error("[VoiceBrain] mic denied", err);
       setError("Mikrofon izni gerekli.");
@@ -166,7 +167,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
     audioCtxRef.current = null; nodeRef.current = null; sourceRef.current = null; streamRef.current = null;
 
     const wav = encodeWav(chunks, sampleRate, 16000);
-    console.log(`[VoiceBrain] recording stopped → wav ${wav.size} bytes`);
+    logger.debug(`[VoiceBrain] recording stopped → wav ${wav.size} bytes`);
     if (wav.size < 3000) {
       toast("Ses çok kısa — tekrar deneyin.");
       setState("idle");
@@ -190,7 +191,7 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
       const sttJson = await sttRes.json().catch(() => ({}));
       if (!sttRes.ok) throw new Error(sttJson?.error || `stt ${sttRes.status}`);
       transcript = String(sttJson?.text ?? "").trim();
-      console.log("[VoiceBrain] transcript:", transcript);
+      logger.debug("[VoiceBrain] transcript:", transcript);
       if (!transcript) {
         toast("Söylediğinizi anlayamadım — tekrar deneyin.");
         setState("idle");
@@ -276,8 +277,8 @@ export function VoiceBrain({ onClose, access, initialContext }: Props) {
     const turn: Turn = { id: crypto.randomUUID(), userText: transcript, speech, ui, ts: Date.now() };
     setTurns((prev) => [...prev, turn]);
     setPartial("");
-    console.log("[VoiceBrain] parsed speech:", speech);
-    console.log("[VoiceBrain] parsed ui payloads:", ui);
+    logger.debug("[VoiceBrain] parsed speech:", speech);
+    logger.debug("[VoiceBrain] parsed ui payloads:", ui);
 
     // ── 4. TTS (ElevenLabs, transport only) ───────────────────────────────
     if (!speech.trim()) { setState("idle"); return; }

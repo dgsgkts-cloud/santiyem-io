@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
@@ -34,7 +35,7 @@ const DeepLinkHandler = () => {
 
     const urlSub = CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
       try {
-        console.log("[DeepLink] appUrlOpen:", url);
+        logger.debug("[DeepLink] appUrlOpen:", url);
         try { await Browser.close(); } catch {}
 
         const action = resolveDeepLinkAction(url);
@@ -85,7 +86,7 @@ const DeepLinkHandler = () => {
     });
 
     const browserSub = Browser.addListener("browserFinished", () => {
-      console.log("[DeepLink] browserFinished");
+      logger.debug("[DeepLink] browserFinished");
       handleNativeBrowserClosed();
     });
 

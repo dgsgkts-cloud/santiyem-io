@@ -1,4 +1,9 @@
-import "./debug/wsRtcTap"; // must run before any SDK constructs WS/RTC
+// Dev-only WS/RTC diagnostic tap — prod build skips it (must run before any SDK constructs WS/RTC).
+if (import.meta.env.DEV) {
+  import("./debug/wsRtcTap");
+}
+
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
