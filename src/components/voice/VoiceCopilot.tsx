@@ -970,7 +970,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
         {/* RIGHT: Dashboard rail (desktop) */}
         {!compact && (
-          <DashboardRail cards={cards} summary={showSummary ? bubbles : null} onClose={() => setShowSummary(false)} />
+          <DashboardRail
+            cards={cards}
+            summary={showSummary ? bubbles : null}
+            onClose={() => setShowSummary(false)}
+            onAsk={askQuestion}
+            onNavigate={(tab) => {
+              window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+              onClose();
+            }}
+          />
         )}
 
         {/* Slide-over history panel (mobile + desktop) */}
