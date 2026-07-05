@@ -3,10 +3,8 @@ import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessPr
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
-  BookOpen, TrendingUp, Calculator,
-  Bell, Crown, FileSignature, Wallet, Mic,
-  Settings, LogOut, User, ChevronLeft, ChevronRight, Lock, Zap, Camera, Package, FileSpreadsheet,
-  Brain, Sparkles, History, FileText, Library, Send,
+  BookOpen, Wallet, HardHat, BarChart3,
+  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet,
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,7 +13,7 @@ import { isNativeApp } from "@/lib/nativeGuards";
 type Tab =
   | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
-  | "e-invoices" | "personnel" | "meetings" | "communication"
+  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports"
   | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 interface DesktopSidebarProps {
@@ -23,52 +21,49 @@ interface DesktopSidebarProps {
   onTabChange: (tab: Tab) => void;
 }
 
+// Sadeleştirilmiş navigasyon — Sprint 15.2 Production Polish.
+// Company Brain (Memory / AI Decisions / Decision History / Docs) menüden kaldırıldı;
+// ilgili tab id'leri Index.tsx tarafından dashboard'a yönlendiriliyor.
 const NAV_SECTIONS = [
   {
     label: "ANA",
     items: [
       { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
-      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
+      { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
     ],
   },
   {
-    label: "PROJELER",
+    label: "FİNANS",
     items: [
-      { id: "projects" as Tab, label: "Proje Yönetimi", icon: FolderKanban },
-      { id: "hakedis" as Tab, label: "Hakediş Yönetimi", icon: Receipt },
-      { id: "contracts" as Tab, label: "Sözleşme Takibi", icon: FileSignature },
       { id: "payments-kasa" as Tab, label: "Ödemeler & Kasa", icon: Wallet },
+      { id: "e-invoices" as Tab, label: "E-Fatura", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    label: "OPERASYON",
+    items: [
+      { id: "hakedis" as Tab, label: "Hakediş", icon: Receipt },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
-      { id: "materials" as Tab, label: "Malzeme Takibi", icon: Package },
-      { id: "e-invoices" as Tab, label: "E-Fatura / E-Arşiv", icon: FileSpreadsheet },
-      { id: "meetings" as Tab, label: "Toplantı Merkezi", icon: Mic },
+      { id: "materials" as Tab, label: "Malzeme", icon: Package },
+      { id: "personnel" as Tab, label: "Personel", icon: HardHat },
     ],
   },
   {
-    label: "🧠 COMPANY BRAIN",
+    label: "ZEKA",
     items: [
-      { id: "company-memory" as Tab, label: "Company Memory", icon: Brain },
-      { id: "company-kb" as Tab, label: "Knowledge Base", icon: Library },
-      { id: "ai-decisions" as Tab, label: "AI Decisions", icon: Sparkles },
-      { id: "decision-history" as Tab, label: "Decision History", icon: History },
-      { id: "company-docs" as Tab, label: "Documents", icon: FileText, soon: true },
+      { id: "chat" as Tab, label: "AI Copilot", icon: MessageSquare },
+      { id: "reports" as Tab, label: "Raporlar", icon: BarChart3 },
     ],
   },
   {
-    label: "İLETİŞİM",
+    label: "AYARLAR",
     items: [
-      { id: "communication" as Tab, label: "İletişim Merkezi", icon: Send },
-    ],
-  },
-  {
-    label: "İÇERİK",
-    items: [
-      { id: "reminders" as Tab, label: "Hatırlatıcı", icon: Bell },
-      // "pricing" intentionally omitted on native (Apple/Google IAP rules)
-      ...(isNativeApp() ? [] : [{ id: "pricing" as Tab, label: "Planlar", icon: Crown }]),
+      { id: "settings" as Tab, label: "Ayarlar", icon: Settings },
     ],
   },
 ] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean }> }>;
+// Not: isNativeApp / Planlar linki, Ayarlar > Abonelik altından erişilebilir.
+void isNativeApp;
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
