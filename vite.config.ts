@@ -20,8 +20,12 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
   build: {
-    // Sprint 17.2 — split heavy vendors into their own chunks so the initial
-    // dashboard doesn't ship PDF/chart/voice code the user may never open.
+    // Sprint 17.2 — split ONLY heavy leaf vendors that are safe to isolate.
+    // Do NOT split react / react-dom / react-router / radix / supabase / tanstack:
+    // those share module-init state with the app entry and, when placed in
+    // separate chunks, can execute before the vendor chunk finishes loading in
+    // production, resulting in `undefined is not an object (evaluating 'React.…')`
+    // and a blank page. Keeping them in the main chunk guarantees init order.
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -30,11 +34,7 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("canvg")) return "pdf";
           if (id.includes("xlsx") || id.includes("exceljs")) return "spreadsheet";
           if (id.includes("@elevenlabs")) return "voice";
-          if (id.includes("@supabase")) return "supabase";
           if (id.includes("@capacitor")) return "capacitor";
-          if (id.includes("react-router") || id.includes("scheduler") || id.includes("react-dom") || id.includes("/react/")) return "react-vendor";
-          if (id.includes("@radix-ui") || id.includes("lucide-react")) return "ui-vendor";
-          if (id.includes("@tanstack")) return "query";
         },
       },
     },
