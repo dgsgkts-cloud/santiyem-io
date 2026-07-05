@@ -18,7 +18,7 @@ export const CanvasEmptyState = ({ onExecutiveBrief }: { onExecutiveBrief?: () =
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center gap-2 mb-1.5">
           <Sparkles className="w-4 h-4 text-primary" />
-          <p className="text-[13px] font-semibold text-foreground">AI Canvas</p>
+          <p className="text-[13px] font-semibold text-foreground">Şantiyem AI</p>
         </div>
         <p className="text-[12px] text-muted-foreground leading-relaxed">
           Sorduğunuz her şey burada canlı olarak görselleşir — KPI, tablo, grafik, aksiyon ve

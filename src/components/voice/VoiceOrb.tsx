@@ -88,7 +88,7 @@ export function VoiceOrb() {
     <>
       <button
         onClick={() => { setPending({}); setOpen(true); }}
-        aria-label="AI Sesli Asistan"
+        aria-label="Şantiyem AI · Sesli Mod"
         className="fixed left-1/2 -translate-x-1/2 z-40 group"
         style={{ bottom: bottomOffset }}
       >

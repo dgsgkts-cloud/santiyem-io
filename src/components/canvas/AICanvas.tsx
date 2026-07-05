@@ -71,7 +71,7 @@ export const AICanvas = ({
       <div className={className}>
         <div className="flex items-center justify-between px-4 pt-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            AI Canvas
+            Şantiyem AI · Canlı Görünüm
           </p>
           <AIStatusBadge />
         </div>
