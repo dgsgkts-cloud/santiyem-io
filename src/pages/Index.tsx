@@ -55,7 +55,16 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+
+// Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
+// kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
+// yönlendiriyoruz; hiçbir 404 gösterilmiyor.
+const DEPRECATED_TABS = new Set<Tab>([
+  "company-memory", "company-kb", "ai-decisions", "decision-history", "company-docs",
+  "meetings", "communication", "contracts", "reminders", "daily", "render",
+]);
+const coerceTab = (t: Tab): Tab => (DEPRECATED_TABS.has(t) ? "dashboard" : t);
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -73,7 +82,6 @@ const NAVIGABLE_TABS: Tab[] = [
   "reminders",
   "pricing",
   "daily",
-  "dashboard",
   "projects",
   "hakedis",
   "settings",
@@ -85,6 +93,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "personnel",
   "meetings",
   "communication",
+  "reports",
   "company-memory",
   "company-kb",
   "ai-decisions",
