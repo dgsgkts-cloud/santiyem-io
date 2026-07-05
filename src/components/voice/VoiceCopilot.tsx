@@ -333,35 +333,36 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         setError("Bu cihaz/tarayıcı mikrofon erişimini desteklemiyor.");
         setUiState("error"); return;
       }
+
+      // ============ MIC PERMISSION (iOS PWA-safe) ============
+      // On iOS Safari / PWA, microphone permission is bound to a live
+      // MediaStreamTrack. Opening a preflight stream and stopping its tracks
+      // (as we used to do here) invalidates that binding, so the ElevenLabs
+      // SDK's own getUserMedia call moments later is treated as a fresh
+      // request and WKWebView re-prompts the user. WebKit also does not
+      // implement `navigator.permissions.query({ name: 'microphone' })`, so
+      // we cannot query state on iOS at all — we must simply avoid the
+      // redundant preflight and let the SDK make the ONE authoritative
+      // getUserMedia call for the whole session.
+      //
+      // Strategy:
+      //  - If Permissions API says "denied" → show the friendly error and
+      //    stop. Never re-trigger the system dialog.
+      //  - If Permissions API says "granted" (Chrome/Android/desktop Safari
+      //    16.4+) → skip preflight entirely; the SDK will reuse the grant
+      //    without prompting.
+      //  - Otherwise (iOS Safari/PWA, or "prompt" state) → skip preflight
+      //    too. The SDK's single getUserMedia is what surfaces the native
+      //    dialog exactly once; a preflight would just cause a second one.
       try {
         const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
-        console.log("[voice][start] mic permission state:", perm?.state);
+        console.log("[voice][start] mic permission state:", perm?.state ?? "unknown");
         if (perm?.state === "denied") {
           setError("Mikrofon izni reddedilmiş. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açın.");
           setUiState("error"); return;
         }
-      } catch { /* noop */ }
+      } catch { /* Permissions API unavailable (iOS) — proceed and let SDK request. */ }
 
-      console.log("[voice][start] ➋ Requesting microphone...");
-      try {
-        const stream = await withTimeout(
-          navigator.mediaDevices.getUserMedia({ audio: true }),
-          CONNECT_TIMEOUT_MS, "Mikrofon izni"
-        );
-        console.log("[voice][start] ✅ Microphone granted, tracks:", stream.getAudioTracks().length);
-        stream.getTracks().forEach((t) => t.stop());
-      } catch (micErr) {
-        console.error("[voice][start] ❌ Microphone failed", micErr);
-        const name = (micErr as DOMException)?.name;
-        if (name === "NotAllowedError" || name === "SecurityError") {
-          setError("Mikrofon izni gerekli. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açıp tekrar deneyin.");
-        } else if (name === "NotFoundError") {
-          setError("Mikrofon bulunamadı. Cihazınızın mikrofonunu kontrol edin.");
-        } else {
-          setError("Mikrofon açılamadı. Lütfen tekrar deneyin.");
-        }
-        setUiState("error"); return;
-      }
 
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
@@ -535,10 +536,25 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       throw new Error("Ses bağlantısı kurulamadı: token endpoint boş yanıt döndü.");
     } catch (e) {
       console.error("[voice][start] ❌ FAILED:", e);
-      setError(e instanceof Error ? e.message : String(e));
+      // Detect mic-permission failures bubbling up from the SDK's own
+      // getUserMedia call (the ONE authoritative request) and show a
+      // friendly in-app screen instead of a raw DOMException message.
+      const name = (e as DOMException)?.name;
+      const msg = e instanceof Error ? e.message : String(e);
+      const isMicDenied = name === "NotAllowedError" || name === "SecurityError" ||
+        /permission|denied|not[- ]?allowed/i.test(msg);
+      const isMicMissing = name === "NotFoundError" || /device not found|no.*microphone/i.test(msg);
+      if (isMicDenied) {
+        setError("Mikrofon izni gerekli. Cihaz ayarlarından Şantiyem için mikrofon iznini açıp tekrar deneyin.");
+      } else if (isMicMissing) {
+        setError("Mikrofon bulunamadı. Cihazınızın mikrofonunu kontrol edin.");
+      } else {
+        setError(msg);
+      }
       setUiState("error");
-      toast.error("Sesli asistan başlatılamadı", { description: String(e) });
+      if (!isMicDenied && !isMicMissing) toast.error("Sesli asistan başlatılamadı", { description: msg });
     }
+
   };
 
   const stop = async () => {
