@@ -461,6 +461,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           a summary into the AI Canvas. Supersedes the old MorningBriefingCard. */}
       <ExecutiveMorningBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 
+      {/* Sprint 14.2 — AI Daily Agenda. Orchestrates existing findings into
+          a Now/Next/Later timeline with ActionExecutor buttons. */}
+      <AIDailyAgenda onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
+
+
       <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 
       <CompanyBrainWidget onOpen={() => onTabChange("company-memory")} />
