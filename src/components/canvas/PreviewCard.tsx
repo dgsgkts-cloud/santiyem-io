@@ -31,23 +31,21 @@ const KIND_LABEL: Record<EntityRef["kind"], string> = {
 export const PreviewCard = ({ ref }: { ref: EntityRef }) => {
   const Icon = ICONS[ref.kind];
 
-  // Read from the caches these hooks maintain; failures fall back to label.
+  // Read from the caches these hooks maintain; unresolved refs fall back
+  // to the raw label supplied by the AI.
   const projects = useProjects();
   const personnel = usePersonnel();
   const materials = useMaterials();
-  const tasks = useTasks();
 
   const findLabel = () => {
     if (ref.label) return ref.label;
     switch (ref.kind) {
       case "project":
-        return projects.projects?.find((p: any) => p.id === ref.id)?.name;
+        return (projects.projects as any[])?.find((p) => p.id === ref.id)?.name;
       case "personnel":
-        return personnel.personnel?.find((p: any) => p.id === ref.id)?.full_name;
+        return (personnel.personnel as any[])?.find((p) => p.id === ref.id)?.full_name;
       case "material":
-        return materials.materials?.find((m: any) => m.id === ref.id)?.name;
-      case "task":
-        return tasks.tasks?.find((t: any) => t.id === ref.id)?.title;
+        return (materials.materials as any[])?.find((m) => m.id === ref.id)?.name;
       default:
         return undefined;
     }
