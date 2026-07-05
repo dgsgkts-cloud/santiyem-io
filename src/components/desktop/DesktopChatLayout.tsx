@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Trash2, MessageSquare, BookOpen } from "lucide-react";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
@@ -12,6 +12,8 @@ import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
 import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
 import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
+import { AICanvas } from "@/components/canvas/AICanvas";
+import { canvasStore } from "@/hooks/useCanvasTurns";
 import { toast } from "sonner";
 
 interface DesktopChatLayoutProps {
