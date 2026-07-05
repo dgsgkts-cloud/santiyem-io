@@ -42,6 +42,14 @@ interface Props {
   compact?: boolean;
   autoStart?: boolean;
   initialContext?: string;
+  /** Sprint 15.3 — pre-fill the Live Panel with cards from an existing briefing. */
+  initialCards?: Card[];
+  /**
+   * Sprint 15.3 — auto-narrate mode. When true, the initialContext is sent as
+   * a user message right after connect so the agent immediately reads it aloud,
+   * instead of a silent contextual update that never triggers a reply.
+   */
+  autoSpeak?: boolean;
 }
 
 type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
@@ -57,16 +65,21 @@ export function VoiceCopilot(props: Props) {
   );
 }
 
-function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false, initialContext }: Props) {
+function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false, initialContext, initialCards, autoSpeak = false }: Props) {
   const [uiState, setUiState] = useState<UiState>("idle");
   const [transcript, setTranscript] = useState<string>("");
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const [cards, setCards] = useState<Card[]>([]);
+  // Sprint 15.3 — Live Panel opens pre-filled with brief cards when provided.
+  const [cards, setCards] = useState<Card[]>(() => initialCards ?? []);
   const [error, setError] = useState<string | null>(null);
   // `muted` is driven by the ElevenLabs SDK (conversation.isMuted) below.
   const [paused, setPaused] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  // Sprint 15.3 — Voice Fix #4: post-session "Şimdi ne yapmak istersiniz?" panel.
+  const [showPostSession, setShowPostSession] = useState(false);
+  const hadAutoSpeakRef = useRef(!!autoSpeak);
+  useEffect(() => { hadAutoSpeakRef.current = !!autoSpeak; }, [autoSpeak]);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
   const [firstName, setFirstName] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("");
@@ -158,11 +171,21 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         const lat = connectStartRef.current ? Date.now() - connectStartRef.current : 0;
         setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
         firstReplyPendingRef.current = Date.now();
+        setShowPostSession(false);
         setUiState("listening");
         if (initialContext) {
+          // Sprint 15.3 — Voice Fix #1/#2: autoSpeak modunda contextual update
+          // (sessiz) yerine gerçek bir user message gönderiyoruz; böylece agent
+          // brifingi anında sesli okumaya başlar. Standart mod eski davranışta
+          // (sadece bağlam) kalır.
           queueMicrotask(() => {
-            try { conversation.sendContextualUpdate(initialContext); }
-            catch (e) { console.warn("contextual update failed", e); }
+            try {
+              if (autoSpeak) {
+                conversation.sendUserMessage(initialContext);
+              } else {
+                conversation.sendContextualUpdate(initialContext);
+              }
+            } catch (e) { console.warn("initial context dispatch failed", e); }
           });
         }
       } catch (e) { console.error("onConnect handler failed", e); }
@@ -193,6 +216,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         sessionStartRef.current = null;
         if (secs > 0) trackUsage(secs);
         if (bubbles.length >= 2) setShowSummary(true);
+        // Sprint 15.3 — Voice Fix #4: konuşma bittiğinde ekran kapanmasın,
+        // kullanıcıya bir sonraki adım seçenekleri gösterilsin.
+        if (secs > 2 || hadAutoSpeakRef.current) setShowPostSession(true);
         // If we never got onConnect, resolve the waiter with an error so start() unblocks.
         if (connectWaiterRef.current) {
           connectWaiterRef.current.reject(new Error(
@@ -773,13 +799,15 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (muted && active) return "🎤❌ Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
-      case "listening": return "Dinleniyor";
-      case "thinking": return "Şantiye kayıtları inceleniyor…";
-      case "speaking": return "Cevap veriliyor";
+      case "listening": return "Dinliyor";
+      case "thinking": return "Analiz ediyor…";
+      case "speaking": return "Konuşuyor";
       case "error": return "Hata";
-      default: return access.hasAccess ? "Dokun ve konuş" : "Kota doldu";
+      default:
+        if (showPostSession) return "Hazır — bir sonraki adımı seç";
+        return access.hasAccess ? "Hazır" : "Kota doldu";
     }
-  }, [uiState, access.hasAccess, muted, active]);
+  }, [uiState, access.hasAccess, muted, active, showPostSession]);
 
   return (
     <div
@@ -863,6 +891,16 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
                   Vazgeç
                 </button>
               </div>
+            ) : uiState === "idle" && showPostSession ? (
+              <PostSessionActions
+                onAgain={() => { setShowPostSession(false); start(); }}
+                onClose={() => { setShowPostSession(false); onClose(); }}
+                onNavigate={(tab) => {
+                  setShowPostSession(false);
+                  window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+                  onClose();
+                }}
+              />
             ) : uiState === "idle" ? (
               <StartButton onStart={start} disabled={!access.hasAccess} />
             ) : (
@@ -1122,6 +1160,67 @@ function ThinkingViz() {
           boxShadow: "0 0 40px 4px rgba(255,107,43,0.5)",
         }}>
         <Activity className="w-8 h-8 text-white" strokeWidth={1.8} />
+      </div>
+    </div>
+  );
+}
+
+/* =====================================================
+   POST-SESSION ACTIONS — Sprint 15.3 Voice Fix #4
+   Konuşma bittikten sonra ekran kapanmaz; kullanıcıya
+   bir sonraki adım seçenekleri gösterilir.
+   ===================================================== */
+function PostSessionActions({
+  onAgain,
+  onClose,
+  onNavigate,
+}: {
+  onAgain: () => void;
+  onClose: () => void;
+  onNavigate: (tab: string) => void;
+}) {
+  const actions: Array<{ label: string; tab: string; icon: React.ReactNode }> = [
+    { label: "Projeleri Aç", tab: "projects", icon: <HardHat className="w-4 h-4" /> },
+    { label: "Ödemeleri Gör", tab: "payments-kasa", icon: <TrendingUp className="w-4 h-4" /> },
+    { label: "Şantiye Günlüğü", tab: "site-diary", icon: <Activity className="w-4 h-4" /> },
+    { label: "Personel", tab: "personnel", icon: <Users className="w-4 h-4" /> },
+  ];
+  return (
+    <div className="w-full max-w-xl flex flex-col items-center gap-3 voice-fade-in">
+      <p className="text-[11px] uppercase tracking-[0.22em] text-white/50 font-semibold">
+        Şimdi ne yapmak istersiniz?
+      </p>
+      <div className="grid grid-cols-2 gap-2 w-full">
+        {actions.map((a) => (
+          <button
+            key={a.tab}
+            onClick={() => onNavigate(a.tab)}
+            className="voice-glass-btn h-12 rounded-xl flex items-center justify-center gap-2 text-white/90 text-sm font-medium transition-all active:scale-[0.98]"
+          >
+            {a.icon}
+            <span>{a.label}</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={onAgain}
+          className="h-11 px-5 rounded-full flex items-center gap-2 text-white text-sm font-medium transition-all active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, #FF6B2B 0%, #E85300 100%)",
+            boxShadow: "0 8px 24px -6px rgba(255,107,43,0.55)",
+          }}
+        >
+          <Mic className="w-4 h-4" strokeWidth={2} />
+          <span>Tekrar Konuş</span>
+        </button>
+        <button
+          onClick={onClose}
+          className="h-11 px-4 rounded-full text-[12px] text-white/60 hover:text-white/90 uppercase tracking-widest"
+        >
+          Kapat
+        </button>
       </div>
     </div>
   );

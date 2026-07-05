@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sun, Sunrise, Moon, Volume2, RefreshCw, Sparkles, AlertTriangle, Target, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import { useExecutiveBrief, type Finding } from "@/hooks/useExecutiveBrief";
 import { HealthScoreCard } from "./executive/HealthScoreCard";
 import { ActionCard } from "./executive/ActionCard";
@@ -156,9 +157,69 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
       score: kpis.healthScore,
       priorities,
       opportunities,
-    });
-    (window as unknown as { __briefingText?: string }).__briefingText = text;
-    window.dispatchEvent(new CustomEvent("open-voice-copilot"));
+    }).trim();
+
+    // Sprint 15.3 — Voice Fix #5: eğer okunacak bir brifing yoksa Voice
+    // açılmasın, kullanıcıya net toast göster.
+    if (!text || loading) {
+      toast.error("Okunacak bir yönetici özeti bulunamadı.", {
+        description: "Şirket verileri hazırlanana kadar sesli brifing kullanılamaz.",
+      });
+      return;
+    }
+
+    // Voice ekranında Live Panel'in ilk saniyeden dolu görünmesi için
+    // brifing kartlarını önden hazırla (Sprint 15.3 — Voice Fix #3).
+    const preCards = [
+      {
+        id: "brief-summary",
+        type: "kpi" as const,
+        title: "Sağlık Skoru",
+        value: `${kpis.healthScore}/100`,
+        detail: "Bugünün genel şirket sağlık göstergesi.",
+        tone: (kpis.healthScore >= 80 ? "positive" : kpis.healthScore >= 60 ? "warning" : "danger") as
+          "positive" | "warning" | "danger",
+      },
+      ...(priorities.length
+        ? [{
+            id: "brief-priorities",
+            type: "warning" as const,
+            title: "Bugünün Öncelikleri",
+            value: String(priorities.length),
+            detail: priorities.slice(0, 3).map((p) => "• " + p.title.replace(/\.$/, "")).join("\n"),
+            tone: "warning" as const,
+          }]
+        : []),
+      ...(opportunities.length
+        ? [{
+            id: "brief-opportunities",
+            type: "info" as const,
+            title: "Fırsatlar",
+            value: String(opportunities.length),
+            detail: opportunities.slice(0, 2).join(" • "),
+            tone: "positive" as const,
+          }]
+        : []),
+      {
+        id: "brief-narration",
+        type: "recommendation" as const,
+        title: "Sabah Brifingi",
+        detail: text,
+        tone: "neutral" as const,
+      },
+    ];
+
+    const w = window as unknown as {
+      __briefingText?: string;
+      __briefingCards?: typeof preCards;
+      __briefingAutoSpeak?: boolean;
+    };
+    w.__briefingText = text;
+    w.__briefingCards = preCards;
+    w.__briefingAutoSpeak = true;
+    window.dispatchEvent(new CustomEvent("open-voice-copilot", {
+      detail: { autoSpeak: true, requiresBriefing: true },
+    }));
   };
 
   const GreetingIcon = greeting.icon;

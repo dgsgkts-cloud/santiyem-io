@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
 import { Mic, Lock } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { toast } from "sonner";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 import { VoiceCopilot } from "./VoiceCopilot";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
+
+type BriefCard = {
+  id: string;
+  type: "kpi" | "warning" | "recommendation" | "info";
+  title: string;
+  value?: string;
+  detail?: string;
+  tone?: "positive" | "warning" | "danger" | "neutral";
+};
+
+type OpenPayload = { autoSpeak?: boolean; requiresBriefing?: boolean };
 
 /**
  * Global floating microphone button that opens the Voice Copilot overlay.
@@ -14,6 +26,11 @@ import "@/styles/voice.css";
 export function VoiceOrb() {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [pending, setPending] = useState<{
+    initialContext?: string;
+    initialCards?: BriefCard[];
+    autoSpeak?: boolean;
+  }>({});
   const access = useVoiceAccess();
 
   useEffect(() => {
@@ -23,7 +40,40 @@ export function VoiceOrb() {
   }, []);
 
   useEffect(() => {
-    const handler = () => setOpen(true);
+    const handler = (e: Event) => {
+      const detail = ((e as CustomEvent).detail ?? {}) as OpenPayload;
+      const w = window as unknown as {
+        __briefingText?: string;
+        __briefingCards?: BriefCard[];
+        __briefingAutoSpeak?: boolean;
+      };
+      const brief = w.__briefingText;
+      const cards = w.__briefingCards;
+      const autoSpeak = detail.autoSpeak ?? w.__briefingAutoSpeak ?? false;
+
+      // Sprint 15.3 — Voice Fix #5: brifing zorunluysa ve yoksa açma.
+      if (detail.requiresBriefing && !brief) {
+        toast.error("Okunacak bir yönetici özeti bulunamadı.");
+        return;
+      }
+
+      setPending({
+        initialContext: brief
+          ? `SABAH YÖNETİCİ BRİFİNGİ (aşağıdaki metni tam olarak, sanki sen okuyormuşsun gibi Türkçe sesli oku; giriş cümlesi ekleme, standart selamlama YAPMA; bittiğinde tek somut soruyla bitir): ${brief}`
+          : undefined,
+        initialCards: cards,
+        autoSpeak,
+      });
+
+      // Hand-off tüketildi — window state'ini temizle.
+      try {
+        delete w.__briefingText;
+        delete w.__briefingCards;
+        delete w.__briefingAutoSpeak;
+      } catch { /* noop */ }
+
+      setOpen(true);
+    };
     window.addEventListener("open-voice-copilot", handler);
     return () => window.removeEventListener("open-voice-copilot", handler);
   }, []);
@@ -37,7 +87,7 @@ export function VoiceOrb() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setPending({}); setOpen(true); }}
         aria-label="AI Sesli Asistan"
         className="fixed left-1/2 -translate-x-1/2 z-40 group"
         style={{ bottom: bottomOffset }}
@@ -67,21 +117,18 @@ export function VoiceOrb() {
           </div>
         </div>
       </button>
-      {open && (() => {
-        // Consume any pending briefing hand-off from MorningBriefingCard.
-        const brief = (window as unknown as { __briefingText?: string }).__briefingText;
-        if (brief) {
-          try { delete (window as unknown as { __briefingText?: string }).__briefingText; } catch { /* noop */ }
-        }
-        const initialContext = brief
-          ? `SABAH YÖNETİCİ BRİFİNGİ (sesli oku ve ardından tek bir eyleme yönelik soruyla bitir; bu bir yönetici brifingidir, standart selamlama YAPMA): ${brief}`
-          : undefined;
-        return (
-          <VoiceErrorBoundary onClose={() => setOpen(false)}>
-            <VoiceCopilot onClose={() => setOpen(false)} access={access} initialContext={initialContext} />
-          </VoiceErrorBoundary>
-        );
-      })()}
+      {open && (
+        <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
+          <VoiceCopilot
+            onClose={() => { setOpen(false); setPending({}); }}
+            access={access}
+            initialContext={pending.initialContext}
+            initialCards={pending.initialCards}
+            autoSpeak={pending.autoSpeak}
+            autoStart={pending.autoSpeak}
+          />
+        </VoiceErrorBoundary>
+      )}
     </>
   );
 }
