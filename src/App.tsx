@@ -70,8 +70,10 @@ const App = () => (
       <UserProvider>
         <ThemeProvider>
         <ActionExecutorProvider>
+        <OfflineBanner />
         <Toaster />
         <Sonner />
+
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
