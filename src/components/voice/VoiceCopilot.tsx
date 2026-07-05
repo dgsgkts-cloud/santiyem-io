@@ -876,32 +876,50 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
           <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center gap-4">
             <div className="shrink-0"><OrbStage state={uiState} compact={compact} /></div>
 
-            {/* Live transcript — fixed height, auto-scroll, older lines fade upward. */}
-            <div
-              ref={transcriptScrollRef}
-              className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
-              style={{
-                maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
-                WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
-              }}
-            >
-              {error ? (
-                <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
-                  <AlertCircle className="w-5 h-5" /> {error}
+            {/* Sprint 15.4 — on mobile idle, show the Live Panel instead of an empty transcript. */}
+            {compact && !active && !showPostSession && !error ? (
+              <div className="w-full max-w-xl flex-1 min-h-0 overflow-y-auto px-1 pb-2 voice-transcript-scroll">
+                <VoiceStatePill state={uiState} label={statusLabel} />
+                <div className="mt-3">
+                  <VoiceLivePanel
+                    compact
+                    onAsk={askQuestion}
+                    onNavigate={(tab) => {
+                      window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
+                      onClose();
+                    }}
+                  />
                 </div>
-              ) : uiState === "thinking" ? (
-                <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
-                  {statusLabel}
-                </div>
-              ) : transcript && active ? (
-                <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
-                  {transcript}
-                </div>
-              ) : (
-                <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Live transcript — fixed height, auto-scroll, older lines fade upward. */
+              <div
+                ref={transcriptScrollRef}
+                className="w-full max-w-xl h-[84px] overflow-y-auto text-center px-4 voice-transcript-scroll"
+                style={{
+                  maskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                  WebkitMaskImage: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 28%, #000 70%)",
+                }}
+              >
+                {error ? (
+                  <div className="flex items-center justify-center gap-2 text-[#FF8A8A] text-base voice-fade-in pt-6">
+                    <AlertCircle className="w-5 h-5" /> {error}
+                  </div>
+                ) : uiState === "thinking" ? (
+                  <div className="voice-shimmer-text text-lg font-medium tracking-wide pt-6">
+                    {statusLabel}
+                  </div>
+                ) : transcript && active ? (
+                  <div className="voice-fade-in text-white/95 text-base md:text-lg leading-relaxed pt-4">
+                    {transcript}
+                  </div>
+                ) : (
+                  <div className="text-white/40 text-sm uppercase tracking-[0.25em] pt-6">{statusLabel}</div>
+                )}
+              </div>
+            )}
           </div>
+
 
           {/* Pinned bottom control zone */}
           <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2">
