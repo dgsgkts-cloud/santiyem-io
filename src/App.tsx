@@ -12,6 +12,8 @@ import CookieBanner from "@/components/CookieBanner";
 
 
 import DeepLinkHandler from "@/components/DeepLinkHandler";
+import OfflineBanner from "@/components/OfflineBanner";
+
 import NativeSetup from "@/components/NativeSetup";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
@@ -70,8 +72,10 @@ const App = () => (
       <UserProvider>
         <ThemeProvider>
         <ActionExecutorProvider>
+        <OfflineBanner />
         <Toaster />
         <Sonner />
+
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
