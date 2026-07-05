@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +50,7 @@ export async function initPushNotifications(userId: string): Promise<void> {
     });
 
     PushNotifications.addListener("pushNotificationReceived", n => {
-      console.log("[push] received", n);
+      logger.debug("[push] received", n);
     });
 
     PushNotifications.addListener("pushNotificationActionPerformed", action => {

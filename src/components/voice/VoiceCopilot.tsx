@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import {
@@ -58,7 +59,7 @@ type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 export function VoiceCopilot(props: Props) {
-  console.log("[voice][mount] VoiceCopilot → ConversationProvider mounted");
+  logger.debug("[voice][mount] VoiceCopilot → ConversationProvider mounted");
   return (
     <ConversationProvider>
       <VoiceCopilotInner {...props} />
@@ -167,7 +168,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     // (original onConnect replaced by instrumented handler below)
 
     onConnect: (info?: unknown) => {
-      console.log("[voice][SDK] ✅ onConnect fired", info);
+      logger.debug("[voice][SDK] ✅ onConnect fired", info);
       try {
         connectWaiterRef.current?.resolve();
         connectWaiterRef.current = null;
@@ -204,11 +205,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       } catch (e) { console.error("onConnect handler failed", e); }
     },
     onStatusChange: (v: unknown) => {
-      console.log("[voice][SDK] onStatusChange →", v);
+      logger.debug("[voice][SDK] onStatusChange →", v);
       setDebug((d) => ({ ...d, lastEvent: `status:${String((v as any)?.status ?? v)}` }));
     },
     onDisconnect: (details?: unknown) => {
-      console.log("[voice][SDK] 🔌 onDisconnect", details);
+      logger.debug("[voice][SDK] 🔌 onDisconnect", details);
       try {
         const d: any = details as any;
         const reason = d?.reason ?? d?.detail?.reason;
@@ -243,11 +244,11 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     },
     onDebug: (info: unknown) => {
       // Very chatty — but essential to see why the SDK is stuck.
-      console.log("[voice][SDK][debug]", info);
+      logger.debug("[voice][SDK][debug]", info);
     },
     onMessage: (msg: any) => {
       try {
-        console.log("[voice][onMessage]", msg?.type ?? msg?.source, msg);
+        logger.debug("[voice][onMessage]", msg?.type ?? msg?.source, msg);
         if (msg?.source === "user" && typeof msg.message === "string") {
           setTranscript(msg.message);
           firstReplyPendingRef.current = Date.now();
@@ -303,7 +304,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       },
       query_project_data: async (params: { intent?: string; keyword?: string }) => {
         const t0 = performance.now();
-        console.log("[voice][tool] query_project_data CALLED", params);
+        logger.debug("[voice][tool] query_project_data CALLED", params);
         setDebug((d) => ({ ...d, toolCalls: d.toolCalls + 1, lastEvent: "tool:query_project_data" }));
         setUiState("thinking");
         try {
@@ -317,12 +318,12 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
               voice_mode: true,
             }),
           });
-          console.log("[voice][tool] /chat status:", res.status, "in", Math.round(performance.now() - t0), "ms");
+          logger.debug("[voice][tool] /chat status:", res.status, "in", Math.round(performance.now() - t0), "ms");
           if (!res.ok) return `Veriye ulaşılamadı (HTTP ${res.status}).`;
           const json = await res.json().catch(() => null);
           const text = json?.text ?? json?.error ?? "";
           const out = String(text).slice(0, 1200) || "Bu konuda veri bulunamadı.";
-          console.log("[voice][tool] RETURNING (len " + out.length + "):", out.slice(0, 200));
+          logger.debug("[voice][tool] RETURNING (len " + out.length + "):", out.slice(0, 200));
           return out;
         } catch (e) {
           console.error("[voice][tool] query_project_data FAILED:", e);
@@ -361,7 +362,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
     });
 
   const start = async () => {
-    console.log("[voice][start] ➊ Initializing session...");
+    logger.debug("[voice][start] ➊ Initializing session...");
     connectStartRef.current = Date.now();
     setDebug((d) => ({ ...d, lastError: "", lastEvent: "start", connectLatencyMs: 0, firstReplyLatencyMs: 0, toolCalls: 0 }));
     setError(null);
@@ -395,7 +396,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       //    dialog exactly once; a preflight would just cause a second one.
       try {
         const perm = await navigator.permissions?.query?.({ name: "microphone" as PermissionName });
-        console.log("[voice][start] mic permission state:", perm?.state ?? "unknown");
+        logger.debug("[voice][start] mic permission state:", perm?.state ?? "unknown");
         if (perm?.state === "denied") {
           setError("Mikrofon izni reddedilmiş. Ayarlar > Uygulamalar > Şantiyem > İzinler bölümünden mikrofon iznini açın.");
           setUiState("error"); return;
@@ -405,10 +406,10 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
 
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
-      console.log("[voice][start] ➌ JWT present:", !!jwt);
+      logger.debug("[voice][start] ➌ JWT present:", !!jwt);
       if (!jwt) throw new Error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
 
-      console.log("[voice][start] ➍ Fetching ElevenLabs token from edge function...");
+      logger.debug("[voice][start] ➍ Fetching ElevenLabs token from edge function...");
       const tTok = performance.now();
       const res = await withTimeout(
         fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`, {
@@ -416,7 +417,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         }),
         CONNECT_TIMEOUT_MS, "Token isteği"
       );
-      console.log("[voice][start] token endpoint status:", res.status, "in", Math.round(performance.now() - tTok), "ms");
+      logger.debug("[voice][start] token endpoint status:", res.status, "in", Math.round(performance.now() - tTok), "ms");
       if (res.status === 402) {
         const body = await res.json();
         setError(body?.message ?? "Günlük ses kotanız doldu.");
@@ -429,7 +430,7 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
       }
       const tokenBody = await res.json();
       const { token, signed_url, agent_id, quota } = tokenBody;
-      console.log("[voice][start] ➎ token endpoint returned:", {
+      logger.debug("[voice][start] ➎ token endpoint returned:", {
         has_token: !!token, has_signed_url: !!signed_url, agent_id, quota,
       });
 
@@ -525,7 +526,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         if (company) dynamicVariables.company_name = company;
       } catch { /* noop */ }
       if (userRole) dynamicVariables.user_role = userRole;
-      console.log("[voice][start] dynamicVariables →", dynamicVariables);
+      logger.debug("[voice][start] dynamicVariables →", dynamicVariables);
 
       const waitForConnect = (ms: number) =>
         withTimeout(
@@ -549,12 +550,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       // works through firewalls/carrier NAT where WebRTC data channels hang.
       if (signed_url) {
         try {
-          console.log("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
+          logger.debug("[voice][start] ➏ Opening WebSocket session (signedUrl)…");
           const connected = waitForConnect(CONNECT_TIMEOUT_MS);
           conversation.startSession({ signedUrl: signed_url, connectionType: "websocket", overrides, dynamicVariables } as any);
-          console.log("[voice][start] startSession() returned (ws), waiting for onConnect…");
+          logger.debug("[voice][start] startSession() returned (ws), waiting for onConnect…");
           await connected;
-          console.log("[voice][start] ✅ WebSocket connected");
+          logger.debug("[voice][start] ✅ WebSocket connected");
           return;
         } catch (e) {
           console.warn("[voice][start] ⚠️ WebSocket failed, trying WebRTC fallback:", e);
@@ -564,12 +565,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
       }
       // FALLBACK: WebRTC (lower latency, but can hang behind restrictive networks).
       if (token) {
-        console.log("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
+        logger.debug("[voice][start] ➏ Opening WebRTC session (conversationToken)…");
         const connected = waitForConnect(CONNECT_TIMEOUT_MS);
         conversation.startSession({ conversationToken: token, connectionType: "webrtc", overrides, dynamicVariables } as any);
-        console.log("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
+        logger.debug("[voice][start] startSession() returned (webrtc), waiting for onConnect…");
         await connected;
-        console.log("[voice][start] ✅ WebRTC connected");
+        logger.debug("[voice][start] ✅ WebRTC connected");
         return;
       }
       throw new Error("Ses bağlantısı kurulamadı: token endpoint boş yanıt döndü.");
@@ -597,12 +598,12 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
   };
 
   const stop = async () => {
-    console.log("[voice] endSession() called by user");
+    logger.debug("[voice] endSession() called by user");
     try { await conversation.endSession(); } catch (e) { console.warn(e); }
   };
 
   useEffect(() => {
-    console.log("[voice][status] SDK status →", conversation.status, "isSpeaking:", conversation.isSpeaking);
+    logger.debug("[voice][status] SDK status →", conversation.status, "isSpeaking:", conversation.isSpeaking);
     if (conversation.status === "connected") {
       setUiState(conversation.isSpeaking ? "speaking" : "listening");
     }
@@ -680,7 +681,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         if (t.readyState === "live" && t.kind === "audio") {
           if (t.enabled !== enabled) {
             t.enabled = enabled;
-            console.log(enabled ? "[MUTE] microphone track resumed" : "[MUTE] microphone track stopped", { id: t.id });
+            logger.debug(enabled ? "[MUTE] microphone track resumed" : "[MUTE] microphone track stopped", { id: t.id });
           }
         }
       }
@@ -713,7 +714,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
 
   const toggleMute = () => {
     const next = !muted;
-    console.log(next ? "[MUTE] enabled" : "[MUTE] disabled", { tracks: micTracksRef.current.size });
+    logger.debug(next ? "[MUTE] enabled" : "[MUTE] disabled", { tracks: micTracksRef.current.size });
     // Sync the ref immediately so setLocalTracksEnabled's guard sees the new
     // state before any of the effects below react.
     mutedRef.current = next;
@@ -725,7 +726,7 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
         for (const t of micTracksRef.current) {
           if (t.readyState === "live" && t.kind === "audio" && t.enabled) {
             t.enabled = false;
-            console.log("[MUTE] microphone track stopped", { id: t.id });
+            logger.debug("[MUTE] microphone track stopped", { id: t.id });
           }
         }
       } catch (e) { console.warn("[voice] track disable failed", e); }

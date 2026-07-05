@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string; attachments?: { base64: string; type: string }[] };
@@ -30,7 +31,7 @@ export async function streamChat({
     }
   }, CONNECT_TIMEOUT_MS);
 
-  console.log("[AI] → POST", CHAT_URL, "msgs:", messages.length);
+  logger.debug("[AI] → POST", CHAT_URL, "msgs:", messages.length);
 
   try {
     // The chat function verifies the caller's user JWT via auth.getUser().
@@ -61,7 +62,7 @@ export async function streamChat({
     headersReceived = true;
     clearTimeout(timeoutId);
 
-    console.log("[AI] ← status:", resp.status, "ok:", resp.ok);
+    logger.debug("[AI] ← status:", resp.status, "ok:", resp.ok);
 
     if (!resp.ok) {
       const data = await resp.json().catch(() => ({ error: "Bağlantı hatası" }));
@@ -106,7 +107,7 @@ export async function streamChat({
     }
 
     clearTimeout(timeoutId);
-    console.log("[AI] ✓ stream complete");
+    logger.debug("[AI] ✓ stream complete");
     onDone();
   } catch (err: any) {
     clearTimeout(timeoutId);
