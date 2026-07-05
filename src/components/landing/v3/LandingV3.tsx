@@ -915,6 +915,16 @@ const whyCards = [
   { icon: Brain, kpi: 24, suffix: "/7", l: "AI yönetici asistan", d: "Uyumaz, unutmaz" },
 ];
 
+const trustItems = [
+  { icon: ClipboardList, l: "Hakediş" },
+  { icon: Users, l: "Taşeron" },
+  { icon: Receipt, l: "E-Fatura" },
+  { icon: FileText, l: "Şantiye Günlüğü" },
+  { icon: Users, l: "Personel" },
+  { icon: Package, l: "Malzeme" },
+  { icon: Wallet, l: "Nakit Akışı" },
+];
+
 const WhyChoose = () => (
   <section className="py-24 md:py-32" style={{ background: T.elev }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -923,15 +933,15 @@ const WhyChoose = () => (
         <H2>Sayılar konuşsun.</H2>
       </Reveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-20">
         {whyCards.map((c, i) => (
           <Reveal key={c.l} delay={i * 80}>
             <div
               className="p-6 rounded-2xl h-full transition-all hover:border-[#FF6B2B]/30"
               style={{ background: T.bg, border: `1px solid ${T.border}`, minHeight: 200 }}
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4" style={{ background: T.emberFaint }}>
-                <c.icon className="w-4 h-4" style={{ color: T.ember }} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: T.emberFaint }}>
+                <c.icon className="w-[18px] h-[18px]" style={{ color: T.ember }} />
               </div>
               <p className="text-3xl font-semibold" style={{ color: T.text, ...heading }}>
                 <CountUp to={c.kpi} suffix={c.suffix} />
@@ -942,9 +952,60 @@ const WhyChoose = () => (
           </Reveal>
         ))}
       </div>
+
+      {/* Türkiye'ye özel güven bloğu */}
+      <Reveal>
+        <div
+          className="rounded-3xl p-8 md:p-12"
+          style={{
+            background: `linear-gradient(180deg, ${T.bg}, ${T.elev})`,
+            border: `1px solid ${T.border}`,
+          }}
+        >
+          <div className="grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5">
+              <div className="mb-4"><EmberBadge>Türkiye'ye özel</EmberBadge></div>
+              <h3 className="text-3xl md:text-4xl font-semibold leading-[1.1]" style={{ color: T.text, ...heading }}>
+                Türkiye'deki inşaat şirketleri için{" "}
+                <span style={{ color: T.emberGlow }}>sıfırdan geliştirildi.</span>
+              </h3>
+              <p className="mt-4 text-[14.5px] leading-relaxed" style={{ color: T.muted, ...body }}>
+                Hakediş süreçleri, taşeron ilişkileri, e-Fatura mevzuatı, şantiye günlüğü zorunlulukları ve
+                Türkiye'deki nakit akışı gerçeklerine göre tasarlandı. Global bir CRM'i Türkçeye çevirmedik —
+                inşaat sektörünün diliyle konuşan bir sistem kurduk.
+              </p>
+            </div>
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                {trustItems.map((t) => (
+                  <div
+                    key={t.l}
+                    className="group flex items-center gap-2.5 p-3 rounded-xl transition-all"
+                    style={{ background: T.elev, border: `1px solid ${T.border}` }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = `${T.ember}55`;
+                      e.currentTarget.style.boxShadow = `0 0 20px ${T.ember}22`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = T.border;
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: T.emberFaint }}>
+                      <t.icon className="w-[17px] h-[17px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(255,107,43,0.7)]" style={{ color: T.ember }} />
+                    </div>
+                    <span className="text-[13px] font-medium" style={{ color: T.text, ...body }}>{t.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </div>
   </section>
 );
+
 
 /* ═══════════════════════════════════════════════════════════════════
    10 · PRICING
