@@ -171,11 +171,21 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         const lat = connectStartRef.current ? Date.now() - connectStartRef.current : 0;
         setDebug((d) => ({ ...d, connectLatencyMs: lat, lastEvent: "connect" }));
         firstReplyPendingRef.current = Date.now();
+        setShowPostSession(false);
         setUiState("listening");
         if (initialContext) {
+          // Sprint 15.3 — Voice Fix #1/#2: autoSpeak modunda contextual update
+          // (sessiz) yerine gerçek bir user message gönderiyoruz; böylece agent
+          // brifingi anında sesli okumaya başlar. Standart mod eski davranışta
+          // (sadece bağlam) kalır.
           queueMicrotask(() => {
-            try { conversation.sendContextualUpdate(initialContext); }
-            catch (e) { console.warn("contextual update failed", e); }
+            try {
+              if (autoSpeak) {
+                conversation.sendUserMessage(initialContext);
+              } else {
+                conversation.sendContextualUpdate(initialContext);
+              }
+            } catch (e) { console.warn("initial context dispatch failed", e); }
           });
         }
       } catch (e) { console.error("onConnect handler failed", e); }
