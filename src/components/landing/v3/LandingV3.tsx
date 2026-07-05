@@ -169,9 +169,25 @@ const AppFrame = ({ children, label = "santiyem.io/dashboard" }: { children: Rea
 /* ═══════════════════════════════════════════════════════════════════
    1 · HERO — split-screen
    ═══════════════════════════════════════════════════════════════════ */
-const HeroDashboardMock = () => (
+const HeroDashboardMock = () => {
+  const { ref, visible } = useReveal();
+  const [score, setScore] = useState(0);
+  useEffect(() => {
+    if (!visible) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / 1400);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setScore(Math.round(87 * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [visible]);
+  return (
   <AppFrame label="santiyem.io/dashboard">
-    <div className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
+    <div ref={ref} className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
       {/* Sidebar */}
       <div className="col-span-1 space-y-1.5">
         {[Building2, Wallet, Users, Package, FileText].map((I, i) => (
@@ -189,9 +205,16 @@ const HeroDashboardMock = () => (
             <span className="text-[10px]" style={{ color: "#4ade80", ...body }}>▲ +4</span>
           </div>
           <div className="flex items-end gap-3">
-            <span className="text-4xl font-semibold" style={{ color: T.text, ...heading }}>87</span>
+            <span className="text-4xl font-semibold tabular-nums" style={{ color: T.text, ...heading }}>{score}</span>
             <div className="flex-1 h-1.5 rounded-full overflow-hidden mb-2" style={{ background: "#1a1a1a" }}>
-              <div className="h-full rounded-full" style={{ width: "87%", background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})` }} />
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${score}%`,
+                  background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})`,
+                  transition: "width 1.4s cubic-bezier(0.22,1,0.36,1)",
+                }}
+              />
             </div>
           </div>
         </div>
@@ -209,9 +232,17 @@ const HeroDashboardMock = () => (
           ))}
         </div>
         {/* AI insight */}
-        <div className="rounded-xl p-3" style={{ background: T.emberFaint, border: `1px solid ${T.ember}33` }}>
+        <div
+          className="rounded-xl p-3"
+          style={{
+            background: T.emberFaint,
+            border: `1px solid ${T.ember}33`,
+            boxShadow: visible ? `0 0 24px ${T.ember}22` : "none",
+            transition: "box-shadow 1.2s ease",
+          }}
+        >
           <div className="flex items-start gap-2">
-            <Sparkles className="w-3.5 h-3.5 mt-0.5" style={{ color: T.ember }} />
+            <Sparkles className="w-3.5 h-3.5 mt-0.5" style={{ color: T.ember, animation: visible ? "pulse 2.4s ease-in-out infinite" : "none" }} />
             <div className="flex-1">
               <p className="text-[11px] font-semibold" style={{ color: T.text, ...body }}>Şantiyem AI</p>
               <p className="text-[10.5px] mt-0.5" style={{ color: T.muted, ...body }}>
@@ -224,14 +255,24 @@ const HeroDashboardMock = () => (
         <div className="rounded-xl p-3" style={{ background: "#0F0F0F", border: `1px solid ${T.border}` }}>
           <div className="flex items-end gap-1.5 h-16">
             {[40, 65, 45, 80, 55, 90, 70, 85].map((h, i) => (
-              <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: i === 5 ? T.ember : "rgba(255,255,255,0.12)" }} />
+              <div
+                key={i}
+                className="flex-1 rounded-t"
+                style={{
+                  height: visible ? `${h}%` : "0%",
+                  background: i === 5 ? T.ember : "rgba(255,255,255,0.12)",
+                  transition: `height 900ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
+                }}
+              />
             ))}
           </div>
         </div>
       </div>
     </div>
   </AppFrame>
-);
+  );
+};
+
 
 const Hero = () => (
   <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
@@ -242,7 +283,7 @@ const Hero = () => (
     </div>
     {/* Grid pattern */}
     <div
-      className="absolute inset-0 opacity-[0.03]"
+      className="absolute inset-0 opacity-[0.021]"
       style={{
         backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
@@ -253,25 +294,26 @@ const Hero = () => (
       <Reveal className="lg:col-span-6">
         <div className="mb-6"><EmberBadge>Şantiyem AI · v3</EmberBadge></div>
         <h1
-          className="text-[44px] sm:text-5xl md:text-6xl lg:text-[68px] font-semibold leading-[1.02] mb-6"
+          className="text-[40px] sm:text-5xl md:text-6xl lg:text-[64px] font-semibold leading-[1.04] mb-6"
           style={{ color: T.text, ...heading }}
         >
-          The AI Operating System<br />
+          Tüm şirketinizi{" "}
           <span style={{ background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            for Construction Companies.
-          </span>
+            tek bir yapay zekayla
+          </span>{" "}
+          yönetin.
         </h1>
         <Sub className="max-w-xl mb-8">
-          Firmanızı yönetmek için 12 farklı yazılım kullanmayı bırakın. Şantiyem AI; projelerinizi,
-          finansınızı, personelinizi ve şantiyenizi tek bir zekada birleştirir.
+          Projeler, finans, hakediş, personel, stok ve şantiye yönetimi tek bir yapay zekâda birleşiyor.
         </Sub>
         <div className="flex flex-wrap gap-3 mb-10">
-          <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
-          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
+          <PrimaryBtn to="/register">Ücretsiz Dene</PrimaryBtn>
           <GhostBtn icon={<Play className="w-4 h-4" style={{ color: T.ember }} />} onClick={() => {}}>
             2 dk Demo İzle
           </GhostBtn>
+          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
         </div>
+
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-[12.5px]" style={{ color: T.faint, ...body }}>
           <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
           <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> Kart gerekmez</span>
@@ -308,7 +350,7 @@ const AIExecutive = () => (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10.5px] uppercase tracking-widest" style={{ color: T.ember, ...body }}>Bu Sabah</p>
-                  <h3 className="text-xl font-semibold mt-1" style={{ color: T.text, ...heading }}>Günaydın, Mehmet Bey</h3>
+                  <h3 className="text-xl font-semibold mt-1" style={{ color: T.text, ...heading }}>Günaydın, hoş geldiniz</h3>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px]" style={{ color: T.faint, ...body }}>SAĞLIK SKORU</p>
@@ -406,9 +448,30 @@ const VoiceSection = () => (
               </div>
             </div>
             <p className="mt-8 text-[11px] uppercase tracking-[0.3em] font-semibold" style={{ color: T.emberGlow, ...body }}>Dinliyor</p>
-            <p className="mt-3 text-center text-[14px] max-w-xs" style={{ color: T.muted, ...body }}>
-              "Bu ay en kârlı proje hangisi ve neden?"
-            </p>
+            <div className="mt-5 w-full max-w-sm space-y-2.5">
+              {/* User bubble */}
+              <div className="flex justify-end">
+                <div
+                  className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tr-sm text-[12.5px] leading-snug"
+                  style={{ background: T.ember, color: "#fff", ...body, boxShadow: `0 4px 16px ${T.ember}44` }}
+                >
+                  Bu ay en kârlı proje hangisi ve neden?
+                </div>
+              </div>
+              {/* AI bubble */}
+              <div className="flex justify-start items-start gap-2">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `linear-gradient(135deg, ${T.ember}, ${T.emberGlow})` }}>
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+                <div
+                  className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
+                  style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
+                >
+                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — ₺1.8M net kâr, %22 marj. Erken teslim primi belirleyici oldu.
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Live analysis panel */}
@@ -505,17 +568,29 @@ const OneAI = () => (
           {departments.map((d, i) => (
             <Reveal key={d.label} delay={i * 60}>
               <div
-                className="p-5 rounded-2xl transition-all hover:border-white/20 hover:-translate-y-0.5"
+                className="group p-5 rounded-2xl transition-all hover:-translate-y-0.5"
                 style={{ background: T.elev, border: `1px solid ${T.border}`, minHeight: 128 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = `${T.ember}55`;
+                  e.currentTarget.style.boxShadow = `0 12px 40px ${T.ember}22`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = T.border;
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: T.emberFaint }}>
-                  <d.icon className="w-4 h-4" style={{ color: T.ember }} />
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all group-hover:scale-110"
+                  style={{ background: T.emberFaint }}
+                >
+                  <d.icon className="w-[18px] h-[18px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(255,107,43,0.7)]" style={{ color: T.ember }} />
                 </div>
                 <p className="text-[15px] font-semibold" style={{ color: T.text, ...heading }}>{d.label}</p>
                 <p className="text-[12.5px] mt-1" style={{ color: T.muted, ...body }}>{d.d}</p>
               </div>
             </Reveal>
           ))}
+
         </div>
       </div>
     </div>
@@ -840,6 +915,16 @@ const whyCards = [
   { icon: Brain, kpi: 24, suffix: "/7", l: "AI yönetici asistan", d: "Uyumaz, unutmaz" },
 ];
 
+const trustItems = [
+  { icon: ClipboardList, l: "Hakediş" },
+  { icon: Users, l: "Taşeron" },
+  { icon: Receipt, l: "E-Fatura" },
+  { icon: FileText, l: "Şantiye Günlüğü" },
+  { icon: Users, l: "Personel" },
+  { icon: Package, l: "Malzeme" },
+  { icon: Wallet, l: "Nakit Akışı" },
+];
+
 const WhyChoose = () => (
   <section className="py-24 md:py-32" style={{ background: T.elev }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -848,15 +933,15 @@ const WhyChoose = () => (
         <H2>Sayılar konuşsun.</H2>
       </Reveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-20">
         {whyCards.map((c, i) => (
           <Reveal key={c.l} delay={i * 80}>
             <div
               className="p-6 rounded-2xl h-full transition-all hover:border-[#FF6B2B]/30"
               style={{ background: T.bg, border: `1px solid ${T.border}`, minHeight: 200 }}
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4" style={{ background: T.emberFaint }}>
-                <c.icon className="w-4 h-4" style={{ color: T.ember }} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: T.emberFaint }}>
+                <c.icon className="w-[18px] h-[18px]" style={{ color: T.ember }} />
               </div>
               <p className="text-3xl font-semibold" style={{ color: T.text, ...heading }}>
                 <CountUp to={c.kpi} suffix={c.suffix} />
@@ -867,9 +952,60 @@ const WhyChoose = () => (
           </Reveal>
         ))}
       </div>
+
+      {/* Türkiye'ye özel güven bloğu */}
+      <Reveal>
+        <div
+          className="rounded-3xl p-8 md:p-12"
+          style={{
+            background: `linear-gradient(180deg, ${T.bg}, ${T.elev})`,
+            border: `1px solid ${T.border}`,
+          }}
+        >
+          <div className="grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5">
+              <div className="mb-4"><EmberBadge>Türkiye'ye özel</EmberBadge></div>
+              <h3 className="text-3xl md:text-4xl font-semibold leading-[1.1]" style={{ color: T.text, ...heading }}>
+                Türkiye'deki inşaat şirketleri için{" "}
+                <span style={{ color: T.emberGlow }}>sıfırdan geliştirildi.</span>
+              </h3>
+              <p className="mt-4 text-[14.5px] leading-relaxed" style={{ color: T.muted, ...body }}>
+                Hakediş süreçleri, taşeron ilişkileri, e-Fatura mevzuatı, şantiye günlüğü zorunlulukları ve
+                Türkiye'deki nakit akışı gerçeklerine göre tasarlandı. Global bir CRM'i Türkçeye çevirmedik —
+                inşaat sektörünün diliyle konuşan bir sistem kurduk.
+              </p>
+            </div>
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                {trustItems.map((t) => (
+                  <div
+                    key={t.l}
+                    className="group flex items-center gap-2.5 p-3 rounded-xl transition-all"
+                    style={{ background: T.elev, border: `1px solid ${T.border}` }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = `${T.ember}55`;
+                      e.currentTarget.style.boxShadow = `0 0 20px ${T.ember}22`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = T.border;
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: T.emberFaint }}>
+                      <t.icon className="w-[17px] h-[17px] transition-all group-hover:drop-shadow-[0_0_8px_rgba(255,107,43,0.7)]" style={{ color: T.ember }} />
+                    </div>
+                    <span className="text-[13px] font-medium" style={{ color: T.text, ...body }}>{t.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </div>
   </section>
 );
+
 
 /* ═══════════════════════════════════════════════════════════════════
    10 · PRICING
