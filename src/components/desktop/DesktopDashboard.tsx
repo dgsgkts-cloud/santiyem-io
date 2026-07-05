@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
+import { AIDailyAgenda } from "@/components/dashboard/AIDailyAgenda";
+
 import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
 import CompanyBrainWidget from "@/components/companybrain/CompanyBrainWidget";
 
@@ -458,6 +460,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           existing intelligence (useExecutiveBrief + ActionCard) and pushes
           a summary into the AI Canvas. Supersedes the old MorningBriefingCard. */}
       <ExecutiveMorningBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
+
+      {/* Sprint 14.2 — AI Daily Agenda. Orchestrates existing findings into
+          a Now/Next/Later timeline with ActionExecutor buttons. */}
+      <AIDailyAgenda onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
+
 
       <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 
