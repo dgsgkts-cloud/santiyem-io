@@ -30,6 +30,8 @@ import PersonnelPage from "@/pages/PersonnelPage";
 import DesktopSettingsPage from "@/components/desktop/DesktopSettingsPage";
 import MeetingCenterPage from "@/components/meetings/MeetingCenterPage";
 import CompanyBrainPage from "@/components/companybrain/CompanyBrainPage";
+import ComingSoonScreen from "@/components/desktop/ComingSoonScreen";
+void CompanyBrainPage;
 import CommunicationCenterPage from "@/components/communication/CommunicationCenterPage";
 
 
@@ -55,7 +57,16 @@ import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+
+// Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
+// kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
+// yönlendiriyoruz; hiçbir 404 gösterilmiyor.
+const DEPRECATED_TABS = new Set<Tab>([
+  "company-memory", "company-kb", "ai-decisions", "decision-history", "company-docs",
+  "meetings", "communication", "contracts", "reminders", "daily", "render",
+]);
+const coerceTab = (t: Tab): Tab => (DEPRECATED_TABS.has(t) ? "dashboard" : t);
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
@@ -73,7 +84,6 @@ const NAVIGABLE_TABS: Tab[] = [
   "reminders",
   "pricing",
   "daily",
-  "dashboard",
   "projects",
   "hakedis",
   "settings",
@@ -85,6 +95,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "personnel",
   "meetings",
   "communication",
+  "reports",
   "company-memory",
   "company-kb",
   "ai-decisions",
@@ -217,7 +228,7 @@ const Index = () => {
   const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
+  const [activeTab, setActiveTab] = useState<Tab>(() => coerceTab(getInitialTab()));
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { role: primaryRole } = usePrimaryProjectRole();
@@ -417,7 +428,8 @@ const Index = () => {
     setIsTyping(false);
   };
 
-  const goToTab = useCallback((tab: Tab) => {
+  const goToTab = useCallback((rawTab: Tab) => {
+    const tab = coerceTab(rawTab);
     const path = TAB_TO_PATH[tab];
     if (path && location.pathname !== path) {
       navigate(path);
@@ -487,10 +499,15 @@ const Index = () => {
                   <MeetingCenterPage />
                 ) : activeTab === "communication" ? (
                   <CommunicationCenterPage />
+                ) : activeTab === "reports" ? (
+                  <ComingSoonScreen
+                    title="Raporlar"
+                    description="Kar-zarar, nakit akışı ve karar geçmişi raporları hazırlanıyor. Yakında burada olacak."
+                  />
                 ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
-                  <CompanyBrainPage
-                    section={TAB_TO_BRAIN_SECTION[activeTab]}
-                    onSectionChange={(s) => handleDesktopTabChange(BRAIN_SECTION_TO_TAB[s])}
+                  <ComingSoonScreen
+                    title="Company Brain"
+                    description="Şirket Belleği ve AI Karar Geçmişi modülleri yeniden tasarlanıyor. Bu sürede AI Copilot üzerinden aynı bilgilere erişebilirsiniz."
                   />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
