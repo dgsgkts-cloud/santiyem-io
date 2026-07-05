@@ -283,7 +283,7 @@ const Hero = () => (
     </div>
     {/* Grid pattern */}
     <div
-      className="absolute inset-0 opacity-[0.03]"
+      className="absolute inset-0 opacity-[0.021]"
       style={{
         backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
@@ -294,25 +294,26 @@ const Hero = () => (
       <Reveal className="lg:col-span-6">
         <div className="mb-6"><EmberBadge>Şantiyem AI · v3</EmberBadge></div>
         <h1
-          className="text-[44px] sm:text-5xl md:text-6xl lg:text-[68px] font-semibold leading-[1.02] mb-6"
+          className="text-[40px] sm:text-5xl md:text-6xl lg:text-[64px] font-semibold leading-[1.04] mb-6"
           style={{ color: T.text, ...heading }}
         >
-          The AI Operating System<br />
+          Tüm şirketinizi{" "}
           <span style={{ background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            for Construction Companies.
-          </span>
+            tek bir yapay zekayla
+          </span>{" "}
+          yönetin.
         </h1>
         <Sub className="max-w-xl mb-8">
-          Firmanızı yönetmek için 12 farklı yazılım kullanmayı bırakın. Şantiyem AI; projelerinizi,
-          finansınızı, personelinizi ve şantiyenizi tek bir zekada birleştirir.
+          Projeler, finans, hakediş, personel, stok ve şantiye yönetimi tek bir yapay zekâda birleşiyor.
         </Sub>
         <div className="flex flex-wrap gap-3 mb-10">
-          <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
-          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
+          <PrimaryBtn to="/register">Ücretsiz Dene</PrimaryBtn>
           <GhostBtn icon={<Play className="w-4 h-4" style={{ color: T.ember }} />} onClick={() => {}}>
             2 dk Demo İzle
           </GhostBtn>
+          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
         </div>
+
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-[12.5px]" style={{ color: T.faint, ...body }}>
           <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
           <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> Kart gerekmez</span>
