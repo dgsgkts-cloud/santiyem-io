@@ -192,6 +192,15 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
             } catch (e) { console.warn("initial context dispatch failed", e); }
           });
         }
+        // Sprint 15.4 — flush queued question from idle Live Panel.
+        if (pendingQuestionRef.current) {
+          const q = pendingQuestionRef.current;
+          pendingQuestionRef.current = null;
+          queueMicrotask(() => {
+            try { conversation.sendUserMessage(q); }
+            catch (e) { console.warn("pending question dispatch failed", e); }
+          });
+        }
       } catch (e) { console.error("onConnect handler failed", e); }
     },
     onStatusChange: (v: unknown) => {
