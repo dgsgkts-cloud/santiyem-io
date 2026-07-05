@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sun, Sunrise, Moon, Volume2, RefreshCw, Sparkles, AlertTriangle, Target, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import { useExecutiveBrief, type Finding } from "@/hooks/useExecutiveBrief";
 import { HealthScoreCard } from "./executive/HealthScoreCard";
 import { ActionCard } from "./executive/ActionCard";
