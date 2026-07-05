@@ -214,7 +214,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
             {/* Mobile/Tablet card list */}
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
               {allProjects.map((p) => (
-                <div key={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+                <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
                     <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
