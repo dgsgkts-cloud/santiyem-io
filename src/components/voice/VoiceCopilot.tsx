@@ -216,6 +216,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
         sessionStartRef.current = null;
         if (secs > 0) trackUsage(secs);
         if (bubbles.length >= 2) setShowSummary(true);
+        // Sprint 15.3 — Voice Fix #4: konuşma bittiğinde ekran kapanmasın,
+        // kullanıcıya bir sonraki adım seçenekleri gösterilsin.
+        if (secs > 2 || hadAutoSpeakRef.current) setShowPostSession(true);
         // If we never got onConnect, resolve the waiter with an error so start() unblocks.
         if (connectWaiterRef.current) {
           connectWaiterRef.current.reject(new Error(
