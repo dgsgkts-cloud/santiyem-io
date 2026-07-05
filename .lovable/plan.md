@@ -1,89 +1,128 @@
-# Sprint 13.1 — AI Canvas
+# Sprint 13.2 — Living Workspace
 
-Add a permanent **AI Canvas** surface that becomes the primary visual output for every AI turn (chat + voice). Reuse the existing `AIResponseRenderer`, `useAIResponse`, and `ActionExecutor`. No changes to Construction Brain, Company Brain, Executive Dashboard logic, VoiceCopilot conversation logic, prompts, or the renderer internals.
+Make the ERP react in real time as the AI speaks. All work is additive UX plumbing on top of Sprint 13.1's `AICanvas`. No touches to Construction Brain, Company Brain, VoiceCopilot reasoning, prompts, AI actions, or `AIResponseRenderer`.
 
-## Scope
+## Core primitive: workspace event bus
 
-Presentation-only. All new code lives in a new `src/components/canvas/` folder plus small wiring edits to the chat + voice UIs.
+A tiny publish/subscribe layer that carries entity references extracted from AI turns to any listening UI surface.
 
-## Deliverables
-
-### New: `src/components/canvas/`
-- `AICanvas.tsx` — container that renders one canvas per turn (header, status, timeline, visuals, summary card, actions, sources, follow-ups).
-- `CanvasHeader.tsx` — title, date range, project, records analysed, generated time. Never shows anonymous data (falls back to "Genel" only if all fields absent).
-- `AIStatusBadge.tsx` — animated live status pill (Listening / Understanding / Searching / Reading Memory / Calculating / Preparing Charts / Speaking / Completed).
-- `AIThinkingTimeline.tsx` — checkmark list of completed system operations (not chain-of-thought). Steps derived from response metadata + fallback heuristic on `ui` payload.
-- `SummaryCard.tsx` — fallback card when no `ui` payload: Summary / Key Findings / Suggested Next Step / Related Modules.
-- `SourcePanel.tsx` — evidence chips built from the existing explainability payload (`sources`, `evidence`, `records`). Read-only, no reasoning exposed.
-- `SuggestedFollowups.tsx` — clickable follow-up chips; on click, dispatches `canvas-followup` CustomEvent picked up by chat input / voice.
-- `ExpandableVisual.tsx` — wraps a visual in a card with expand/collapse/fullscreen (Radix Dialog) buttons; wraps children only, does not re-render.
-- `CanvasHistory.tsx` — desktop-only scrollable stack of past turns' canvases.
-- `CanvasEmptyState.tsx` — pre-first-question view: suggested questions, recent, Executive Brief shortcut, voice + demo examples.
-
-### New helpers
-- `src/lib/canvasAdapter.ts` — pure function `toCanvasTurn(assistantMessage)` that:
-  - Runs `parseAIResponse` (existing).
-  - Extracts header context from message metadata (project, date range, record count, timestamp — all already present on chat messages).
-  - Extracts sources from `explainability` / `sources` fields when present.
-  - Derives thinking steps from which subsystems fired (voice=true, ui payload present, sources present, etc.).
-  - Derives follow-ups from an optional `followups` field or a small heuristic seeded from `exampleQuestions.ts`.
-- `src/hooks/useCanvasTurns.ts` — subscribes to chat/voice streams and yields `CanvasTurn[]`.
-
-### Wiring (minimal, no logic changes)
-- `src/pages/Index.tsx` (AI Assistant tab) — split layout on desktop: left = existing transcript + composer, right = `<AICanvas />` bound to latest turn with `<CanvasHistory />`. Mobile: stack Orb → Canvas → Transcript → Actions.
-- `src/components/voice/VoiceModeUI.tsx` — mount `<AICanvas />` alongside the orb; auto-opens on speech start (existing status signal), progressively reveals visuals as `assistantMessage.ui` populates.
-- `src/components/ChatMessage.tsx` — when a message is the latest assistant turn AND canvas is visible, hide inline `AIResponseRenderer` output (canvas owns it). Older messages keep inline rendering for scroll-back parity.
-
-### Behaviour rules
-- Voice and Chat both feed the same `AICanvas` — one shared component.
-- Canvas is the primary output; transcript is secondary.
-- When no `ui` payload: `SummaryCard` renders.
-- Follow-up click → fills chat input + submits (or triggers voice question).
-- Fullscreen uses existing Radix `Dialog`.
-- Animations: reuse Tailwind `animate-fade-in`, `animate-scale-in`, `animate-slide-in-right`. No new keyframes.
-
-## Technical notes
-
-```text
-Index.tsx  (ai-asistan tab)
-├── left column  (existing)
-│   ├── Transcript (ChatMessage list)
-│   └── ChatInput
-└── right column  (NEW)
-    └── AICanvas
-        ├── CanvasHeader
-        ├── AIStatusBadge
-        ├── AIThinkingTimeline
-        ├── ExpandableVisual × N   ← wraps AIResponseRenderer
-        │   └── (or) SummaryCard   ← when ui payload empty
-        ├── Action row             ← existing ActionExecutor
-        ├── SourcePanel
-        └── SuggestedFollowups
-
-CanvasHistory (below current, collapsed by default)
-```
-
-Status signal source:
-- Chat: existing streaming state in `useChat`/`streamChat`.
-- Voice: existing `VoiceBrain` phase (`listening`, `thinking`, `speaking`).
-- Mapped in `canvasAdapter.ts` to the badge labels.
-
-Follow-up transport:
+### New: `src/lib/workspaceBus.ts`
 ```ts
-window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
+type EntityKind = "project" | "personnel" | "supplier" | "material" | "task" | "payment" | "document";
+type EntityRef  = { kind: EntityKind; id: string; label?: string };
+type WorkspaceEvent =
+  | { type: "highlight"; refs: EntityRef[]; ttlMs?: number }
+  | { type: "filter";    kind: EntityKind; predicate: Record<string, unknown> }
+  | { type: "navigate";  ref: EntityRef; confidence: "high" | "medium" }
+  | { type: "preview";   ref: EntityRef; anchor?: DOMRect };
 ```
-`ChatInput` and `VoiceCopilot` add a passive listener — no logic change.
+Backed by `EventTarget`; caps highlights at 2 concurrent; auto-expires after `ttlMs` (default 2200 ms).
+
+### New: `src/hooks/useWorkspaceHighlight.ts`
+```ts
+useWorkspaceHighlight(kind, id) → boolean
+```
+Row/card components opt in with a single hook + one CSS class.
+
+### New: `src/lib/entityExtractor.ts`
+Deterministic post-processor for the assistant message. Reads the raw response text/JSON and pulls entity IDs from three sources it already contains:
+1. `ui[*].meta.entities` if the payload includes them.
+2. `sources` array (uses `kind` field).
+3. Regex scan for `id:xxxxx` markers already emitted by the brains.
+Returns `EntityRef[]`. Never modifies the response.
+
+## Canvas integration (extends 13.1)
+
+### Edited: `src/components/canvas/AICanvas.tsx`
+- After `pushTurn`, run `entityExtractor` and publish `{ type:"highlight", refs, ttlMs:2200 }`.
+- Render up to 2 `<PreviewCard>` chips at the top when refs exist.
+- Add a **Pin** button on each `ExpandableVisual` header.
+- Progressive reveal: cards mount with staggered `animate-fade-in` delays (60ms each).
+
+### New: `src/components/canvas/PreviewCard.tsx`
+Compact context card per entity kind. Fetches summary via existing hooks:
+- Project → `useProjects` row lookup
+- Personnel → `usePersonnel`
+- Supplier → `useSubcontractors`
+- Material → `useMaterials`
+- Task → `useTasks`
+- Payment → `useCashPayments`
+- Document → `useDocuments`
+Renders label + 2–3 key fields + "Aç" button that emits `navigate`.
+
+### New: `src/components/canvas/PinButton.tsx`
+Persists pinned visuals to `localStorage: canvas_pinned_v1` as `{ id, title, ui, createdAt }[]`. Cap 12.
+
+### New: `src/components/canvas/PinnedInsights.tsx`
+Reads pinned list and renders via `AIResponseRenderer`. Empty state fallback.
+
+## Dashboard integration
+
+### Edited: `src/components/desktop/DesktopDashboard.tsx`
+Add a **"Pinned Insights"** section (top of grid) mounting `<PinnedInsights />`. No dashboard logic changes.
+
+## Highlight surfaces (opt-in, one line each)
+
+Add `useWorkspaceHighlight(kind, id)` + `data-ws-highlight` class to:
+- Project cards in `DesktopProjectsPage`
+- Personnel rows in `PersonnelList`
+- Supplier rows in `useSubcontractors` list component
+- Material rows in `MaterialsPage` table
+- Task rows in `useTasks` list surface
+- Payment rows in `PaymentsKasaPage`
+
+CSS: single utility in `src/index.css`:
+```css
+.ws-highlight { animation: ws-pulse 1.6s ease-out 1; box-shadow: 0 0 0 2px hsl(var(--primary)/0.35); border-radius: inherit; }
+@keyframes ws-pulse { 0%{box-shadow:0 0 0 0 hsl(var(--primary)/0.55)} 100%{box-shadow:0 0 0 12px hsl(var(--primary)/0)} }
+```
+
+## Smart navigation
+
+### New: `src/hooks/useSmartNavigation.ts`
+Listens for `navigate` events; if `confidence === "high"` and only one ref, calls the existing tab change bus (`navigate-tab` CustomEvent already used across app). Otherwise renders an inline "Aç" button in `PreviewCard`.
+
+Confidence heuristic:
+- `high`: response contains exactly one entity ref AND text matches `/açalım|aç|göster|detay/i`.
+- Else `medium`.
+
+## Live filters
+
+### New: `src/hooks/useLiveFilter.ts`
+List pages subscribe: `const filter = useLiveFilter("project")`. Returns `{ predicate, clear }`. When `filter` event fires for the page's kind, list narrows client-side. A small chip **"AI filtresi · Temizle"** appears above the list (added in each page's existing header slot).
+
+Wired in:
+- `DesktopProjectsPage`
+- `PersonnelList`
+- `PaymentsKasaPage`
+
+Predicate is a shallow subset filter (`row[key] === value` or `Array.includes`); no schema changes.
+
+## Empty state (canvas)
+
+### Edited: `src/components/canvas/CanvasEmptyState.tsx`
+Insert a new "Pinlenmiş İçgörüler" section that lists titles of pinned items; click → scrolls to pinned area.
+
+## Conversation memory (lightweight)
+
+`AICanvas` already keeps `turns[]` (Sprint 13.1). Add a helper `getTurnByHint(hintText)` used only when the assistant's speech contains phrases like "önceki cevap" — resolves the last completed turn and mounts a "🕘 Önceki Yanıt" collapsible above the new canvas, reusing the stored `ui` (no rebuild).
+
+## Animation rules
+- All new motion ≤ 300 ms.
+- Reuse Tailwind `animate-fade-in`, `animate-scale-in`. Add one `ws-pulse` keyframe.
+- Number count-up: `src/components/canvas/CountUp.tsx` — 220 ms, `requestAnimationFrame`, integer/float aware. Wraps numeric values inside `AIKpiCards` via a light DOM observer? No — leave existing renderer untouched; expose `CountUp` for future opt-in only. Not injected into `AIKpiCards`.
+
+## Files
+
+**New (10):** `src/lib/workspaceBus.ts`, `src/lib/entityExtractor.ts`, `src/hooks/useWorkspaceHighlight.ts`, `src/hooks/useSmartNavigation.ts`, `src/hooks/useLiveFilter.ts`, `src/components/canvas/PreviewCard.tsx`, `src/components/canvas/PinButton.tsx`, `src/components/canvas/PinnedInsights.tsx`, `src/components/canvas/CountUp.tsx`, one CSS block in `src/index.css`.
+
+**Edited (small, presentation only):** `src/components/canvas/AICanvas.tsx`, `src/components/canvas/ExpandableVisual.tsx`, `src/components/canvas/CanvasEmptyState.tsx`, `src/components/desktop/DesktopDashboard.tsx`, project/personnel/material/payment/task list rows (one hook + className each).
 
 ## Non-goals
-- No prompt changes.
-- No changes to `AIResponseRenderer`, `AITable`, `AICharts`, `AIKpiCards`, `AITimeline`, `AIProgress`.
-- No new backend routes.
-- No changes to how sources are computed — canvas only *displays* what the assistant already returns.
-
-## Files touched
-**New (11):** `src/components/canvas/{AICanvas,CanvasHeader,AIStatusBadge,AIThinkingTimeline,SummaryCard,SourcePanel,SuggestedFollowups,ExpandableVisual,CanvasHistory,CanvasEmptyState}.tsx`, `src/lib/canvasAdapter.ts`, `src/hooks/useCanvasTurns.ts`.
-
-**Edited (3, wiring only):** `src/pages/Index.tsx` (AI Assistant tab layout), `src/components/voice/VoiceModeUI.tsx` (mount canvas), `src/components/ChatMessage.tsx` (suppress inline visuals for latest turn when canvas active).
+- No changes to `AIResponseRenderer`, `AIKpiCards`, `AITable`, brain edge functions, prompts, or actions registry.
+- No database changes. Pins live in `localStorage`.
+- Smart navigation reuses existing `navigate-tab` CustomEvent; no new router work.
+- No changes to how AI responses are produced. Extraction is passive.
 
 ## Risk
-Low. Renderer, hooks, brains, prompts, and executive logic remain untouched. Canvas is additive; if it fails to render, existing inline visuals still work (kept behind a `canvasActive` flag).
+Low. If the bus never publishes, every list, dashboard, and canvas behaves exactly as today.
