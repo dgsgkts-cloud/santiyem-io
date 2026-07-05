@@ -234,7 +234,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                     <span>→</span>
                     <span>{p.end}</span>
                   </div>
-                </div>
+                </HCard>
               ))}
             </div>
           </div>
