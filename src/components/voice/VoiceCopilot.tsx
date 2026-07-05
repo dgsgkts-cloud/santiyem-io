@@ -69,12 +69,17 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const [uiState, setUiState] = useState<UiState>("idle");
   const [transcript, setTranscript] = useState<string>("");
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const [cards, setCards] = useState<Card[]>([]);
+  // Sprint 15.3 — Live Panel opens pre-filled with brief cards when provided.
+  const [cards, setCards] = useState<Card[]>(() => initialCards ?? []);
   const [error, setError] = useState<string | null>(null);
   // `muted` is driven by the ElevenLabs SDK (conversation.isMuted) below.
   const [paused, setPaused] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  // Sprint 15.3 — Voice Fix #4: post-session "Şimdi ne yapmak istersiniz?" panel.
+  const [showPostSession, setShowPostSession] = useState(false);
+  const hadAutoSpeakRef = useRef(!!autoSpeak);
+  useEffect(() => { hadAutoSpeakRef.current = !!autoSpeak; }, [autoSpeak]);
   const [projectName, setProjectName] = useState<string>("Tüm Projeler");
   const [firstName, setFirstName] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("");
