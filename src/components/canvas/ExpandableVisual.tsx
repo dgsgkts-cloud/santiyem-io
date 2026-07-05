@@ -5,12 +5,22 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 export const ExpandableVisual = ({
   title,
   children,
+  extra,
 }: {
   title?: string;
   children: ReactNode;
+  extra?: ReactNode;
 }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [full, setFull] = useState(false);
+  return (
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden animate-scale-in">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
+        <p className="text-[12px] font-medium text-foreground/90 truncate">
+          {title || "Görsel"}
+        </p>
+        <div className="flex items-center gap-1">
+          {extra}
   return (
     <div className="rounded-xl border border-border/60 bg-card overflow-hidden animate-scale-in">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
