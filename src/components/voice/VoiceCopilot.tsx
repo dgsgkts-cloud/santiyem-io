@@ -96,6 +96,9 @@ function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false
   const sessionStartRef = useRef<number | null>(null);
   const connectWaiterRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
   const lastAiMessageRef = useRef<string>("");
+  // Sprint 15.4 — question queued from an idle-panel chip/suggestion.
+  // Sent right after onConnect so the user can trigger flows from the rail.
+  const pendingQuestionRef = useRef<string | null>(null);
   const transcriptScrollRef = useRef<HTMLDivElement | null>(null);
   // ── Debug telemetry (dev-only overlay) ─────────────────────────
   const connectStartRef = useRef<number | null>(null);
