@@ -5,7 +5,6 @@ import { ArrowUpRight, Folder, User, Truck, Package, ListTodo, Wallet, FileText 
 import { useProjects } from "@/hooks/useProjects";
 import { usePersonnel } from "@/hooks/usePersonnel";
 import { useMaterials } from "@/hooks/useMaterials";
-import { useTasks } from "@/hooks/useTasks";
 import { workspaceBus, type EntityRef } from "@/lib/workspaceBus";
 
 const ICONS = {
