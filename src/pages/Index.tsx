@@ -803,8 +803,10 @@ const Index = () => {
           ) : (
             <RemindersPanel />
           )}
+          </Suspense>
         </div>
         </div>
+
         {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer />}
       </div>
 
