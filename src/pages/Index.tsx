@@ -426,7 +426,8 @@ const Index = () => {
     setIsTyping(false);
   };
 
-  const goToTab = useCallback((tab: Tab) => {
+  const goToTab = useCallback((rawTab: Tab) => {
+    const tab = coerceTab(rawTab);
     const path = TAB_TO_PATH[tab];
     if (path && location.pathname !== path) {
       navigate(path);
