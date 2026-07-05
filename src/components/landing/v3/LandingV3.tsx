@@ -169,9 +169,25 @@ const AppFrame = ({ children, label = "santiyem.io/dashboard" }: { children: Rea
 /* ═══════════════════════════════════════════════════════════════════
    1 · HERO — split-screen
    ═══════════════════════════════════════════════════════════════════ */
-const HeroDashboardMock = () => (
+const HeroDashboardMock = () => {
+  const { ref, visible } = useReveal();
+  const [score, setScore] = useState(0);
+  useEffect(() => {
+    if (!visible) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / 1400);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setScore(Math.round(87 * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [visible]);
+  return (
   <AppFrame label="santiyem.io/dashboard">
-    <div className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
+    <div ref={ref} className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
       {/* Sidebar */}
       <div className="col-span-1 space-y-1.5">
         {[Building2, Wallet, Users, Package, FileText].map((I, i) => (
@@ -189,9 +205,16 @@ const HeroDashboardMock = () => (
             <span className="text-[10px]" style={{ color: "#4ade80", ...body }}>▲ +4</span>
           </div>
           <div className="flex items-end gap-3">
-            <span className="text-4xl font-semibold" style={{ color: T.text, ...heading }}>87</span>
+            <span className="text-4xl font-semibold tabular-nums" style={{ color: T.text, ...heading }}>{score}</span>
             <div className="flex-1 h-1.5 rounded-full overflow-hidden mb-2" style={{ background: "#1a1a1a" }}>
-              <div className="h-full rounded-full" style={{ width: "87%", background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})` }} />
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${score}%`,
+                  background: `linear-gradient(90deg, ${T.ember}, ${T.emberGlow})`,
+                  transition: "width 1.4s cubic-bezier(0.22,1,0.36,1)",
+                }}
+              />
             </div>
           </div>
         </div>
@@ -209,9 +232,17 @@ const HeroDashboardMock = () => (
           ))}
         </div>
         {/* AI insight */}
-        <div className="rounded-xl p-3" style={{ background: T.emberFaint, border: `1px solid ${T.ember}33` }}>
+        <div
+          className="rounded-xl p-3"
+          style={{
+            background: T.emberFaint,
+            border: `1px solid ${T.ember}33`,
+            boxShadow: visible ? `0 0 24px ${T.ember}22` : "none",
+            transition: "box-shadow 1.2s ease",
+          }}
+        >
           <div className="flex items-start gap-2">
-            <Sparkles className="w-3.5 h-3.5 mt-0.5" style={{ color: T.ember }} />
+            <Sparkles className="w-3.5 h-3.5 mt-0.5" style={{ color: T.ember, animation: visible ? "pulse 2.4s ease-in-out infinite" : "none" }} />
             <div className="flex-1">
               <p className="text-[11px] font-semibold" style={{ color: T.text, ...body }}>Şantiyem AI</p>
               <p className="text-[10.5px] mt-0.5" style={{ color: T.muted, ...body }}>
@@ -224,14 +255,24 @@ const HeroDashboardMock = () => (
         <div className="rounded-xl p-3" style={{ background: "#0F0F0F", border: `1px solid ${T.border}` }}>
           <div className="flex items-end gap-1.5 h-16">
             {[40, 65, 45, 80, 55, 90, 70, 85].map((h, i) => (
-              <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: i === 5 ? T.ember : "rgba(255,255,255,0.12)" }} />
+              <div
+                key={i}
+                className="flex-1 rounded-t"
+                style={{
+                  height: visible ? `${h}%` : "0%",
+                  background: i === 5 ? T.ember : "rgba(255,255,255,0.12)",
+                  transition: `height 900ms cubic-bezier(0.22,1,0.36,1) ${i * 70}ms`,
+                }}
+              />
             ))}
           </div>
         </div>
       </div>
     </div>
   </AppFrame>
-);
+  );
+};
+
 
 const Hero = () => (
   <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
