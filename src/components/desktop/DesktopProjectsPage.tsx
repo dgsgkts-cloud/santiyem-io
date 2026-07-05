@@ -185,7 +185,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
               </thead>
               <tbody>
                 {allProjects.map((p) => (
-                  <tr key={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
+                  <HRow key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
                     <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
                     <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
