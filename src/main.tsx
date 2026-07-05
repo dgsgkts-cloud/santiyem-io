@@ -1,7 +1,8 @@
-// Dev-only WS/RTC diagnostic tap — prod build tree-shakes this out.
+// Dev-only WS/RTC diagnostic tap — prod build skips it (must run before any SDK constructs WS/RTC).
 if (import.meta.env.DEV) {
-  await import("./debug/wsRtcTap");
+  import("./debug/wsRtcTap");
 }
+
 
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
