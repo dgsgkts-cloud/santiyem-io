@@ -341,3 +341,122 @@
   0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55); opacity: 1; }
   100% { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); opacity: 0; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   SPRINT 15.1 — Premium Visual Polish Layer
+   Global, non-invasive refinements. No logic changes.
+   ══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    --motion-fast: 120ms;
+    --motion-base: 180ms;
+    --motion-slow: 240ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-emphasized: cubic-bezier(0.2, 0, 0.1, 1);
+    --shadow-elevation-1: 0 1px 2px hsl(0 0% 0% / 0.04), 0 1px 1px hsl(0 0% 0% / 0.03);
+    --shadow-elevation-2: 0 4px 12px hsl(0 0% 0% / 0.08), 0 1px 2px hsl(0 0% 0% / 0.04);
+    --shadow-elevation-3: 0 10px 32px hsl(0 0% 0% / 0.14), 0 2px 6px hsl(0 0% 0% / 0.06);
+  }
+
+  :where(button, [role="button"], a, input, textarea, select, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.55);
+    transition: box-shadow var(--motion-fast) var(--ease-standard);
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  @media (pointer: fine) {
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.22);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); background-clip: padding-box; }
+    * { scrollbar-width: thin; scrollbar-color: hsl(var(--muted-foreground) / 0.28) transparent; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .motion-fade-in { animation: fadeInSoft var(--motion-slow) var(--ease-standard) both; }
+  .motion-slide-up { animation: slideUpSoft var(--motion-slow) var(--ease-emphasized) both; }
+  .motion-scale-in { animation: scaleInSoft var(--motion-base) var(--ease-emphasized) both; }
+
+  @keyframes fadeInSoft { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUpSoft { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleInSoft { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted) / 0.6);
+    border-radius: calc(var(--radius) - 4px);
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent 0%, hsl(var(--foreground) / 0.06) 50%, transparent 100%);
+    animation: skeletonSweep 1.4s ease-in-out infinite;
+  }
+  @keyframes skeletonSweep { 100% { transform: translateX(100%); } }
+
+  .table-refined tbody tr {
+    transition: background-color var(--motion-fast) var(--ease-standard);
+  }
+  .table-refined tbody tr:hover {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+  .table-refined thead th {
+    position: sticky;
+    top: 0;
+    background: hsl(var(--card));
+    z-index: 1;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    letter-spacing: 0.01em;
+  }
+
+  .elevation-1 { box-shadow: var(--shadow-elevation-1); }
+  .elevation-2 { box-shadow: var(--shadow-elevation-2); }
+  .elevation-3 { box-shadow: var(--shadow-elevation-3); }
+
+  .card-refined {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.7);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elevation-1);
+    transition: border-color var(--motion-base) var(--ease-standard),
+                box-shadow var(--motion-base) var(--ease-standard);
+  }
+  .card-refined:hover {
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-elevation-2);
+  }
+
+  .safe-area-top { padding-top: env(safe-area-inset-top, 0px); }
+  .safe-area-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+
+  @supports (-webkit-touch-callout: none) {
+    input, textarea, select { font-size: max(16px, 1rem); }
+  }
+}
