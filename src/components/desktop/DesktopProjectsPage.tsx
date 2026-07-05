@@ -265,7 +265,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
                   <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
                   <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
                 </div>
-              </div>
+              </HCard>
             ))}
           </div>
         )}
