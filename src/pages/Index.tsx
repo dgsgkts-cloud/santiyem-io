@@ -497,10 +497,15 @@ const Index = () => {
                   <MeetingCenterPage />
                 ) : activeTab === "communication" ? (
                   <CommunicationCenterPage />
+                ) : activeTab === "reports" ? (
+                  <ComingSoonScreen
+                    title="Raporlar"
+                    description="Kar-zarar, nakit akışı ve karar geçmişi raporları hazırlanıyor. Yakında burada olacak."
+                  />
                 ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
-                  <CompanyBrainPage
-                    section={TAB_TO_BRAIN_SECTION[activeTab]}
-                    onSectionChange={(s) => handleDesktopTabChange(BRAIN_SECTION_TO_TAB[s])}
+                  <ComingSoonScreen
+                    title="Company Brain"
+                    description="Şirket Belleği ve AI Karar Geçmişi modülleri yeniden tasarlanıyor. Bu sürede AI Copilot üzerinden aynı bilgilere erişebilirsiniz."
                   />
                 ) : activeTab === "settings" ? (
                   <DesktopSettingsPage />
