@@ -241,7 +241,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
             {allProjects.map((p) => (
-              <div key={p.id} onClick={() => setSelectedProjectId(p.id)}
+              <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)}
                 className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
