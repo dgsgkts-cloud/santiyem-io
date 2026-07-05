@@ -146,6 +146,18 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
     conv.loadMessages(c.id);
   };
 
+  // Listen for canvas follow-up clicks anywhere in the tree.
+  const sendRef = useRef(handleSend);
+  useEffect(() => { sendRef.current = handleSend; });
+  useEffect(() => {
+    const onFollowup = (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string }>).detail;
+      if (detail?.text) sendRef.current(detail.text);
+    };
+    window.addEventListener("canvas-followup", onFollowup as EventListener);
+    return () => window.removeEventListener("canvas-followup", onFollowup as EventListener);
+  }, []);
+
   // Filter conversations
   const filteredConversations = conv.conversations.filter(c =>
     !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase())
