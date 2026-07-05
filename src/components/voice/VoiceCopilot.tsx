@@ -1392,33 +1392,29 @@ function ActionBtn({ onClick, label, active, danger, children }: {
 /* =====================================================
    DASHBOARD RAIL (desktop right column)
    ===================================================== */
-function DashboardRail({ cards, summary, onClose }: { cards: Card[]; summary: Bubble[] | null; onClose: () => void }) {
+function DashboardRail({
+  cards, summary, onClose, onAsk, onNavigate,
+}: {
+  cards: Card[]; summary: Bubble[] | null; onClose: () => void;
+  onAsk: (q: string) => void; onNavigate: (tab: string) => void;
+}) {
+  const isLive = cards.length > 0;
   return (
     <aside className="border-l border-white/5 overflow-y-auto p-4 space-y-3 relative"
       style={{ background: "linear-gradient(180deg, rgba(15,20,25,0.9), rgba(6,9,13,0.95))" }}>
-      <div className="flex items-center justify-between px-1 pb-1">
-        <div className="flex items-center gap-2">
-          <Sparkle className="w-3.5 h-3.5 text-[#FF8F5A]" strokeWidth={2.2} />
-          <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">Canlı Panel</span>
-        </div>
-        <span className="text-[10px] text-white/30 tabular-nums">{cards.length}/8</span>
-      </div>
-
-      {cards.length === 0 ? (
-        <div className="voice-glass rounded-2xl p-6 text-center">
-          <div className="text-white/40 text-sm leading-relaxed">
-            AI konuşma sırasında burada KPI kartları, uyarılar ve öneriler oluşturur.
+      {isLive ? (
+        <>
+          <div className="flex items-center justify-between px-1 pb-1">
+            <div className="flex items-center gap-2">
+              <Sparkle className="w-3.5 h-3.5 text-[#FF8F5A]" strokeWidth={2.2} />
+              <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">Canlı Analiz</span>
+            </div>
+            <span className="text-[10px] text-white/30 tabular-nums">{cards.length}/8</span>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-white/25 uppercase tracking-widest">
-            <AlertTriangle className="w-3 h-3" /> Ödeme
-            <span>·</span>
-            <Package className="w-3 h-3" /> Stok
-            <span>·</span>
-            <Users className="w-3 h-3" /> Puantaj
-          </div>
-        </div>
+          {cards.map((c) => <PremiumCard key={c.id} card={c} />)}
+        </>
       ) : (
-        cards.map((c) => <PremiumCard key={c.id} card={c} />)
+        <VoiceLivePanel onAsk={onAsk} onNavigate={onNavigate} />
       )}
 
       {summary && summary.length >= 2 && (
@@ -1427,6 +1423,7 @@ function DashboardRail({ cards, summary, onClose }: { cards: Card[]; summary: Bu
     </aside>
   );
 }
+
 
 function PremiumCard({ card }: { card: Card }) {
   const tone = {
