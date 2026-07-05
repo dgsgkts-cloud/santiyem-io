@@ -126,7 +126,20 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
       {/* View toggle + Add button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
+          {liveFilter.active && (
+            <button
+              onClick={liveFilter.clear}
+              className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
+              aria-label="AI filtresini temizle"
+            >
+              <Sparkles className="w-3 h-3" />
+              {liveFilter.label ?? "AI filtresi"}
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           {user && (
             <button
