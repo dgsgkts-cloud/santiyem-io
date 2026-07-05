@@ -91,3 +91,44 @@ export function formatNumber0(n: number): string {
 export function formatCurrency2(n: number): string {
   return `₺${formatNumber2(n)}`;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Safe helpers — asla NaN / Infinity / undefined göstermez.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Bölme koruması. Payda 0/negatif/geçersiz ise fallback döner. */
+export function safeDiv(numerator: unknown, denominator: unknown, fallback = 0): number {
+  const n = Number(numerator);
+  const d = Number(denominator);
+  if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return fallback;
+  const r = n / d;
+  return Number.isFinite(r) ? r : fallback;
+}
+
+/** Güvenli yüzde: safePercent(3, 10) → "%30". Payda 0 ise "—". */
+export function safePercent(
+  numerator: unknown,
+  denominator: unknown,
+  opts: { emptyLabel?: string; decimals?: number } = {}
+): string {
+  const { emptyLabel = "—", decimals = 0 } = opts;
+  const n = Number(numerator);
+  const d = Number(denominator);
+  if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return emptyLabel;
+  const pct = (n / d) * 100;
+  if (!Number.isFinite(pct)) return emptyLabel;
+  const rounded = decimals > 0 ? pct.toFixed(decimals) : String(Math.round(pct));
+  return `%${rounded}`;
+}
+
+/** Sayı formatı — NaN/undefined/Infinity için fallback. */
+export function safeNumber(value: unknown, fallback = "—"): string {
+  if (value === null || value === undefined || value === "") return fallback;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return n.toLocaleString("tr-TR");
+}
+
+/** formatCurrency alias'ı (isim tutarlılığı için). */
+export const safeCurrency = formatCurrency;
+
