@@ -42,6 +42,14 @@ interface Props {
   compact?: boolean;
   autoStart?: boolean;
   initialContext?: string;
+  /** Sprint 15.3 — pre-fill the Live Panel with cards from an existing briefing. */
+  initialCards?: Card[];
+  /**
+   * Sprint 15.3 — auto-narrate mode. When true, the initialContext is sent as
+   * a user message right after connect so the agent immediately reads it aloud,
+   * instead of a silent contextual update that never triggers a reply.
+   */
+  autoSpeak?: boolean;
 }
 
 type UiState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";
@@ -57,7 +65,7 @@ export function VoiceCopilot(props: Props) {
   );
 }
 
-function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false, initialContext }: Props) {
+function VoiceCopilotInner({ onClose, access, compact = false, autoStart = false, initialContext, initialCards, autoSpeak = false }: Props) {
   const [uiState, setUiState] = useState<UiState>("idle");
   const [transcript, setTranscript] = useState<string>("");
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
