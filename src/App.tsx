@@ -39,7 +39,24 @@ const EkipTakip = lazy(() => import("./pages/EkipTakip"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 
-const queryClient = new QueryClient();
+// Sprint 17.2 — sensible defaults so opening the same widget on two tabs of
+// the app doesn't refetch identical queries. 60s stale window matches the
+// dashboard refresh rhythm; disable focus-refetch (mobile fires it constantly).
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
+
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F1419" }}>
