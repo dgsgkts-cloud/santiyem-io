@@ -799,13 +799,15 @@ Net durum → kısa yorum → önerilen adım → tek kısa takip sorusu. Kullan
     if (muted && active) return "🎤❌ Mikrofon kapalı";
     switch (uiState) {
       case "connecting": return "Bağlanıyor…";
-      case "listening": return "Dinleniyor";
-      case "thinking": return "Şantiye kayıtları inceleniyor…";
-      case "speaking": return "Cevap veriliyor";
+      case "listening": return "Dinliyor";
+      case "thinking": return "Analiz ediyor…";
+      case "speaking": return "Konuşuyor";
       case "error": return "Hata";
-      default: return access.hasAccess ? "Dokun ve konuş" : "Kota doldu";
+      default:
+        if (showPostSession) return "Hazır — bir sonraki adımı seç";
+        return access.hasAccess ? "Hazır" : "Kota doldu";
     }
-  }, [uiState, access.hasAccess, muted, active]);
+  }, [uiState, access.hasAccess, muted, active, showPostSession]);
 
   return (
     <div
