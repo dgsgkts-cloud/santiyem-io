@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { MorningBriefingCard } from "@/components/voice/MorningBriefingCard";
+import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
 import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
 import CompanyBrainWidget from "@/components/companybrain/CompanyBrainWidget";
+
 import {
   useUser,
   canAccessProjects,
@@ -453,11 +454,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
       <PinnedInsights />
 
+      {/* Sprint 14.1 — Proactive Executive Morning Brief. Orchestrates
+          existing intelligence (useExecutiveBrief + ActionCard) and pushes
+          a summary into the AI Canvas. Supersedes the old MorningBriefingCard. */}
+      <ExecutiveMorningBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
+
       <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
 
-      <MorningBriefingCard />
-
       <CompanyBrainWidget onOpen={() => onTabChange("company-memory")} />
+
 
 
 
