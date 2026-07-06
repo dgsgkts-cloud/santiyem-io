@@ -1,128 +1,96 @@
-# Sprint 13.2 — Living Workspace
+# Premium Demo Company — MSY Yapı A.Ş.
 
-Make the ERP react in real time as the AI speaks. All work is additive UX plumbing on top of Sprint 13.1's `AICanvas`. No touches to Construction Brain, Company Brain, VoiceCopilot reasoning, prompts, AI actions, or `AIResponseRenderer`.
+## Goal
+Add a rich, interconnected demo dataset that showcases every Şantiyem AI feature, loadable and removable with a single click from **Settings → Demo Data**. No existing logic, prompts, permissions, or AI brains change.
 
-## Core primitive: workspace event bus
+## Approach
 
-A tiny publish/subscribe layer that carries entity references extracted from AI turns to any listening UI surface.
+Two moving parts only:
 
-### New: `src/lib/workspaceBus.ts`
-```ts
-type EntityKind = "project" | "personnel" | "supplier" | "material" | "task" | "payment" | "document";
-type EntityRef  = { kind: EntityKind; id: string; label?: string };
-type WorkspaceEvent =
-  | { type: "highlight"; refs: EntityRef[]; ttlMs?: number }
-  | { type: "filter";    kind: EntityKind; predicate: Record<string, unknown> }
-  | { type: "navigate";  ref: EntityRef; confidence: "high" | "medium" }
-  | { type: "preview";   ref: EntityRef; anchor?: DOMRect };
+1. **One new Supabase Edge Function** — `seed-msy-demo` — that generates the entire dataset for the currently authenticated user (owner scope) and can also fully remove it. Every row is tagged so removal is surgical.
+2. **One new UI card** inside the existing Settings → Demo Data tab — "MSY Yapı Premium Demo" with **Load** and **Remove** buttons and a live counts summary.
+
+No schema migrations. No changes to Construction Brain, Company Brain, prompts, permissions, or RLS. The seeder writes to existing tables using the same shapes the app already uses, so the AI answers naturally from real demo rows.
+
+## Tagging strategy (how "Remove" stays surgical)
+
+Existing tables already have free-text/JSON fields we can safely mark without a migration:
+
+- `projects.description` — prefix with `[MSY_DEMO]` marker line.
+- `personnel.note`, `subcontractors.note`, `materials` (via note-like fields), `tasks.description`, `site_diary_entries.notes`, `meetings.notes`, `company_memories.metadata.is_demo=true`, `communication_messages.metadata.is_demo=true`, `reminders.title` prefix, `project_expenses.note`, `cash_*` tables `note` field, `contracts.description`, `invoices.notes`, `project_notes.content`, `project_files.name` suffix.
+- Everything else (hakediş items, deductions, material entries/exits, assignments, attendance, photos) is deleted transitively via the parent `project_id` = the demo project's id, which is the only truly reliable anchor.
+
+The **demo project id** is stored in `company_memories` under a well-known key (`type='other'`, `category='__msy_demo_anchor__'`, `metadata.is_demo=true`) so Remove can find it in one query.
+
+## What gets seeded
+
+**Company profile** (localStorage helper call from UI after seed succeeds): MSY Yapı A.Ş., Hatay, +90… , est. 2013.
+
+**Main project**: MSY Yapı — Ballıca Panorama Villaları, Hatay/Arsuz, 245.000.000 TL, 41% progress, dates 2026-01-12 → 2027-04-30.
+
+**Personnel** (~40 realistic rows): PM, Site Chief, 4 Civil Eng, 2 Architects, Mech Eng, Elec Eng, Survey Eng, HSE, Procurement, Warehouse Mgr, HR, Accountant, 6 Foremen, 20 workers. Each with phone, occupation, title, wage/salary, `note` containing skills+certificates JSON.
+
+**Attendance**: 60 days back, realistic present/absent/leave mix → `attendance_records` + `worker_attendance` for QR-style entries.
+
+**Subcontractors** (18): all trades listed, with contract amount, payments, performance in `note`.
+
+**Suppliers**: modelled through `materials.supplier` field + `material_entries` history (22 distinct supplier names, price history via multiple entries).
+
+**Warehouse** (~250 materials): realistic construction items, each with stock, min_stock, unit, supplier, purchase entries (price history), exits tied to site diary.
+
+**Finance**: `cash_accounts` (2 bank + 1 cash), `cash_collections` (hakediş receipts), `cash_payments` (payroll, subcontractor, supplier, tax, fuel), `subcontractor_payments`, `project_expenses`, `invoices`, `e_invoices`, `project_hakedis` (4 hakediş with items+deductions). Numbers reconcile: sum(payments)+sum(expenses) ≈ 98.700.000 TL current cost.
+
+**Tasks**: 340 completed + 78 active + 16 delayed + 14 high-priority = 448 tasks linked to project/personnel.
+
+**Site diary**: 120 daily entries with weather, worker counts, materials in/out (auto-syncs to stock via existing trigger — no logic change, just data), notes, photos (a few placeholder rows in `site_diary_photos`).
+
+**Meetings**: 48 rows with participants, transcript excerpts, analyses (AI summary), action items.
+
+**Company Memory**: ~40 entries — contracts, technical specs, method statements, quality/safety procedures, supplier agreements, purchase policy, employee handbook, org chart, company profile. All with `metadata.is_demo=true` so Company Brain answers them naturally.
+
+**Communication**: ~30 `communication_messages` (email + WhatsApp) with delivery attempts — payment reminders, delivery notifications, meeting reminders, announcements.
+
+**Reminders**: 12 upcoming reminders (permits, inspections, payments).
+
+**Contracts**: 6 subcontractor contracts + 2 supplier framework contracts with items.
+
+## UI change
+
+Add a new card at the top of `src/components/desktop/DemoDataTab.tsx` (above the existing panels) titled **"MSY Yapı A.Ş. — Premium Demo"** with:
+
+- Short description
+- **Yükle** button → invokes `seed-msy-demo` with `{action:'load'}`
+- **Kaldır** button (destructive style, confirmation) → `{action:'remove'}`
+- Counts summary after load
+
+No other UI touched.
+
+## Technical details
+
+**File plan:**
+
+- `supabase/functions/seed-msy-demo/index.ts` — new. Uses service_role client, resolves user from JWT, runs `load` or `remove`. Splits load into batched inserts (~500 rows per batch) to stay within edge function timeouts. Returns `{ok:true, counts:{…}}`.
+- `src/components/desktop/DemoDataTab.tsx` — add the MSY card at the top; keep existing "Göktaş demo" and "Arsuz Villas" panels untouched.
+
+**Removal query set** (executed in FK-safe order):
 ```
-Backed by `EventTarget`; caps highlights at 2 concurrent; auto-expires after `ttlMs` (default 2200 ms).
-
-### New: `src/hooks/useWorkspaceHighlight.ts`
-```ts
-useWorkspaceHighlight(kind, id) → boolean
-```
-Row/card components opt in with a single hook + one CSS class.
-
-### New: `src/lib/entityExtractor.ts`
-Deterministic post-processor for the assistant message. Reads the raw response text/JSON and pulls entity IDs from three sources it already contains:
-1. `ui[*].meta.entities` if the payload includes them.
-2. `sources` array (uses `kind` field).
-3. Regex scan for `id:xxxxx` markers already emitted by the brains.
-Returns `EntityRef[]`. Never modifies the response.
-
-## Canvas integration (extends 13.1)
-
-### Edited: `src/components/canvas/AICanvas.tsx`
-- After `pushTurn`, run `entityExtractor` and publish `{ type:"highlight", refs, ttlMs:2200 }`.
-- Render up to 2 `<PreviewCard>` chips at the top when refs exist.
-- Add a **Pin** button on each `ExpandableVisual` header.
-- Progressive reveal: cards mount with staggered `animate-fade-in` delays (60ms each).
-
-### New: `src/components/canvas/PreviewCard.tsx`
-Compact context card per entity kind. Fetches summary via existing hooks:
-- Project → `useProjects` row lookup
-- Personnel → `usePersonnel`
-- Supplier → `useSubcontractors`
-- Material → `useMaterials`
-- Task → `useTasks`
-- Payment → `useCashPayments`
-- Document → `useDocuments`
-Renders label + 2–3 key fields + "Aç" button that emits `navigate`.
-
-### New: `src/components/canvas/PinButton.tsx`
-Persists pinned visuals to `localStorage: canvas_pinned_v1` as `{ id, title, ui, createdAt }[]`. Cap 12.
-
-### New: `src/components/canvas/PinnedInsights.tsx`
-Reads pinned list and renders via `AIResponseRenderer`. Empty state fallback.
-
-## Dashboard integration
-
-### Edited: `src/components/desktop/DesktopDashboard.tsx`
-Add a **"Pinned Insights"** section (top of grid) mounting `<PinnedInsights />`. No dashboard logic changes.
-
-## Highlight surfaces (opt-in, one line each)
-
-Add `useWorkspaceHighlight(kind, id)` + `data-ws-highlight` class to:
-- Project cards in `DesktopProjectsPage`
-- Personnel rows in `PersonnelList`
-- Supplier rows in `useSubcontractors` list component
-- Material rows in `MaterialsPage` table
-- Task rows in `useTasks` list surface
-- Payment rows in `PaymentsKasaPage`
-
-CSS: single utility in `src/index.css`:
-```css
-.ws-highlight { animation: ws-pulse 1.6s ease-out 1; box-shadow: 0 0 0 2px hsl(var(--primary)/0.35); border-radius: inherit; }
-@keyframes ws-pulse { 0%{box-shadow:0 0 0 0 hsl(var(--primary)/0.55)} 100%{box-shadow:0 0 0 12px hsl(var(--primary)/0)} }
+1. delete communication_delivery_attempts where message_id in (demo msgs)
+2. delete communication_messages where metadata->>'is_demo'='true' and user_id=uid
+3. delete company_memories where metadata->>'is_demo'='true' and user_id=uid
+4. read demo project_id from anchor memory (before step 3 if still needed — cache in memory)
+5. for demo project_id: delete hakedis_items/deductions → project_hakedis, tasks, site_diary_photos → site_diary_entries, worker_attendance, attendance_records, material_entries/exits (where source=demo project), materials, project_expenses, project_files, project_notes, project_milestones, personnel_project_assignments, contract_items → contracts, invoices, e_invoices, cash_payments/collections/checks/accounts (tagged), subcontractor_payments, meetings + children, reminders (tagged), subcontractors (tagged), personnel (tagged), then project itself.
 ```
 
-## Smart navigation
+**Reconciliation math** is done in the seeder in JS so totals match the headline numbers exactly.
 
-### New: `src/hooks/useSmartNavigation.ts`
-Listens for `navigate` events; if `confidence === "high"` and only one ref, calls the existing tab change bus (`navigate-tab` CustomEvent already used across app). Otherwise renders an inline "Aç" button in `PreviewCard`.
+## Non-goals (explicit)
 
-Confidence heuristic:
-- `high`: response contains exactly one entity ref AND text matches `/açalım|aç|göster|detay/i`.
-- Else `medium`.
+- No changes to `chat`, `voice-*`, `company-memory`, `communication-hub` functions.
+- No changes to any prompt file under `supabase/functions/chat/prompt/*`.
+- No RLS/policy/grant changes.
+- No new tables, no schema migration.
+- No changes to `Construction Brain` or `Company Brain` code paths — they will simply see the demo rows as normal data.
 
-## Live filters
+## Deliverable
 
-### New: `src/hooks/useLiveFilter.ts`
-List pages subscribe: `const filter = useLiveFilter("project")`. Returns `{ predicate, clear }`. When `filter` event fires for the page's kind, list narrows client-side. A small chip **"AI filtresi · Temizle"** appears above the list (added in each page's existing header slot).
-
-Wired in:
-- `DesktopProjectsPage`
-- `PersonnelList`
-- `PaymentsKasaPage`
-
-Predicate is a shallow subset filter (`row[key] === value` or `Array.includes`); no schema changes.
-
-## Empty state (canvas)
-
-### Edited: `src/components/canvas/CanvasEmptyState.tsx`
-Insert a new "Pinlenmiş İçgörüler" section that lists titles of pinned items; click → scrolls to pinned area.
-
-## Conversation memory (lightweight)
-
-`AICanvas` already keeps `turns[]` (Sprint 13.1). Add a helper `getTurnByHint(hintText)` used only when the assistant's speech contains phrases like "önceki cevap" — resolves the last completed turn and mounts a "🕘 Önceki Yanıt" collapsible above the new canvas, reusing the stored `ui` (no rebuild).
-
-## Animation rules
-- All new motion ≤ 300 ms.
-- Reuse Tailwind `animate-fade-in`, `animate-scale-in`. Add one `ws-pulse` keyframe.
-- Number count-up: `src/components/canvas/CountUp.tsx` — 220 ms, `requestAnimationFrame`, integer/float aware. Wraps numeric values inside `AIKpiCards` via a light DOM observer? No — leave existing renderer untouched; expose `CountUp` for future opt-in only. Not injected into `AIKpiCards`.
-
-## Files
-
-**New (10):** `src/lib/workspaceBus.ts`, `src/lib/entityExtractor.ts`, `src/hooks/useWorkspaceHighlight.ts`, `src/hooks/useSmartNavigation.ts`, `src/hooks/useLiveFilter.ts`, `src/components/canvas/PreviewCard.tsx`, `src/components/canvas/PinButton.tsx`, `src/components/canvas/PinnedInsights.tsx`, `src/components/canvas/CountUp.tsx`, one CSS block in `src/index.css`.
-
-**Edited (small, presentation only):** `src/components/canvas/AICanvas.tsx`, `src/components/canvas/ExpandableVisual.tsx`, `src/components/canvas/CanvasEmptyState.tsx`, `src/components/desktop/DesktopDashboard.tsx`, project/personnel/material/payment/task list rows (one hook + className each).
-
-## Non-goals
-- No changes to `AIResponseRenderer`, `AIKpiCards`, `AITable`, brain edge functions, prompts, or actions registry.
-- No database changes. Pins live in `localStorage`.
-- Smart navigation reuses existing `navigate-tab` CustomEvent; no new router work.
-- No changes to how AI responses are produced. Extraction is passive.
-
-## Risk
-Low. If the bus never publishes, every list, dashboard, and canvas behaves exactly as today.
+After the user clicks **Yükle**, they can ask Şantiyem AI any of the 15 example questions (workers today, concrete today, cash flow, overdue invoices, etc.) and get answers derived from the seeded demo data. Clicking **Kaldır** removes every seeded row and leaves production data untouched.
