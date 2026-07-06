@@ -1,8 +1,104 @@
 import { useState } from "react";
-import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle2, Trash2, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DemoDataPanel from "./DemoDataPanel";
+
+const MsyPremiumDemoCard = () => {
+  const [busy, setBusy] = useState<null | "load" | "remove">(null);
+  const [summary, setSummary] = useState<Record<string, number> | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  const run = async (action: "load" | "remove") => {
+    setBusy(action);
+    setSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-msy-demo", { body: { action } });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "İşlem başarısız");
+      setSummary(data.counts || {});
+      toast.success(action === "load" ? "MSY Yapı demo yüklendi" : "MSY Yapı demo kaldırıldı");
+      setConfirmRemove(false);
+    } catch (e: any) {
+      toast.error("Hata: " + (e?.message || String(e)));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border-2 p-4 space-y-3" style={{ borderColor: "#FF6B2B33", background: "linear-gradient(135deg, rgba(255,107,43,0.06), transparent)" }}>
+      <div className="flex items-center gap-2">
+        <Crown className="w-5 h-5" style={{ color: "#FF6B2B" }} />
+        <h3 className="text-[15px] font-semibold text-foreground">MSY Yapı A.Ş. — Premium Demo</h3>
+      </div>
+      <p className="text-[12px] text-muted-foreground leading-relaxed">
+        Şantiyem AI'nın her özelliğini sergileyen zengin, birbiriyle ilişkili bir demo şirket yükler:
+        24 villalık <b>Ballıca Panorama Villaları</b> projesi, 42+ personel, 18 alt yüklenici,
+        100+ malzeme, 448 görev, 60 günlük şantiye günlüğü, 4 hakediş, 24 toplantı, kasa/finans hareketleri,
+        şirket hafızası, iletişim geçmişi ve hatırlatıcılar. Her demo satırı işaretlenir; tek tıkla temiz şekilde kaldırılır.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => run("load")}
+          disabled={!!busy}
+          className="inline-flex items-center gap-2 px-4 rounded-lg text-[13px] font-semibold text-white disabled:opacity-60"
+          style={{ height: 38, backgroundColor: "#FF6B2B" }}
+        >
+          {busy === "load" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          MSY Yapı Demo'yu Yükle
+        </button>
+        {!confirmRemove ? (
+          <button
+            onClick={() => setConfirmRemove(true)}
+            disabled={!!busy}
+            className="inline-flex items-center gap-2 px-4 rounded-lg text-[13px] font-medium border border-border text-foreground disabled:opacity-60"
+            style={{ height: 38 }}
+          >
+            <Trash2 className="w-4 h-4" />
+            Demo Verisini Kaldır
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => run("remove")}
+              disabled={!!busy}
+              className="inline-flex items-center gap-2 px-4 rounded-lg text-[13px] font-semibold text-white bg-red-600 disabled:opacity-60"
+              style={{ height: 38 }}
+            >
+              {busy === "remove" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              Evet, kaldır
+            </button>
+            <button
+              onClick={() => setConfirmRemove(false)}
+              className="inline-flex items-center px-4 rounded-lg text-[13px] font-medium border border-border text-foreground"
+              style={{ height: 38 }}
+            >
+              Vazgeç
+            </button>
+          </>
+        )}
+      </div>
+      {summary && Object.keys(summary).length > 0 && (
+        <div className="rounded-lg bg-background/50 border border-border p-3">
+          <div className="flex items-center gap-2 mb-2 text-[12px] font-semibold text-foreground">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            Sonuç
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
+            {Object.entries(summary).map(([k, v]) => (
+              <div key={k} className="flex justify-between rounded bg-background/60 border border-border px-2 py-1">
+                <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
+                <span className="font-mono font-semibold text-foreground">{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 /**
  * "Demo Proje Oluştur" — populates the workspace with a realistic construction
