@@ -1,9 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
-import { AIDailyAgenda } from "@/components/dashboard/AIDailyAgenda";
+import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
 
-import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
-import CompanyBrainWidget from "@/components/companybrain/CompanyBrainWidget";
 
 import {
   useUser,
