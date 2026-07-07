@@ -49,6 +49,7 @@ const NAV_ITEMS = [
   { id: "materials", label: "Malzeme", icon: Package },
   { id: "personnel", label: "Personel", icon: HardHat },
   { id: "e-invoices", label: "E-Fatura", icon: FileText },
+  { id: "procurement", label: "Satın Alma", icon: ShoppingCart, hint: "Talep / RFQ / Sipariş" },
   { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "settings", label: "Ayarlar", icon: Settings },
