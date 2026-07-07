@@ -77,27 +77,33 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("full_name, title, city, plan, role")
-      .eq("user_id", userId)
-      .single();
-    if (data) {
-      const p = (data.plan as PlanType) || "free";
-      const r = ((data as any).role as UserRole) || "free";
-      setProfile({ ...data, role: r } as UserContextType["profile"]);
-      setPlanState(p);
-      setRole(r);
-      setUsage(prev => {
-        const effectivePlan = r === "admin" ? "pro" : p;
-        const limits = getLimitsForPlan(effectivePlan);
-        return {
-          aiQuestions: { used: prev.aiQuestions.used, max: limits.aiQuestions.max },
-          photoAnalysis: { used: prev.photoAnalysis.used, max: limits.photoAnalysis.max },
-          render: { used: prev.render.used, max: limits.render.max },
-          reminders: { used: prev.reminders.used, max: limits.reminders.max },
-        };
-      });
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, title, city, plan, role")
+        .eq("user_id", userId)
+        .single();
+      if (data) {
+        const p = (data.plan as PlanType) || "free";
+        const r = ((data as any).role as UserRole) || "free";
+        setProfile({ ...data, role: r } as UserContextType["profile"]);
+        setPlanState(p);
+        setRole(r);
+        setUsage(prev => {
+          const effectivePlan = r === "admin" ? "pro" : p;
+          const limits = getLimitsForPlan(effectivePlan);
+          return {
+            aiQuestions: { used: prev.aiQuestions.used, max: limits.aiQuestions.max },
+            photoAnalysis: { used: prev.photoAnalysis.used, max: limits.photoAnalysis.max },
+            render: { used: prev.render.used, max: limits.render.max },
+            reminders: { used: prev.reminders.used, max: limits.reminders.max },
+          };
+        });
+      }
+    } finally {
+      // Mark profile as resolved regardless of success — the sidebar must
+      // stop showing the neutral loading state after the query settles.
+      setProfileLoaded(true);
     }
   }, []);
 
@@ -105,11 +111,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        setProfileLoaded(false);
         setTimeout(() => fetchProfile(session.user.id), 0);
       } else {
         setProfile(null);
         setPlanState("free");
         setRole("free");
+        setProfileLoaded(true);
       }
       setLoading(false);
     });
@@ -117,7 +125,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        setProfileLoaded(false);
         fetchProfile(session.user.id);
+      } else {
+        setProfileLoaded(true);
       }
       setLoading(false);
     });
