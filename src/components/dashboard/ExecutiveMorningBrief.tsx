@@ -21,6 +21,10 @@ interface Props {
   onTabChange: (tab: string) => void;
   onProjectSelect?: (projectId: string) => void;
   voiceEnabled?: boolean;
+  /** Compact mode for the redesigned dashboard: hides greeting + snapshot tiles + opportunities and shows only the top 5 priorities with a subtle voice trigger. */
+  compact?: boolean;
+  /** Maximum number of priorities visible when collapsed. Default: 2 (5 in compact). */
+  maxPriorities?: number;
 }
 
 /** Greeting by local time. */
