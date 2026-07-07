@@ -1118,7 +1118,7 @@ const PaymentsKasaPage = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 };
 
