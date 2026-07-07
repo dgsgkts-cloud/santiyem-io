@@ -293,7 +293,10 @@ const SubcontractorDetail = ({ sub, onBack }: { sub: any; onBack: () => void }) 
       {/* Add payment modal */}
       <Dialog open={addModal} onOpenChange={setAddModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Ödeme Ekle — {sub.name}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Ödeme Ekle — {sub.name}</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Taşerona yeni ödeme kaydı oluşturun.</p>
+          </DialogHeader>
           <div className="space-y-3">
             <input value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="Tutar (₺)" type="number" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
             <div className="grid grid-cols-2 gap-3">
