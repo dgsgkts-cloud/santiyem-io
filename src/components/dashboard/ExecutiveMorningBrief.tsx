@@ -229,105 +229,150 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
   const GreetingIcon = greeting.icon;
   const scoreTone = kpis.healthScore >= 80 ? "text-emerald-500" : kpis.healthScore >= 60 ? "text-amber-500" : "text-destructive";
 
+  const collapsedCount = maxPriorities ?? (compact ? 5 : 2);
+
   return (
     <section
-      className="relative rounded-2xl border border-border/70 bg-gradient-to-br from-primary/[0.04] via-card to-card p-5 sm:p-6 space-y-5 animate-fade-in"
+      className={`relative rounded-2xl border border-border/70 bg-gradient-to-br from-primary/[0.03] via-card to-card animate-fade-in ${
+        compact ? "p-4 sm:p-5 space-y-4" : "p-5 sm:p-6 space-y-5"
+      }`}
       aria-label="Yönetici sabah brifingi"
     >
-      {/* ── Greeting header ───────────────────────────── */}
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary/80">
-            <GreetingIcon className="w-3.5 h-3.5" />
-            Yönetici Brifingi
+      {/* ── Greeting header (only in full mode) ──────── */}
+      {!compact && (
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary/80">
+              <GreetingIcon className="w-3.5 h-3.5" />
+              Yönetici Brifingi
+            </div>
+            <h2
+              className="mt-1.5 text-[22px] sm:text-[26px] font-medium tracking-tight text-foreground leading-tight"
+              style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+            >
+              {greeting.text}{firstName ? "," : ""}{" "}
+              {firstName && <span className="text-muted-foreground/90 font-normal">{firstName}.</span>}
+            </h2>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              {loading
+                ? "Şirket verileri analiz ediliyor…"
+                : findings.length === 0
+                  ? "Bugün için işaretlenen kritik bir konu yok. Şantiye sakin."
+                  : `Bugün ${findings.length} önemli bulgu var; en kritik ${Math.min(priorities.length, 5)} tanesi aşağıda.`}
+            </p>
           </div>
-          <h2
-            className="mt-1.5 text-[22px] sm:text-[26px] font-medium tracking-tight text-foreground leading-tight"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-          >
-            {greeting.text}{firstName ? "," : ""}{" "}
-            {firstName && <span className="text-muted-foreground/90 font-normal">{firstName}.</span>}
-          </h2>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            {loading
-              ? "Şirket verileri analiz ediliyor…"
-              : findings.length === 0
-                ? "Bugün için işaretlenen kritik bir konu yok. Şantiye sakin."
-                : `Bugün ${findings.length} önemli bulgu var; en kritik ${Math.min(priorities.length, 5)} tanesi aşağıda.`}
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {voiceEnabled && (
+          <div className="flex items-center gap-2 shrink-0">
+            {voiceEnabled && (
+              <Button
+                size="sm"
+                onClick={narrate}
+                disabled={loading}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Volume2 className="w-3.5 h-3.5 mr-1.5" />
+                Sesli Dinle
+              </Button>
+            )}
             <Button
               size="sm"
-              onClick={narrate}
+              variant="ghost"
+              onClick={refresh}
               disabled={loading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Brifingi yenile"
             >
-              <Volume2 className="w-3.5 h-3.5 mr-1.5" />
-              Sesli Dinle
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={refresh}
-            disabled={loading}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Brifingi yenile"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
-      {/* ── Snapshot row: score + counts ─────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <HealthScoreCard score={kpis.healthScore} />
-        <SnapshotTile
-          icon={AlertTriangle}
-          label="Kritik Risk"
-          value={kpis.criticalRisks}
-          tone={kpis.criticalRisks > 0 ? "danger" : "positive"}
-          onClick={() => setExpanded(true)}
-        />
-        <SnapshotTile
-          icon={Target}
-          label="Öncelik"
-          value={priorities.length}
-          tone={priorities.length > 0 ? "warning" : "positive"}
-          onClick={() => setExpanded(true)}
-        />
-        <SnapshotTile
-          icon={TrendingUp}
-          label="Fırsat"
-          value={opportunities.length}
-          tone={opportunities.length > 0 ? "positive" : "neutral"}
-        />
-      </div>
+      {/* ── Compact header: title strip + subtle voice button ── */}
+      {compact && (
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+            <h3 className="text-[13px] font-semibold text-foreground tracking-tight truncate">
+              Yönetici Brifingi
+            </h3>
+            <span className="text-[11px] text-muted-foreground truncate">
+              {loading ? "hazırlanıyor…" : findings.length === 0 ? "sakin" : `${findings.length} bulgu`}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            {voiceEnabled && (
+              <button
+                onClick={narrate}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 px-2.5 py-1 text-[11.5px] font-medium text-[#FF6B2B] hover:bg-[#FF6B2B]/15 transition-colors disabled:opacity-50"
+                aria-label="Sesli dinle"
+              >
+                <Volume2 className="w-3 h-3" />
+                Dinle
+              </button>
+            )}
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+              aria-label="Brifingi yenile"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* ── Snapshot row: score + counts (hidden in compact) ── */}
+      {!compact && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <HealthScoreCard score={kpis.healthScore} />
+          <SnapshotTile
+            icon={AlertTriangle}
+            label="Kritik Risk"
+            value={kpis.criticalRisks}
+            tone={kpis.criticalRisks > 0 ? "danger" : "positive"}
+            onClick={() => setExpanded(true)}
+          />
+          <SnapshotTile
+            icon={Target}
+            label="Öncelik"
+            value={priorities.length}
+            tone={priorities.length > 0 ? "warning" : "positive"}
+          />
+          <SnapshotTile
+            icon={TrendingUp}
+            label="Fırsat"
+            value={opportunities.length}
+            tone={opportunities.length > 0 ? "positive" : "neutral"}
+          />
+        </div>
+      )}
 
       {/* ── Priorities (top 5) ───────────────────────── */}
       {priorities.length > 0 ? (
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Bugünün Öncelikleri
-              </p>
+          {!compact && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Bugünün Öncelikleri
+                </p>
+              </div>
+              {priorities.length > collapsedCount && (
+                <button
+                  onClick={() => setExpanded((v) => !v)}
+                  className="text-[12px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  {expanded ? <>Kapat <ChevronUp className="w-3.5 h-3.5" /></> : <>Tümünü Aç <ChevronDown className="w-3.5 h-3.5" /></>}
+                </button>
+              )}
             </div>
-            {priorities.length > 2 && (
-              <button
-                onClick={() => setExpanded((v) => !v)}
-                className="text-[12px] text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                {expanded ? <>Kapat <ChevronUp className="w-3.5 h-3.5" /></> : <>Tümünü Aç <ChevronDown className="w-3.5 h-3.5" /></>}
-              </button>
-            )}
-          </div>
+          )}
           <div className="space-y-2.5">
-            {(expanded ? priorities : priorities.slice(0, 2)).map((f) => (
+            {(expanded || compact ? priorities : priorities.slice(0, collapsedCount)).map((f) => (
               <ActionCard
                 key={f.id}
                 finding={f}
@@ -340,8 +385,8 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
         <EmptyPositive />
       ) : null}
 
-      {/* ── Opportunities / positive insights ────────── */}
-      {opportunities.length > 0 && (
+      {/* ── Opportunities / positive insights (hidden in compact) ── */}
+      {!compact && opportunities.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
