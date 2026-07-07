@@ -557,6 +557,12 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         </div>
       </div>
 
+      {/* Project Timeline */}
+      <ProjectTimeline events={timelineEvents} />
+
+      {/* Risk Center */}
+      <RiskCenter risks={risks} />
+
       {/* Hakediş Özeti */}
       <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
