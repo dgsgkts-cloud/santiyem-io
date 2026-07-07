@@ -538,33 +538,75 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const toneColor = (t: "good" | "warn" | "alert" | "muted") =>
     t === "alert" ? "#EF4444" : t === "warn" ? "#F59E0B" : t === "good" ? "#22C55E" : "hsl(var(--muted-foreground))";
 
+  // ── Projects table column definition (used by ResponsiveTable) ──
+  const projectColumns: ResponsiveColumn<typeof displayProjects[number]>[] = [
+    {
+      key: "name",
+      header: "Proje Adı",
+      primary: true,
+      cell: (p) => <span className="font-medium text-foreground">{p.name}</span>,
+    },
+    {
+      key: "client",
+      header: "Müşteri",
+      cell: (p) => <span className="text-muted-foreground">{p.client}</span>,
+    },
+    {
+      key: "progress",
+      header: "İlerleme",
+      cell: (p) => (
+        <div className="flex items-center gap-2 min-w-[120px]">
+          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }}
+            />
+          </div>
+          <span className="text-fs-xs tabular-nums text-muted-foreground w-9 text-right">
+            {p.progress}%
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Durum",
+      cell: (p) => (
+        <span
+          className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
+          style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+        >
+          {p.status}
+        </span>
+      ),
+    },
+  ];
+
   /* ---------------------------------- Render ---------------------------------- */
 
   return (
-    <div className="px-4 sm:px-6 lg:px-10 py-8 lg:py-10 max-w-[1120px] mx-auto space-y-8">
+    <PageShell maxWidth={1120} className="space-y-6 lg:space-y-8">
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
       <PinnedInsights />
       <WorkspaceSetupCard />
 
-
-
       {/* 1. Manager Greeting — warm executive header */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-muted-foreground/80 mb-1.5">
             <greeting.Icon className="w-3.5 h-3.5" />
-            <span className="text-[11.5px] tracking-wide uppercase">{formatDate(new Date())}</span>
+            <span className="text-fs-xs tracking-wide uppercase">{formatDate(new Date())}</span>
           </div>
           <h1
-            className="text-[24px] lg:text-[30px] font-medium tracking-tight text-foreground leading-tight"
+            className="text-fs-2xl font-medium tracking-tight text-foreground leading-tight"
             style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
           >
             {greeting.text},{" "}
             <span className="text-muted-foreground/90 font-normal">{name}.</span>
           </h1>
-          <p className="text-[13px] text-muted-foreground mt-1.5">
+          <p className="text-fs-sm text-muted-foreground mt-1.5">
             Bugün şirketinizde olup bitenler.
           </p>
         </div>
@@ -578,7 +620,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         maxPriorities={5}
       />
 
-      {/* 3. Quick Actions */}
+      {/* 3. Quick Actions — 44px touch minimum */}
       <div className="flex flex-wrap gap-2">
         {quickActions.map((a) => {
           const Icon = a.icon;
@@ -587,13 +629,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               key={a.label}
               onClick={a.onClick}
               disabled={a.locked}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
+              className={`inline-flex items-center gap-2 px-4 rounded-xl text-fs-sm font-medium border transition-all touch-target ${
                 a.primary
                   ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
                   : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
               } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               {a.label}
             </button>
           );
@@ -601,25 +643,25 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </div>
 
       {/* 4. Company Health — 4 KPI tiles */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <ResponsiveGrid variant="kpi">
         {healthCards.map((c) => {
           const Icon = c.icon;
           const color = toneColor(c.tone);
           return (
             <Tooltip key={c.label} delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="relative rounded-xl bg-card/60 border border-border/50 p-4 hover:border-border transition-colors">
+                <div className="card-refined p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
+                    <span className="text-fs-xs font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
                       {c.label}
                     </span>
-                    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color }} />
+                    <Icon className="w-4 h-4 shrink-0" style={{ color }} />
                   </div>
                   {!loaded ? (
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <p
-                      className="text-[22px] font-semibold tracking-tight tabular-nums"
+                      className="text-fs-xl font-semibold tracking-tight tabular-nums"
                       style={{
                         fontFamily: "'Space Grotesk', sans-serif",
                         letterSpacing: "-0.02em",
@@ -635,170 +677,123 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </Tooltip>
           );
         })}
-      </section>
-
+      </ResponsiveGrid>
 
       {/* 5. Financial Snapshot — 4 merged metrics */}
-      <Card>
+      <div className="relative">
         {profitLocked && (
           <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
         )}
-        <SectionHeader icon={Wallet} title="Finansal Özet — Bu Ay" action="Detay" onAction={() => onTabChange("payments-kasa")} />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange, inv: false },
-            { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange, inv: true },
-            { label: "Kasa", value: cashTotal, color: "#3B82F6", change: null as number | null, inv: false },
-            { label: "Aylık Kâr", value: netProfit, color: "#FF6B2B", change: profitChange, inv: false },
-          ].map((item) => {
-            const isUp = (item.change ?? 0) >= 0;
-            const changeColor = item.change == null
-              ? "hsl(var(--muted-foreground))"
-              : item.inv
-                ? (isUp ? "#EF4444" : "#22C55E")
-                : (isUp ? "#22C55E" : "#EF4444");
-            return (
-              <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
-                <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
-                  {item.label}
-                </p>
-                {!loaded ? (
-                  <Skeleton className="h-6 w-24" />
-                ) : (
-                  <>
-                    <MetricTooltip full={formatCurrencyFull(item.value)}>
-                      <p
-                        className="text-[20px] font-semibold truncate cursor-help tabular-nums"
-                        style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-                      >
-                        {formatCurrency(item.value)}
-                      </p>
-                    </MetricTooltip>
-                    {item.change != null && (
-                      <p className="text-[10.5px] mt-1 flex items-center gap-1 tabular-nums" style={{ color: changeColor }}>
-                        {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                        <span>{formatPercent(item.change)} vs geçen ay</span>
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <SectionCard
+          title={
+            <span className="inline-flex items-center gap-2">
+              <Wallet className="w-3.5 h-3.5 text-muted-foreground/80" />
+              Finansal Özet — Bu Ay
+            </span>
+          }
+          action={
+            <button
+              onClick={() => onTabChange("payments-kasa")}
+              className="flex items-center gap-0.5 text-fs-xs font-medium text-muted-foreground hover:text-foreground transition-colors touch-target px-2"
+            >
+              Detay <ChevronRight className="w-3 h-3" />
+            </button>
+          }
+        >
+          <ResponsiveGrid variant="kpi">
+            {[
+              { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange, inv: false },
+              { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange, inv: true },
+              { label: "Kasa", value: cashTotal, color: "#3B82F6", change: null as number | null, inv: false },
+              { label: "Aylık Kâr", value: netProfit, color: "#FF6B2B", change: profitChange, inv: false },
+            ].map((item) => {
+              const isUp = (item.change ?? 0) >= 0;
+              const changeColor = item.change == null
+                ? "hsl(var(--muted-foreground))"
+                : item.inv
+                  ? (isUp ? "#EF4444" : "#22C55E")
+                  : (isUp ? "#22C55E" : "#EF4444");
+              return (
+                <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
+                  <p className="text-fs-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
+                    {item.label}
+                  </p>
+                  {!loaded ? (
+                    <Skeleton className="h-6 w-24" />
+                  ) : (
+                    <>
+                      <MetricTooltip full={formatCurrencyFull(item.value)}>
+                        <p
+                          className="text-fs-lg font-semibold truncate cursor-help tabular-nums"
+                          style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+                        >
+                          {formatCurrency(item.value)}
+                        </p>
+                      </MetricTooltip>
+                      {item.change != null && (
+                        <p className="text-fs-xs mt-1 flex items-center gap-1 tabular-nums" style={{ color: changeColor }}>
+                          {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                          <span>{formatPercent(item.change)} vs geçen ay</span>
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </ResponsiveGrid>
 
-        {/* Rich AI insight (Sprint 19 §11) */}
-        {richInsight && (
-          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/40 px-3.5 py-2.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" />
-            <p className="text-[12.5px] leading-relaxed text-foreground/85">{richInsight}</p>
-          </div>
-        )}
-      </Card>
+          {richInsight && (
+            <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/40 px-3 py-3">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" />
+              <p className="text-fs-sm leading-relaxed text-foreground/85">{richInsight}</p>
+            </div>
+          )}
+        </SectionCard>
+      </div>
 
       {/* 6. Projects Overview */}
-      <Card padded={false}>
+      <div className="relative">
         {projectsLocked && (
           <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />
         )}
-        <div className="p-5 pb-3">
-          <SectionHeader title="Aktif Projeler" action="Tümü" onAction={() => onTabChange("projects")} />
-        </div>
-        {displayProjects.length === 0 ? (
-          <div className="pb-6 px-4">
-            <EmptyState
-              icon="🏗️"
-              title="Henüz proje yok"
-              description="İlk projenizi ekleyerek şantiye takibine başlayın."
-              buttonText="İlk Projeyi Oluştur"
-              onButtonClick={() => onTabChange("projects")}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="hidden lg:block">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr>
-                    {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
-                      <th
-                        key={h}
-                        className="text-left px-5 py-2.5 font-medium uppercase tracking-wider text-muted-foreground/80 text-[10.5px] border-b border-border/50"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayProjects.map((p, idx) => (
-                    <tr
-                      key={p.id}
-                      onClick={() => onProjectSelect?.(p.id)}
-                      className={`transition-colors duration-150 cursor-pointer hover:bg-muted/30 ${
-                        idx !== displayProjects.length - 1 ? "border-b border-border/40" : ""
-                      }`}
-                    >
-                      <td className="px-5 py-3.5 font-medium text-foreground tracking-tight">{p.name}</td>
-                      <td className="px-5 py-3.5 text-muted-foreground">{p.client}</td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full transition-all" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                          </div>
-                          <span className="text-[11.5px] tabular-nums text-muted-foreground w-9 text-right">
-                            {p.progress}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span
-                          className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
-                          style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
-                        >
-                          {p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <SectionCard
+          title="Aktif Projeler"
+          action={
+            <button
+              onClick={() => onTabChange("projects")}
+              className="flex items-center gap-0.5 text-fs-xs font-medium text-muted-foreground hover:text-foreground transition-colors touch-target px-2"
+            >
+              Tümü <ChevronRight className="w-3 h-3" />
+            </button>
+          }
+          padded={false}
+        >
+          {displayProjects.length === 0 ? (
+            <div className="px-4 pb-4">
+              <EmptyState
+                icon="🏗️"
+                title="Henüz proje yok"
+                description="İlk projenizi ekleyerek şantiye takibine başlayın."
+                buttonText="İlk Projeyi Oluştur"
+                onButtonClick={() => onTabChange("projects")}
+              />
             </div>
-            <div className="lg:hidden divide-y divide-border/50">
-              {displayProjects.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => onProjectSelect?.(p.id)}
-                  className="px-5 py-3.5 space-y-2 cursor-pointer active:bg-muted/40 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium truncate text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{p.client}</p>
-                    </div>
-                    <span
-                      className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2"
-                      style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
-                    >
-                      {p.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                    </div>
-                    <span className="text-[11px] tabular-nums shrink-0 text-muted-foreground">{p.progress}%</span>
-                  </div>
-                </div>
-              ))}
+          ) : (
+            <div className="px-2 pb-3">
+              <ResponsiveTable
+                columns={projectColumns}
+                rows={displayProjects}
+                rowKey={(p) => p.id}
+                onRowClick={(p) => onProjectSelect?.(p.id)}
+              />
             </div>
-          </>
-        )}
-      </Card>
+          )}
+        </SectionCard>
+      </div>
 
       {/* 7. Latest Activities */}
-      <Card>
-        <SectionHeader title="Son Aktiviteler" />
+      <SectionCard title="Son Aktiviteler">
         {projects.length === 0 ? (
           <EmptyState icon="📋" title="Aktivite yok" description="Projeleriniz üzerinde işlem yaptıkça burada listelenir." />
         ) : (
@@ -809,16 +804,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
               return (
                 <div key={p.id} className="flex items-center gap-3">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-[12.5px] flex-1 min-w-0 truncate text-foreground/90">
+                  <span className="text-fs-sm flex-1 min-w-0 truncate text-foreground/90">
                     {p.name} <span className="text-muted-foreground">— {p.status}</span>
                   </span>
-                  <span className="text-[11px] shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
+                  <span className="text-fs-xs shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
                 </div>
               );
             })}
           </div>
         )}
-      </Card>
+      </SectionCard>
 
       <UpgradeModal
         open={upgradeModal.open}
@@ -826,7 +821,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         feature={upgradeModal.feature}
         requiresOffice={upgradeModal.requiresOffice}
       />
-    </div>
+    </PageShell>
   );
 };
 
