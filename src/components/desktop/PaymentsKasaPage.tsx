@@ -400,50 +400,59 @@ const PaymentsKasaPage = () => {
 
 
                   {/* Executive Cash Position */}
-                  <div>
-                    <h3 className="text-[12px] uppercase tracking-wide text-muted-foreground font-semibold mb-3">Nakit Pozisyonu</h3>
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                      {[
-                        { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
-                        { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
-                        { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
-                        { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
-                        { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
-                      ].map((c, i) => (
-                        <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-2 mb-2 min-w-0">
-                            <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
-                            <span className="text-[11px] text-muted-foreground truncate">{c.label}</span>
-                          </div>
-                          <MetricTooltip full={fmtFull(c.value)}>
-                            <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
-                          </MetricTooltip>
-                        </div>
-                      ))}
+                  <SectionCard title="Nakit Pozisyonu" padded={false}>
+                    <div className="px-4 pb-4">
+                      <ResponsiveGrid variant="auto" minItemWidth={200}>
+                        {[
+                          { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
+                          { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
+                          { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
+                          { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
+                          { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
+                        ].map((c, i) => (
+                          <KpiCard
+                            key={i}
+                            label={c.label}
+                            icon={c.icon}
+                            accent={c.color}
+                            value={
+                              <MetricTooltip full={fmtFull(c.value)}>
+                                <span className="cursor-help tabular-nums" style={{ color: c.color }}>
+                                  {fmtShort(c.value)}
+                                </span>
+                              </MetricTooltip>
+                            }
+                          />
+                        ))}
+                      </ResponsiveGrid>
                     </div>
-                  </div>
+                  </SectionCard>
                 </>
               );
             })()}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <ResponsiveGrid variant="kpi">
               {[
                 { label: "Toplam Gelir", value: totals.ciro, color: "#22C55E", icon: TrendingUp },
                 { label: "Toplam Gider", value: totals.gider, color: "#EF4444", icon: TrendingDown },
                 { label: "Net Bakiye", value: totals.kar, color: "#3B82F6", icon: DollarSign },
                 { label: "Bekleyen Hakediş", value: totals.bekleyenTahsilat, color: "#F59E0B", icon: Receipt },
               ].map((c, i) => (
-                <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-2 mb-2 min-w-0">
-                    <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
-                    <span className="text-xs text-muted-foreground truncate">{c.label}</span>
-                  </div>
-                  <MetricTooltip full={fmtFull(c.value)}>
-                    <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
-                  </MetricTooltip>
-                </div>
+                <KpiCard
+                  key={i}
+                  label={c.label}
+                  icon={c.icon}
+                  accent={c.color}
+                  value={
+                    <MetricTooltip full={fmtFull(c.value)}>
+                      <span className="cursor-help tabular-nums" style={{ color: c.color }}>
+                        {fmtShort(c.value)}
+                      </span>
+                    </MetricTooltip>
+                  }
+                />
               ))}
-            </div>
+            </ResponsiveGrid>
 
 
             <div className="rounded-xl p-4 bg-card border border-border">
