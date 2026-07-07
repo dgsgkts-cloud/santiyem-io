@@ -534,7 +534,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   /* ---------------------------------- Render ---------------------------------- */
 
   return (
-    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-8 max-w-[1120px] mx-auto space-y-6">
+    <div className="px-4 sm:px-6 lg:px-10 py-8 lg:py-10 max-w-[1120px] mx-auto space-y-8">
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
