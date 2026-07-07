@@ -98,7 +98,14 @@ const DesktopSettingsPage = () => {
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
+          {activeTab === "subscription" && (
+            <div className="space-y-6">
+              <SubscriptionCenter />
+              <div className="pt-6 border-t border-border">
+                <SubscriptionTab plan={plan} />
+              </div>
+            </div>
+          )}
           {activeTab === "plan" && <PlanLimitsPanel />}
           {activeTab === "org" && <OrgAdminPanel />}
           {activeTab === "team" && <TeamManagement />}
