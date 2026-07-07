@@ -413,6 +413,35 @@ const Index = () => {
     if (attachments && attachments.length > 0) {
       incrementUsage("photoAnalysis");
     }
+
+    // Sprint 28.6 — AI access awareness. If the user asks to open a module
+    // that is currently locked, respond immediately with a locked-state
+    // reply instead of round-tripping the model.
+    const lowered = text.toLowerCase();
+    const openMatchers: { pat: RegExp; tab: any; name: string }[] = [
+      { pat: /(depo|envanter)/, tab: "warehouse", name: "Depo" },
+      { pat: /(satın\s*alma|satin\s*alma|procurement)/, tab: "procurement", name: "Satın Alma" },
+      { pat: /(makine|ekipman|filo|fleet)/, tab: "fleet", name: "Makine & Ekipman" },
+      { pat: /(fatura|e-\s*fatura)/, tab: "e-invoices", name: "E-Fatura" },
+      { pat: /(kasa|ödeme|odeme|nakit)/, tab: "payments-kasa", name: "Ödemeler & Kasa" },
+      { pat: /(hakediş|hakedis)/, tab: "hakedis", name: "Hakediş" },
+      { pat: /(rapor)/, tab: "reports", name: "Raporlar" },
+    ];
+    if (/(aç|ac|göster|goster|open)/i.test(lowered)) {
+      const m = openMatchers.find(o => o.pat.test(lowered));
+      if (m) {
+        const d = guard.check(m.tab);
+        if (!d.ok) {
+          const why = d.reason === "setup-required"
+            ? "Önce şirket kurulumunuzu tamamlayın."
+            : "Mevcut planınızda bu modüle erişim yok. Planı yükseltmeniz gerekiyor.";
+          const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
+          const aiMsg: Message = { id: (Date.now() + 1).toString(), role: "assistant", content: `${m.name} modülü mevcut planınızda aktif değil. ${why}` };
+          setMessages(prev => [...prev, userMsg, aiMsg]);
+          return;
+        }
+      }
+    }
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, attachments };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
