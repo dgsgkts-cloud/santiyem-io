@@ -1,6 +1,6 @@
 import {
   Home, FolderOpen, FileText, BookOpen, Users, CreditCard,
-  CheckSquare, Settings, type LucideIcon,
+  CheckSquare, Settings, User, type LucideIcon,
 } from "lucide-react";
 import type { ProjectRole } from "@/lib/projectPermissions";
 
@@ -14,12 +14,14 @@ export interface MobileTab {
   icon: LucideIcon;
 }
 
+// Sprint 18.4: Bottom nav is now 5 concrete destinations (no "Daha Fazla").
+// The hamburger button in the mobile header owns the drawer.
 const FULL_TABS: MobileTab[] = [
   { id: "dashboard", label: "Ana Sayfa", icon: Home },
   { id: "projects", label: "Projeler", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", icon: FileText },
   { id: "site-diary", label: "Günlük", icon: BookOpen },
-  { id: "more", label: "Daha Fazla", icon: Settings },
+  { id: "settings", label: "Profil", icon: User },
 ];
 
 /**
