@@ -12,6 +12,7 @@ import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/com
 import { supabase } from "@/integrations/supabase/client";
 import FirstRunWizard from "./FirstRunWizard";
 import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
+import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
