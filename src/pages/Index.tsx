@@ -361,9 +361,15 @@ const Index = () => {
     }, 50);
   }, []);
 
+  // Only auto-scroll to the bottom while the Chat tab is active AND there are
+  // messages to follow. Previously this ran on every mount and jumped the
+  // shared scroll container (which also wraps the Dashboard) to its bottom,
+  // making the Dashboard open at the footer on load.
   useEffect(() => {
+    if (activeTab !== "chat") return;
+    if (messages.length === 0 && !isTyping) return;
     scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+  }, [activeTab, messages, isTyping, scrollToBottom]);
 
   useEffect(() => {
     if (drawerOpen) {
