@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
+import { useUser, isOfficePlan } from "@/contexts/UserContext";
+import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
@@ -88,10 +89,9 @@ void isNativeApp;
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const { user, profile, plan, role, usage, signOut, isAdmin, profileLoaded } = useUser();
-  // Feature locks must only be evaluated after subscription/role/profile
-  // queries have resolved. Otherwise the sidebar briefly renders every
-  // paid item as locked (default plan="free"/role="free") and then unlocks
-  // once the profile arrives — a jarring flash.
+  const guard = useAccessGuard();
+  // Feature locks are evaluated by the central access guard (Sprint 28.6).
+  // Loading window kept so we don't flash "locked" while auth/plan settle.
   const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
@@ -170,27 +170,15 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
 
-                // Check if feature is locked — but only after gates are
-                // ready. During loading we render items as unlocked so the
-                // user never sees a "flash of locked nav".
-                const isLocked = gatesReady && (
-                  (item.id === "projects" && !canAccessProjects(plan, role)) ||
-                  (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
-                  (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
-                  (item.id === "payments-kasa" && !canAccessProfitability(plan, role)) ||
-                   (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
-                  (item.id === "materials" && !canAccessProjects(plan, role)) ||
-                  (item.id === "e-invoices" && !canAccessProfitability(plan, role)) ||
-                  (item.id === "reminders" && !canAccessReminders(plan))
-                );
+                // Sprint 28.6 — Ask the central access guard whether this
+                // module is currently locked. Clicking still routes to the
+                // tab so LockedPage explains why (no more silent redirects).
+                const decision = guard.check(item.id as GuardTab);
+                const isLocked = gatesReady && !decision.ok;
 
                 const handleClick = () => {
-                  if (!gatesReady) return; // ignore clicks while loading
-                  if (isLocked) {
-                    onTabChange("pricing");
-                  } else {
-                    onTabChange(item.id);
-                  }
+                  if (!gatesReady) return;
+                  onTabChange(item.id);
                 };
 
                 const btn = (

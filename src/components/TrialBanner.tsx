@@ -10,7 +10,7 @@ import { NATIVE_SUB_NOTICE } from "@/lib/nativeGuards";
 const PAID_STATUSES = new Set(["active", "cancelled"]);
 
 const TrialBanner = () => {
-  const { user, plan } = useUser();
+  const { user, plan, isAdmin } = useUser();
   const [loading, setLoading] = useState(true);
   const [trialEnd, setTrialEnd] = useState<Date | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -40,6 +40,8 @@ const TrialBanner = () => {
   }, [user]);
 
   if (loading) return null;
+  // Sprint 28.6 — Super Admin bypass. Never nag platform owners.
+  if (isAdmin) return null;
 
   // Already paid → never show
   if (plan && plan !== "free" && status && PAID_STATUSES.has(status)) return null;
