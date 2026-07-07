@@ -94,21 +94,21 @@ export function VoiceOrb() {
       >
         <div className="relative">
           {access.hasAccess && (
-            <div className="absolute inset-0 rounded-full bg-[#FF6B2B]/40 voice-orb-ring pointer-events-none" />
+            <div className="absolute inset-0 rounded-full bg-[#FF6B2B]/20 voice-orb-ring pointer-events-none" style={{ opacity: 0.5 }} />
           )}
           <div
-            className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-active:scale-95 backdrop-blur-xl ${
+            className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-active:scale-95 backdrop-blur-xl ${
               access.hasAccess
                 ? "bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5A]"
                 : "bg-[#1E2732]/90"
             }`}
             style={{
               boxShadow: access.hasAccess
-                ? "0 20px 50px -12px rgba(255,107,43,0.55), 0 0 0 1px rgba(255,255,255,0.08) inset"
-                : "0 20px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06) inset",
+                ? "0 10px 24px -12px rgba(255,107,43,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset"
+                : "0 10px 24px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
             }}
           >
-            <Mic className="w-7 h-7 text-white" strokeWidth={2.2} />
+            <Mic className="w-6 h-6 text-white" strokeWidth={2.2} />
             {!access.hasAccess && (
               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#0F1419] border border-[#2A3441] flex items-center justify-center">
                 <Lock className="w-3 h-3 text-white/70" />
