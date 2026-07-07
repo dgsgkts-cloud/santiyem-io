@@ -961,6 +961,9 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         )}
       </div>
 
+      {/* Aktivite Akışı */}
+      <ProjectActivityFeed items={activityItems} />
+
       {/* Görevlendirme / Kanban */}
       {user && (
         <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
