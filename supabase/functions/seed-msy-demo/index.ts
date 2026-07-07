@@ -711,7 +711,7 @@ async function loadDemo(sb: Sb, uid: string) {
       subtotal: sub,
       kdv_total: Math.round(sub * 0.2),
       grand_total: Math.round(sub * 1.2),
-      status: i < 4 ? "gecikmis" : "odendi",
+      status: i < 4 ? "beklemede" : (inbound ? "odendi" : "tahsil_edildi"),
       project_id: projectId,
       notes: DEMO_TAG,
       items: [{ name: "Malzeme/Hizmet", qty: 1, price: sub }],
