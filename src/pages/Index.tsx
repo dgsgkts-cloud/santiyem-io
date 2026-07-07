@@ -86,7 +86,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "fleet" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 // Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
 // kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
