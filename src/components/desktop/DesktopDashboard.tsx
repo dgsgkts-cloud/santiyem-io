@@ -67,6 +67,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import EmptyState from "./EmptyState";
 import PinnedInsights from "@/components/canvas/PinnedInsights";
+import {
+  PageShell,
+  SectionCard,
+  ResponsiveGrid,
+  ResponsiveTable,
+  type ResponsiveColumn,
+} from "@/components/ui/responsive";
 
 interface DesktopDashboardProps {
   onTabChange: (tab: string) => void;
