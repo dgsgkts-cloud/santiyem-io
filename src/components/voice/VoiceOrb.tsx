@@ -80,35 +80,46 @@ export function VoiceOrb() {
 
   if (!signedIn) return null;
 
-  const bottomOffset = Capacitor.isNativePlatform()
+  const isNative = Capacitor.isNativePlatform();
+  const bottomOffset = isNative
     ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
-    : "calc(env(safe-area-inset-bottom, 0px) + 88px)";
+    : "calc(env(safe-area-inset-bottom, 0px) + 24px)";
+
+  // Sprint 21.1 — Desktop mic moves to bottom-right, mobile keeps bottom-center above tab bar.
+  const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
+  const positionClass = isDesktop
+    ? "fixed right-6 z-40 group"
+    : "fixed left-1/2 -translate-x-1/2 z-40 group";
+  const orbSize = isDesktop ? "w-12 h-12" : "w-14 h-14";
+  const iconSize = isDesktop ? "w-5 h-5" : "w-6 h-6";
 
   return (
     <>
       <button
         onClick={() => { setPending({}); setOpen(true); }}
         aria-label="Şantiyem AI · Sesli Mod"
-        className="fixed left-1/2 -translate-x-1/2 z-40 group"
+        className={positionClass}
         style={{ bottom: bottomOffset }}
       >
         <div className="relative">
-          {access.hasAccess && (
+          {access.hasAccess && !isDesktop && (
             <div className="absolute inset-0 rounded-full bg-[#FF6B2B]/20 voice-orb-ring pointer-events-none" style={{ opacity: 0.5 }} />
           )}
           <div
-            className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-active:scale-95 backdrop-blur-xl ${
+            className={`relative ${orbSize} rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-active:scale-95 backdrop-blur-xl ${
               access.hasAccess
                 ? "bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5A]"
                 : "bg-[#1E2732]/90"
             }`}
             style={{
               boxShadow: access.hasAccess
-                ? "0 10px 24px -12px rgba(255,107,43,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset"
-                : "0 10px 24px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
+                ? (isDesktop
+                    ? "0 6px 16px -8px rgba(255,107,43,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset"
+                    : "0 10px 24px -12px rgba(255,107,43,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset")
+                : "0 6px 16px -8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
             }}
           >
-            <Mic className="w-6 h-6 text-white" strokeWidth={2.2} />
+            <Mic className={`${iconSize} text-white`} strokeWidth={2.2} />
             {!access.hasAccess && (
               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#0F1419] border border-[#2A3441] flex items-center justify-center">
                 <Lock className="w-3 h-3 text-white/70" />
