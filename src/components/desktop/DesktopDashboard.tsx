@@ -453,8 +453,372 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
   /* ---------------------------------- Render ---------------------------------- */
 
+  // ── Financial snapshot derived values ──
+  const kasaBalance = accounts.filter((a) => a.account_type === "nakit_kasa").reduce((s, a) => s + Number(a.balance), 0);
+  const bankaBalance = accounts.filter((a) => a.account_type === "banka").reduce((s, a) => s + Number(a.balance), 0);
+  const cashTotal = kasaBalance + bankaBalance;
+  const netProfit = monthRevenue - monthExpense;
+  const prevNetProfit = prevMonthRevenue - prevMonthExpense;
+  const calcChange = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
+  const revenueChange = calcChange(monthRevenue, prevMonthRevenue);
+  const expenseChange = calcChange(monthExpense, prevMonthExpense);
+  const profitChange = calcChange(netProfit, prevNetProfit);
+
+  // ── Health cards (5-second scan) ──
+  const healthCards = [
+    {
+      label: "Şirket Sağlığı",
+      value: `${briefKpis.healthScore}/100`,
+      icon: TrendingUp,
+      tone:
+        briefKpis.healthScore >= 80 ? "good" :
+        briefKpis.healthScore >= 60 ? "warn" : "alert",
+      hint: "Nakit, tahsilat ve risk sinyallerinden hesaplandı.",
+    },
+    {
+      label: "Kritik Risk",
+      value: String(briefKpis.criticalRisks),
+      icon: AlertTriangle,
+      tone: briefKpis.criticalRisks > 0 ? "alert" : "good",
+      hint: "Bugün acilen ilgilenilmesi gereken bulgular.",
+    },
+    {
+      label: "Bekleyen Ödeme",
+      value: String(briefKpis.pendingPayments),
+      icon: Wallet,
+      tone: briefKpis.pendingPayments > 0 ? "warn" : "good",
+      hint: "Onay veya tahsilat bekleyen kayıtlar.",
+    },
+    {
+      label: "Bugünkü Görev",
+      value: String(briefKpis.tasksDueToday),
+      icon: CalendarClock,
+      tone: briefKpis.tasksDueToday > 0 ? "warn" : "good",
+      hint: "Bugün için planlanmış işler.",
+    },
+  ] as const;
+
+  // ── Richer, human-sounding AI insight (Sprint 19 §11) ──
+  const richInsight = useMemo(() => {
+    if (!loaded) return null;
+    if (monthExpense > 0 && prevMonthExpense > 0) {
+      const diff = ((monthExpense - prevMonthExpense) / prevMonthExpense) * 100;
+      if (diff <= -25) {
+        return `Giderler geçen aya göre %${Math.abs(diff).toFixed(0)} azaldı. Büyük alımların tamamlanmış olması bu düşüşün başlıca sebebi görünüyor. Bu ay nakit akışı belirgin biçimde daha sağlıklı.`;
+      }
+      if (diff >= 25) {
+        return `Giderler geçen aya göre %${diff.toFixed(0)} arttı. Yeni sözleşmeler ve malzeme alımları bu artışı besliyor olabilir; nakit dengesini yakından izlemek faydalı olur.`;
+      }
+    }
+    if (monthRevenue > 0 && prevMonthRevenue > 0) {
+      const diff = ((monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
+      if (Math.abs(diff) >= 15) {
+        return diff > 0
+          ? `Bu ay ciro geçen aya göre %${diff.toFixed(0)} arttı. Ödenen hakedişlerdeki hızlanma tahsilat performansınızı olumlu etkiliyor.`
+          : `Bu ay ciro geçen aya göre %${Math.abs(diff).toFixed(0)} düştü. Bekleyen hakedişlerin onay süreçlerini hızlandırmak toparlanmayı destekleyebilir.`;
+      }
+    }
+    if (overdueTotal > 0) {
+      return `${formatCurrency(overdueTotal)} tutarında ${overdueCount} gecikmiş tahsilat, nakit akışını baskılıyor. En eski kayıtlardan başlayarak müşterilerle iletişime geçmek belirgin bir rahatlama sağlar.`;
+    }
+    return "Şu an nakit akışınız dengeli; hem gelir hem gider tarafı beklenen aralıkta seyrediyor.";
+  }, [loaded, monthRevenue, prevMonthRevenue, monthExpense, prevMonthExpense, overdueTotal, overdueCount]);
+
+  const toneColor = (t: "good" | "warn" | "alert" | "muted") =>
+    t === "alert" ? "#EF4444" : t === "warn" ? "#F59E0B" : t === "good" ? "#22C55E" : "hsl(var(--muted-foreground))";
+
+  /* ---------------------------------- Render ---------------------------------- */
+
   return (
-    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-[1120px] mx-auto space-y-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-8 max-w-[1120px] mx-auto space-y-6">
+      <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
+
+      <TrialBanner />
+      <PinnedInsights />
+
+      {/* 1. Manager Greeting — slim hero (-30% height) */}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-muted-foreground/80 mb-1.5">
+            <greeting.Icon className="w-3.5 h-3.5" />
+            <span className="text-[11.5px] tracking-wide uppercase">{formatDate(new Date())}</span>
+          </div>
+          <h1
+            className="text-[22px] lg:text-[26px] font-medium tracking-tight text-foreground leading-tight"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+          >
+            {greeting.text},{" "}
+            <span className="text-muted-foreground/90 font-normal">{name}.</span>
+          </h1>
+          <p className="text-[12.5px] text-muted-foreground mt-1">
+            {loaded
+              ? `${activeProjects} aktif proje · ${formatCurrency(cashTotal)} kasada · ${briefKpis.criticalRisks > 0 ? `${briefKpis.criticalRisks} kritik risk` : "kritik uyarı yok"}`
+              : "Şirket verileri hazırlanıyor…"}
+          </p>
+        </div>
+      </header>
+
+      {/* 2. Health Cards — 4 tiles */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {healthCards.map((c) => {
+          const Icon = c.icon;
+          const color = toneColor(c.tone);
+          return (
+            <Tooltip key={c.label} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="relative rounded-xl bg-card/60 border border-border/50 p-4 hover:border-border transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
+                      {c.label}
+                    </span>
+                    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color }} />
+                  </div>
+                  {!loaded ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <p
+                      className="text-[22px] font-semibold tracking-tight tabular-nums"
+                      style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        letterSpacing: "-0.02em",
+                        color: c.tone === "good" ? "hsl(var(--foreground))" : color,
+                      }}
+                    >
+                      {c.value}
+                    </p>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">{c.hint}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </section>
+
+      {/* 3. Manager Briefing — top 5 priorities, integrated voice button */}
+      <ExecutiveMorningBrief
+        onTabChange={onTabChange}
+        onProjectSelect={onProjectSelect}
+        compact
+        maxPriorities={5}
+      />
+
+      {/* 4. Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        {quickActions.map((a) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.label}
+              onClick={a.onClick}
+              disabled={a.locked}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
+                a.primary
+                  ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
+                  : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
+              } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {a.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 5. Financial Snapshot — 4 merged metrics */}
+      <Card>
+        {profitLocked && (
+          <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
+        )}
+        <SectionHeader icon={Wallet} title="Finansal Özet — Bu Ay" action="Detay" onAction={() => onTabChange("payments-kasa")} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange, inv: false },
+            { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange, inv: true },
+            { label: "Kasa", value: cashTotal, color: "#3B82F6", change: null as number | null, inv: false },
+            { label: "Aylık Kâr", value: netProfit, color: "#FF6B2B", change: profitChange, inv: false },
+          ].map((item) => {
+            const isUp = (item.change ?? 0) >= 0;
+            const changeColor = item.change == null
+              ? "hsl(var(--muted-foreground))"
+              : item.inv
+                ? (isUp ? "#EF4444" : "#22C55E")
+                : (isUp ? "#22C55E" : "#EF4444");
+            return (
+              <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
+                <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
+                  {item.label}
+                </p>
+                {!loaded ? (
+                  <Skeleton className="h-6 w-24" />
+                ) : (
+                  <>
+                    <MetricTooltip full={formatCurrencyFull(item.value)}>
+                      <p
+                        className="text-[20px] font-semibold truncate cursor-help tabular-nums"
+                        style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+                      >
+                        {formatCurrency(item.value)}
+                      </p>
+                    </MetricTooltip>
+                    {item.change != null && (
+                      <p className="text-[10.5px] mt-1 flex items-center gap-1 tabular-nums" style={{ color: changeColor }}>
+                        {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        <span>{formatPercent(item.change)} vs geçen ay</span>
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Rich AI insight (Sprint 19 §11) */}
+        {richInsight && (
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/40 px-3.5 py-2.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" />
+            <p className="text-[12.5px] leading-relaxed text-foreground/85">{richInsight}</p>
+          </div>
+        )}
+      </Card>
+
+      {/* 6. Projects Overview */}
+      <Card padded={false}>
+        {projectsLocked && (
+          <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />
+        )}
+        <div className="p-5 pb-3">
+          <SectionHeader title="Aktif Projeler" action="Tümü" onAction={() => onTabChange("projects")} />
+        </div>
+        {displayProjects.length === 0 ? (
+          <div className="pb-6 px-4">
+            <EmptyState
+              icon="🏗️"
+              title="Henüz proje yok"
+              description="İlk projenizi ekleyerek şantiye takibine başlayın."
+              buttonText="İlk Projeyi Oluştur"
+              onButtonClick={() => onTabChange("projects")}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="hidden lg:block">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr>
+                    {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-5 py-2.5 font-medium uppercase tracking-wider text-muted-foreground/80 text-[10.5px] border-b border-border/50"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayProjects.map((p, idx) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => onProjectSelect?.(p.id)}
+                      className={`transition-colors duration-150 cursor-pointer hover:bg-muted/30 ${
+                        idx !== displayProjects.length - 1 ? "border-b border-border/40" : ""
+                      }`}
+                    >
+                      <td className="px-5 py-3.5 font-medium text-foreground tracking-tight">{p.name}</td>
+                      <td className="px-5 py-3.5 text-muted-foreground">{p.client}</td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full transition-all" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                          </div>
+                          <span className="text-[11.5px] tabular-nums text-muted-foreground w-9 text-right">
+                            {p.progress}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span
+                          className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
+                          style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="lg:hidden divide-y divide-border/50">
+              {displayProjects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => onProjectSelect?.(p.id)}
+                  className="px-5 py-3.5 space-y-2 cursor-pointer active:bg-muted/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium truncate text-foreground">{p.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{p.client}</p>
+                    </div>
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2"
+                      style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+                    >
+                      {p.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                    </div>
+                    <span className="text-[11px] tabular-nums shrink-0 text-muted-foreground">{p.progress}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* 7. Latest Activities */}
+      <Card>
+        <SectionHeader title="Son Aktiviteler" />
+        {projects.length === 0 ? (
+          <EmptyState icon="📋" title="Aktivite yok" description="Projeleriniz üzerinde işlem yaptıkça burada listelenir." />
+        ) : (
+          <div className="space-y-3">
+            {projects.slice(0, 5).map((p, i) => {
+              const colors = ["#22C55E", "#3B82F6", "#F59E0B", "#818CF8", "#FF6B2B"];
+              const ago = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)));
+              return (
+                <div key={p.id} className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                  <span className="text-[12.5px] flex-1 min-w-0 truncate text-foreground/90">
+                    {p.name} <span className="text-muted-foreground">— {p.status}</span>
+                  </span>
+                  <span className="text-[11px] shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal((prev) => ({ ...prev, open: false }))}
+        feature={upgradeModal.feature}
+        requiresOffice={upgradeModal.requiresOffice}
+      />
+    </div>
+  );
+};
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
