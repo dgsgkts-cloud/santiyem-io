@@ -6,13 +6,16 @@ import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
 import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
 import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
+import FirstRunWizard from "./FirstRunWizard";
+import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
+  { id: "setup", label: "Kurulum Merkezi", icon: Rocket },
   { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
