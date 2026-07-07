@@ -50,6 +50,7 @@ const NAV_ITEMS = [
   { id: "personnel", label: "Personel", icon: HardHat },
   { id: "e-invoices", label: "E-Fatura", icon: FileText },
   { id: "procurement", label: "Satın Alma", icon: ShoppingCart, hint: "Talep / RFQ / Sipariş" },
+  { id: "warehouse", label: "Depo & Envanter", icon: Warehouse, hint: "Stok / Transfer / Zimmet" },
   { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "settings", label: "Ayarlar", icon: Settings },
@@ -62,6 +63,8 @@ const AI_SHORTCUTS = [
   { label: "CEO Modu", prompt: "CEO modu: gelir, gider, nakit, kâr, proje sağlığı, riskler ve önerileri tek ekranda özetle.", icon: Zap },
   { label: "Satın alma özeti", prompt: "Bu ayki satın alma performansını ve tedarikçi puanlarını özetle.", icon: ShoppingCart },
   { label: "Teklif karşılaştır", prompt: "Aktif RFQ'lardaki teklifleri karşılaştır ve en iyi tedarikçiyi öner.", icon: Send },
+  { label: "Depo özeti", prompt: "Depo envanterini, kritik stokları ve tüketim trendini özetle.", icon: Warehouse },
+  { label: "Kritik stokları listele", prompt: "Kritik ve tükenmiş stok kalemlerini önceliklendirerek listele.", icon: ShieldAlert },
 ];
 
 const CREATE_ACTIONS = [
@@ -74,6 +77,10 @@ const CREATE_ACTIONS = [
   { label: "Yeni Satın Alma Talebi", tab: "procurement", icon: ShoppingCart },
   { label: "Yeni Tedarikçi", tab: "procurement", icon: Users },
   { label: "Yeni Sipariş", tab: "procurement", icon: Truck },
+  { label: "Malzeme Girişi", tab: "warehouse", icon: Package },
+  { label: "Stok Transferi", tab: "warehouse", icon: ArrowLeftRight },
+  { label: "Ekipman Zimmetle", tab: "warehouse", icon: Wrench },
+  { label: "Stok Sayımı Başlat", tab: "warehouse", icon: ClipboardCheck },
 ];
 
 const getActiveTab = (): string => {
