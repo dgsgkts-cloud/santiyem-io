@@ -66,6 +66,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "procurement" as Tab, label: "Satın Alma", icon: ShoppingCart },
       { id: "warehouse" as Tab, label: "Depo & Envanter", icon: Warehouse },
+      { id: "fleet" as Tab, label: "Makine & Ekipman", icon: Truck },
     ],
   },
   {
