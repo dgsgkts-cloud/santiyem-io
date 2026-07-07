@@ -239,25 +239,33 @@ export const CommandPalette = () => {
         <CommandSeparator />
 
         <CommandGroup heading="Oluştur">
-          {CREATE_ACTIONS.map((c) => (
-            <CommandItem key={c.label} onSelect={() => run(() => nav(c.tab))}>
-              <Plus className="mr-2 h-4 w-4" />
-              <span>{c.label}</span>
-              <c.icon className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
-            </CommandItem>
-          ))}
+          {CREATE_ACTIONS.map((c) => {
+            const d = guard.check(c.tab as GuardTab);
+            return (
+              <CommandItem key={c.label} onSelect={() => run(() => guardedNav(c.tab))} className={d.ok ? "" : "opacity-50"}>
+                <Plus className="mr-2 h-4 w-4" />
+                <span>{c.label}</span>
+                {!d.ok && <Lock className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
+                <c.icon className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
 
         <CommandSeparator />
 
         <CommandGroup heading="Sayfalar">
-          {NAV_ITEMS.map((n) => (
-            <CommandItem key={n.id} onSelect={() => run(() => nav(n.id))}>
-              <n.icon className="mr-2 h-4 w-4" />
-              <span>{n.label}</span>
-              {n.hint && <span className="ml-auto text-[10px] text-muted-foreground">{n.hint}</span>}
-            </CommandItem>
-          ))}
+          {NAV_ITEMS.map((n) => {
+            const d = guard.check(n.id as GuardTab);
+            return (
+              <CommandItem key={n.id} onSelect={() => run(() => guardedNav(n.id))} className={d.ok ? "" : "opacity-50"}>
+                <n.icon className="mr-2 h-4 w-4" />
+                <span>{n.label}</span>
+                {!d.ok && <Lock className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
+                {n.hint && <span className="ml-auto text-[10px] text-muted-foreground">{n.hint}</span>}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
 
         {projectItems.length > 0 && (
