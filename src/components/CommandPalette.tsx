@@ -227,6 +227,30 @@ export const CommandPalette = () => {
 
         <CommandSeparator />
 
+        <CommandGroup heading="Abonelik & Plan">
+          {[
+            { label: "Aboneliği görüntüle", keywords: "abonelik subscription plan lisans license" },
+            { label: "Planı yükselt", keywords: "upgrade yukselt plan" },
+            { label: "Trial durumu", keywords: "trial deneme" },
+            { label: "Lisans / Faturalar", keywords: "license lisans fatura invoices" },
+          ].map((a) => (
+            <CommandItem
+              key={a.label}
+              value={`${a.label} ${a.keywords}`}
+              onSelect={() => run(() => {
+                nav("settings");
+                setTimeout(() => window.dispatchEvent(new CustomEvent("open-subscription-tab")), 120);
+              })}
+            >
+              <Sparkles className="mr-2 h-4 w-4 text-[#FF6B2B]" />
+              <span>{a.label}</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">Plan</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+
+
+
         <CommandGroup heading="AI Kısayolları">
           {AI_SHORTCUTS.map((a) => (
             <CommandItem key={a.label} onSelect={() => run(() => askAI(a.prompt))}>
