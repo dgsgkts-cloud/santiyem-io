@@ -246,7 +246,7 @@ export const CommandPalette = () => {
               <CommandItem key={c.label} onSelect={() => run(() => guardedNav(c.tab))} className={d.ok ? "" : "opacity-50"}>
                 <Plus className="mr-2 h-4 w-4" />
                 <span>{c.label}</span>
-                {!d.ok && <Lock className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
+                {!d.ok && <LockIcon className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
                 <c.icon className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
               </CommandItem>
             );
@@ -262,7 +262,7 @@ export const CommandPalette = () => {
               <CommandItem key={n.id} onSelect={() => run(() => guardedNav(n.id))} className={d.ok ? "" : "opacity-50"}>
                 <n.icon className="mr-2 h-4 w-4" />
                 <span>{n.label}</span>
-                {!d.ok && <Lock className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
+                {!d.ok && <LockIcon className="ml-2 h-3 w-3 text-muted-foreground" aria-label="Bu özellik mevcut planınızda kullanılamıyor." />}
                 {n.hint && <span className="ml-auto text-[10px] text-muted-foreground">{n.hint}</span>}
               </CommandItem>
             );
