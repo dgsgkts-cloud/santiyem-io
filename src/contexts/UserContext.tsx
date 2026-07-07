@@ -37,6 +37,13 @@ interface UserContextType {
   user: User | null;
   profile: { full_name: string; title: string; city: string; plan: PlanType; role: UserRole } | null;
   loading: boolean;
+  /**
+   * True only after profile/plan/role queries have resolved (or the user is
+   * signed out). Use this — not `loading` — to gate feature-lock UI. It
+   * prevents the "flash of locked nav" that happens while `plan`/`role`
+   * still hold their default "free" values.
+   */
+  profileLoaded: boolean;
   plan: PlanType;
   role: UserRole;
   usage: UsageLimits;
