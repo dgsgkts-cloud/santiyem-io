@@ -2,6 +2,8 @@ import { Bell, Search } from "lucide-react";
 import { useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCenter from "@/components/NotificationCenter";
+import { PlanBadge } from "@/components/licensing/PlanBadge";
+import { useLicense, openSubscriptionPage } from "@/lib/licenseStore";
 
 interface DesktopTopBarProps {
   title: string;
