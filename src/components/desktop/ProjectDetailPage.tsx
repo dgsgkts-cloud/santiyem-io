@@ -1,8 +1,8 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import {
-  DollarSign, CheckCircle2, Calendar, Wallet, ArrowUpRight,
-  MessageSquare, Users, AlertTriangle, Plus, FileText, Camera, ClipboardCheck,
+  DollarSign, CheckCircle2, MessageSquare, Users,
+  Plus, FileText, Camera, ClipboardCheck,
 } from "lucide-react";
 
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
@@ -26,8 +26,7 @@ import { useCashChecks } from "@/hooks/useCashChecks";
 
 import {
   ExecutiveRibbon, ProjectTimeline, RiskCenter, ProjectActivityFeed,
-  QuickActionBar, ProjectAIDock, CEOExecutiveSummary, calcHealth,
-  type RibbonKPI, type TimelineEvent, type RiskItem, type ActivityItem, type AIDockData,
+  QuickActionBar, ProjectAIDock, CEOExecutiveSummary,
 } from "./ProjectCockpit";
 
 import { PageShell, SectionCard } from "@/components/ui/responsive";
@@ -42,6 +41,8 @@ import ProjectFilesSection from "./project-detail/ProjectFilesSection";
 import ProjectCashFlowSection from "./project-detail/ProjectCashFlowSection";
 import ProjectNotesSection from "./project-detail/ProjectNotesSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
+import { useProjectDetailData } from "./project-detail/useProjectDetailData";
+
 
 interface ProjectDetailPageProps {
   project: Project;
