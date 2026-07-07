@@ -59,6 +59,7 @@ import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBann
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
+import CommandPalette from "@/components/CommandPalette";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
