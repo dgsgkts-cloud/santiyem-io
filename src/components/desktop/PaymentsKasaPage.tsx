@@ -10,6 +10,13 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  PageShell,
+  SectionCard,
+  ResponsiveGrid,
+  ResponsiveSheet,
+  KpiCard,
+} from "@/components/ui/responsive";
 import { toast } from "sonner";
 import MetricTooltip from "@/components/MetricTooltip";
 import { useProjects } from "@/hooks/useProjects";
@@ -326,7 +333,7 @@ const PaymentsKasaPage = () => {
   const currentCategories = expForm.is_income ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
+    <PageShell maxWidth={1400} className="!py-4">
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -344,17 +351,17 @@ const PaymentsKasaPage = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full mb-6 h-auto p-1 rounded-xl bg-card border border-border flex flex-nowrap gap-0.5 sm:gap-1">
-          <TabsTrigger value="overview" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
+          <TabsTrigger value="overview" className="flex-1 min-w-0 touch-target flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-fs-xs sm:text-fs-sm leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <BarChart3 className="w-4 h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
           </TabsTrigger>
-          <TabsTrigger value="transactions" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Gelir & Gider</span>
+          <TabsTrigger value="transactions" className="flex-1 min-w-0 touch-target flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-fs-xs sm:text-fs-sm leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <CreditCard className="w-4 h-4 shrink-0" /> <span className="truncate">Gelir & Gider</span>
           </TabsTrigger>
-          <TabsTrigger value="kasa" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Hesaplar</span>
+          <TabsTrigger value="kasa" className="flex-1 min-w-0 touch-target flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-fs-xs sm:text-fs-sm leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <Wallet className="w-4 h-4 shrink-0" /> <span className="truncate">Hesaplar</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Raporlar</span>
+          <TabsTrigger value="reports" className="flex-1 min-w-0 touch-target flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-fs-xs sm:text-fs-sm leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
+            <FileText className="w-4 h-4 shrink-0" /> <span className="truncate">Raporlar</span>
           </TabsTrigger>
         </TabsList>
 
@@ -393,54 +400,62 @@ const PaymentsKasaPage = () => {
 
 
                   {/* Executive Cash Position */}
-                  <div>
-                    <h3 className="text-[12px] uppercase tracking-wide text-muted-foreground font-semibold mb-3">Nakit Pozisyonu</h3>
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                      {[
-                        { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
-                        { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
-                        { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
-                        { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
-                        { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
-                      ].map((c, i) => (
-                        <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-2 mb-2 min-w-0">
-                            <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
-                            <span className="text-[11px] text-muted-foreground truncate">{c.label}</span>
-                          </div>
-                          <MetricTooltip full={fmtFull(c.value)}>
-                            <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
-                          </MetricTooltip>
-                        </div>
-                      ))}
+                  <SectionCard title="Nakit Pozisyonu" padded={false}>
+                    <div className="px-4 pb-4">
+                      <ResponsiveGrid variant="auto" minItemWidth={200}>
+                        {[
+                          { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
+                          { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
+                          { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
+                          { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
+                          { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
+                        ].map((c, i) => (
+                          <KpiCard
+                            key={i}
+                            label={c.label}
+                            icon={c.icon}
+                            accent={c.color}
+                            value={
+                              <MetricTooltip full={fmtFull(c.value)}>
+                                <span className="cursor-help tabular-nums" style={{ color: c.color }}>
+                                  {fmtShort(c.value)}
+                                </span>
+                              </MetricTooltip>
+                            }
+                          />
+                        ))}
+                      </ResponsiveGrid>
                     </div>
-                  </div>
+                  </SectionCard>
                 </>
               );
             })()}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <ResponsiveGrid variant="kpi">
               {[
                 { label: "Toplam Gelir", value: totals.ciro, color: "#22C55E", icon: TrendingUp },
                 { label: "Toplam Gider", value: totals.gider, color: "#EF4444", icon: TrendingDown },
                 { label: "Net Bakiye", value: totals.kar, color: "#3B82F6", icon: DollarSign },
                 { label: "Bekleyen Hakediş", value: totals.bekleyenTahsilat, color: "#F59E0B", icon: Receipt },
               ].map((c, i) => (
-                <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-2 mb-2 min-w-0">
-                    <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
-                    <span className="text-xs text-muted-foreground truncate">{c.label}</span>
-                  </div>
-                  <MetricTooltip full={fmtFull(c.value)}>
-                    <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
-                  </MetricTooltip>
-                </div>
+                <KpiCard
+                  key={i}
+                  label={c.label}
+                  icon={c.icon}
+                  accent={c.color}
+                  value={
+                    <MetricTooltip full={fmtFull(c.value)}>
+                      <span className="cursor-help tabular-nums" style={{ color: c.color }}>
+                        {fmtShort(c.value)}
+                      </span>
+                    </MetricTooltip>
+                  }
+                />
               ))}
-            </div>
+            </ResponsiveGrid>
 
 
-            <div className="rounded-xl p-4 bg-card border border-border">
-              <h3 className="text-sm font-semibold mb-4 text-foreground">Aylık Gelir / Gider</h3>
+            <SectionCard title="Aylık Gelir / Gider">
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={monthlyData}>
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} />
@@ -450,23 +465,22 @@ const PaymentsKasaPage = () => {
                   <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} name="Gider" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </SectionCard>
 
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-foreground">Proje Bazlı Karlılık</h3>
+            <SectionCard title="Proje Bazlı Karlılık">
               {projectStats.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
+                <p className="text-fs-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <ResponsiveGrid variant="auto" minItemWidth={260}>
                   {projectStats.map(p => (
-                    <div key={p.id} className="rounded-xl p-4 bg-card border border-border">
+                    <div key={p.id} className="rounded-xl p-4 bg-background/50 border border-border/50">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-foreground truncate">{p.name}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
+                        <span className="text-fs-sm font-medium text-foreground truncate">{p.name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-fs-xs font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
                           {p.karMarji.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-[11px]">
+                      <div className="grid grid-cols-3 gap-2 text-fs-xs">
                         <div>
                           <span className="text-muted-foreground">Gelir</span>
                           <MetricTooltip full={fmtFull(p.hakedisTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p></MetricTooltip>
@@ -482,9 +496,9 @@ const PaymentsKasaPage = () => {
                       </div>
                     </div>
                   ))}
-                </div>
+                </ResponsiveGrid>
               )}
-            </div>
+            </SectionCard>
           </div>
         </TabsContent>
 
@@ -896,13 +910,15 @@ const PaymentsKasaPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ═══ Add/Edit Expense Modal ═══ */}
-      <Dialog open={addModal} onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Gelir veya gider işlemi oluşturun.</p>
-          </DialogHeader>
+      {/* ═══ Add/Edit Expense — ResponsiveSheet ═══ */}
+      <ResponsiveSheet
+        open={addModal}
+        onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}
+        title={editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}
+        description="Gelir veya gider işlemi oluşturun."
+        size="md"
+      >
+
 
           <div className="space-y-3">
             {/* Gelir / Gider Toggle */}
@@ -1025,24 +1041,22 @@ const PaymentsKasaPage = () => {
               </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </ResponsiveSheet>
 
-      {/* ═══ Kasa Account / Transaction Modal ═══ */}
-      <Dialog open={kasaModal} onOpenChange={v => { if (!v) { setKasaModal(false); setKasaAmount(""); setKasaDesc(""); } }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              {kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
-            </DialogTitle>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              {kasaModalType === "add_account"
-                ? "Yeni banka veya kasa hesabı oluşturun."
-                : kasaModalType === "deposit"
-                ? "Seçilen hesaba giriş kaydı ekleyin."
-                : "Seçilen hesaptan çıkış kaydı ekleyin."}
-            </p>
-          </DialogHeader>
+      {/* ═══ Kasa Account / Transaction — ResponsiveSheet ═══ */}
+      <ResponsiveSheet
+        open={kasaModal}
+        onOpenChange={v => { if (!v) { setKasaModal(false); setKasaAmount(""); setKasaDesc(""); } }}
+        title={kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
+        description={
+          kasaModalType === "add_account"
+            ? "Yeni banka veya kasa hesabı oluşturun."
+            : kasaModalType === "deposit"
+            ? "Seçilen hesaba giriş kaydı ekleyin."
+            : "Seçilen hesaptan çıkış kaydı ekleyin."
+        }
+        size="sm"
+      >
 
 
           {kasaModalType === "add_account" ? (
@@ -1109,9 +1123,8 @@ const PaymentsKasaPage = () => {
               </button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-    </div>
+      </ResponsiveSheet>
+    </PageShell>
   );
 };
 
