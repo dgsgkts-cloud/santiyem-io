@@ -36,6 +36,7 @@ const CommunicationCenterPage = lazy(() => import("@/components/communication/Co
 const ProcurementPage = lazy(() => import("@/components/desktop/ProcurementPage"));
 const WarehousePage = lazy(() => import("@/components/desktop/WarehousePage"));
 const FleetPage = lazy(() => import("@/components/desktop/FleetPage"));
+const ReportsPage = lazy(() => import("@/components/desktop/ReportsPage"));
 
 const TabFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -223,12 +224,14 @@ const TAB_TO_PATH: Record<string, string> = {
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
   settings: "/settings",
+  reports: "/raporlar",
+  meetings: "/toplantilar",
   "company-memory": "/company-brain/memory",
   "company-kb": "/company-brain/knowledge-base",
   "ai-decisions": "/company-brain/ai-decisions",
   "decision-history": "/company-brain/decision-history",
   "company-docs": "/company-brain/documents",
-  "communication": "/iletisim",
+  "communication": "/iletisim-merkezi",
 };
 
 const PATH_TO_TAB: Record<string, Tab> = Object.entries(TAB_TO_PATH).reduce(
@@ -546,10 +549,8 @@ const Index = () => {
                 ) : activeTab === "fleet" ? (
                   <FleetPage />
                 ) : activeTab === "reports" ? (
-                  <ComingSoonScreen
-                    title="Raporlar"
-                    description="Kar-zarar, nakit akışı ve karar geçmişi raporları hazırlanıyor. Yakında burada olacak."
-                  />
+                  <ReportsPage />
+
                 ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
                   <ComingSoonScreen
                     title="Company Brain"
