@@ -1,7 +1,6 @@
 // Sprint 23 — Global Command Palette (⌘K / Ctrl+K)
-// Raycast/Linear-inspired workspace command center. Searches navigation,
-// projects, personnel, subcontractors, quick actions and AI shortcuts.
-// Uses existing `navigate-tab` CustomEvent bus so no router changes required.
+// Sprint 23.1 — Contextual AI suggestions per current page, frequency-sorted,
+// with recently used list and hover descriptions. No backend, no schema.
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -14,13 +13,22 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Home, FolderOpen, FileText, MessageSquare, WalletCards, BookOpen,
   Package, HardHat, BarChart3, Settings, Sparkles, Plus, TrendingUp,
-  ShieldAlert, Wallet, Users, Zap,
+  ShieldAlert, Wallet, Users, Zap, Clock,
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSubcontractors } from "@/hooks/useSubcontractors";
 import { usePersonnel } from "@/hooks/usePersonnel";
+import {
+  getSuggestionsForTab, getRecentSuggestions, recordSuggestionUse,
+  sortByFrequency, type AISuggestion,
+} from "@/lib/aiSuggestions";
+
+const ACTIVE_TAB_KEY = "santiyem_active_tab";
 
 const nav = (tab: string) =>
   window.dispatchEvent(new CustomEvent("navigate-tab", { detail: tab }));
@@ -46,14 +54,11 @@ const NAV_ITEMS = [
   { id: "settings", label: "Ayarlar", icon: Settings },
 ];
 
-const AI_ACTIONS = [
+const AI_SHORTCUTS = [
   { label: "Finansal analiz", prompt: "Şirketimin güncel finansal durumunu analiz et.", icon: TrendingUp },
   { label: "Risk raporu", prompt: "Şirketimdeki finansal ve operasyonel riskleri listele.", icon: ShieldAlert },
   { label: "Nakit tahmini", prompt: "Önümüzdeki 30 gün için nakit akışı tahmini oluştur.", icon: Wallet },
-  { label: "Günlük özet", prompt: "Bugün odaklanmam gereken en önemli 5 konu nedir?", icon: Sparkles },
   { label: "CEO Modu", prompt: "CEO modu: gelir, gider, nakit, kâr, proje sağlığı, riskler ve önerileri tek ekranda özetle.", icon: Zap },
-  { label: "Proje kârlılık", prompt: "Tüm projelerin kârlılık sıralamasını göster.", icon: TrendingUp },
-  { label: "Gecikmiş ödemeler", prompt: "Vadesi geçmiş tüm ödemeleri listele.", icon: ShieldAlert },
 ];
 
 const CREATE_ACTIONS = [
@@ -65,9 +70,33 @@ const CREATE_ACTIONS = [
   { label: "Yeni Hakediş", tab: "hakedis", icon: FileText },
 ];
 
+const getActiveTab = (): string => {
+  try { return localStorage.getItem(ACTIVE_TAB_KEY) ?? "dashboard"; }
+  catch { return "dashboard"; }
+};
+
+const SuggestionRow = ({ s, onRun }: { s: AISuggestion; onRun: (s: AISuggestion) => void }) => (
+  <TooltipProvider delayDuration={250}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <CommandItem value={`ai ${s.label}`} onSelect={() => onRun(s)} className="group">
+          <Sparkles className="mr-2 h-4 w-4 text-[#FF6B2B]" />
+          <span className="truncate">{s.label}</span>
+          <span className="ml-auto text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">AI</span>
+        </CommandItem>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="max-w-[280px] text-xs leading-snug">
+        {s.description}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
 export const CommandPalette = () => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const [currentTab, setCurrentTab] = useState<string>(getActiveTab());
+  const [recentTick, setRecentTick] = useState(0);
   const { projects } = useProjects();
   const { subcontractors } = useSubcontractors();
   const { personnel } = usePersonnel();
@@ -79,20 +108,44 @@ export const CommandPalette = () => {
         setOpen((o) => !o);
       }
     };
-    const openEv = () => setOpen(true);
+    const openEv = () => { setCurrentTab(getActiveTab()); setOpen(true); };
+    const navEv = (e: Event) => setCurrentTab((e as CustomEvent).detail);
     document.addEventListener("keydown", down);
     window.addEventListener("open-command-palette", openEv);
+    window.addEventListener("navigate-tab", navEv);
     return () => {
       document.removeEventListener("keydown", down);
       window.removeEventListener("open-command-palette", openEv);
+      window.removeEventListener("navigate-tab", navEv);
     };
   }, []);
+
+  useEffect(() => {
+    if (open) setCurrentTab(getActiveTab());
+  }, [open]);
+
+  const runSuggestion = (s: AISuggestion) => {
+    recordSuggestionUse(s);
+    setRecentTick((t) => t + 1);
+    askAI(s.prompt);
+    setOpen(false);
+    setQ("");
+  };
 
   const run = (fn: () => void) => {
     fn();
     setOpen(false);
     setQ("");
   };
+
+  const pageSuggestions = useMemo(
+    () => sortByFrequency(getSuggestionsForTab(currentTab)),
+    [currentTab, open, recentTick],
+  );
+  const recent = useMemo(
+    () => getRecentSuggestions(),
+    [open, recentTick],
+  );
 
   const projectItems = useMemo(() => (projects || []).slice(0, 8), [projects]);
   const subItems = useMemo(() => (subcontractors || []).slice(0, 6), [subcontractors]);
@@ -105,11 +158,39 @@ export const CommandPalette = () => {
         value={q}
         onValueChange={setQ}
       />
-      <CommandList className="max-h-[480px]">
+      <CommandList className="max-h-[520px]">
         <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
 
-        <CommandGroup heading="AI Eylemleri">
-          {AI_ACTIONS.map((a) => (
+        {pageSuggestions.length > 0 && (
+          <CommandGroup heading="Bu sayfa için öneriler">
+            {pageSuggestions.map((s) => (
+              <SuggestionRow key={s.id} s={s} onRun={runSuggestion} />
+            ))}
+          </CommandGroup>
+        )}
+
+        {recent.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Son Kullanılanlar">
+              {recent.map((s) => (
+                <CommandItem
+                  key={`recent-${s.id}`}
+                  value={`recent ${s.label}`}
+                  onSelect={() => runSuggestion(s)}
+                >
+                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{s.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        <CommandSeparator />
+
+        <CommandGroup heading="AI Kısayolları">
+          {AI_SHORTCUTS.map((a) => (
             <CommandItem key={a.label} onSelect={() => run(() => askAI(a.prompt))}>
               <a.icon className="mr-2 h-4 w-4 text-[#FF6B2B]" />
               <span>{a.label}</span>
@@ -189,7 +270,7 @@ export const CommandPalette = () => {
           <>
             <CommandSeparator />
             <CommandGroup heading="AI'a sor">
-              <CommandItem value={`ai ${q}`} onSelect={() => run(() => askAI(q))}>
+              <CommandItem value={`ai-ask ${q}`} onSelect={() => run(() => askAI(q))}>
                 <Sparkles className="mr-2 h-4 w-4 text-[#FF6B2B]" />
                 <span className="truncate">"{q}" → AI'a sor</span>
               </CommandItem>
