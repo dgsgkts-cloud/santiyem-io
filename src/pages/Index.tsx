@@ -550,7 +550,7 @@ const Index = () => {
                 </div>
 
               </div>
-              {!Capacitor.isNativePlatform() && <Footer />}
+              {!Capacitor.isNativePlatform() && <Footer minimal />}
             </div>
           )}
         </div>
