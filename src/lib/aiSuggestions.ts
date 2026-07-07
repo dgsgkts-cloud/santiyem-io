@@ -60,6 +60,14 @@ export const PAGE_SUGGESTIONS: Record<string, AISuggestion[]> = {
     { id: "proc-budget-risk", label: "Bütçe aşımını tahmin et", prompt: "Aktif satın alma taleplerine göre bütçe aşımı riskini tahmin et.", description: "Talep ve sipariş tutarlarını proje bütçesiyle karşılaştırır." },
     { id: "proc-forecast", label: "Fiyat trendlerini göster", prompt: "Beton, demir ve ana malzemelerin son 30 gün fiyat trendini göster.", description: "Kategori bazlı fiyat değişim önerilerini üretir." },
   ],
+  warehouse: [
+    { id: "wh-critical", label: "Kritik stokları listele", prompt: "Kritik ve tükenmiş envanter kalemlerini önceliklendirerek listele.", description: "Minimum eşiğin altındaki malzemeleri kritiklikle sıralar." },
+    { id: "wh-forecast", label: "Tükenme tahmini yap", prompt: "Aktif tüketime göre önümüzdeki 14 gün içinde tükenecek malzemeleri tahmin et.", description: "Ortalama tüketim hızı ile bitiş tarihi projeksiyonu üretir." },
+    { id: "wh-transfer", label: "Transfer önerileri", prompt: "Depolar arası dengesizlikleri gider — transfer önerileri hazırla.", description: "Fazla ve eksik stokları eşleştirerek transfer listesi verir." },
+    { id: "wh-dead", label: "Atıl stokları göster", prompt: "90 günden uzun süredir hareket görmemiş envanter kalemlerini listele.", description: "Nakit bağlı dead stock kalemlerini raporlar." },
+    { id: "wh-variance", label: "Sayım sapmalarını analiz et", prompt: "Son sayımlardaki büyük sapmaları ve olası nedenlerini analiz et.", description: "Beklenen vs. sayılan farkı yüksek kalemleri özetler." },
+    { id: "wh-consume", label: "Tüketim trendi", prompt: "Son 3 ayın tüketim trendini kategori bazında özetle.", description: "Aylık tüketim hızını ve proje bazlı dağılımı gösterir." },
+  ],
   reports: [
     { id: "monthly-report", label: "Aylık rapor oluştur", prompt: "Bu ayın konsolide yönetim raporunu hazırla.", description: "Finans, proje ve personel verilerini tek raporda toplar." },
     { id: "compare-months", label: "Ayları karşılaştır", prompt: "Son 3 ayı finansal ve operasyonel olarak karşılaştır.", description: "Trendleri ve sapmaları grafiklerle özetler." },
