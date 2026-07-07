@@ -543,7 +543,9 @@ async function integrityCheck(supabase: any, userId: string) {
   const per: Record<string, number> = {};
   let total = 0;
   for (const [t, c] of probes) {
-    const { count } = await supabase.from(t).select("id", { count: "exact", head: true }).eq("user_id", userId).ilike(c, like);
+    // tasks has no user_id column — scope by created_by
+    const q = supabase.from(t).select("id", { count: "exact", head: true }).ilike(c, like);
+    const { count } = t === "tasks" ? await q.eq("created_by", userId) : await q.eq("user_id", userId);
     if (count) { per[t] = count; total += count; }
   }
   return { per_table: per, total };
