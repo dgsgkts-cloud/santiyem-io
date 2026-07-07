@@ -560,12 +560,26 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = body.action === "clean" ? "clean" : "seed";
 
-    let summary: Record<string, number>;
     if (action === "clean") {
-      summary = await clean(supabase, user.id);
-    } else {
-      summary = await seed(supabase, user.id);
+      const result = await clean(supabase, user.id);
+      if (!result.verified) {
+        return new Response(JSON.stringify({
+          ok: false,
+          action,
+          error: `Cleanup incomplete: ${result.leftovers.total} [DEMO] rows remain`,
+          summary: result.summary,
+          leftovers: result.leftovers,
+          total_deleted: result.total_deleted,
+        }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({
+        ok: true, action,
+        summary: result.summary,
+        total_deleted: result.total_deleted,
+        verified: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const summary = await seed(supabase, user.id);
     return new Response(JSON.stringify({ ok: true, action, summary }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
