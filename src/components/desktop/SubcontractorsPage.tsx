@@ -115,6 +115,11 @@ const SubcontractorsPage = () => {
             const progress = Number(s.contract_amount) > 0
               ? Math.min(100, Math.round((s.totalPaid / Number(s.contract_amount)) * 100))
               : 0;
+            const riskMeta = {
+              safe: { label: "Güvenli", dot: "#22C55E", bg: "rgba(34,197,94,0.12)" },
+              watch: { label: "Yakın Takip", dot: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+              risky: { label: "Riskli", dot: "#EF4444", bg: "rgba(239,68,68,0.14)" },
+            }[s.risk];
             return (
               <Card key={s.id} className="border-border cursor-pointer hover:border-[#FF6B2B]/30 transition-colors" onClick={() => setSelectedId(s.id)}>
                 <CardContent className="p-3.5">
@@ -124,11 +129,13 @@ const SubcontractorsPage = () => {
                       {s.specialty && <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5"><Wrench className="w-3 h-3 shrink-0" />{s.specialty}</p>}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      {s.upcomingCount > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}>
-                          ⏰ {s.upcomingCount}
-                        </span>
-                      )}
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                        style={{ backgroundColor: riskMeta.bg, color: riskMeta.dot }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: riskMeta.dot }} />
+                        {riskMeta.label}
+                      </span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
@@ -139,13 +146,21 @@ const SubcontractorsPage = () => {
                   <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: progress >= 100 ? "#22C55E" : "#FF6B2B" }} />
                   </div>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] text-muted-foreground">%{progress} tamamlandı</span>
-                    {s.upcomingCount > 0 && <span className="text-[10px] text-muted-foreground">Yaklaşan ödeme</span>}
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
+                    <span>%{progress} tamamlandı</span>
+                    <span>
+                      {s.avgDelay > 0 ? `Ort. ${s.avgDelay} gün gecikme` : "Zamanında ödeniyor"}
+                    </span>
                   </div>
+                  {s.lastPayment && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Son ödeme: {new Date(s.lastPayment).toLocaleDateString("tr-TR")}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
+
           })}
         </div>
       )}
