@@ -522,53 +522,49 @@ const Index = () => {
               <div className="flex min-h-full flex-col">
                 <div className="flex-1 pb-12">
                 <Suspense fallback={<TabFallback />}>
-                {activeTab === "dashboard" ? (
-                  <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />
-                ) : activeTab === "projects" ? (
-                  <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />
-                ) : activeTab === "hakedis" ? (
-                  <DesktopHakedisPage />
-                ) : activeTab === "contracts" ? (
-                  <DesktopContractsPage />
-                ) : activeTab === "site-diary" ? (
-                  <SiteDiaryPage />
-                ) : activeTab === "payments-kasa" ? (
-                  <PaymentsKasaPage />
-                ) : activeTab === "materials" ? (
-                  <MaterialsPage />
-                ) : activeTab === "e-invoices" ? (
-                  <EInvoicesPage />
-                ) : activeTab === "personnel" ? (
-                  <PersonnelPage />
-                ) : activeTab === "meetings" ? (
-                  <MeetingCenterPage />
-                ) : activeTab === "communication" ? (
-                  <CommunicationCenterPage />
-                ) : activeTab === "procurement" ? (
-                  <ProcurementPage />
-                ) : activeTab === "warehouse" ? (
-                  <WarehousePage />
-                ) : activeTab === "fleet" ? (
-                  <FleetPage />
-                ) : activeTab === "reports" ? (
-                  <ReportsPage />
-
-                ) : COMPANY_BRAIN_TABS.has(activeTab) ? (
-                  <ComingSoonScreen
-                    title="Company Brain"
-                    description="Şirket Belleği ve AI Karar Geçmişi modülleri yeniden tasarlanıyor. Bu sürede AI Copilot üzerinden aynı bilgilere erişebilirsiniz."
-                  />
-                ) : activeTab === "settings" ? (
-                  <DesktopSettingsPage />
-                ) : activeTab === "pricing" ? (
-                  <div className="bg-background"><PricingPanel /></div>
-                ) : activeTab === "daily" ? (
-                  <DailyKnowledgePanel />
-                ) : activeTab === "render" ? (
-                  <RenderPanel />
-                ) : (
-                  <RemindersPanel />
-                )}
+                {(() => {
+                  // Sprint 28.6 — Centralized access guard. Any tab in
+                  // SETUP_REQUIRED / PREMIUM_TABS routes through LockedPage
+                  // instead of its real component when locked. Admin bypass
+                  // and always-allowed tabs (dashboard/settings/pricing/chat/
+                  // reminders/daily/render) short-circuit inside the guard.
+                  const decision = guard.check(activeTab as any);
+                  if (!decision.ok && decision.reason !== "loading" && decision.reason !== "ok") {
+                    return (
+                      <LockedPage
+                        reason={decision.reason as any}
+                        moduleName={decision.label}
+                        setupPercent={guard.setupPercent}
+                      />
+                    );
+                  }
+                  if (activeTab === "dashboard") return <DesktopDashboard onTabChange={(t) => handleDesktopTabChange(t as Tab)} onSend={(text) => { handleDesktopTabChange("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }} />;
+                  if (activeTab === "projects") return <DesktopProjectsPage initialProjectId={selectedProjectId} onProjectIdClear={() => setSelectedProjectId(null)} />;
+                  if (activeTab === "hakedis") return <DesktopHakedisPage />;
+                  if (activeTab === "contracts") return <DesktopContractsPage />;
+                  if (activeTab === "site-diary") return <SiteDiaryPage />;
+                  if (activeTab === "payments-kasa") return <PaymentsKasaPage />;
+                  if (activeTab === "materials") return <MaterialsPage />;
+                  if (activeTab === "e-invoices") return <EInvoicesPage />;
+                  if (activeTab === "personnel") return <PersonnelPage />;
+                  if (activeTab === "meetings") return <MeetingCenterPage />;
+                  if (activeTab === "communication") return <CommunicationCenterPage />;
+                  if (activeTab === "procurement") return <ProcurementPage />;
+                  if (activeTab === "warehouse") return <WarehousePage />;
+                  if (activeTab === "fleet") return <FleetPage />;
+                  if (activeTab === "reports") return <ReportsPage />;
+                  if (COMPANY_BRAIN_TABS.has(activeTab)) return (
+                    <ComingSoonScreen
+                      title="Company Brain"
+                      description="Şirket Belleği ve AI Karar Geçmişi modülleri yeniden tasarlanıyor. Bu sürede AI Copilot üzerinden aynı bilgilere erişebilirsiniz."
+                    />
+                  );
+                  if (activeTab === "settings") return <DesktopSettingsPage />;
+                  if (activeTab === "pricing") return <div className="bg-background"><PricingPanel /></div>;
+                  if (activeTab === "daily") return <DailyKnowledgePanel />;
+                  if (activeTab === "render") return <RenderPanel />;
+                  return <RemindersPanel />;
+                })()}
                 </Suspense>
                 </div>
 
