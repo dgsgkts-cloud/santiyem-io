@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,6 +9,19 @@ import {
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
+import { getCompanyProfile } from "@/lib/companyProfile";
+
+// Localized role labels — extend as new roles are added
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Yönetici",
+  owner: "Sahip",
+  site_chief: "Şantiye Şefi",
+  accounting: "Muhasebe",
+  purchasing: "Satın Alma",
+  personnel: "Personel",
+  member: "Üye",
+  viewer: "İzleyici",
+};
 
 type Tab =
   | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
