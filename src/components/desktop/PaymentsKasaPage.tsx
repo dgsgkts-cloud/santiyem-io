@@ -492,6 +492,41 @@ const PaymentsKasaPage = () => {
         <TabsContent value="transactions">
           <PullToRefresh onRefresh={handleRefresh}>
             <div className="space-y-4">
+              {(() => {
+                const last30 = new Date(); last30.setDate(last30.getDate() - 30);
+                const prev30Start = new Date(); prev30Start.setDate(prev30Start.getDate() - 60);
+                const inRange = (d: string, from: Date, to: Date) => {
+                  const dt = new Date(d);
+                  return dt >= from && dt <= to;
+                };
+                const catSum = (list: typeof expenses, cats: string[], from: Date, to: Date) =>
+                  list
+                    .filter(x => cats.some(c => x.category.toLowerCase().includes(c)) && inRange(x.expense_date, from, to))
+                    .reduce((s, x) => s + Number(x.amount), 0);
+                const now2 = new Date();
+                const malzemeNow = catSum(expenses, ["malzeme"], last30, now2);
+                const malzemePrev = catSum(expenses, ["malzeme"], prev30Start, last30);
+                const pctChange = malzemePrev > 0 ? Math.round(((malzemeNow - malzemePrev) / malzemePrev) * 100) : 0;
+                const insights: string[] = [];
+                if (malzemeNow > 0)
+                  insights.push(
+                    pctChange === 0
+                      ? "Malzeme giderleri son 30 günde stabil."
+                      : `Son 30 günde malzeme giderleri %${Math.abs(pctChange)} ${pctChange > 0 ? "arttı" : "azaldı"}.`,
+                  );
+                const iscilikNow = catSum(expenses, ["işçilik", "iscilik", "taşeron"], last30, now2);
+                if (iscilikNow > 0) insights.push("İşçilik giderleri normal seviyede.");
+                if (expenses.length === 0) insights.push("İlk kaydınızı ekleyerek AI harcama analizini başlatın.");
+                return (
+                  <AIInsightCard
+                    title="AI Harcama Analizi"
+                    insights={insights}
+                    actions={[{ label: "İncele", onClick: () => setActiveTab("reports") }]}
+                    compact
+                  />
+                );
+              })()}
+
               <div className="flex items-center gap-2 flex-wrap">
                 <select
                   value={selectedProjectFilter}
@@ -515,6 +550,7 @@ const PaymentsKasaPage = () => {
                     {filteredExpenses.map(e => {
                       const proj = projects.find(p => p.id === e.project_id);
                       const isIncome = INCOME_CATEGORIES.includes(e.category);
+                      const paymentType = (e as any).payment_type as string | undefined;
                       return (
                         <div key={e.id} className="flex items-center justify-between px-4 py-3">
                           <div className="flex items-center gap-3 min-w-0">
@@ -527,11 +563,15 @@ const PaymentsKasaPage = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
-                              <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <span className="text-sm font-semibold" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="hidden sm:flex items-center gap-1.5">
+                              <PaymentMethodBadge type={paymentType} />
+                              <StatusBadge status="odendi" />
+                            </div>
+                            <span className="text-sm font-semibold min-w-[80px] text-right" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
                               {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
                             </span>
                             <button onClick={() => openEditModal(e)}
@@ -551,6 +591,7 @@ const PaymentsKasaPage = () => {
               </div>
             </div>
           </PullToRefresh>
+
         </TabsContent>
 
         {/* ═══ TAB 3: KASA & ÖDEMELER ═══ */}
