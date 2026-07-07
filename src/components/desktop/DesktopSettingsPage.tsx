@@ -36,8 +36,13 @@ const DesktopSettingsPage = () => {
 
   useEffect(() => {
     const handler = () => setActiveTab("setup");
+    const subHandler = () => setActiveTab("subscription");
     window.addEventListener("open-workspace-setup", handler);
-    return () => window.removeEventListener("open-workspace-setup", handler);
+    window.addEventListener("open-subscription-tab", subHandler);
+    return () => {
+      window.removeEventListener("open-workspace-setup", handler);
+      window.removeEventListener("open-subscription-tab", subHandler);
+    };
   }, []);
 
   return (
