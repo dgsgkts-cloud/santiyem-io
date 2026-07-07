@@ -758,7 +758,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
           <SmartDocumentsFolders files={files} onOpen={(f) => window.open(f.file_url, "_blank")} />
         </div>
 
-
+        {fLoading ? (
           <p className="text-[12px]" style={labelStyle}>Yükleniyor...</p>
         ) : files.length === 0 ? (
           <div className="text-center py-8">
