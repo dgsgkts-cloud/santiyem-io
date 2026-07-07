@@ -429,27 +429,120 @@ async function seed(supabase: any, userId: string) {
   return summary;
 }
 
+/**
+ * Sprint 18.2 — Full cleanup with integrity verification.
+ * Deletes every table this seeder writes to, in FK-safe order, then verifies
+ * that zero [DEMO]-tagged rows remain for this user.
+ */
 async function clean(supabase: any, userId: string) {
-  // Delete rows tagged [DEMO] under this user
   const like = `${DEMO_TAG}%`;
   const summary: Record<string, number> = {};
+  const add = (t: string, n: number) => { summary[t] = (summary[t] || 0) + (n || 0); };
+
+  // ---- Resolve demo entity ids ----
+  const { data: projs } = await supabase.from("projects").select("id").eq("user_id", userId).ilike("name", like);
+  const projectIds: string[] = (projs || []).map((p: any) => p.id);
+
+  const { data: persons } = await supabase.from("personnel").select("id").eq("user_id", userId).ilike("full_name", like);
+  const personnelIds: string[] = (persons || []).map((p: any) => p.id);
+
+  const matByName = await supabase.from("materials").select("id").eq("user_id", userId).ilike("name", like);
+  let materialIds: string[] = (matByName.data || []).map((m: any) => m.id);
+  if (projectIds.length) {
+    const matByProj = await supabase.from("materials").select("id").eq("user_id", userId).in("project_id", projectIds);
+    materialIds = Array.from(new Set([...materialIds, ...((matByProj.data || []).map((m: any) => m.id))]));
+  }
+
+  // ---- Child rows first ----
+  if (materialIds.length) {
+    const e = await supabase.from("material_entries").delete({ count: "exact" }).in("material_id", materialIds);
+    add("material_entries", e.count || 0);
+    const x = await supabase.from("material_exits").delete({ count: "exact" }).in("material_id", materialIds);
+    add("material_exits", x.count || 0);
+  }
+  if (personnelIds.length) {
+    const a = await supabase.from("personnel_project_assignments").delete({ count: "exact" }).in("personnel_id", personnelIds);
+    add("personnel_project_assignments", a.count || 0);
+  }
+
+  // ---- Tag-scoped deletes ----
   const del = async (table: string, col: string) => {
-    const { error, count } = await supabase.from(table).delete({ count: "exact" }).eq("user_id", userId).ilike(col, like);
-    if (!error) summary[table] = count ?? 0;
+    const { count } = await supabase.from(table).delete({ count: "exact" }).eq("user_id", userId).ilike(col, like);
+    add(table, count || 0);
   };
-  // Order matters: cascades will help for projects
   await del("company_memories", "title");
   await del("reminders", "title");
   await del("cash_checks", "counterparty");
   await del("cash_collections", "sender");
   await del("cash_payments", "recipient");
   await del("cash_accounts", "name");
+  await del("tasks", "title");
+  await del("site_diary_entries", "work_done");
+  await del("worker_attendance", "full_name");
+  await del("project_expenses", "description");
   await del("subcontractors", "name");
-  await del("personnel", "full_name");
-  // Projects with CASCADE remove tasks/materials/diary/attendance/expenses
-  await del("projects", "name");
-  return summary;
+
+  if (materialIds.length) {
+    const m = await supabase.from("materials").delete({ count: "exact" }).in("id", materialIds).eq("user_id", userId);
+    add("materials", m.count || 0);
+  }
+  if (personnelIds.length) {
+    const p = await supabase.from("personnel").delete({ count: "exact" }).in("id", personnelIds).eq("user_id", userId);
+    add("personnel", p.count || 0);
+  }
+
+  // ---- Project-scoped sweep (safety net for any remaining child rows) ----
+  if (projectIds.length) {
+    const projectChildren = [
+      "tasks","site_diary_entries","site_diary_photos","project_expenses","project_notes","project_milestones","project_files",
+      "cash_payments","cash_collections","cash_checks","subcontractor_payments","e_invoices",
+      "worker_attendance","attendance_records","personnel_project_assignments",
+    ];
+    for (const t of projectChildren) {
+      const { count } = await supabase.from(t).delete({ count: "exact" }).eq("user_id", userId).in("project_id", projectIds);
+      if (count) add(t, count);
+    }
+    const pr = await supabase.from("projects").delete({ count: "exact" }).in("id", projectIds).eq("user_id", userId);
+    add("projects", pr.count || 0);
+  }
+
+  // ---- Integrity check: no [DEMO] rows may remain ----
+  const leftovers = await integrityCheck(supabase, userId);
+  const total = Object.values(summary).reduce((a, b) => a + b, 0);
+  return { summary, leftovers, total_deleted: total, verified: leftovers.total === 0 };
 }
+
+/**
+ * Counts any remaining [DEMO]-tagged rows for this user across every affected table.
+ * Returns per-table counts and grand total. verified == (total === 0).
+ */
+async function integrityCheck(supabase: any, userId: string) {
+  const like = `${DEMO_TAG}%`;
+  const probes: Array<[string, string]> = [
+    ["projects", "name"],
+    ["personnel", "full_name"],
+    ["subcontractors", "name"],
+    ["cash_accounts", "name"],
+    ["cash_payments", "recipient"],
+    ["cash_collections", "sender"],
+    ["cash_checks", "counterparty"],
+    ["materials", "name"],
+    ["tasks", "title"],
+    ["site_diary_entries", "work_done"],
+    ["worker_attendance", "full_name"],
+    ["project_expenses", "description"],
+    ["reminders", "title"],
+    ["company_memories", "title"],
+  ];
+  const per: Record<string, number> = {};
+  let total = 0;
+  for (const [t, c] of probes) {
+    const { count } = await supabase.from(t).select("id", { count: "exact", head: true }).eq("user_id", userId).ilike(c, like);
+    if (count) { per[t] = count; total += count; }
+  }
+  return { per_table: per, total };
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
