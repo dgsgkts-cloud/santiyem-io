@@ -1,6 +1,7 @@
-import { Bell, Search, CalendarClock, FolderOpen, Check } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
+import NotificationCenter from "@/components/NotificationCenter";
 
 interface DesktopTopBarProps {
   title: string;
