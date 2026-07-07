@@ -68,6 +68,14 @@ export const PAGE_SUGGESTIONS: Record<string, AISuggestion[]> = {
     { id: "wh-variance", label: "Sayım sapmalarını analiz et", prompt: "Son sayımlardaki büyük sapmaları ve olası nedenlerini analiz et.", description: "Beklenen vs. sayılan farkı yüksek kalemleri özetler." },
     { id: "wh-consume", label: "Tüketim trendi", prompt: "Son 3 ayın tüketim trendini kategori bazında özetle.", description: "Aylık tüketim hızını ve proje bazlı dağılımı gösterir." },
   ],
+  fleet: [
+    { id: "fleet-maint-soon", label: "Bakım gereken ekipmanlar", prompt: "Önümüzdeki 7 gün içinde bakım gerektirecek ekipmanları listele.", description: "Motor saati ve sağlık skoruna göre bakım önerileri." },
+    { id: "fleet-fuel-trend", label: "Yakıt trendi", prompt: "Son 30 gündeki yakıt tüketim ve maliyet trendini özetle.", description: "Ekipman ve tedarikçi bazında yakıt analizi." },
+    { id: "fleet-utilization", label: "Kullanım oranı analizi", prompt: "Ekipman kullanım oranlarını analiz et ve düşük kullanım için öneride bulun.", description: "Atıl / düşük kullanım tespiti ve transfer önerisi." },
+    { id: "fleet-idle", label: "Atıl ekipmanları göster", prompt: "5 günden uzun süredir çalışmayan ekipmanları listele.", description: "Boşta kalan varlıklar için transfer / kiralama önerileri." },
+    { id: "fleet-cost", label: "Filo maliyet özeti", prompt: "Bu ayki filo bakım, yakıt ve operatör maliyet özetini hazırla.", description: "Toplam maliyet ve ekipman bazında dağılım." },
+    { id: "fleet-ceo", label: "CEO filo özeti", prompt: "CEO modu: filo değeri, sağlık, bakım riski, atıl varlıklar ve yakıt maliyetini özetle.", description: "Üst düzey filo yönetim özeti." },
+  ],
   reports: [
     { id: "monthly-report", label: "Aylık rapor oluştur", prompt: "Bu ayın konsolide yönetim raporunu hazırla.", description: "Finans, proje ve personel verilerini tek raporda toplar." },
     { id: "compare-months", label: "Ayları karşılaştır", prompt: "Son 3 ayı finansal ve operasyonel olarak karşılaştır.", description: "Trendleri ve sapmaları grafiklerle özetler." },

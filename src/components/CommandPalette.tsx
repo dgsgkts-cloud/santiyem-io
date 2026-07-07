@@ -18,7 +18,7 @@ import {
 import {
   Home, FolderOpen, FileText, MessageSquare, WalletCards, BookOpen,
   Package, HardHat, BarChart3, Settings, Sparkles, Plus, TrendingUp,
-  ShieldAlert, Wallet, Users, Zap, Clock, ShoppingCart, Send, Truck, Warehouse, ArrowLeftRight, Wrench, ClipboardCheck,
+  ShieldAlert, Wallet, Users, Zap, Clock, ShoppingCart, Send, Truck, Warehouse, ArrowLeftRight, Wrench, ClipboardCheck, Fuel,
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSubcontractors } from "@/hooks/useSubcontractors";
@@ -51,6 +51,7 @@ const NAV_ITEMS = [
   { id: "e-invoices", label: "E-Fatura", icon: FileText },
   { id: "procurement", label: "Satın Alma", icon: ShoppingCart, hint: "Talep / RFQ / Sipariş" },
   { id: "warehouse", label: "Depo & Envanter", icon: Warehouse, hint: "Stok / Transfer / Zimmet" },
+  { id: "fleet", label: "Makine & Ekipman", icon: Truck, hint: "Filo / Bakım / Yakıt / Operatör" },
   { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "settings", label: "Ayarlar", icon: Settings },
@@ -65,6 +66,8 @@ const AI_SHORTCUTS = [
   { label: "Teklif karşılaştır", prompt: "Aktif RFQ'lardaki teklifleri karşılaştır ve en iyi tedarikçiyi öner.", icon: Send },
   { label: "Depo özeti", prompt: "Depo envanterini, kritik stokları ve tüketim trendini özetle.", icon: Warehouse },
   { label: "Kritik stokları listele", prompt: "Kritik ve tükenmiş stok kalemlerini önceliklendirerek listele.", icon: ShieldAlert },
+  { label: "Filo dashboard aç", prompt: "Filo dashboard: bakım riskleri, yakıt, kullanım oranı ve atıl ekipmanları özetle.", icon: Truck },
+  { label: "Bakım gereken ekipmanlar", prompt: "Önümüzdeki 7 gün içinde bakım gerektirecek tüm ekipmanları listele.", icon: Wrench },
 ];
 
 const CREATE_ACTIONS = [
@@ -81,6 +84,10 @@ const CREATE_ACTIONS = [
   { label: "Stok Transferi", tab: "warehouse", icon: ArrowLeftRight },
   { label: "Ekipman Zimmetle", tab: "warehouse", icon: Wrench },
   { label: "Stok Sayımı Başlat", tab: "warehouse", icon: ClipboardCheck },
+  { label: "Yakıt Kaydı Ekle", tab: "fleet", icon: Fuel },
+  { label: "Bakım Oluştur", tab: "fleet", icon: Wrench },
+  { label: "Operatör Ata", tab: "fleet", icon: Users },
+  { label: "Ekipman Transferi", tab: "fleet", icon: ArrowLeftRight },
 ];
 
 const getActiveTab = (): string => {

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, Wallet, HardHat, BarChart3,
-  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart, Warehouse,
+  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart, Warehouse, Truck,
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -26,7 +26,7 @@ const ROLE_LABELS: Record<string, string> = {
 type Tab =
   | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
-  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse"
+  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "fleet"
   | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 interface DesktopSidebarProps {
@@ -66,6 +66,7 @@ const NAV_SECTIONS = [
     items: [
       { id: "procurement" as Tab, label: "Satın Alma", icon: ShoppingCart },
       { id: "warehouse" as Tab, label: "Depo & Envanter", icon: Warehouse },
+      { id: "fleet" as Tab, label: "Makine & Ekipman", icon: Truck },
     ],
   },
   {
