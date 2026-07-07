@@ -18,7 +18,7 @@ import {
 import {
   Home, FolderOpen, FileText, MessageSquare, WalletCards, BookOpen,
   Package, HardHat, BarChart3, Settings, Sparkles, Plus, TrendingUp,
-  ShieldAlert, Wallet, Users, Zap, Clock, ShoppingCart, Send, Truck, Warehouse, ArrowLeftRight, Wrench, ClipboardCheck,
+  ShieldAlert, Wallet, Users, Zap, Clock, ShoppingCart, Send, Truck, Warehouse, ArrowLeftRight, Wrench, ClipboardCheck, Fuel,
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSubcontractors } from "@/hooks/useSubcontractors";
