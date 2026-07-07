@@ -173,6 +173,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { contracts } = useContracts();
   const { accounts } = useCashAccounts();
   const { checks } = useCashChecks();
+  const { kpis: briefKpis } = useExecutiveBrief();
+
+  // Sprint 19 — swap login title for a dashboard-specific one immediately after render.
+  useEffect(() => {
+    document.title = "Dashboard • Şantiyem";
+  }, []);
+
 
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
