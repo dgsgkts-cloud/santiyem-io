@@ -14,6 +14,8 @@ interface PageShellProps {
   className?: string;
   /** Removes the default max-width wrapper (for dashboards that want full-bleed). */
   bleed?: boolean;
+  /** Optional max-width override (defaults to 1400px). */
+  maxWidth?: number | string;
 }
 
 export function PageShell({
