@@ -1,4 +1,5 @@
 // Sprint 29.0 — Centralized Licensing / Subscription store.
+// Sprint 29.1 — Added Super Admin "View As" simulator + expired state.
 // Frontend-only. Reads from existing UserContext + accessControl signals,
 // then normalises them into a single license snapshot that every page,
 // FeatureGate, LimitGuard, badge or AI prompt can consume.
@@ -10,9 +11,37 @@
 //   3. Trial state        → time-bounded full access
 //   4. Super Admin        → global override (never gated, never nudged)
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useUser, type PlanType, type UserRole } from "@/contexts/UserContext";
 import { useSubscriptionStatus } from "@/lib/accessControl";
+
+const VIEW_AS_KEY = "santiyem_view_as_plan";
+const listeners = new Set<() => void>();
+let viewAsPlan: LicensePlan | null =
+  (typeof window !== "undefined"
+    ? (localStorage.getItem(VIEW_AS_KEY) as LicensePlan | null)
+    : null) || null;
+
+function subscribeViewAs(fn: () => void) {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+}
+function getViewAsSnapshot() { return viewAsPlan; }
+function getViewAsServerSnapshot() { return null; }
+
+export function useViewAs(): LicensePlan | null {
+  return useSyncExternalStore(subscribeViewAs, getViewAsSnapshot, getViewAsServerSnapshot);
+}
+
+export function setViewAs(plan: LicensePlan | null) {
+  viewAsPlan = plan;
+  try {
+    if (plan) localStorage.setItem(VIEW_AS_KEY, plan);
+    else localStorage.removeItem(VIEW_AS_KEY);
+  } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+
 
 /** Public plan tiers exposed by the licensing system. */
 export type LicensePlan =
