@@ -224,7 +224,7 @@ const getInitialTab = (): Tab => {
 };
 
 const Index = () => {
-  const { user, plan, signOut, incrementUsage, canUse, isAdmin } = useUser();
+  const { user, profile, plan, role, signOut, incrementUsage, canUse, isAdmin } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
