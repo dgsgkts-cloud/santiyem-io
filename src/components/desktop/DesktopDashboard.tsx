@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
+import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
 
 
@@ -538,6 +539,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
       <TrialBanner />
       <PinnedInsights />
+      <WorkspaceSetupCard />
+
+
 
       {/* 1. Manager Greeting — slim hero (-30% height) */}
       <header className="flex flex-wrap items-end justify-between gap-4">

@@ -6,13 +6,16 @@ import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
 import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
 import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
+import FirstRunWizard from "./FirstRunWizard";
+import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
+  { id: "setup", label: "Kurulum Merkezi", icon: Rocket },
   { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
@@ -26,7 +29,16 @@ const TABS = [
 
 const DesktopSettingsPage = () => {
   const { user, profile, plan } = useUser();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#setup") return "setup";
+    return "profile";
+  });
+
+  useEffect(() => {
+    const handler = () => setActiveTab("setup");
+    window.addEventListener("open-workspace-setup", handler);
+    return () => window.removeEventListener("open-workspace-setup", handler);
+  }, []);
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
@@ -77,6 +89,7 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
+          {activeTab === "setup" && <WorkspaceSetupTab />}
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
@@ -92,6 +105,40 @@ const DesktopSettingsPage = () => {
           {activeTab === "demo" && <DemoDataTab />}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ─── Workspace Setup Tab (Sprint 20) ───
+const WorkspaceSetupTab = () => {
+  const [progress, setProgress] = useState(() => loadSetupProgress());
+  useEffect(() => {
+    const h = () => setProgress(loadSetupProgress());
+    window.addEventListener("setup-progress-changed", h);
+    return () => window.removeEventListener("setup-progress-changed", h);
+  }, []);
+  const pct = completionPercent(progress);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold text-foreground">Kurulum Merkezi</h3>
+          <p className="text-[11.5px] lg:text-[12px] text-muted-foreground mt-1">
+            {progress.finished
+              ? "Kurulumunuz tamamlandı. İstediğiniz zaman güncelleyebilirsiniz."
+              : `Kaldığınız yerden devam edin — ${progress.completed.length}/${TOTAL_SETUP_STEPS} adım tamamlandı (%${pct}).`}
+          </p>
+        </div>
+        {progress.finished && (
+          <button
+            onClick={() => { if (confirm("Kurulumu sıfırlayıp baştan başlatmak istiyor musunuz?")) { resetSetupProgress(); setProgress(loadSetupProgress()); } }}
+            className="text-[12px] px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-[#FF6B2B] flex items-center gap-1"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Sıfırla
+          </button>
+        )}
+      </div>
+      <FirstRunWizard inline />
     </div>
   );
 };
