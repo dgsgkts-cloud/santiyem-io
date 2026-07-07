@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Capacitor } from "@capacitor/core";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import QrCodeModal from "./QrCodeModal";
-import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode, Pencil } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode, Pencil, Camera, ClipboardCheck, AlertTriangle } from "lucide-react";
 import EditProjectModal, { EditProjectData } from "./EditProjectModal";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
@@ -19,6 +19,12 @@ import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
 import ProjectMembersManagement from "./ProjectMembersManagement";
 import { formatCurrency, formatNumber0 } from "@/lib/formatCurrency";
+import {
+  ProjectHealthWidget, ExecutiveRibbon, ProjectTimeline, RiskCenter,
+  SmartDocumentsFolders, ProjectActivityFeed, QuickActionBar, ProjectAIDock,
+  CEOModeToggle, CEOExecutiveSummary, calcHealth,
+  type RibbonKPI, type TimelineEvent, type RiskItem, type ActivityItem, type AIDockData,
+} from "./ProjectCockpit";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
