@@ -80,7 +80,30 @@ export function VoiceOrb() {
     return () => window.removeEventListener("open-voice-copilot", handler);
   }, []);
 
+  // Sprint 22 — one-time contextual tooltip inside Finance module.
+  useEffect(() => {
+    if (!signedIn || !access.hasAccess) return;
+    const path = window.location.pathname;
+    const isFinance = path.includes("/odemeler-kasa") || path.includes("/finans");
+    if (!isFinance) return;
+    if (typeof localStorage !== "undefined" && localStorage.getItem("finance_voice_tip_dismissed") === "1") return;
+    const tips = [
+      "Nakit durumunu analiz edebilirim.",
+      "Giderlerini özetleyebilirim.",
+      "Bu ayı tahmin edebilirim.",
+    ];
+    (window as any).__financeVoiceTip = tips[Math.floor(Math.random() * tips.length)];
+    const t = setTimeout(() => setShowFinanceTip(true), 8000);
+    return () => clearTimeout(t);
+  }, [signedIn, access.hasAccess]);
+
+  const dismissTip = () => {
+    setShowFinanceTip(false);
+    try { localStorage.setItem("finance_voice_tip_dismissed", "1"); } catch { /* noop */ }
+  };
+
   if (!signedIn) return null;
+
 
   const isNative = Capacitor.isNativePlatform();
   const bottomOffset = isNative
