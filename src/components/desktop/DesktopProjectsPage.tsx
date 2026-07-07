@@ -1,7 +1,7 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  FolderOpen, Clock, CheckCircle, AlertTriangle,
-  LayoutGrid, List, MoreHorizontal, ChevronRight, Trash2, Plus, Sparkles, X
+  FolderOpen, Clock, CheckCircle2, AlertTriangle,
+  LayoutGrid, List, Trash2, Plus, Sparkles, X,
 } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
@@ -13,15 +13,38 @@ import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import { useLiveFilter } from "@/hooks/useLiveFilter";
 import { useWorkspaceHighlight } from "@/hooks/useWorkspaceHighlight";
+import {
+  PageShell,
+  SectionCard,
+  ResponsiveGrid,
+  ResponsiveTable,
+  KpiCard,
+  type ResponsiveColumn,
+} from "@/components/ui/responsive";
 
-// Small row wrappers that opt into the workspace highlight pulse.
-const HRow = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLTableRowElement>) => {
+/**
+ * SPRINT M1.3 — Projects list migrated to the Responsive Design System.
+ *
+ * • PageShell for layout / spacing / safe-area
+ * • ResponsiveGrid + KpiCard for stats
+ * • SectionCard as the container
+ * • ResponsiveTable (desktop table ↔ mobile card list) for the list view
+ * • Design tokens only (spacing scale + text-fs-* typography)
+ *
+ * Business logic, data flow, drawers and detail page behaviour are preserved.
+ */
+
+const HCard = ({
+  id,
+  children,
+  ...rest
+}: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) => {
   const on = useWorkspaceHighlight("project", id);
-  return <tr {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</tr>;
-};
-const HCard = ({ id, children, ...rest }: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) => {
-  const on = useWorkspaceHighlight("project", id);
-  return <div {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>{children}</div>;
+  return (
+    <div {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>
+      {children}
+    </div>
+  );
 };
 
 interface DesktopProjectsPageProps {
@@ -29,7 +52,6 @@ interface DesktopProjectsPageProps {
   onProjectIdClear?: () => void;
 }
 
-// Convert DB project to Project interface for detail page
 const dbToProject = (p: UserProject): Project => ({
   id: p.id,
   name: p.name,
@@ -48,14 +70,19 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
-
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
-  const { projects: dbProjects, loading, addProject, deleteProject, updateProject, updateProjectStatus, refetch } = useProjects();
+  const {
+    projects: dbProjects,
+    addProject,
+    deleteProject,
+    updateProject,
+    updateProjectStatus,
+    refetch,
+  } = useProjects();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
-  
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleBack = () => {
@@ -63,9 +90,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     onProjectIdClear?.();
   };
 
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
-  };
+  const handleDeleteProject = (id: string) => deleteProject(id);
 
   const rawProjects: Project[] = dbProjects.map(dbToProject);
   const liveFilter = useLiveFilter("project");
@@ -73,9 +98,7 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     ? rawProjects.filter((p) => liveFilter.ids.has(p.id))
     : rawProjects;
 
-  const selectedProject = selectedProjectId ? rawProjects.find(p => p.id === selectedProjectId) : null;
-  
-  
+  const selectedProject = selectedProjectId ? rawProjects.find((p) => p.id === selectedProjectId) : null;
 
   if (selectedProject) {
     return (
@@ -90,15 +113,122 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     );
   }
 
-  const stats = [
-    { label: "Toplam Proje", value: String(allProjects.length), emoji: "📋" },
-    { label: "Devam Eden", value: String(allProjects.filter(p => p.status === "Devam Ediyor").length), emoji: "🔄" },
-    { label: "Tamamlanan", value: String(allProjects.filter(p => p.status === "Tamamlanıyor" || p.progress >= 100).length), emoji: "✅" },
-    { label: "Geciken", value: String(allProjects.filter(p => p.status === "Gecikmiş").length), emoji: "⏰", alert: true },
+  const total = allProjects.length;
+  const active = allProjects.filter((p) => p.status === "Devam Ediyor").length;
+  const completed = allProjects.filter((p) => p.status === "Tamamlanıyor" || p.progress >= 100).length;
+  const delayed = allProjects.filter((p) => p.status === "Gecikmiş").length;
+
+  const columns: ResponsiveColumn<Project>[] = [
+    {
+      key: "name",
+      header: "Proje Adı",
+      primary: true,
+      cell: (p) => <span className="font-semibold text-foreground">{p.name}</span>,
+    },
+    {
+      key: "client",
+      header: "Müşteri",
+      cell: (p) => <span className="text-muted-foreground">{p.client}</span>,
+    },
+    {
+      key: "start",
+      header: "Başlangıç",
+      cell: (p) => <span className="font-mono text-fs-xs text-muted-foreground">{p.start}</span>,
+    },
+    {
+      key: "end",
+      header: "Bitiş",
+      cell: (p) => <span className="font-mono text-fs-xs text-muted-foreground">{p.end}</span>,
+    },
+    {
+      key: "progress",
+      header: "İlerleme",
+      cell: (p) => (
+        <div className="flex items-center gap-2 min-w-[120px]">
+          <div className="flex-1 h-1.5 rounded-full bg-muted">
+            <div
+              className="h-full rounded-full"
+              style={{ backgroundColor: "hsl(var(--primary))", width: `${p.progress}%` }}
+            />
+          </div>
+          <span className="text-fs-xs font-mono text-muted-foreground shrink-0">{p.progress}%</span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Durum",
+      cell: (p) => (
+        <span
+          className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
+          style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+        >
+          {p.status}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      cell: (p) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }}
+          className="min-h-[44px] min-w-[44px] rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+          aria-label="Projeyi sil"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      ),
+    },
   ];
 
+  const kpiAccent = "hsl(var(--primary))";
+
+  const headerActions = (
+    <div className="flex items-center gap-3">
+      {user && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-lg text-fs-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Proje Ekle
+        </button>
+      )}
+      <div className="flex rounded-lg overflow-hidden border border-border">
+        <button
+          onClick={() => setViewMode("list")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+          style={{
+            backgroundColor: viewMode === "list" ? "hsl(var(--primary))" : "transparent",
+            color: viewMode === "list" ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
+          }}
+          aria-label="Liste görünümü"
+        >
+          <List className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setViewMode("grid")}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+          style={{
+            backgroundColor: viewMode === "grid" ? "hsl(var(--primary))" : "transparent",
+            color: viewMode === "grid" ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
+          }}
+          aria-label="Kart görünümü"
+        >
+          <LayoutGrid className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
+    <PageShell
+      title="Projeler"
+      subtitle={liveFilter.active ? liveFilter.label ?? "AI filtresi aktif" : undefined}
+      actions={headerActions}
+      maxWidth={1200}
+    >
       <DeleteConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -109,174 +239,114 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
         itemName={deleteTarget?.name}
         extraWarning="Projeye ait tüm iş kalemleri, hakedişler ve şantiye kayıtları da silinecektir."
       />
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl p-3 lg:p-5 bg-card border border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base lg:text-lg">{s.emoji}</span>
-              <span className="text-[10px] lg:text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
-            </div>
-            <p className={`text-xl lg:text-[28px] font-bold ${s.alert ? '' : 'text-foreground'}`} style={{ fontFamily: "'Space Grotesk', sans-serif", ...(s.alert ? { color: "#EF4444" } : {}) }}>
-              {s.value}
-            </p>
-          </div>
-        ))}
-      </div>
 
-      {/* View toggle + Add button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <h3 className="text-sm lg:text-[15px] font-semibold text-foreground">Projeler</h3>
-          {liveFilter.active && (
-            <button
-              onClick={liveFilter.clear}
-              className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
-              aria-label="AI filtresini temizle"
-            >
-              <Sparkles className="w-3 h-3" />
-              {liveFilter.label ?? "AI filtresi"}
-              <X className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {user && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white transition-colors"
-              style={{ height: 32, backgroundColor: "#FF6B2B" }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Proje Ekle
-            </button>
-          )}
-          <div className="flex rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode("list")} className="w-8 h-8 flex items-center justify-center transition-colors"
-              style={{ backgroundColor: viewMode === "list" ? "#FF6B2B" : "transparent", color: viewMode === "list" ? "white" : "#64748B" }}>
-              <List className="w-4 h-4" />
-            </button>
-            <button onClick={() => setViewMode("grid")} className="w-8 h-8 flex items-center justify-center transition-colors"
-              style={{ backgroundColor: viewMode === "grid" ? "#FF6B2B" : "transparent", color: viewMode === "grid" ? "white" : "#64748B" }}>
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="flex flex-col gap-4 lg:gap-6">
+        {/* KPI stats */}
+        <ResponsiveGrid variant="kpi">
+          <KpiCard label="Toplam Proje" value={total} icon={FolderOpen} accent={kpiAccent} />
+          <KpiCard label="Devam Eden" value={active} icon={Clock} accent="#3B82F6" />
+          <KpiCard label="Tamamlanan" value={completed} icon={CheckCircle2} accent="#22C55E" />
+          <KpiCard label="Geciken" value={delayed} icon={AlertTriangle} accent="#EF4444" />
+        </ResponsiveGrid>
 
-      <PullToRefresh onRefresh={refetch}>
-        {allProjects.length === 0 ? (
-          <EmptyState
-            icon="🏗️"
-            title="Henüz proje yok"
-            description="İlk projenizi ekleyerek şantiye takibine başlayın."
-            buttonText="+ Yeni Proje Ekle"
-            onButtonClick={() => setShowAddModal(true)}
-          />
-        ) : viewMode === "list" ? (
-          <div className="rounded-xl overflow-hidden bg-card border border-border">
-            {/* Desktop table */}
-            <table className="w-full text-[13px] hidden lg:table">
-              <thead>
-                <tr className="bg-background">
-                  {["Proje Adı", "Müşteri", "Başlangıç", "Bitiş", "İlerleme", "Durum", ""].map((h) => (
-                    <th key={h} className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide" style={{ color: "#64748B", fontSize: 11 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allProjects.map((p) => (
-                  <HRow key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="hover-row cursor-pointer border-b border-border">
-                    <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{p.client}</td>
-                    <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.start}</td>
-                    <td className="px-5 py-3 font-mono text-[12px] text-muted-foreground">{p.end}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full bg-muted">
-                          <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
-                        </div>
-                        <span className="text-[12px] font-mono text-muted-foreground">{p.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                    </td>
-                    <td className="px-5 py-3">
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:text-red-400 text-muted-foreground">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                    </td>
-                  </HRow>
-                ))}
-              </tbody>
-            </table>
+        {liveFilter.active && (
+          <button
+            onClick={liveFilter.clear}
+            className="self-start inline-flex items-center gap-1 text-fs-xs px-3 min-h-[32px] rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
+            aria-label="AI filtresini temizle"
+          >
+            <Sparkles className="w-3 h-3" />
+            {liveFilter.label ?? "AI filtresi"}
+            <X className="w-3 h-3" />
+          </button>
+        )}
 
-            {/* Mobile/Tablet card list */}
-            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+        <PullToRefresh onRefresh={refetch}>
+          {allProjects.length === 0 ? (
+            <EmptyState
+              icon="🏗️"
+              title="Henüz proje yok"
+              description="İlk projenizi ekleyerek şantiye takibine başlayın."
+              buttonText="+ Yeni Proje Ekle"
+              onButtonClick={() => setShowAddModal(true)}
+            />
+          ) : viewMode === "list" ? (
+            <SectionCard padded={false}>
+              <div className="p-3 lg:p-4">
+                <ResponsiveTable<Project>
+                  columns={columns}
+                  rows={allProjects}
+                  rowKey={(p) => p.id}
+                  onRowClick={(p) => setSelectedProjectId(p.id)}
+                />
+              </div>
+            </SectionCard>
+          ) : (
+            <ResponsiveGrid variant="auto" minItemWidth={260}>
               {allProjects.map((p) => (
-                <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)} className="rounded-xl p-4 cursor-pointer active:scale-[0.98] transition-all bg-card border border-border">
+                <HCard
+                  key={p.id}
+                  id={p.id}
+                  onClick={() => setSelectedProjectId(p.id)}
+                  className="card-refined p-4 lg:p-5 cursor-pointer hover:border-primary/40 transition-colors"
+                >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-medium px-2.5 py-1 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                    <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-400">
+                    <span
+                      className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
+                      style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+                    >
+                      {p.status}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive"
+                      aria-label="Projeyi sil"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <h4 className="text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-                  <p className="text-[13px] mb-3 text-muted-foreground">{p.client}</p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-2 rounded-full bg-muted">
-                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                  <h4 className="text-fs-md font-semibold mb-1 truncate text-foreground">{p.name}</h4>
+                  <p className="text-fs-xs mb-3 text-muted-foreground truncate">{p.client}</p>
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="relative w-14 h-14">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="hsl(var(--muted))"
+                          strokeWidth="3"
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth="3"
+                          strokeDasharray={`${p.progress}, 100`}
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-fs-xs font-bold font-mono text-foreground">
+                        {p.progress}%
+                      </span>
                     </div>
-                    <span className="text-[13px] font-mono font-semibold shrink-0 text-foreground">{p.progress}%</span>
                   </div>
-                  <div className="flex items-center justify-between mt-3 text-[12px] text-muted-foreground">
-                    <span>{p.start}</span>
-                    <span>→</span>
-                    <span>{p.end}</span>
+                  <div className="flex items-center justify-between text-fs-xs">
+                    <span style={{ color: "#22C55E" }}>✅ {p.done}</span>
+                    <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
+                    <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
                   </div>
                 </HCard>
               ))}
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-            {allProjects.map((p) => (
-              <HCard key={p.id} id={p.id} onClick={() => setSelectedProjectId(p.id)}
-                className="rounded-xl p-4 lg:p-5 transition-all duration-150 cursor-pointer bg-card border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] lg:text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}>{p.status}</span>
-                  <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }} className="text-muted-foreground">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <h4 className="text-[13px] lg:text-[15px] font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-                <p className="text-[11px] lg:text-[12px] mb-3 text-muted-foreground">{p.client}</p>
-                <div className="flex items-center justify-center mb-3">
-                  <div className="relative w-14 h-14">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${p.progress}, 100`} />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold font-mono text-foreground">{p.progress}%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span style={{ color: "#22C55E" }}>✅ {p.done}</span>
-                  <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
-                  <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
-                </div>
-              </HCard>
-            ))}
-          </div>
-        )}
-      </PullToRefresh>
+            </ResponsiveGrid>
+          )}
+        </PullToRefresh>
+      </div>
 
       <AddProjectModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={(data) => addProject(data)}
       />
-    </div>
+    </PageShell>
   );
 };
 
