@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { PaymentLogos } from "@/components/PaymentLogos";
 
-const Footer = () => (
+const Footer = ({ minimal = false }: { minimal?: boolean }) => (
+
   <footer className="shrink-0 mt-auto" style={{ borderTop: "1px solid #1E2732", backgroundColor: "#0A0E13" }}>
     {/* Desktop: single row 52px */}
     <div className="hidden lg:flex items-center justify-between px-6" style={{ height: 52 }}>
