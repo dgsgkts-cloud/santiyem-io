@@ -124,6 +124,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "meetings",
   "communication",
   "reports",
+  "procurement",
   "company-memory",
   "company-kb",
   "ai-decisions",
