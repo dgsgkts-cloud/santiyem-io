@@ -460,3 +460,75 @@
     input, textarea, select { font-size: max(16px, 1rem); }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   SPRINT M1 — Responsive Design System Foundation
+   Unified spacing, typography, touch, and motion tokens.
+   Modules opt-in via primitives under src/components/ui/responsive/.
+   ══════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    /* Single spacing scale — 4/8/12/16/24/32/48 */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+
+    /* Fluid typography scale (mobile → desktop) */
+    --fs-xs:   clamp(11px, 0.72vw + 9px, 12px);
+    --fs-sm:   clamp(12px, 0.8vw  + 10px, 13px);
+    --fs-base: clamp(14px, 0.9vw  + 12px, 15px);
+    --fs-md:   clamp(15px, 1vw    + 12px, 17px);
+    --fs-lg:   clamp(17px, 1.3vw  + 13px, 20px);
+    --fs-xl:   clamp(20px, 1.8vw  + 14px, 26px);
+    --fs-2xl:  clamp(24px, 2.4vw  + 16px, 34px);
+
+    /* Touch minimum */
+    --touch-min: 44px;
+
+    /* Unified motion — 200–250ms ease-out */
+    --motion-unified: 220ms;
+    --ease-unified: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+@layer utilities {
+  .touch-target { min-width: var(--touch-min); min-height: var(--touch-min); }
+
+  .text-fs-xs   { font-size: var(--fs-xs);   }
+  .text-fs-sm   { font-size: var(--fs-sm);   }
+  .text-fs-base { font-size: var(--fs-base); }
+  .text-fs-md   { font-size: var(--fs-md);   }
+  .text-fs-lg   { font-size: var(--fs-lg);   }
+  .text-fs-xl   { font-size: var(--fs-xl);   }
+  .text-fs-2xl  { font-size: var(--fs-2xl);  }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Responsive KPI grid — 1 col mobile, 2 col tablet, 4 col desktop */
+  .grid-kpi {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px)  { .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .grid-kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  /* Responsive section grid — 1/1/2 */
+  .grid-section {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .grid-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* Prevent horizontal overflow container */
+  .no-overflow-x { max-width: 100%; overflow-x: hidden; }
+}
