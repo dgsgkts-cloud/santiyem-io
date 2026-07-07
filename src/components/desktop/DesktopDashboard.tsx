@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
+import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
 
 
