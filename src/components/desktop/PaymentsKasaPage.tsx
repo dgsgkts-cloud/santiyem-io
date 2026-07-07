@@ -455,8 +455,7 @@ const PaymentsKasaPage = () => {
             </ResponsiveGrid>
 
 
-            <div className="rounded-xl p-4 bg-card border border-border">
-              <h3 className="text-sm font-semibold mb-4 text-foreground">Aylık Gelir / Gider</h3>
+            <SectionCard title="Aylık Gelir / Gider">
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={monthlyData}>
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} />
@@ -466,23 +465,22 @@ const PaymentsKasaPage = () => {
                   <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} name="Gider" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </SectionCard>
 
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-foreground">Proje Bazlı Karlılık</h3>
+            <SectionCard title="Proje Bazlı Karlılık">
               {projectStats.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
+                <p className="text-fs-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <ResponsiveGrid variant="auto" minItemWidth={260}>
                   {projectStats.map(p => (
-                    <div key={p.id} className="rounded-xl p-4 bg-card border border-border">
+                    <div key={p.id} className="rounded-xl p-4 bg-background/50 border border-border/50">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-foreground truncate">{p.name}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
+                        <span className="text-fs-sm font-medium text-foreground truncate">{p.name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-fs-xs font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
                           {p.karMarji.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-[11px]">
+                      <div className="grid grid-cols-3 gap-2 text-fs-xs">
                         <div>
                           <span className="text-muted-foreground">Gelir</span>
                           <MetricTooltip full={fmtFull(p.hakedisTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p></MetricTooltip>
@@ -498,9 +496,9 @@ const PaymentsKasaPage = () => {
                       </div>
                     </div>
                   ))}
-                </div>
+                </ResponsiveGrid>
               )}
-            </div>
+            </SectionCard>
           </div>
         </TabsContent>
 
