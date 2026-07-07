@@ -16,6 +16,9 @@ interface DesktopTopBarProps {
 const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelect }: DesktopTopBarProps) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const { unreadCount } = useNotifications();
+  const license = useLicense();
+
+
 
   const handleNavigate = (tab: string, projectId?: string) => {
     if (tab === "projects" && projectId && onProjectSelect) onProjectSelect(projectId);
