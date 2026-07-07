@@ -59,6 +59,7 @@ import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBann
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import Footer from "@/components/Footer";
+import CommandPalette from "@/components/CommandPalette";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
@@ -478,6 +479,7 @@ const Index = () => {
   if (isLg) {
     return (
       <div className="flex h-screen bg-background">
+        <CommandPalette />
         <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
         <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
         <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
