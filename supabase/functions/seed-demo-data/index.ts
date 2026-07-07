@@ -476,7 +476,11 @@ async function clean(supabase: any, userId: string) {
   await del("cash_collections", "sender");
   await del("cash_payments", "recipient");
   await del("cash_accounts", "name");
-  await del("tasks", "title");
+  // tasks has no user_id column — scope by created_by
+  {
+    const { count } = await supabase.from("tasks").delete({ count: "exact" }).eq("created_by", userId).ilike("title", like);
+    add("tasks", count || 0);
+  }
   await del("site_diary_entries", "work_done");
   await del("worker_attendance", "full_name");
   await del("project_expenses", "description");
