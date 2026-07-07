@@ -13,16 +13,13 @@ interface DesktopTopBarProps {
 
 const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelect }: DesktopTopBarProps) => {
   const [notifOpen, setNotifOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const { unreadCount } = useNotifications();
 
-  const handleNotifClick = (n: typeof notifications[0]) => {
-    markAsRead([n.id]);
-    if (n.targetTab === "projects" && n.targetProjectId && onProjectSelect) {
-      onProjectSelect(n.targetProjectId);
-    }
-    onTabChange?.(n.targetTab);
-    setNotifOpen(false);
+  const handleNavigate = (tab: string, projectId?: string) => {
+    if (tab === "projects" && projectId && onProjectSelect) onProjectSelect(projectId);
+    onTabChange?.(tab);
   };
+
 
   return (
     <div
