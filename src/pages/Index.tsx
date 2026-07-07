@@ -543,6 +543,8 @@ const Index = () => {
                   <ProcurementPage />
                 ) : activeTab === "warehouse" ? (
                   <WarehousePage />
+                ) : activeTab === "fleet" ? (
+                  <FleetPage />
                 ) : activeTab === "reports" ? (
                   <ComingSoonScreen
                     title="Raporlar"
