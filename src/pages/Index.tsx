@@ -37,6 +37,8 @@ const ProcurementPage = lazy(() => import("@/components/desktop/ProcurementPage"
 const WarehousePage = lazy(() => import("@/components/desktop/WarehousePage"));
 const FleetPage = lazy(() => import("@/components/desktop/FleetPage"));
 const ReportsPage = lazy(() => import("@/components/desktop/ReportsPage"));
+import LockedPage from "@/components/desktop/LockedPage";
+import { useAccessGuard } from "@/lib/accessControl";
 
 const TabFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
