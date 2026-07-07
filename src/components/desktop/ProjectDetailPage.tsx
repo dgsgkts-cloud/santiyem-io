@@ -90,6 +90,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
   const [currentStatus, setCurrentStatus] = useState(p.status);
   const [currentStatusColor, setCurrentStatusColor] = useState(p.statusColor);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [ceoMode, setCeoMode] = useState(false);
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle) return;
