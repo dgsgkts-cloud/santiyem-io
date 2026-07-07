@@ -403,6 +403,27 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         </div>
       </div>
 
+      {/* Executive KPI Ribbon */}
+      <ExecutiveRibbon items={ribbon} />
+
+      {ceoMode && (
+        <CEOExecutiveSummary
+          health={health.score}
+          budget={`₺${formatNumber0(budgetNum)}`}
+          spent={`₺${formatNumber0(totalPaymentsAmt)}`}
+          cash={`₺${formatNumber0(netCashAmt)}`}
+          completion={displayProgress}
+          forecast={netCashAmt >= 0 ? "Pozitif" : "Riskli"}
+          insights={[
+            `Bütçe kullanımı %${budgetUsedPct}. ${budgetUsedPct > 85 ? "Yakın takip önerilir." : "Kontrol altında."}`,
+            `${overdueTasksCount} görev gecikmede; ${openTasksCount} açık iş var.`,
+            `Nakit akışı ₺${formatNumber0(netCashAmt)} — ${netCashAmt >= 0 ? "sağlıklı" : "negatif, tahsilatları hızlandırın"}.`,
+            `Öncelikli riskler: ${risks.slice(0, 2).map(r => r.title).join("; ") || "yok"}.`,
+          ]}
+        />
+      )}
+
+      {!ceoMode && (<>
       {/* Info cards row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
