@@ -10,6 +10,13 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  PageShell,
+  SectionCard,
+  ResponsiveGrid,
+  ResponsiveSheet,
+  KpiCard,
+} from "@/components/ui/responsive";
 import { toast } from "sonner";
 import MetricTooltip from "@/components/MetricTooltip";
 import { useProjects } from "@/hooks/useProjects";
