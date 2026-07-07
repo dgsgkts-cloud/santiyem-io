@@ -25,7 +25,9 @@ export function PageShell({
   children,
   className,
   bleed,
+  maxWidth = 1400,
 }: PageShellProps) {
+  const mw = typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth;
   return (
     <div
       className={cn(
@@ -35,7 +37,10 @@ export function PageShell({
         className
       )}
     >
-      <div className={cn(bleed ? "w-full" : "mx-auto w-full max-w-[1400px]")}>
+      <div
+        className={cn(bleed ? "w-full" : "mx-auto w-full")}
+        style={bleed ? undefined : { maxWidth: mw }}
+      >
         {(title || actions) && (
           <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 lg:mb-6">
             <div className="min-w-0">
