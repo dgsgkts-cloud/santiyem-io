@@ -34,6 +34,7 @@ const DesktopSettingsPage = lazy(() => import("@/components/desktop/DesktopSetti
 const MeetingCenterPage = lazy(() => import("@/components/meetings/MeetingCenterPage"));
 const CommunicationCenterPage = lazy(() => import("@/components/communication/CommunicationCenterPage"));
 const ProcurementPage = lazy(() => import("@/components/desktop/ProcurementPage"));
+const WarehousePage = lazy(() => import("@/components/desktop/WarehousePage"));
 
 const TabFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
