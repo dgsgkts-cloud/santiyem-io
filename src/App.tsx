@@ -95,6 +95,13 @@ const App = () => (
               <Route path="/personel" element={<HomePage />} />
               <Route path="/hatirlatici" element={<HomePage />} />
               <Route path="/planlar" element={<HomePage />} />
+              <Route path="/satin-alma" element={<HomePage />} />
+              <Route path="/depo" element={<HomePage />} />
+              <Route path="/makine-ekipman" element={<HomePage />} />
+              <Route path="/raporlar" element={<HomePage />} />
+              <Route path="/toplantilar" element={<HomePage />} />
+              <Route path="/iletisim-merkezi" element={<HomePage />} />
+              <Route path="/company-brain/:section" element={<HomePage />} />
               <Route path="/gunluk-bilgi" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
