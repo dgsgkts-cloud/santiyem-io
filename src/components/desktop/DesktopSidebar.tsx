@@ -79,7 +79,12 @@ const NAV_SECTIONS = [
 void isNativeApp;
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
-  const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
+  const { user, profile, plan, role, usage, signOut, isAdmin, profileLoaded } = useUser();
+  // Feature locks must only be evaluated after subscription/role/profile
+  // queries have resolved. Otherwise the sidebar briefly renders every
+  // paid item as locked (default plan="free"/role="free") and then unlocks
+  // once the profile arrives — a jarring flash.
+  const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebarCollapsed") === "true"; } catch { return false; }
@@ -157,8 +162,10 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
 
-                // Check if feature is locked
-                const isLocked =
+                // Check if feature is locked — but only after gates are
+                // ready. During loading we render items as unlocked so the
+                // user never sees a "flash of locked nav".
+                const isLocked = gatesReady && (
                   (item.id === "projects" && !canAccessProjects(plan, role)) ||
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
@@ -166,9 +173,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                    (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "materials" && !canAccessProjects(plan, role)) ||
                   (item.id === "e-invoices" && !canAccessProfitability(plan, role)) ||
-                  (item.id === "reminders" && !canAccessReminders(plan));
+                  (item.id === "reminders" && !canAccessReminders(plan))
+                );
 
                 const handleClick = () => {
+                  if (!gatesReady) return; // ignore clicks while loading
                   if (isLocked) {
                     onTabChange("pricing");
                   } else {
