@@ -91,6 +91,14 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || "Kullanıcı";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+  const title = profile?.title || "İnşaat Mühendisi";
+  const companyShort = useMemo(() => {
+    try {
+      const cp = getCompanyProfile();
+      return cp.companyName.split(" ").slice(0, 2).join(" ");
+    } catch { return ""; }
+  }, []);
+  const roleLabel = ROLE_LABELS[String(role || "").toLowerCase()] || (isAdmin ? "Yönetici" : "");
 
   return (
     <aside
