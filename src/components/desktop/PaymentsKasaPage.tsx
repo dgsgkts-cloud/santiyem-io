@@ -27,6 +27,9 @@ import { differenceInDays, parseISO, format } from "date-fns";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSection";
 import PullToRefresh from "@/components/PullToRefresh";
+import AIInsightCard from "@/components/finance/AIInsightCard";
+import { PaymentMethodBadge, StatusBadge } from "@/components/finance/PaymentBadges";
+import { Sparkles, Wallet as WalletIcon } from "lucide-react";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
 const EXPENSE_CATEGORIES = ["Malzeme", "Taşeron Ödemesi", "Ekipman/Kira", "Genel Gider", "Diğer"];
