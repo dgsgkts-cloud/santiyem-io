@@ -190,19 +190,29 @@ function buildFeatureFlags(plan: LicensePlan): Record<LicenseFeature, boolean> {
 export function useLicense(): LicenseSnapshot {
   const { plan, role } = useUser();
   const { data: sub } = useSubscriptionStatus();
+  const viewAs = useViewAs();
 
   return useMemo(() => {
-    const licensePlan = resolveLicensePlan(plan, role, sub);
-    const licenseRole = resolveLicenseRole(role);
+    const realPlan = resolveLicensePlan(plan, role, sub);
+    const realRole = resolveLicenseRole(role);
+    const realIsSuperAdmin = realRole === "super_admin";
+
+    // Super Admin "View As" simulator — only applies for real super admins.
+    const licensePlan: LicensePlan = realIsSuperAdmin && viewAs ? viewAs : realPlan;
+    const licenseRole: LicenseRole =
+      realIsSuperAdmin && viewAs && viewAs !== "super_admin" ? "company_admin" : realRole;
     const isSuperAdmin = licenseRole === "super_admin";
     const isTrial = licensePlan === "trial";
     const isDemo = licensePlan === "demo";
+    const isExpired = viewAs === undefined
+      ? (sub?.status || "").toLowerCase() === "expired"
+      : false;
 
     const trialEnds = sub?.trial_end ? new Date(sub.trial_end) : null;
     const daysRemaining =
       trialEnds && !Number.isNaN(trialEnds.getTime())
         ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86_400_000))
-        : null;
+        : (isTrial ? 14 : null);
 
     const subscriptionActive =
       isSuperAdmin || isTrial || isDemo ||
@@ -229,7 +239,7 @@ export function useLicense(): LicenseSnapshot {
       isDemo,
       trialEnds,
       daysRemaining,
-      subscriptionActive,
+      subscriptionActive: subscriptionActive && !isExpired,
       features,
       limits,
       canFinance: hasFeature("finance"),
@@ -241,8 +251,9 @@ export function useLicense(): LicenseSnapshot {
       hasFeature,
       isWithinLimit,
     };
-  }, [plan, role, sub]);
+  }, [plan, role, sub, viewAs]);
 }
+
 
 export const PLAN_META: Record<LicensePlan, { label: string; color: string; bg: string; border: string }> = {
   starter:     { label: "Starter",     color: "#CBD5E1", bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.35)" },
