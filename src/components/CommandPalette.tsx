@@ -27,6 +27,8 @@ import {
   getSuggestionsForTab, getRecentSuggestions, recordSuggestionUse,
   sortByFrequency, type AISuggestion,
 } from "@/lib/aiSuggestions";
+import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
+import { toast } from "sonner";
 
 const ACTIVE_TAB_KEY = "santiyem_active_tab";
 
@@ -120,6 +122,21 @@ export const CommandPalette = () => {
   const { projects } = useProjects();
   const { subcontractors } = useSubcontractors();
   const { personnel } = usePersonnel();
+  const guard = useAccessGuard();
+
+  // Sprint 28.6 — guarded navigation. Locked commands still open the tab
+  // (LockedPage renders) and a toast explains why for immediate feedback.
+  const guardedNav = (tab: string) => {
+    const d = guard.check(tab as GuardTab);
+    if (!d.ok) {
+      toast.error("Bu özellik mevcut planınızda kullanılamıyor.", {
+        description: d.reason === "setup-required" ? "Önce şirket kurulumunu tamamlayın." : "Planı yükselterek erişim sağlayın.",
+      });
+    }
+    nav(tab);
+  };
+
+
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
