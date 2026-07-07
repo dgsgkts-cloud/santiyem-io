@@ -49,7 +49,8 @@ import {
   RotateCcw, MessageSquare,
   Calculator, Paintbrush, CalendarClock, Menu, X,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
-  Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards
+  Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards,
+  BarChart3, Radio
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
