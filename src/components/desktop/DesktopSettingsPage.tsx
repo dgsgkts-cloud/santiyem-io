@@ -89,6 +89,7 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
+          {activeTab === "setup" && <WorkspaceSetupTab />}
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
