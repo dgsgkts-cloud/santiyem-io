@@ -204,3 +204,48 @@ export const useIsLocked = (tab: GuardTab): AccessDecision => {
   const guard = useAccessGuard();
   return guard.check(tab);
 };
+
+/**
+ * Global snapshot for non-React callers (chat pipeline, action executor)
+ * to answer "is X locked?" without pulling in hooks. Kept in sync via the
+ * useAccessSnapshot hook below.
+ */
+export interface AccessSnapshot {
+  ready: boolean;
+  isSuperAdmin: boolean;
+  subscriptionExpired: boolean;
+  setupComplete: boolean;
+  lockedTabs: GuardTab[];
+}
+
+let currentSnapshot: AccessSnapshot = {
+  ready: false, isSuperAdmin: false, subscriptionExpired: false,
+  setupComplete: true, lockedTabs: [],
+};
+
+export const getAccessSnapshot = (): AccessSnapshot => currentSnapshot;
+
+const ALL_TABS: GuardTab[] = [
+  "chat", "reminders", "pricing", "daily", "dashboard", "projects", "hakedis",
+  "settings", "site-diary", "payments-kasa", "contracts", "materials",
+  "e-invoices", "personnel", "meetings", "communication", "reports",
+  "procurement", "warehouse", "fleet", "render",
+];
+
+/** Mount once (e.g. inside Index) to keep the global snapshot fresh. */
+export const useAccessSnapshotSync = () => {
+  const guard = useAccessGuard();
+  useEffect(() => {
+    currentSnapshot = {
+      ready: guard.ready,
+      isSuperAdmin: guard.isSuperAdmin,
+      subscriptionExpired: guard.subscriptionExpired,
+      setupComplete: guard.setupComplete,
+      lockedTabs: ALL_TABS.filter((t) => !guard.check(t).ok),
+    };
+    window.dispatchEvent(new CustomEvent("access-snapshot-changed", { detail: currentSnapshot }));
+  }, [guard]);
+};
+
+export const isModuleLocked = (tab: GuardTab): boolean =>
+  currentSnapshot.lockedTabs.includes(tab);
