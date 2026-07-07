@@ -5,7 +5,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { Plus, Trash2, ArrowLeft, Phone, Wrench, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Wrench, AlertTriangle, ChevronRight } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 
@@ -74,36 +74,43 @@ const SubcontractorsPage = () => {
       {enriched.length === 0 ? (
         <div className="text-center py-12 text-sm text-muted-foreground">Henüz taşeron eklenmemiş</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {enriched.map(s => (
-            <Card key={s.id} className="border-border cursor-pointer hover:border-[#FF6B2B]/30 transition-colors" onClick={() => setSelectedId(s.id)}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{s.name}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      {s.specialty && <span className="flex items-center gap-1"><Wrench className="w-3 h-3" />{s.specialty}</span>}
-                      {s.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{s.phone}</span>}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {enriched.map(s => {
+            const progress = Number(s.contract_amount) > 0
+              ? Math.min(100, Math.round((s.totalPaid / Number(s.contract_amount)) * 100))
+              : 0;
+            return (
+              <Card key={s.id} className="border-border cursor-pointer hover:border-[#FF6B2B]/30 transition-colors" onClick={() => setSelectedId(s.id)}>
+                <CardContent className="p-3.5">
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">{s.name}</p>
+                      {s.specialty && <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5"><Wrench className="w-3 h-3 shrink-0" />{s.specialty}</p>}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {s.upcomingCount > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}>
+                          ⏰ {s.upcomingCount}
+                        </span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {s.upcomingCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}>
-                        ⏰ {s.upcomingCount}
-                      </span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  <div className="grid grid-cols-2 gap-2 text-[11px] mb-2">
+                    <div><p className="text-[10px] text-muted-foreground">Ödenen</p><p className="text-xs font-semibold" style={{ color: "#22C55E" }}>{fmt(s.totalPaid)}</p></div>
+                    <div><p className="text-[10px] text-muted-foreground">Kalan</p><p className="text-xs font-semibold" style={{ color: s.remaining > 0 ? "#F59E0B" : "#22C55E" }}>{fmt(s.remaining)}</p></div>
                   </div>
-                </div>
-                {s.projectName && <p className="text-[11px] text-muted-foreground mb-2">📁 {s.projectName}</p>}
-                <div className="grid grid-cols-3 gap-2 pt-2" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-                  <div><p className="text-[10px] text-muted-foreground">Sözleşme</p><p className="text-xs font-semibold text-foreground">{fmt(s.contract_amount)}</p></div>
-                  <div><p className="text-[10px] text-muted-foreground">Ödenen</p><p className="text-xs font-semibold" style={{ color: "#22C55E" }}>{fmt(s.totalPaid)}</p></div>
-                  <div><p className="text-[10px] text-muted-foreground">Kalan</p><p className="text-xs font-semibold" style={{ color: s.remaining > 0 ? "#F59E0B" : "#22C55E" }}>{fmt(s.remaining)}</p></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: progress >= 100 ? "#22C55E" : "#FF6B2B" }} />
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-[10px] text-muted-foreground">%{progress} tamamlandı</span>
+                    {s.upcomingCount > 0 && <span className="text-[10px] text-muted-foreground">Yaklaşan ödeme</span>}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

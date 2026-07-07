@@ -348,7 +348,7 @@ const PaymentsKasaPage = () => {
             <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Gelir & Gider</span>
           </TabsTrigger>
           <TabsTrigger value="kasa" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Kasa</span>
+            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Hesaplar</span>
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
             <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Raporlar</span>
@@ -358,6 +358,76 @@ const PaymentsKasaPage = () => {
         {/* ═══ TAB 1: GENEL BAKIŞ ═══ */}
         <TabsContent value="overview">
           <div className="space-y-6">
+            {/* Sprint 21.1 — AI Finance Summary */}
+            {(() => {
+              const weekAhead = new Date(); weekAhead.setDate(weekAhead.getDate() + 7);
+              const weekAheadStr = weekAhead.toISOString().slice(0, 10);
+              const todayStr = now.toISOString().slice(0, 10);
+              const plannedPayments = cashPayments.filter(p => p.status !== "odendi" && p.payment_date >= todayStr && p.payment_date <= weekAheadStr);
+              const expectedCollections = cashCollections.filter(c => c.status === "bekleniyor" && c.collection_date >= todayStr && c.collection_date <= weekAheadStr);
+              const plannedTotal = plannedPayments.reduce((s, p) => s + Number(p.amount), 0);
+              const expectedTotal = expectedCollections.reduce((s, c) => s + Number(c.amount), 0);
+              const availableCash = nakitKasaBalance + bankaBalance;
+              const netAvailable = availableCash + expectedTotal - plannedTotal;
+
+              const insights: string[] = [];
+              if (plannedPayments.length > 0) insights.push(`Bu hafta ${plannedPayments.length} ödeme planlanıyor.`);
+              if (expectedCollections.length > 0) insights.push(`${expectedCollections.length} tahsilat nakit akışını dengeliyor.`);
+              if (upcomingChecks.length > 0) insights.push(`${upcomingChecks.length} çek vadesi 7 gün içinde.`);
+              if (netAvailable < 0) insights.push("Uyarı: Net nakit pozisyonu negatif — tahsilat takibi öncelikli.");
+              else if (insights.length === 0) insights.push("Şu anda kritik finansal risk görünmüyor.");
+
+              return (
+                <>
+                  <div className="rounded-xl p-4 border border-[#FF6B2B]/25" style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.08), rgba(255,143,90,0.03))" }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-base">✨</span>
+                          <span className="text-[12px] font-semibold text-[#FF6B2B] uppercase tracking-wide">AI Finans Özeti</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {insights.map((t, i) => (
+                            <li key={i} className="text-[13px] text-foreground leading-snug">• {t}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("reports")}
+                        className="shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#FF6B2B]/15 text-[#FF6B2B] hover:bg-[#FF6B2B]/25 transition-colors"
+                      >
+                        Detaylı Analiz
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Executive Cash Position */}
+                  <div>
+                    <h3 className="text-[12px] uppercase tracking-wide text-muted-foreground font-semibold mb-3">Nakit Pozisyonu</h3>
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                      {[
+                        { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
+                        { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
+                        { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
+                        { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
+                        { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
+                      ].map((c, i) => (
+                        <div key={i} className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-2 mb-2 min-w-0">
+                            <c.icon className="w-4 h-4 shrink-0" style={{ color: c.color }} />
+                            <span className="text-[11px] text-muted-foreground truncate">{c.label}</span>
+                          </div>
+                          <MetricTooltip full={fmtFull(c.value)}>
+                            <p className="text-base lg:text-xl font-bold truncate cursor-help" style={{ color: c.color }}>{fmtShort(c.value)}</p>
+                          </MetricTooltip>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
                 { label: "Toplam Gelir", value: totals.ciro, color: "#22C55E", icon: TrendingUp },
@@ -377,27 +447,6 @@ const PaymentsKasaPage = () => {
               ))}
             </div>
 
-            {/* Kasa Bakiyeleri */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1 min-w-0">
-                  <Banknote className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-xs text-muted-foreground truncate">Nakit Kasa</span>
-                </div>
-                <MetricTooltip full={fmtFull(nakitKasaBalance)}>
-                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(nakitKasaBalance)}</p>
-                </MetricTooltip>
-              </div>
-              <div className="rounded-xl p-4 bg-card border border-border min-w-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1 min-w-0">
-                  <Building2 className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-xs text-muted-foreground truncate">Banka</span>
-                </div>
-                <MetricTooltip full={fmtFull(bankaBalance)}>
-                  <p className="text-base lg:text-lg font-bold text-foreground truncate cursor-help">{fmtShort(bankaBalance)}</p>
-                </MetricTooltip>
-              </div>
-            </div>
 
             <div className="rounded-xl p-4 bg-card border border-border">
               <h3 className="text-sm font-semibold mb-4 text-foreground">Aylık Gelir / Gider</h3>
