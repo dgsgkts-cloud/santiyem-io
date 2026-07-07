@@ -133,7 +133,9 @@ async function removeDemo(sb: Sb, uid: string) {
       "cash_collections","cash_payments","subcontractor_payments","e_invoices",
     ];
     for (const t of projectChildren) {
-      const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).eq("project_id", projectId);
+      // tasks has no user_id column; scope only by project_id (+ created_by for extra safety)
+      const q = sb.from(t).delete({ count: "exact" }).eq("project_id", projectId);
+      const r = t === "tasks" ? await q.eq("created_by", uid) : await q.eq("user_id", uid);
       if (r.count) add(t, r.count);
     }
 
@@ -180,6 +182,13 @@ async function removeDemo(sb: Sb, uid: string) {
   for (const [t, c] of tagSweeps) {
     const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).ilike(c, like);
     if (r.count) add(t, r.count);
+  }
+  // tasks (no user_id column) — sweep by created_by + [MSY_DEMO] tag
+  {
+    const r = await sb.from("tasks").delete({ count: "exact" }).eq("created_by", uid).ilike("description", like);
+    if (r.count) add("tasks", r.count);
+    const r2 = await sb.from("tasks").delete({ count: "exact" }).eq("created_by", uid).ilike("title", like);
+    if (r2.count) add("tasks", r2.count);
   }
 
   // Company memories (demo-tagged, incl. anchor)
@@ -233,6 +242,10 @@ async function integrityCheck(sb: Sb, uid: string) {
   const mt = await sb.from("meetings").select("id", { count: "exact", head: true })
     .eq("user_id", uid).contains("tags", ["msy_demo"]);
   if (mt.count) { per["meetings"] = mt.count; total += mt.count; }
+  // Tasks (no user_id column, scope by created_by + tag in description)
+  const tk = await sb.from("tasks").select("id", { count: "exact", head: true })
+    .eq("created_by", uid).ilike("description", like);
+  if (tk.count) { per["tasks"] = tk.count; total += tk.count; }
   return { per_table: per, total };
 }
 

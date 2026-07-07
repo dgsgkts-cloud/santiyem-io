@@ -476,7 +476,11 @@ async function clean(supabase: any, userId: string) {
   await del("cash_collections", "sender");
   await del("cash_payments", "recipient");
   await del("cash_accounts", "name");
-  await del("tasks", "title");
+  // tasks has no user_id column — scope by created_by
+  {
+    const { count } = await supabase.from("tasks").delete({ count: "exact" }).eq("created_by", userId).ilike("title", like);
+    add("tasks", count || 0);
+  }
   await del("site_diary_entries", "work_done");
   await del("worker_attendance", "full_name");
   await del("project_expenses", "description");
@@ -499,7 +503,9 @@ async function clean(supabase: any, userId: string) {
       "worker_attendance","attendance_records","personnel_project_assignments",
     ];
     for (const t of projectChildren) {
-      const { count } = await supabase.from(t).delete({ count: "exact" }).eq("user_id", userId).in("project_id", projectIds);
+      // tasks has no user_id column; scope only by project_id
+      const q = supabase.from(t).delete({ count: "exact" }).in("project_id", projectIds);
+      const { count } = t === "tasks" ? await q : await q.eq("user_id", userId);
       if (count) add(t, count);
     }
     const pr = await supabase.from("projects").delete({ count: "exact" }).in("id", projectIds).eq("user_id", userId);
@@ -537,7 +543,9 @@ async function integrityCheck(supabase: any, userId: string) {
   const per: Record<string, number> = {};
   let total = 0;
   for (const [t, c] of probes) {
-    const { count } = await supabase.from(t).select("id", { count: "exact", head: true }).eq("user_id", userId).ilike(c, like);
+    // tasks has no user_id column — scope by created_by
+    const q = supabase.from(t).select("id", { count: "exact", head: true }).ilike(c, like);
+    const { count } = t === "tasks" ? await q.eq("created_by", userId) : await q.eq("user_id", userId);
     if (count) { per[t] = count; total += count; }
   }
   return { per_table: per, total };
