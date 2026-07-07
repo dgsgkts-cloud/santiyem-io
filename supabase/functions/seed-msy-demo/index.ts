@@ -133,7 +133,9 @@ async function removeDemo(sb: Sb, uid: string) {
       "cash_collections","cash_payments","subcontractor_payments","e_invoices",
     ];
     for (const t of projectChildren) {
-      const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).eq("project_id", projectId);
+      // tasks has no user_id column; scope only by project_id (+ created_by for extra safety)
+      const q = sb.from(t).delete({ count: "exact" }).eq("project_id", projectId);
+      const r = t === "tasks" ? await q.eq("created_by", uid) : await q.eq("user_id", uid);
       if (r.count) add(t, r.count);
     }
 
