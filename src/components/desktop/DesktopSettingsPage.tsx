@@ -109,6 +109,40 @@ const DesktopSettingsPage = () => {
   );
 };
 
+// ─── Workspace Setup Tab (Sprint 20) ───
+const WorkspaceSetupTab = () => {
+  const [progress, setProgress] = useState(() => loadSetupProgress());
+  useEffect(() => {
+    const h = () => setProgress(loadSetupProgress());
+    window.addEventListener("setup-progress-changed", h);
+    return () => window.removeEventListener("setup-progress-changed", h);
+  }, []);
+  const pct = completionPercent(progress);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold text-foreground">Kurulum Merkezi</h3>
+          <p className="text-[11.5px] lg:text-[12px] text-muted-foreground mt-1">
+            {progress.finished
+              ? "Kurulumunuz tamamlandı. İstediğiniz zaman güncelleyebilirsiniz."
+              : `Kaldığınız yerden devam edin — ${progress.completed.length}/${TOTAL_SETUP_STEPS} adım tamamlandı (%${pct}).`}
+          </p>
+        </div>
+        {progress.finished && (
+          <button
+            onClick={() => { if (confirm("Kurulumu sıfırlayıp baştan başlatmak istiyor musunuz?")) { resetSetupProgress(); setProgress(loadSetupProgress()); } }}
+            className="text-[12px] px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-[#FF6B2B] flex items-center gap-1"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Sıfırla
+          </button>
+        )}
+      </div>
+      <FirstRunWizard inline />
+    </div>
+  );
+};
+
 // ─── Appearance Tab ───
 const AppearanceTab = () => {
   const { theme, setTheme } = useTheme();
