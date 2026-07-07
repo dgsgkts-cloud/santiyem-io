@@ -26,12 +26,14 @@ type OpenPayload = { autoSpeak?: boolean; requiresBriefing?: boolean };
 export function VoiceOrb() {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [showFinanceTip, setShowFinanceTip] = useState(false);
   const [pending, setPending] = useState<{
     initialContext?: string;
     initialCards?: BriefCard[];
     autoSpeak?: boolean;
   }>({});
   const access = useVoiceAccess();
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setSignedIn(!!data?.user));
@@ -78,7 +80,30 @@ export function VoiceOrb() {
     return () => window.removeEventListener("open-voice-copilot", handler);
   }, []);
 
+  // Sprint 22 — one-time contextual tooltip inside Finance module.
+  useEffect(() => {
+    if (!signedIn || !access.hasAccess) return;
+    const path = window.location.pathname;
+    const isFinance = path.includes("/odemeler-kasa") || path.includes("/finans");
+    if (!isFinance) return;
+    if (typeof localStorage !== "undefined" && localStorage.getItem("finance_voice_tip_dismissed") === "1") return;
+    const tips = [
+      "Nakit durumunu analiz edebilirim.",
+      "Giderlerini özetleyebilirim.",
+      "Bu ayı tahmin edebilirim.",
+    ];
+    (window as any).__financeVoiceTip = tips[Math.floor(Math.random() * tips.length)];
+    const t = setTimeout(() => setShowFinanceTip(true), 8000);
+    return () => clearTimeout(t);
+  }, [signedIn, access.hasAccess]);
+
+  const dismissTip = () => {
+    setShowFinanceTip(false);
+    try { localStorage.setItem("finance_voice_tip_dismissed", "1"); } catch { /* noop */ }
+  };
+
   if (!signedIn) return null;
+
 
   const isNative = Capacitor.isNativePlatform();
   const bottomOffset = isNative
@@ -128,6 +153,24 @@ export function VoiceOrb() {
           </div>
         </div>
       </button>
+      {showFinanceTip && isDesktop && (
+        <div
+          className="fixed right-6 z-40 animate-in fade-in slide-in-from-bottom-2"
+          style={{ bottom: `calc(${bottomOffset} + 60px)` }}
+        >
+          <div className="relative max-w-[240px] rounded-xl bg-[#1E2732] border border-[#FF6B2B]/30 shadow-xl px-3 py-2.5">
+            <button
+              onClick={dismissTip}
+              className="absolute top-1 right-1.5 text-white/50 hover:text-white text-[14px] leading-none"
+              aria-label="Kapat"
+            >×</button>
+            <p className="text-[11px] font-semibold text-[#FF6B2B] mb-0.5">✨ Şantiyem AI</p>
+            <p className="text-[12px] text-white/90 leading-snug pr-3">
+              {(window as any).__financeVoiceTip || "Nakit durumunu analiz edebilirim."}
+            </p>
+          </div>
+        </div>
+      )}
       {open && (
         <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
           <VoiceCopilot

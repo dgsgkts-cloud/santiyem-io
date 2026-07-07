@@ -27,6 +27,9 @@ import { differenceInDays, parseISO, format } from "date-fns";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSection";
 import PullToRefresh from "@/components/PullToRefresh";
+import AIInsightCard from "@/components/finance/AIInsightCard";
+import { PaymentMethodBadge, StatusBadge } from "@/components/finance/PaymentBadges";
+import { Sparkles, Wallet as WalletIcon } from "lucide-react";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
 const EXPENSE_CATEGORIES = ["Malzeme", "Taşeron Ödemesi", "Ekipman/Kira", "Genel Gider", "Diğer"];
@@ -379,27 +382,15 @@ const PaymentsKasaPage = () => {
 
               return (
                 <>
-                  <div className="rounded-xl p-4 border border-[#FF6B2B]/25" style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.08), rgba(255,143,90,0.03))" }}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-base">✨</span>
-                          <span className="text-[12px] font-semibold text-[#FF6B2B] uppercase tracking-wide">AI Finans Özeti</span>
-                        </div>
-                        <ul className="space-y-1">
-                          {insights.map((t, i) => (
-                            <li key={i} className="text-[13px] text-foreground leading-snug">• {t}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("reports")}
-                        className="shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#FF6B2B]/15 text-[#FF6B2B] hover:bg-[#FF6B2B]/25 transition-colors"
-                      >
-                        Detaylı Analiz
-                      </button>
-                    </div>
-                  </div>
+                  <AIInsightCard
+                    title="AI Finans"
+                    insights={insights}
+                    actions={[
+                      { label: "Detaylı Analiz", onClick: () => setActiveTab("reports") },
+                      { label: "Ödeme Planı", onClick: () => setActiveTab("kasa"), tone: "ghost" },
+                    ]}
+                  />
+
 
                   {/* Executive Cash Position */}
                   <div>
@@ -501,6 +492,41 @@ const PaymentsKasaPage = () => {
         <TabsContent value="transactions">
           <PullToRefresh onRefresh={handleRefresh}>
             <div className="space-y-4">
+              {(() => {
+                const last30 = new Date(); last30.setDate(last30.getDate() - 30);
+                const prev30Start = new Date(); prev30Start.setDate(prev30Start.getDate() - 60);
+                const inRange = (d: string, from: Date, to: Date) => {
+                  const dt = new Date(d);
+                  return dt >= from && dt <= to;
+                };
+                const catSum = (list: typeof expenses, cats: string[], from: Date, to: Date) =>
+                  list
+                    .filter(x => cats.some(c => x.category.toLowerCase().includes(c)) && inRange(x.expense_date, from, to))
+                    .reduce((s, x) => s + Number(x.amount), 0);
+                const now2 = new Date();
+                const malzemeNow = catSum(expenses, ["malzeme"], last30, now2);
+                const malzemePrev = catSum(expenses, ["malzeme"], prev30Start, last30);
+                const pctChange = malzemePrev > 0 ? Math.round(((malzemeNow - malzemePrev) / malzemePrev) * 100) : 0;
+                const insights: string[] = [];
+                if (malzemeNow > 0)
+                  insights.push(
+                    pctChange === 0
+                      ? "Malzeme giderleri son 30 günde stabil."
+                      : `Son 30 günde malzeme giderleri %${Math.abs(pctChange)} ${pctChange > 0 ? "arttı" : "azaldı"}.`,
+                  );
+                const iscilikNow = catSum(expenses, ["işçilik", "iscilik", "taşeron"], last30, now2);
+                if (iscilikNow > 0) insights.push("İşçilik giderleri normal seviyede.");
+                if (expenses.length === 0) insights.push("İlk kaydınızı ekleyerek AI harcama analizini başlatın.");
+                return (
+                  <AIInsightCard
+                    title="AI Harcama Analizi"
+                    insights={insights}
+                    actions={[{ label: "İncele", onClick: () => setActiveTab("reports") }]}
+                    compact
+                  />
+                );
+              })()}
+
               <div className="flex items-center gap-2 flex-wrap">
                 <select
                   value={selectedProjectFilter}
@@ -524,6 +550,7 @@ const PaymentsKasaPage = () => {
                     {filteredExpenses.map(e => {
                       const proj = projects.find(p => p.id === e.project_id);
                       const isIncome = INCOME_CATEGORIES.includes(e.category);
+                      const paymentType = (e as any).payment_type as string | undefined;
                       return (
                         <div key={e.id} className="flex items-center justify-between px-4 py-3">
                           <div className="flex items-center gap-3 min-w-0">
@@ -536,11 +563,15 @@ const PaymentsKasaPage = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
-                              <p className="text-[11px] text-muted-foreground">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <span className="text-sm font-semibold" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="hidden sm:flex items-center gap-1.5">
+                              <PaymentMethodBadge type={paymentType} />
+                              <StatusBadge status="odendi" />
+                            </div>
+                            <span className="text-sm font-semibold min-w-[80px] text-right" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
                               {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
                             </span>
                             <button onClick={() => openEditModal(e)}
@@ -560,6 +591,7 @@ const PaymentsKasaPage = () => {
               </div>
             </div>
           </PullToRefresh>
+
         </TabsContent>
 
         {/* ═══ TAB 3: KASA & ÖDEMELER ═══ */}
@@ -583,56 +615,104 @@ const PaymentsKasaPage = () => {
             </div>
 
             {accounts.length === 0 ? (
-              <div className="rounded-xl p-8 text-center bg-card border border-border">
-                <Wallet className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Henüz hesap eklenmemiş</p>
-                <p className="text-xs text-muted-foreground mt-1">Nakit kasa veya banka hesabı ekleyerek başlayın</p>
+              <div className="rounded-2xl p-10 text-center bg-card border border-border">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-[#FF6B2B]/10 border border-[#FF6B2B]/20">
+                  <WalletIcon className="w-8 h-8 text-[#FF6B2B]" />
+                </div>
+                <h4 className="text-[15px] font-semibold text-foreground mb-1.5">Henüz hesap oluşturmadınız</h4>
+                <p className="text-[12.5px] text-muted-foreground max-w-sm mx-auto mb-4">
+                  İlk banka hesabınızı eklediğinizde AI, nakit akışınızı analiz etmeye başlayacak.
+                </p>
+                <button
+                  onClick={() => { setKasaModalType("add_account"); setKasaModal(true); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold bg-[#FF6B2B] text-white hover:bg-[#FF6B2B]/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> İlk Hesabı Oluştur
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {accounts.map(acc => (
-                  <div key={acc.id} className="rounded-xl p-4 bg-card border border-border">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {acc.account_type === "nakit_kasa"
-                          ? <Banknote className="w-5 h-5 text-primary" />
-                          : <Building2 className="w-5 h-5 text-primary" />
-                        }
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{acc.name}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {acc.account_type === "nakit_kasa" ? "Nakit Kasa" : "Banka Hesabı"}
-                            {acc.bank_name ? ` • ${acc.bank_name}` : ""}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {accounts.map(acc => {
+                  const bankGradients: Record<string, string> = {
+                    ziraat: "linear-gradient(135deg,#0E4C2B,#1B7A3A)",
+                    vakıfbank: "linear-gradient(135deg,#F5A623,#C77B14)",
+                    vakifbank: "linear-gradient(135deg,#F5A623,#C77B14)",
+                    "iş bankası": "linear-gradient(135deg,#0F2E5C,#1E4A8A)",
+                    is_bankasi: "linear-gradient(135deg,#0F2E5C,#1E4A8A)",
+                    garanti: "linear-gradient(135deg,#005B9E,#0AA7D6)",
+                    akbank: "linear-gradient(135deg,#B4001F,#E53950)",
+                    halkbank: "linear-gradient(135deg,#0E1B4D,#2036A0)",
+                    yapı_kredi: "linear-gradient(135deg,#0057A7,#1E7DD0)",
+                    finansbank: "linear-gradient(135deg,#4E1F86,#7B3EC4)",
+                    denizbank: "linear-gradient(135deg,#EE1D23,#F5636A)",
+                  };
+                  const isCash = acc.account_type === "nakit_kasa";
+                  const bankKey = (acc.bank_name || "").toLowerCase().replace(/\s+/g, "_");
+                  const bankKeySimple = (acc.bank_name || "").toLowerCase();
+                  const gradient = isCash
+                    ? "linear-gradient(135deg,#1B3A2E,#2C5F45)"
+                    : bankGradients[bankKey] || bankGradients[bankKeySimple] || "linear-gradient(135deg,#1E2732,#2A3441)";
+                  const balanceNum = Number(acc.balance);
+                  return (
+                    <div
+                      key={acc.id}
+                      className="relative rounded-2xl p-4 text-white overflow-hidden shadow-lg"
+                      style={{ background: gradient }}
+                    >
+                      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+                      <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
+                      <div className="relative flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCash
+                            ? <Banknote className="w-5 h-5 text-white/90" />
+                            : <Building2 className="w-5 h-5 text-white/90" />
+                          }
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-semibold truncate">{acc.name}</p>
+                            <p className="text-[10.5px] text-white/70 truncate">
+                              {isCash ? "Nakit Kasa" : (acc.bank_name || "Banka Hesabı")}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setDeleteAccountTarget({ id: acc.id, name: acc.name })}
+                          className="p-1.5 rounded-lg text-white/70 hover:bg-white/10 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <p className="text-[10px] uppercase tracking-wider text-white/60 mb-0.5">Bakiye</p>
+                        <p className="text-2xl font-bold mb-2">{fmtFull(balanceNum)}</p>
+                        {acc.iban && (
+                          <p className="text-[11px] font-mono text-white/70 tracking-wider mb-2">
+                            {acc.iban.replace(/(.{4})/g, "$1 ").trim()}
                           </p>
+                        )}
+                        <p className="text-[10.5px] text-white/60 mb-3">
+                          Son güncelleme: {new Date(acc.updated_at || acc.created_at).toLocaleDateString("tr-TR")}
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setKasaModalType("deposit"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
+                            className="flex-1 py-1.5 rounded-lg text-[11.5px] font-medium bg-white/15 hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <ArrowDownLeft className="w-3 h-3" /> Giriş
+                          </button>
+                          <button
+                            onClick={() => { setKasaModalType("withdraw"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
+                            className="flex-1 py-1.5 rounded-lg text-[11.5px] font-medium bg-white/15 hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <ArrowUpRight className="w-3 h-3" /> Çıkış
+                          </button>
                         </div>
                       </div>
-                      <button onClick={() => setDeleteAccountTarget({ id: acc.id, name: acc.name })}
-                        className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
                     </div>
-                    <p className="text-2xl font-bold text-foreground mb-3">{fmtFull(Number(acc.balance))}</p>
-                    {acc.iban && <p className="text-[11px] text-muted-foreground mb-3">IBAN: {acc.iban}</p>}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setKasaModalType("deposit"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
-                        className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5"
-                        style={{ backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E" }}
-                      >
-                        <ArrowDownLeft className="w-3.5 h-3.5" /> Para Girişi
-                      </button>
-                      <button
-                        onClick={() => { setKasaModalType("withdraw"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
-                        className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5"
-                        style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "#EF4444" }}
-                      >
-                        <ArrowUpRight className="w-3.5 h-3.5" /> Para Çıkışı
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
+
 
             {/* Subcontractor debts */}
             <SubcontractorDebtSection />
@@ -781,7 +861,38 @@ const PaymentsKasaPage = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Sprint 22 — AI Report Summary */}
+            {(() => {
+              const income = reportHakedis.reduce((s, h) => s + Number(h.net || 0), 0);
+              const expense = reportExpenses.reduce((s, e) => s + Number(e.amount), 0);
+              const topCat = [...reportCategoryBreakdown].sort((a, b) => b.value - a.value)[0];
+              const topProject = [...projectStats].sort((a, b) => b.netKar - a.netKar)[0];
+              const insights: string[] = [];
+              insights.push(`Toplam gelir ${fmtFull(income)}, gider ${fmtFull(expense)}.`);
+              if (topCat) insights.push(`En yüksek gider kalemi: ${topCat.name}.`);
+              if (topProject) insights.push(`En kârlı proje: ${topProject.name}.`);
+              if (income > 0 && expense > 0) {
+                const marj = ((income - expense) / income) * 100;
+                insights.push(
+                  marj >= 0
+                    ? `Dönem kâr marjı %${marj.toFixed(1)} — tahsilatlar hızlanırsa nakit pozisyonu güçlenir.`
+                    : `Dönem zararı %${Math.abs(marj).toFixed(1)} — gider optimizasyonu önerilir.`,
+                );
+              }
+              return (
+                <AIInsightCard
+                  title="AI Rapor Özeti"
+                  insights={insights}
+                  actions={[
+                    { label: "PDF Açıkla", onClick: () => handleExport("pdf") },
+                    { label: "Excel Açıkla", onClick: () => handleExport("excel"), tone: "ghost" },
+                  ]}
+                />
+              );
+            })()}
           </div>
+
         </TabsContent>
       </Tabs>
 
@@ -790,7 +901,9 @@ const PaymentsKasaPage = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Gelir veya gider işlemi oluşturun.</p>
           </DialogHeader>
+
           <div className="space-y-3">
             {/* Gelir / Gider Toggle */}
             <div>
@@ -920,9 +1033,17 @@ const PaymentsKasaPage = () => {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-foreground">
-              {kasaModalType === "add_account" ? "Yeni Hesap Ekle" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
+              {kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
             </DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              {kasaModalType === "add_account"
+                ? "Yeni banka veya kasa hesabı oluşturun."
+                : kasaModalType === "deposit"
+                ? "Seçilen hesaba giriş kaydı ekleyin."
+                : "Seçilen hesaptan çıkış kaydı ekleyin."}
+            </p>
           </DialogHeader>
+
 
           {kasaModalType === "add_account" ? (
             <div className="space-y-3">

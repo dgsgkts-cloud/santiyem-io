@@ -24,17 +24,53 @@ const SubcontractorsPage = () => {
   const enriched = useMemo(() => {
     return subcontractors.map(s => {
       const pays = allPayments.filter(p => p.subcontractor_id === s.id);
-      const totalPaid = pays.filter(p => p.status === "odendi").reduce((sum, p) => sum + Number(p.amount), 0);
+      const paid = pays.filter(p => p.status === "odendi");
+      const totalPaid = paid.reduce((sum, p) => sum + Number(p.amount), 0);
       const remaining = Number(s.contract_amount) - totalPaid;
+      const now = new Date();
       const upcoming = pays.filter(p => {
         if (!p.planned_date || p.status === "odendi") return false;
-        const days = differenceInDays(parseISO(p.planned_date), new Date());
+        const days = differenceInDays(parseISO(p.planned_date), now);
         return days >= 0 && days <= 7;
       });
+      const overdue = pays.filter(p => {
+        if (!p.planned_date || p.status === "odendi") return false;
+        return differenceInDays(now, parseISO(p.planned_date)) > 0;
+      });
+      // Average payment delay (days) — paid vs planned
+      const delays = paid
+        .filter(p => p.planned_date && p.payment_date)
+        .map(p => differenceInDays(parseISO(p.payment_date), parseISO(p.planned_date!)));
+      const avgDelay = delays.length
+        ? Math.round(delays.reduce((a, b) => a + b, 0) / delays.length)
+        : 0;
+      const completion = Number(s.contract_amount) > 0
+        ? Math.round((totalPaid / Number(s.contract_amount)) * 100)
+        : 0;
+      const lastPayment = paid
+        .map(p => p.payment_date)
+        .sort()
+        .reverse()[0];
+      // Risk scoring
+      let risk: "safe" | "watch" | "risky" = "safe";
+      if (overdue.length > 0 || (remaining > 0 && avgDelay > 7)) risk = "risky";
+      else if (upcoming.length > 0 || avgDelay > 0 || (remaining > 0 && completion < 20)) risk = "watch";
       const proj = projects.find(p => p.id === s.project_id);
-      return { ...s, totalPaid, remaining, upcomingCount: upcoming.length, projectName: proj?.name || "" };
+      return {
+        ...s,
+        totalPaid,
+        remaining,
+        upcomingCount: upcoming.length,
+        overdueCount: overdue.length,
+        avgDelay,
+        completion,
+        lastPayment,
+        risk,
+        projectName: proj?.name || "",
+      };
     });
   }, [subcontractors, allPayments, projects]);
+
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Taşeron adı zorunludur"); return; }
@@ -79,6 +115,11 @@ const SubcontractorsPage = () => {
             const progress = Number(s.contract_amount) > 0
               ? Math.min(100, Math.round((s.totalPaid / Number(s.contract_amount)) * 100))
               : 0;
+            const riskMeta = {
+              safe: { label: "Güvenli", dot: "#22C55E", bg: "rgba(34,197,94,0.12)" },
+              watch: { label: "Yakın Takip", dot: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+              risky: { label: "Riskli", dot: "#EF4444", bg: "rgba(239,68,68,0.14)" },
+            }[s.risk];
             return (
               <Card key={s.id} className="border-border cursor-pointer hover:border-[#FF6B2B]/30 transition-colors" onClick={() => setSelectedId(s.id)}>
                 <CardContent className="p-3.5">
@@ -88,11 +129,13 @@ const SubcontractorsPage = () => {
                       {s.specialty && <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5"><Wrench className="w-3 h-3 shrink-0" />{s.specialty}</p>}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      {s.upcomingCount > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: "rgba(245,158,11,0.15)", color: "#F59E0B" }}>
-                          ⏰ {s.upcomingCount}
-                        </span>
-                      )}
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                        style={{ backgroundColor: riskMeta.bg, color: riskMeta.dot }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: riskMeta.dot }} />
+                        {riskMeta.label}
+                      </span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
@@ -103,13 +146,21 @@ const SubcontractorsPage = () => {
                   <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: progress >= 100 ? "#22C55E" : "#FF6B2B" }} />
                   </div>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] text-muted-foreground">%{progress} tamamlandı</span>
-                    {s.upcomingCount > 0 && <span className="text-[10px] text-muted-foreground">Yaklaşan ödeme</span>}
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
+                    <span>%{progress} tamamlandı</span>
+                    <span>
+                      {s.avgDelay > 0 ? `Ort. ${s.avgDelay} gün gecikme` : "Zamanında ödeniyor"}
+                    </span>
                   </div>
+                  {s.lastPayment && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Son ödeme: {new Date(s.lastPayment).toLocaleDateString("tr-TR")}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
+
           })}
         </div>
       )}
@@ -117,7 +168,11 @@ const SubcontractorsPage = () => {
       {/* Add Modal */}
       <Dialog open={addModal} onOpenChange={setAddModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Yeni Taşeron</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Yeni Taşeron</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Borç ve ödeme takibi için firma ekleyin.</p>
+          </DialogHeader>
+
           <div className="space-y-3">
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Taşeron adı" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
             <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Telefon (opsiyonel)" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
@@ -238,7 +293,10 @@ const SubcontractorDetail = ({ sub, onBack }: { sub: any; onBack: () => void }) 
       {/* Add payment modal */}
       <Dialog open={addModal} onOpenChange={setAddModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Ödeme Ekle — {sub.name}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Ödeme Ekle — {sub.name}</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Taşerona yeni ödeme kaydı oluşturun.</p>
+          </DialogHeader>
           <div className="space-y-3">
             <input value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="Tutar (₺)" type="number" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
             <div className="grid grid-cols-2 gap-3">
