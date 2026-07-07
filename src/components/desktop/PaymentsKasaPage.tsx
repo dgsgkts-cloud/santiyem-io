@@ -910,13 +910,15 @@ const PaymentsKasaPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ═══ Add/Edit Expense Modal ═══ */}
-      <Dialog open={addModal} onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Gelir veya gider işlemi oluşturun.</p>
-          </DialogHeader>
+      {/* ═══ Add/Edit Expense — ResponsiveSheet ═══ */}
+      <ResponsiveSheet
+        open={addModal}
+        onOpenChange={v => { if (!v) { setAddModal(false); setEditTarget(null); setExpForm(defaultForm); } }}
+        title={editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}
+        description="Gelir veya gider işlemi oluşturun."
+        size="md"
+      >
+
 
           <div className="space-y-3">
             {/* Gelir / Gider Toggle */}
