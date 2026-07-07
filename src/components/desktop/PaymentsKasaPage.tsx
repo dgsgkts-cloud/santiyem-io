@@ -1123,8 +1123,7 @@ const PaymentsKasaPage = () => {
               </button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+      </ResponsiveSheet>
     </PageShell>
   );
 };
