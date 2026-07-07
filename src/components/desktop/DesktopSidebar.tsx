@@ -26,7 +26,7 @@ const ROLE_LABELS: Record<string, string> = {
 type Tab =
   | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
-  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement"
+  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse"
   | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 interface DesktopSidebarProps {
