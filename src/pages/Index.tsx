@@ -63,6 +63,24 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
+import { getCompanyProfile } from "@/lib/companyProfile";
+
+// Sprint 18.4: localized role labels (extend as roles land)
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Yönetici",
+  owner: "Sahip",
+  site_chief: "Şantiye Şefi",
+  site_engineer: "Şantiye Mühendisi",
+  accountant: "Muhasebe",
+  purchasing: "Satın Alma",
+  personnel: "Personel",
+  manager: "Yönetici",
+  member: "Üye",
+  viewer: "İzleyici",
+  worker: "Personel",
+  landowner: "Arsa Sahibi",
+  subcontractor: "Taşeron",
+};
 
 
 type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
