@@ -901,7 +901,9 @@ const PaymentsKasaPage = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-foreground">{editTarget ? "Kaydı Düzenle" : "Kayıt Ekle"}</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Gelir veya gider işlemi oluşturun.</p>
           </DialogHeader>
+
           <div className="space-y-3">
             {/* Gelir / Gider Toggle */}
             <div>
