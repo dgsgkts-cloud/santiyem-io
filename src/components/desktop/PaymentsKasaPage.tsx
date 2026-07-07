@@ -1033,9 +1033,17 @@ const PaymentsKasaPage = () => {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-foreground">
-              {kasaModalType === "add_account" ? "Yeni Hesap Ekle" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
+              {kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
             </DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              {kasaModalType === "add_account"
+                ? "Yeni banka veya kasa hesabı oluşturun."
+                : kasaModalType === "deposit"
+                ? "Seçilen hesaba giriş kaydı ekleyin."
+                : "Seçilen hesaptan çıkış kaydı ekleyin."}
+            </p>
           </DialogHeader>
+
 
           {kasaModalType === "add_account" ? (
             <div className="space-y-3">
