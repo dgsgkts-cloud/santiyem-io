@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
   BookOpen, Wallet, HardHat, BarChart3,
-  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart,
+  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart, Warehouse,
 } from "lucide-react";
 import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
