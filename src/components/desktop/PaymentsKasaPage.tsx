@@ -364,36 +364,6 @@ const PaymentsKasaPage = () => {
             <FileText className="w-4 h-4 shrink-0" /> <span className="truncate">Raporlar</span>
           </TabsTrigger>
         </TabsList>
-      <DeleteConfirmModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => { if (deleteTarget) deleteExpense.mutate(deleteTarget.id); }}
-        title="Kaydı Sil"
-        itemName={deleteTarget?.name}
-      />
-      <DeleteConfirmModal
-        open={!!deleteAccountTarget}
-        onClose={() => setDeleteAccountTarget(null)}
-        onConfirm={async () => { if (deleteAccountTarget) deleteAccount.mutate(deleteAccountTarget.id); }}
-        title="Hesabı Sil"
-        itemName={deleteAccountTarget?.name}
-      />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full mb-6 h-auto p-1 rounded-xl bg-card border border-border flex flex-nowrap gap-0.5 sm:gap-1">
-          <TabsTrigger value="overview" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Genel Bakış</span>
-          </TabsTrigger>
-          <TabsTrigger value="transactions" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Gelir & Gider</span>
-          </TabsTrigger>
-          <TabsTrigger value="kasa" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Hesaplar</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[13px] leading-tight data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold rounded-lg transition-colors">
-            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> <span className="truncate">Raporlar</span>
-          </TabsTrigger>
-        </TabsList>
 
         {/* ═══ TAB 1: GENEL BAKIŞ ═══ */}
         <TabsContent value="overview">
