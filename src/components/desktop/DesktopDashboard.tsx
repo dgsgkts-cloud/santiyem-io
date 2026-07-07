@@ -1,9 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
-import { AIDailyAgenda } from "@/components/dashboard/AIDailyAgenda";
+import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
 
-import { ExecutiveBrief } from "@/components/dashboard/executive/ExecutiveBrief";
-import CompanyBrainWidget from "@/components/companybrain/CompanyBrainWidget";
 
 import {
   useUser,
@@ -175,6 +173,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { contracts } = useContracts();
   const { accounts } = useCashAccounts();
   const { checks } = useCashChecks();
+  const { kpis: briefKpis } = useExecutiveBrief();
+
+  // Sprint 19 — swap login title for a dashboard-specific one immediately after render.
+  useEffect(() => {
+    document.title = "Dashboard • Şantiyem";
+  }, []);
+
 
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
@@ -448,753 +453,362 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
   /* ---------------------------------- Render ---------------------------------- */
 
+  // ── Financial snapshot derived values ──
+  const kasaBalance = accounts.filter((a) => a.account_type === "nakit_kasa").reduce((s, a) => s + Number(a.balance), 0);
+  const bankaBalance = accounts.filter((a) => a.account_type === "banka").reduce((s, a) => s + Number(a.balance), 0);
+  const cashTotal = kasaBalance + bankaBalance;
+  const netProfit = monthRevenue - monthExpense;
+  const prevNetProfit = prevMonthRevenue - prevMonthExpense;
+  const calcChange = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
+  const revenueChange = calcChange(monthRevenue, prevMonthRevenue);
+  const expenseChange = calcChange(monthExpense, prevMonthExpense);
+  const profitChange = calcChange(netProfit, prevNetProfit);
+
+  // ── Health cards (5-second scan) ──
+  const healthCards = [
+    {
+      label: "Şirket Sağlığı",
+      value: `${briefKpis.healthScore}/100`,
+      icon: TrendingUp,
+      tone:
+        briefKpis.healthScore >= 80 ? "good" :
+        briefKpis.healthScore >= 60 ? "warn" : "alert",
+      hint: "Nakit, tahsilat ve risk sinyallerinden hesaplandı.",
+    },
+    {
+      label: "Kritik Risk",
+      value: String(briefKpis.criticalRisks),
+      icon: AlertTriangle,
+      tone: briefKpis.criticalRisks > 0 ? "alert" : "good",
+      hint: "Bugün acilen ilgilenilmesi gereken bulgular.",
+    },
+    {
+      label: "Bekleyen Ödeme",
+      value: String(briefKpis.pendingPayments),
+      icon: Wallet,
+      tone: briefKpis.pendingPayments > 0 ? "warn" : "good",
+      hint: "Onay veya tahsilat bekleyen kayıtlar.",
+    },
+    {
+      label: "Bugünkü Görev",
+      value: String(briefKpis.tasksDueToday),
+      icon: CalendarClock,
+      tone: briefKpis.tasksDueToday > 0 ? "warn" : "good",
+      hint: "Bugün için planlanmış işler.",
+    },
+  ] as const;
+
+  // ── Richer, human-sounding AI insight (Sprint 19 §11) ──
+  const richInsight = useMemo(() => {
+    if (!loaded) return null;
+    if (monthExpense > 0 && prevMonthExpense > 0) {
+      const diff = ((monthExpense - prevMonthExpense) / prevMonthExpense) * 100;
+      if (diff <= -25) {
+        return `Giderler geçen aya göre %${Math.abs(diff).toFixed(0)} azaldı. Büyük alımların tamamlanmış olması bu düşüşün başlıca sebebi görünüyor. Bu ay nakit akışı belirgin biçimde daha sağlıklı.`;
+      }
+      if (diff >= 25) {
+        return `Giderler geçen aya göre %${diff.toFixed(0)} arttı. Yeni sözleşmeler ve malzeme alımları bu artışı besliyor olabilir; nakit dengesini yakından izlemek faydalı olur.`;
+      }
+    }
+    if (monthRevenue > 0 && prevMonthRevenue > 0) {
+      const diff = ((monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
+      if (Math.abs(diff) >= 15) {
+        return diff > 0
+          ? `Bu ay ciro geçen aya göre %${diff.toFixed(0)} arttı. Ödenen hakedişlerdeki hızlanma tahsilat performansınızı olumlu etkiliyor.`
+          : `Bu ay ciro geçen aya göre %${Math.abs(diff).toFixed(0)} düştü. Bekleyen hakedişlerin onay süreçlerini hızlandırmak toparlanmayı destekleyebilir.`;
+      }
+    }
+    if (overdueTotal > 0) {
+      return `${formatCurrency(overdueTotal)} tutarında ${overdueCount} gecikmiş tahsilat, nakit akışını baskılıyor. En eski kayıtlardan başlayarak müşterilerle iletişime geçmek belirgin bir rahatlama sağlar.`;
+    }
+    return "Şu an nakit akışınız dengeli; hem gelir hem gider tarafı beklenen aralıkta seyrediyor.";
+  }, [loaded, monthRevenue, prevMonthRevenue, monthExpense, prevMonthExpense, overdueTotal, overdueCount]);
+
+  const toneColor = (t: "good" | "warn" | "alert" | "muted") =>
+    t === "alert" ? "#EF4444" : t === "warn" ? "#F59E0B" : t === "good" ? "#22C55E" : "hsl(var(--muted-foreground))";
+
+  /* ---------------------------------- Render ---------------------------------- */
+
   return (
-    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-[1120px] mx-auto space-y-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-6 lg:py-8 max-w-[1120px] mx-auto space-y-6">
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
-
       <PinnedInsights />
 
-      {/* Sprint 14.1 — Proactive Executive Morning Brief. Orchestrates
-          existing intelligence (useExecutiveBrief + ActionCard) and pushes
-          a summary into the AI Canvas. Supersedes the old MorningBriefingCard. */}
-      <ExecutiveMorningBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
-
-      {/* Sprint 14.2 — AI Daily Agenda. Orchestrates existing findings into
-          a Now/Next/Later timeline with ActionExecutor buttons. */}
-      <AIDailyAgenda onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
-
-
-      <ExecutiveBrief onTabChange={onTabChange} onProjectSelect={onProjectSelect} />
-
-      <CompanyBrainWidget onOpen={() => onTabChange("company-memory")} />
-
-
-
-
-
-      {/* ─────────────────────────  GREETING  ───────────────────────── */}
-      <header className="flex flex-col gap-6">
-        <div className="flex items-start justify-between gap-6 flex-wrap">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-muted-foreground/80 mb-2">
-              <greeting.Icon className="w-3.5 h-3.5" />
-              <span className="text-[12px] tracking-wide uppercase">{formatDate(new Date())}</span>
-            </div>
-            <h1
-              className="text-[26px] lg:text-[32px] font-medium tracking-tight text-foreground leading-tight"
-              style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-            >
-              {greeting.text},{" "}
-              <span className="text-muted-foreground/90 font-normal">{name}.</span>
-            </h1>
-            <p className="text-[13.5px] text-muted-foreground mt-1.5">
-              Şantiyende bugün ne oluyor bir bakalım.
-            </p>
+      {/* 1. Manager Greeting — slim hero (-30% height) */}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-muted-foreground/80 mb-1.5">
+            <greeting.Icon className="w-3.5 h-3.5" />
+            <span className="text-[11.5px] tracking-wide uppercase">{formatDate(new Date())}</span>
           </div>
-
-          {/* Compact mini stats — right aligned */}
-          <div className="hidden md:grid grid-cols-4 gap-x-8 gap-y-1 shrink-0">
-            <MiniStat label="Aktif" value={projectsLocked ? "—" : String(activeProjects)} />
-            <MiniStat label="Bu Hafta" value={remindersLocked ? "—" : String(upcomingThisWeek)} />
-            <MiniStat label="Bekleyen" value={hakedisLocked ? "—" : formatCurrency(pendingHakedis)} />
-            <MiniStat label="Geciken" value={remindersLocked ? "—" : String(delayedReminders)} accent={delayedReminders > 0} />
-          </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((a) => {
-            const Icon = a.icon;
-            return (
-              <button
-                key={a.label}
-                onClick={a.onClick}
-                disabled={a.locked}
-                className={`group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
-                  a.primary
-                    ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
-                    : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
-                } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {a.label}
-                {!a.primary && (
-                  <Plus className="w-3 h-3 opacity-0 group-hover:opacity-60 -ml-1 transition-opacity" />
-                )}
-              </button>
-            );
-          })}
+          <h1
+            className="text-[22px] lg:text-[26px] font-medium tracking-tight text-foreground leading-tight"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
+          >
+            {greeting.text},{" "}
+            <span className="text-muted-foreground/90 font-normal">{name}.</span>
+          </h1>
+          <p className="text-[12.5px] text-muted-foreground mt-1">
+            {loaded
+              ? `${activeProjects} aktif proje · ${formatCurrency(cashTotal)} kasada · ${briefKpis.criticalRisks > 0 ? `${briefKpis.criticalRisks} kritik risk` : "kritik uyarı yok"}`
+              : "Şirket verileri hazırlanıyor…"}
+          </p>
         </div>
       </header>
 
-      {/* ─────────────────────────  AI INSIGHTS  ───────────────────────── */}
-      <Card className="overflow-hidden">
-        <div
-          className="absolute inset-x-0 top-0 h-px opacity-70"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, rgba(255,107,43,0.4), rgba(129,140,248,0.4), transparent)",
-          }}
-        />
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#FF6B2B]/10 border border-[#FF6B2B]/20">
-              <Sparkles className="w-3 h-3 text-[#FF6B2B]" />
-            </div>
-            <h3 className="text-[13px] font-semibold tracking-tight text-foreground">Şantiyem AI · İçgörü</h3>
-            <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground/70 border border-border/50 rounded px-1.5 py-0.5">
-              beta
-            </span>
-          </div>
-          <button
-            onClick={() => onTabChange("chat")}
-            className="flex items-center gap-1 text-[11.5px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Şantiyem AI'ı aç <ArrowUpRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <div className="space-y-2.5 mb-5">
-          {!loaded
-            ? [0, 1].map((i) => <Skeleton key={i} className="h-4 w-full max-w-lg" />)
-            : insights.map((ins, i) => {
-                const dot =
-                  ins.tone === "warn" ? "#F59E0B" : ins.tone === "good" ? "#22C55E" : "#818CF8";
-                return (
-                  <div key={i} className="flex items-start gap-3 group">
-                    <span
-                      className="w-1.5 h-1.5 rounded-full mt-[9px] shrink-0"
-                      style={{ backgroundColor: dot }}
-                    />
-                    <p className="text-[13px] leading-relaxed text-foreground/90 flex-1">
-                      {ins.text}
-                      {ins.onAction && (
-                        <button
-                          onClick={ins.onAction}
-                          className="ml-2 text-[12px] font-medium text-[#FF6B2B] hover:underline"
-                        >
-                          {ins.actionLabel} →
-                        </button>
-                      )}
+      {/* 2. Health Cards — 4 tiles */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {healthCards.map((c) => {
+          const Icon = c.icon;
+          const color = toneColor(c.tone);
+          return (
+            <Tooltip key={c.label} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="relative rounded-xl bg-card/60 border border-border/50 p-4 hover:border-border transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
+                      {c.label}
+                    </span>
+                    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color }} />
+                  </div>
+                  {!loaded ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <p
+                      className="text-[22px] font-semibold tracking-tight tabular-nums"
+                      style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        letterSpacing: "-0.02em",
+                        color: c.tone === "good" ? "hsl(var(--foreground))" : color,
+                      }}
+                    >
+                      {c.value}
                     </p>
-                  </div>
-                );
-              })}
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 pt-4 border-t border-border/50">
-          {suggestedQuestions.map((q) => (
-            <button
-              key={q}
-              onClick={() => {
-                onTabChange("chat");
-                onSend?.(q);
-              }}
-              className="text-[11.5px] px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent hover:border-border/60 transition-all"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      {/* ─────────────────────────  STAT CARDS  ───────────────────────── */}
-      <section>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {statCards.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Tooltip key={stat.label} delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <div className="relative rounded-xl bg-card/60 border border-border/50 p-4 hover:border-border transition-colors overflow-hidden">
-                    {stat.locked && (
-                      <LockedOverlay
-                        label="Kurumsal Paket"
-                        onClick={() => openUpgrade(stat.label, true)}
-                      />
-                    )}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
-                        {stat.label}
-                      </span>
-                      <Icon
-                        className="w-3.5 h-3.5 shrink-0"
-                        style={{
-                          color: stat.tone === "alert" ? "#EF4444" : "hsl(var(--muted-foreground))",
-                        }}
-                      />
-                    </div>
-                    {!loaded && !stat.locked ? (
-                      <Skeleton className="h-6 w-20" />
-                    ) : (
-                      <p
-                        className="text-[22px] font-semibold tracking-tight tabular-nums"
-                        style={{
-                          fontFamily: "'Space Grotesk', sans-serif",
-                          letterSpacing: "-0.02em",
-                          color: stat.tone === "alert" ? "#EF4444" : "hsl(var(--foreground))",
-                        }}
-                      >
-                        {stat.locked ? "—" : stat.value}
-                      </p>
-                    )}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  {stat.tooltip}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">{c.hint}</TooltipContent>
+            </Tooltip>
+          );
+        })}
       </section>
 
-      {/* ─────────────────────────  FINANCIAL SUMMARY  ───────────────────────── */}
+      {/* 3. Manager Briefing — top 5 priorities, integrated voice button */}
+      <ExecutiveMorningBrief
+        onTabChange={onTabChange}
+        onProjectSelect={onProjectSelect}
+        compact
+        maxPriorities={5}
+      />
+
+      {/* 4. Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        {quickActions.map((a) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.label}
+              onClick={a.onClick}
+              disabled={a.locked}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
+                a.primary
+                  ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
+                  : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
+              } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {a.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 5. Financial Snapshot — 4 merged metrics */}
       <Card>
         {profitLocked && (
           <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
         )}
-        <SectionHeader
-          icon={Wallet}
-          title="Finansal Özet — Bu Ay"
-          action="Detay"
-          onAction={() => onTabChange("payments-kasa")}
-        />
-        <div className="grid grid-cols-3 gap-3">
-          {(() => {
-            const calcChange = (curr: number, prev: number) => {
-              if (prev === 0) return curr > 0 ? 100 : 0;
-              return Math.round(((curr - prev) / prev) * 100);
-            };
-            const revenueChange = calcChange(monthRevenue, prevMonthRevenue);
-            const expenseChange = calcChange(monthExpense, prevMonthExpense);
-            const netProfit = monthRevenue - monthExpense;
-            const prevNetProfit = prevMonthRevenue - prevMonthExpense;
-            const profitChange = calcChange(netProfit, prevNetProfit);
-
-            const items = [
-              { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange },
-              { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange },
-              { label: "Net Kâr", value: netProfit, color: "#FF6B2B", change: profitChange },
-            ];
-
-            return items.map((item) => {
-              const isUp = item.change >= 0;
-              const changeColor =
-                item.label === "Gider" ? (isUp ? "#EF4444" : "#22C55E") : isUp ? "#22C55E" : "#EF4444";
-              return (
-                <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
-                  <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
-                    {item.label}
-                  </p>
-                  {!loaded ? (
-                    <Skeleton className="h-6 w-24" />
-                  ) : (
-                    <>
-                      <MetricTooltip full={formatCurrencyFull(item.value)}>
-                        <p
-                          className="text-[20px] font-semibold truncate cursor-help tabular-nums"
-                          style={{
-                            color: item.color,
-                            fontFamily: "'Space Grotesk', sans-serif",
-                            letterSpacing: "-0.02em",
-                          }}
-                        >
-                          {formatCurrency(item.value)}
-                        </p>
-                      </MetricTooltip>
-                      <MetricTooltip full={`${formatPercentFull(item.change)} geçen aya göre`}>
-                        <p
-                          className="text-[10.5px] mt-1 flex items-center gap-1 truncate cursor-help tabular-nums"
-                          style={{ color: changeColor }}
-                        >
-                          {isUp ? <ArrowUp className="w-3 h-3 shrink-0" /> : <ArrowDown className="w-3 h-3 shrink-0" />}
-                          <span className="truncate">{formatPercent(item.change)} geçen aya göre</span>
-                        </p>
-                      </MetricTooltip>
-                    </>
-                  )}
-                </div>
-              );
-            });
-          })()}
-        </div>
-      </Card>
-
-      {/* ─────────────────────────  CHART  ───────────────────────── */}
-      <Card>
-        {profitLocked && (
-          <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Grafik", false)} />
-        )}
-        <SectionHeader icon={BarChart3} title="Son 6 Ay — Ciro & Gider" />
-        <div style={{ width: "100%", height: 220 }}>
-          {!loaded ? (
-            <div className="h-full flex items-end gap-3 pb-6 pt-4">
-              {[40, 65, 45, 80, 55, 70].map((h, i) => (
-                <Skeleton key={i} className="flex-1" style={{ height: `${h}%` } as React.CSSProperties} />
-              ))}
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barGap={4} barCategoryGap="25%">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis
-                  tick={{ fill: "#64748B", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: number) =>
-                    v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v / 1_000)}K` : String(v)
-                  }
-                  width={50}
-                />
-                <RechartsTooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ fontWeight: 600 }}
-                  itemStyle={{ color: "#94A3B8" }}
-                  formatter={(value: number, name: string) => [formatCurrency(value), name === "ciro" ? "Ciro" : "Gider"]}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                  formatter={(value: string) => (
-                    <span className="text-muted-foreground">{value === "ciro" ? "Ciro" : "Gider"}</span>
-                  )}
-                />
-                <Bar dataKey="ciro" fill="#22C55E" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="gider" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </Card>
-
-      {/* ─────────────────────────  KASA  ───────────────────────── */}
-      {(() => {
-        const kasaBalance = accounts.filter((a) => a.account_type === "nakit_kasa").reduce((s, a) => s + Number(a.balance), 0);
-        const bankaBalance = accounts.filter((a) => a.account_type === "banka").reduce((s, a) => s + Number(a.balance), 0);
-        const toplamBalance = accounts.reduce((s, a) => s + Number(a.balance), 0);
-        const now = new Date();
-        const upcomingChecks = checks.filter((c) => {
-          const diff = (new Date(c.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-          return diff >= 0 && diff <= 7 && c.status !== "odendi" && c.status !== "tahsil_edildi";
-        });
-
-        return (
-          <Card>
-            {profitLocked && <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Kasa Durumu", false)} />}
-            <SectionHeader
-              icon={Banknote}
-              title="Kasa Durumu"
-              action="Detay"
-              onAction={() => onTabChange("payments-kasa")}
-            />
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Nakit Kasa", value: kasaBalance, color: "#F59E0B", Icon: Wallet },
-                { label: "Banka", value: bankaBalance, color: "#3B82F6", Icon: Building2 },
-                { label: "Toplam", value: toplamBalance, color: "#22C55E", Icon: Banknote },
-              ].map(({ label, value, color, Icon }) => (
-                <div key={label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-2 min-w-0">
-                    <Icon className="w-3 h-3 shrink-0" style={{ color }} />
-                    <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
-                      {label}
-                    </p>
-                  </div>
-                  <MetricTooltip full={formatCurrencyFull(value)}>
-                    <p
-                      className="text-[20px] font-semibold truncate cursor-help tabular-nums"
-                      style={{ color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-                    >
-                      {formatCurrency(value)}
-                    </p>
-                  </MetricTooltip>
-                </div>
-              ))}
-            </div>
-            {upcomingChecks.length > 0 && (
-              <div className="mt-3 space-y-1.5">
-                {upcomingChecks.slice(0, 3).map((chk) => {
-                  const days = Math.ceil((new Date(chk.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                  const urgent = days <= 3;
-                  return (
-                    <button
-                      key={chk.id}
-                      onClick={() => onTabChange("payments-kasa")}
-                      className="w-full rounded-lg px-3 py-2 flex items-center gap-2 text-left border transition-colors hover:bg-muted/30"
-                      style={{
-                        backgroundColor: urgent ? "rgba(239,68,68,0.06)" : "rgba(245,158,11,0.06)",
-                        borderColor: urgent ? "rgba(239,68,68,0.18)" : "rgba(245,158,11,0.18)",
-                      }}
-                    >
-                      <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: urgent ? "#EF4444" : "#F59E0B" }} />
-                      <span
-                        className="text-[11.5px] font-medium truncate"
-                        style={{ color: urgent ? "#FCA5A5" : "#FCD34D" }}
+        <SectionHeader icon={Wallet} title="Finansal Özet — Bu Ay" action="Detay" onAction={() => onTabChange("payments-kasa")} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange, inv: false },
+            { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange, inv: true },
+            { label: "Kasa", value: cashTotal, color: "#3B82F6", change: null as number | null, inv: false },
+            { label: "Aylık Kâr", value: netProfit, color: "#FF6B2B", change: profitChange, inv: false },
+          ].map((item) => {
+            const isUp = (item.change ?? 0) >= 0;
+            const changeColor = item.change == null
+              ? "hsl(var(--muted-foreground))"
+              : item.inv
+                ? (isUp ? "#EF4444" : "#22C55E")
+                : (isUp ? "#22C55E" : "#EF4444");
+            return (
+              <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
+                <p className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
+                  {item.label}
+                </p>
+                {!loaded ? (
+                  <Skeleton className="h-6 w-24" />
+                ) : (
+                  <>
+                    <MetricTooltip full={formatCurrencyFull(item.value)}>
+                      <p
+                        className="text-[20px] font-semibold truncate cursor-help tabular-nums"
+                        style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
                       >
-                        {chk.due_date} • {formatCurrency(chk.amount)} vadeli çek — {chk.counterparty} ({chk.bank_name})
-                        {days === 0 ? " • Bugün" : ` • ${days} gün sonra`}
-                      </span>
-                    </button>
-                  );
-                })}
+                        {formatCurrency(item.value)}
+                      </p>
+                    </MetricTooltip>
+                    {item.change != null && (
+                      <p className="text-[10.5px] mt-1 flex items-center gap-1 tabular-nums" style={{ color: changeColor }}>
+                        {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        <span>{formatPercent(item.change)} vs geçen ay</span>
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </Card>
-        );
-      })()}
+            );
+          })}
+        </div>
 
-      {/* ─────────────────────────  GRID: LEFT + RIGHT  ───────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[64fr_36fr] gap-5">
-        {/* LEFT */}
-        <div className="space-y-5 min-w-0">
-          {/* Projects */}
-          <Card padded={false}>
-            {projectsLocked && (
-              <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />
-            )}
-            <div className="p-5 pb-3">
-              <SectionHeader
-                title="Aktif Projeler"
-                action="Tümü"
-                onAction={() => onTabChange("projects")}
-              />
-            </div>
-            {displayProjects.length === 0 ? (
-              <div className="pb-6 px-4">
-                <EmptyState
-                  icon="🏗️"
-                  title="Henüz proje yok"
-                  description="İlk projenizi ekleyerek şantiye takibine başlayın."
-                  buttonText="İlk Projeyi Oluştur"
-                  onButtonClick={() => onTabChange("projects")}
-                />
-              </div>
-            ) : (
-              <>
-                <div className="hidden lg:block">
-                  <table className="w-full text-[13px]">
-                    <thead>
-                      <tr>
-                        {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
-                          <th
-                            key={h}
-                            className="text-left px-5 py-2.5 font-medium uppercase tracking-wider text-muted-foreground/80 text-[10.5px] border-b border-border/50"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayProjects.map((p, idx) => (
-                        <tr
-                          key={p.id}
-                          onClick={() => onProjectSelect?.(p.id)}
-                          className={`transition-colors duration-150 cursor-pointer hover:bg-muted/30 ${
-                            idx !== displayProjects.length - 1 ? "border-b border-border/40" : ""
-                          }`}
-                        >
-                          <td className="px-5 py-3.5 font-medium text-foreground tracking-tight">{p.name}</td>
-                          <td className="px-5 py-3.5 text-muted-foreground">{p.client}</td>
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all"
-                                  style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }}
-                                />
-                              </div>
-                              <span className="text-[11.5px] tabular-nums text-muted-foreground w-9 text-right">
-                                {p.progress}%
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3.5">
-                            <span
-                              className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
-                              style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
-                            >
-                              {p.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="lg:hidden divide-y divide-border/50">
-                  {displayProjects.map((p) => (
-                    <div
+        {/* Rich AI insight (Sprint 19 §11) */}
+        {richInsight && (
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/40 px-3.5 py-2.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" />
+            <p className="text-[12.5px] leading-relaxed text-foreground/85">{richInsight}</p>
+          </div>
+        )}
+      </Card>
+
+      {/* 6. Projects Overview */}
+      <Card padded={false}>
+        {projectsLocked && (
+          <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />
+        )}
+        <div className="p-5 pb-3">
+          <SectionHeader title="Aktif Projeler" action="Tümü" onAction={() => onTabChange("projects")} />
+        </div>
+        {displayProjects.length === 0 ? (
+          <div className="pb-6 px-4">
+            <EmptyState
+              icon="🏗️"
+              title="Henüz proje yok"
+              description="İlk projenizi ekleyerek şantiye takibine başlayın."
+              buttonText="İlk Projeyi Oluştur"
+              onButtonClick={() => onTabChange("projects")}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="hidden lg:block">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr>
+                    {["Proje Adı", "Müşteri", "İlerleme", "Durum"].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-5 py-2.5 font-medium uppercase tracking-wider text-muted-foreground/80 text-[10.5px] border-b border-border/50"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayProjects.map((p, idx) => (
+                    <tr
                       key={p.id}
                       onClick={() => onProjectSelect?.(p.id)}
-                      className="px-5 py-3.5 space-y-2 cursor-pointer active:bg-muted/40 transition-colors"
+                      className={`transition-colors duration-150 cursor-pointer hover:bg-muted/30 ${
+                        idx !== displayProjects.length - 1 ? "border-b border-border/40" : ""
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-medium truncate text-foreground">{p.name}</p>
-                          <p className="text-[11px] text-muted-foreground">{p.client}</p>
+                      <td className="px-5 py-3.5 font-medium text-foreground tracking-tight">{p.name}</td>
+                      <td className="px-5 py-3.5 text-muted-foreground">{p.client}</td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full transition-all" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                          </div>
+                          <span className="text-[11.5px] tabular-nums text-muted-foreground w-9 text-right">
+                            {p.progress}%
+                          </span>
                         </div>
+                      </td>
+                      <td className="px-5 py-3.5">
                         <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2"
+                          className="text-[10.5px] font-medium px-2 py-0.5 rounded-md"
                           style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
                         >
                           {p.status}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] tabular-nums shrink-0 text-muted-foreground">
-                          {p.progress}%
-                        </span>
-                      </div>
-                    </div>
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </>
-            )}
-          </Card>
-
-          {/* Activities */}
-          <Card>
-            {projectsLocked && (
-              <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Son Aktiviteler", true)} />
-            )}
-            <SectionHeader title="Son Aktiviteler" />
-            {projects.length === 0 ? (
-              <EmptyState
-                icon="📋"
-                title="Aktivite yok"
-                description="Projeleriniz üzerinde işlem yaptıkça burada listelenir."
-              />
-            ) : (
-              <div className="space-y-3">
-                {projects.slice(0, 4).map((p, i) => {
-                  const colors = ["#22C55E", "#3B82F6", "#F59E0B", "#818CF8"];
-                  const ago = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)));
-                  return (
-                    <div key={p.id} className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                      <span className="text-[12.5px] flex-1 min-w-0 truncate text-foreground/90">
-                        {p.name} <span className="text-muted-foreground">— {p.status}</span>
-                      </span>
-                      <span className="text-[11px] shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
-
-          {/* Reminders */}
-          <Card className="cursor-pointer hover:border-[#FF6B2B]/30" >
-            <div onClick={() => !remindersLocked && onTabChange("reminders")}>
-              {remindersLocked && (
-                <LockedOverlay label="Plus Paket" onClick={() => openUpgrade("Hatırlatıcılar", false)} />
-              )}
-              <SectionHeader icon={CalendarClock} title="Hatırlatıcılar" action="Tümü" onAction={() => onTabChange("reminders")} />
-              {recentReminders.length === 0 ? (
-                <EmptyState
-                  icon="🔔"
-                  title="Hatırlatıcı yok"
-                  description="Önemli tarihleri kaçırmamak için hatırlatıcı ekleyin."
-                  linkText="+ Hatırlatıcı Ekle"
-                  onLinkClick={() => onTabChange("reminders")}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {recentReminders.map((r) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const rDate = new Date(r.reminder_date);
-                    rDate.setHours(0, 0, 0, 0);
-                    const diff = Math.round((rDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                    const isOverdue = !r.done && diff < 0;
-                    const isToday = diff === 0;
-                    const dot = r.done ? "#22C55E" : isOverdue ? "#EF4444" : isToday ? "#F59E0B" : "#3B82F6";
-                    return (
-                      <div key={r.id} className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: dot }} />
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-[12.5px] font-medium truncate ${r.done ? "line-through text-muted-foreground" : "text-foreground"}`}
-                          >
-                            {r.title}
-                          </p>
-                          {r.note && <p className="text-[11px] truncate text-muted-foreground">{r.note}</p>}
-                        </div>
-                        <span
-                          className="text-[10.5px] font-medium px-1.5 py-0.5 rounded-md shrink-0 tabular-nums"
-                          style={{
-                            backgroundColor: `${dot}15`,
-                            color: dot,
-                          }}
-                        >
-                          {r.done ? "✓" : isOverdue ? `${Math.abs(diff)}g geç` : isToday ? "Bugün" : `${diff}g`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                </tbody>
+              </table>
             </div>
-          </Card>
-        </div>
-
-        {/* RIGHT */}
-        <div className="space-y-5">
-          {/* AI quick composer */}
-          <Card>
-            <SectionHeader icon={MessageSquare} title="Şantiyem AI" />
-            <button
-              onClick={() => onTabChange("chat")}
-              className="w-full flex items-center gap-2 rounded-xl px-3 mb-3 bg-background/60 border border-border/60 hover:border-[#FF6B2B]/40 transition-colors"
-              style={{ height: 38 }}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-[12.5px] text-muted-foreground">Bir şey sorun…</span>
-            </button>
-            <div className="space-y-0.5">
-              {suggestedQuestions.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => {
-                    onTabChange("chat");
-                    onSend?.(q);
-                  }}
-                  className="w-full text-left text-[12px] px-2.5 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors truncate"
+            <div className="lg:hidden divide-y divide-border/50">
+              {displayProjects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => onProjectSelect?.(p.id)}
+                  className="px-5 py-3.5 space-y-2 cursor-pointer active:bg-muted/40 transition-colors"
                 >
-                  {q}
-                </button>
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium truncate text-foreground">{p.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{p.client}</p>
+                    </div>
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2"
+                      style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
+                    >
+                      {p.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full" style={{ backgroundColor: "#FF6B2B", width: `${p.progress}%` }} />
+                    </div>
+                    <span className="text-[11px] tabular-nums shrink-0 text-muted-foreground">{p.progress}%</span>
+                  </div>
+                </div>
               ))}
             </div>
-          </Card>
+          </>
+        )}
+      </Card>
 
-          {/* Contract Warnings */}
-          {(plan === "pro" || plan === "team" || plan === "enterprise" || role === "admin") && (
-            <Card>
-              <SectionHeader
-                icon={FileSignature}
-                title="Sözleşme Uyarıları"
-                action="Tümü"
-                onAction={() => onTabChange("contracts")}
-              />
-              {(() => {
-                const now = new Date();
-                const expiring = contracts.filter((c) => {
-                  if (!c.end_date) return false;
-                  const end = new Date(c.end_date);
-                  const diff = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-                  return diff > 0 && diff <= 30;
-                });
-                const expired = contracts.filter((c) => {
-                  if (!c.end_date) return false;
-                  return new Date(c.end_date) < now;
-                });
-                const warnings = [
-                  ...expired.map((c) => {
-                    const days = Math.round((now.getTime() - new Date(c.end_date!).getTime()) / (1000 * 60 * 60 * 24));
-                    return { ...c, label: `${days}g doldu`, color: "#EF4444" };
-                  }),
-                  ...expiring.map((c) => {
-                    const days = Math.round((new Date(c.end_date!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                    return { ...c, label: `${days}g kaldı`, color: "#F59E0B" };
-                  }),
-                ];
-                if (warnings.length === 0) {
-                  return (
-                    <div className="flex items-center gap-2 py-2 text-[12px] text-muted-foreground">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                      Yaklaşan uyarı yok
-                    </div>
-                  );
-                }
-                return (
-                  <div className="space-y-3">
-                    {warnings.slice(0, 5).map((w) => (
-                      <div
-                        key={w.id}
-                        className="flex items-start gap-3 cursor-pointer"
-                        onClick={() => onTabChange("contracts")}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: w.color }} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12.5px] font-medium truncate text-foreground">{w.name}</p>
-                          <p className="text-[11px] truncate text-muted-foreground">{w.counterparty}</p>
-                        </div>
-                        <span
-                          className="text-[10.5px] font-medium px-1.5 py-0.5 rounded-md shrink-0 tabular-nums"
-                          style={{ backgroundColor: `${w.color}15`, color: w.color }}
-                        >
-                          {w.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </Card>
-          )}
-
-          {/* Upcoming */}
-          <Card>
-            {projectsLocked && (
-              <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Yaklaşan İşler", true)} />
-            )}
-            <SectionHeader icon={Clock} title="Yaklaşan İşler" />
-            {(() => {
-              const upcomingReminders = reminders
-                .filter((r) => !r.done && getDaysDiff(r.reminder_date) >= 0 && getDaysDiff(r.reminder_date) <= 14)
-                .sort((a, b) => getDaysDiff(a.reminder_date) - getDaysDiff(b.reminder_date))
-                .slice(0, 5);
-              if (upcomingReminders.length === 0) {
-                return (
-                  <div className="flex items-center gap-2 py-2 text-[12px] text-muted-foreground">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    Yaklaşan iş yok
-                  </div>
-                );
-              }
+      {/* 7. Latest Activities */}
+      <Card>
+        <SectionHeader title="Son Aktiviteler" />
+        {projects.length === 0 ? (
+          <EmptyState icon="📋" title="Aktivite yok" description="Projeleriniz üzerinde işlem yaptıkça burada listelenir." />
+        ) : (
+          <div className="space-y-3">
+            {projects.slice(0, 5).map((p, i) => {
+              const colors = ["#22C55E", "#3B82F6", "#F59E0B", "#818CF8", "#FF6B2B"];
+              const ago = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)));
               return (
-                <div className="space-y-3">
-                  {upcomingReminders.map((u) => {
-                    const days = getDaysDiff(u.reminder_date);
-                    const urgent = days <= 2;
-                    const color = urgent ? "#EF4444" : "#F59E0B";
-                    return (
-                      <div key={u.id} className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: color }} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12.5px] font-medium truncate text-foreground">{u.title}</p>
-                          {u.note && <p className="text-[11px] text-muted-foreground truncate">{u.note}</p>}
-                        </div>
-                        <span
-                          className="text-[10.5px] font-medium px-1.5 py-0.5 rounded-md shrink-0 tabular-nums"
-                          style={{ backgroundColor: `${color}15`, color }}
-                        >
-                          {days === 0 ? "Bugün" : `${days}g`}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div key={p.id} className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                  <span className="text-[12.5px] flex-1 min-w-0 truncate text-foreground/90">
+                    {p.name} <span className="text-muted-foreground">— {p.status}</span>
+                  </span>
+                  <span className="text-[11px] shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
                 </div>
               );
-            })()}
-          </Card>
-        </div>
-      </div>
+            })}
+          </div>
+        )}
+      </Card>
 
       <UpgradeModal
         open={upgradeModal.open}
