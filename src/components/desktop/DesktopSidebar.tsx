@@ -261,49 +261,57 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           </div>
         )}
 
-        {/* User row */}
-        <div className="px-1 pb-1">
+        {/* User row — premium, minimal (Linear / Notion / Slack feel) */}
+        <div className="px-2 pt-2 pb-3">
           {collapsed ? (
           <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onTabChange("settings")}
-                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn relative"
+                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn"
                   style={{ height: 40 }}
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FF6B2B" }}>
-                    <span className="text-white text-[11px] font-bold">{initials}</span>
+                  <div className="rounded-full flex items-center justify-center shrink-0" style={{ width: 26, height: 26, backgroundColor: "#FF6B2B" }}>
+                    <span className="text-white text-[10px] font-bold">{initials}</span>
                   </div>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {displayName}{isAdmin ? " · Yönetici" : ""}
+                {displayName}{roleLabel ? ` · ${roleLabel}` : ""}
               </TooltipContent>
             </Tooltip>
           ) : (
-            <div className="flex items-center gap-2.5 px-2 rounded-lg" style={{ height: 44 }}>
+            <div
+              className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg transition-colors"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.02)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
               <div className="shrink-0">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: "#FF6B2B" }}>
-                  <span className="text-white text-[11px] font-bold">{initials}</span>
+                <div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, backgroundColor: "#FF6B2B" }}>
+                  <span className="text-white text-[10px] font-bold">{initials}</span>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[13px] font-bold truncate text-foreground">{displayName}</p>
-                  {isAdmin && (
+                  <p className="text-[13px] font-semibold truncate text-foreground leading-tight">{displayName}</p>
+                  {roleLabel && (
                     <span
-                      className="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0 tracking-wide"
-                      style={{ backgroundColor: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
+                      className="text-[9px] font-medium px-1.5 py-[1px] rounded shrink-0"
+                      style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FFB088" }}
                     >
-                      Yönetici
+                      {roleLabel}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] truncate text-muted-foreground">{profile?.title || "Mühendis"}</p>
+                <p className="text-[11px] truncate text-muted-foreground leading-tight mt-0.5">
+                  {title}{companyShort ? ` • ${companyShort}` : ""}
+                </p>
               </div>
               <button
                 onClick={() => onTabChange("settings")}
-                className="shrink-0 p-1 rounded hover-icon-btn"
+                className="shrink-0 p-1.5 rounded-md hover-icon-btn"
+                aria-label="Ayarlar"
               >
                 <Settings className="w-3.5 h-3.5" />
               </button>
