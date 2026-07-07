@@ -282,6 +282,7 @@ const Index = () => {
   const [showFirstRun, setShowFirstRun] = useState(false);
   const { projects, loading: projectsLoading } = useProjects();
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const guard = useAccessGuard();
 
   // Persist active tab
   useEffect(() => {
