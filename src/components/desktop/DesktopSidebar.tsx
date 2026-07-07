@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useUser, isOfficePlan, canAccessProjects, canAccessHakedis, canAccessProfitability, canAccessReminders, isProOrAbove } from "@/contexts/UserContext";
+import { useUser, isOfficePlan } from "@/contexts/UserContext";
+import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
