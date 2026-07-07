@@ -12,6 +12,7 @@ import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/com
 import { supabase } from "@/integrations/supabase/client";
 import FirstRunWizard from "./FirstRunWizard";
 import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
+import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
@@ -98,7 +99,14 @@ const DesktopSettingsPage = () => {
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "subscription" && <SubscriptionTab plan={plan} />}
+          {activeTab === "subscription" && (
+            <div className="space-y-6">
+              <SubscriptionCenter />
+              <div className="pt-6 border-t border-border">
+                <SubscriptionTab plan={plan} />
+              </div>
+            </div>
+          )}
           {activeTab === "plan" && <PlanLimitsPanel />}
           {activeTab === "org" && <OrgAdminPanel />}
           {activeTab === "team" && <TeamManagement />}

@@ -2,6 +2,8 @@ import { Bell, Search } from "lucide-react";
 import { useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCenter from "@/components/NotificationCenter";
+import { PlanBadge } from "@/components/licensing/PlanBadge";
+import { useLicense, openSubscriptionPage } from "@/lib/licenseStore";
 
 interface DesktopTopBarProps {
   title: string;
@@ -14,6 +16,9 @@ interface DesktopTopBarProps {
 const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelect }: DesktopTopBarProps) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const { unreadCount } = useNotifications();
+  const license = useLicense();
+
+
 
   const handleNavigate = (tab: string, projectId?: string) => {
     if (tab === "projects" && projectId && onProjectSelect) onProjectSelect(projectId);
@@ -44,6 +49,15 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
 
       <div className="flex items-center gap-2">
         {actions}
+
+        <button
+          onClick={openSubscriptionPage}
+          className="hidden md:inline-flex"
+          title={license.isTrial ? `Deneme — ${license.daysRemaining ?? 0} gün kaldı` : `${license.planLabel} planı`}
+        >
+          <PlanBadge plan={license.plan} />
+        </button>
+
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}

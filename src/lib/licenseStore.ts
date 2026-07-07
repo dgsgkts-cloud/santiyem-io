@@ -1,4 +1,5 @@
 // Sprint 29.0 — Centralized Licensing / Subscription store.
+// Sprint 29.1 — Added Super Admin "View As" simulator + expired state.
 // Frontend-only. Reads from existing UserContext + accessControl signals,
 // then normalises them into a single license snapshot that every page,
 // FeatureGate, LimitGuard, badge or AI prompt can consume.
@@ -10,9 +11,37 @@
 //   3. Trial state        → time-bounded full access
 //   4. Super Admin        → global override (never gated, never nudged)
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useUser, type PlanType, type UserRole } from "@/contexts/UserContext";
 import { useSubscriptionStatus } from "@/lib/accessControl";
+
+const VIEW_AS_KEY = "santiyem_view_as_plan";
+const listeners = new Set<() => void>();
+let viewAsPlan: LicensePlan | null =
+  (typeof window !== "undefined"
+    ? (localStorage.getItem(VIEW_AS_KEY) as LicensePlan | null)
+    : null) || null;
+
+function subscribeViewAs(fn: () => void) {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+}
+function getViewAsSnapshot() { return viewAsPlan; }
+function getViewAsServerSnapshot() { return null; }
+
+export function useViewAs(): LicensePlan | null {
+  return useSyncExternalStore(subscribeViewAs, getViewAsSnapshot, getViewAsServerSnapshot);
+}
+
+export function setViewAs(plan: LicensePlan | null) {
+  viewAsPlan = plan;
+  try {
+    if (plan) localStorage.setItem(VIEW_AS_KEY, plan);
+    else localStorage.removeItem(VIEW_AS_KEY);
+  } catch { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+
 
 /** Public plan tiers exposed by the licensing system. */
 export type LicensePlan =
@@ -190,19 +219,29 @@ function buildFeatureFlags(plan: LicensePlan): Record<LicenseFeature, boolean> {
 export function useLicense(): LicenseSnapshot {
   const { plan, role } = useUser();
   const { data: sub } = useSubscriptionStatus();
+  const viewAs = useViewAs();
 
   return useMemo(() => {
-    const licensePlan = resolveLicensePlan(plan, role, sub);
-    const licenseRole = resolveLicenseRole(role);
+    const realPlan = resolveLicensePlan(plan, role, sub);
+    const realRole = resolveLicenseRole(role);
+    const realIsSuperAdmin = realRole === "super_admin";
+
+    // Super Admin "View As" simulator — only applies for real super admins.
+    const licensePlan: LicensePlan = realIsSuperAdmin && viewAs ? viewAs : realPlan;
+    const licenseRole: LicenseRole =
+      realIsSuperAdmin && viewAs && viewAs !== "super_admin" ? "company_admin" : realRole;
     const isSuperAdmin = licenseRole === "super_admin";
     const isTrial = licensePlan === "trial";
     const isDemo = licensePlan === "demo";
+    const isExpired = viewAs === undefined
+      ? (sub?.status || "").toLowerCase() === "expired"
+      : false;
 
     const trialEnds = sub?.trial_end ? new Date(sub.trial_end) : null;
     const daysRemaining =
       trialEnds && !Number.isNaN(trialEnds.getTime())
         ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86_400_000))
-        : null;
+        : (isTrial ? 14 : null);
 
     const subscriptionActive =
       isSuperAdmin || isTrial || isDemo ||
@@ -229,7 +268,7 @@ export function useLicense(): LicenseSnapshot {
       isDemo,
       trialEnds,
       daysRemaining,
-      subscriptionActive,
+      subscriptionActive: subscriptionActive && !isExpired,
       features,
       limits,
       canFinance: hasFeature("finance"),
@@ -241,8 +280,9 @@ export function useLicense(): LicenseSnapshot {
       hasFeature,
       isWithinLimit,
     };
-  }, [plan, role, sub]);
+  }, [plan, role, sub, viewAs]);
 }
+
 
 export const PLAN_META: Record<LicensePlan, { label: string; color: string; bg: string; border: string }> = {
   starter:     { label: "Starter",     color: "#CBD5E1", bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.35)" },
