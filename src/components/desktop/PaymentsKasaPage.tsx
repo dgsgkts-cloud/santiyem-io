@@ -615,56 +615,104 @@ const PaymentsKasaPage = () => {
             </div>
 
             {accounts.length === 0 ? (
-              <div className="rounded-xl p-8 text-center bg-card border border-border">
-                <Wallet className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Henüz hesap eklenmemiş</p>
-                <p className="text-xs text-muted-foreground mt-1">Nakit kasa veya banka hesabı ekleyerek başlayın</p>
+              <div className="rounded-2xl p-10 text-center bg-card border border-border">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-[#FF6B2B]/10 border border-[#FF6B2B]/20">
+                  <WalletIcon className="w-8 h-8 text-[#FF6B2B]" />
+                </div>
+                <h4 className="text-[15px] font-semibold text-foreground mb-1.5">Henüz hesap oluşturmadınız</h4>
+                <p className="text-[12.5px] text-muted-foreground max-w-sm mx-auto mb-4">
+                  İlk banka hesabınızı eklediğinizde AI, nakit akışınızı analiz etmeye başlayacak.
+                </p>
+                <button
+                  onClick={() => { setKasaModalType("add_account"); setKasaModal(true); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold bg-[#FF6B2B] text-white hover:bg-[#FF6B2B]/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> İlk Hesabı Oluştur
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {accounts.map(acc => (
-                  <div key={acc.id} className="rounded-xl p-4 bg-card border border-border">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {acc.account_type === "nakit_kasa"
-                          ? <Banknote className="w-5 h-5 text-primary" />
-                          : <Building2 className="w-5 h-5 text-primary" />
-                        }
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{acc.name}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {acc.account_type === "nakit_kasa" ? "Nakit Kasa" : "Banka Hesabı"}
-                            {acc.bank_name ? ` • ${acc.bank_name}` : ""}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {accounts.map(acc => {
+                  const bankGradients: Record<string, string> = {
+                    ziraat: "linear-gradient(135deg,#0E4C2B,#1B7A3A)",
+                    vakıfbank: "linear-gradient(135deg,#F5A623,#C77B14)",
+                    vakifbank: "linear-gradient(135deg,#F5A623,#C77B14)",
+                    "iş bankası": "linear-gradient(135deg,#0F2E5C,#1E4A8A)",
+                    is_bankasi: "linear-gradient(135deg,#0F2E5C,#1E4A8A)",
+                    garanti: "linear-gradient(135deg,#005B9E,#0AA7D6)",
+                    akbank: "linear-gradient(135deg,#B4001F,#E53950)",
+                    halkbank: "linear-gradient(135deg,#0E1B4D,#2036A0)",
+                    yapı_kredi: "linear-gradient(135deg,#0057A7,#1E7DD0)",
+                    finansbank: "linear-gradient(135deg,#4E1F86,#7B3EC4)",
+                    denizbank: "linear-gradient(135deg,#EE1D23,#F5636A)",
+                  };
+                  const isCash = acc.account_type === "nakit_kasa";
+                  const bankKey = (acc.bank_name || "").toLowerCase().replace(/\s+/g, "_");
+                  const bankKeySimple = (acc.bank_name || "").toLowerCase();
+                  const gradient = isCash
+                    ? "linear-gradient(135deg,#1B3A2E,#2C5F45)"
+                    : bankGradients[bankKey] || bankGradients[bankKeySimple] || "linear-gradient(135deg,#1E2732,#2A3441)";
+                  const balanceNum = Number(acc.balance);
+                  return (
+                    <div
+                      key={acc.id}
+                      className="relative rounded-2xl p-4 text-white overflow-hidden shadow-lg"
+                      style={{ background: gradient }}
+                    >
+                      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+                      <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
+                      <div className="relative flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCash
+                            ? <Banknote className="w-5 h-5 text-white/90" />
+                            : <Building2 className="w-5 h-5 text-white/90" />
+                          }
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-semibold truncate">{acc.name}</p>
+                            <p className="text-[10.5px] text-white/70 truncate">
+                              {isCash ? "Nakit Kasa" : (acc.bank_name || "Banka Hesabı")}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setDeleteAccountTarget({ id: acc.id, name: acc.name })}
+                          className="p-1.5 rounded-lg text-white/70 hover:bg-white/10 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <p className="text-[10px] uppercase tracking-wider text-white/60 mb-0.5">Bakiye</p>
+                        <p className="text-2xl font-bold mb-2">{fmtFull(balanceNum)}</p>
+                        {acc.iban && (
+                          <p className="text-[11px] font-mono text-white/70 tracking-wider mb-2">
+                            {acc.iban.replace(/(.{4})/g, "$1 ").trim()}
                           </p>
+                        )}
+                        <p className="text-[10.5px] text-white/60 mb-3">
+                          Son güncelleme: {new Date(acc.updated_at || acc.created_at).toLocaleDateString("tr-TR")}
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setKasaModalType("deposit"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
+                            className="flex-1 py-1.5 rounded-lg text-[11.5px] font-medium bg-white/15 hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <ArrowDownLeft className="w-3 h-3" /> Giriş
+                          </button>
+                          <button
+                            onClick={() => { setKasaModalType("withdraw"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
+                            className="flex-1 py-1.5 rounded-lg text-[11.5px] font-medium bg-white/15 hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <ArrowUpRight className="w-3 h-3" /> Çıkış
+                          </button>
                         </div>
                       </div>
-                      <button onClick={() => setDeleteAccountTarget({ id: acc.id, name: acc.name })}
-                        className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
                     </div>
-                    <p className="text-2xl font-bold text-foreground mb-3">{fmtFull(Number(acc.balance))}</p>
-                    {acc.iban && <p className="text-[11px] text-muted-foreground mb-3">IBAN: {acc.iban}</p>}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setKasaModalType("deposit"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
-                        className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5"
-                        style={{ backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E" }}
-                      >
-                        <ArrowDownLeft className="w-3.5 h-3.5" /> Para Girişi
-                      </button>
-                      <button
-                        onClick={() => { setKasaModalType("withdraw"); setKasaTargetAccountId(acc.id); setKasaModal(true); }}
-                        className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5"
-                        style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "#EF4444" }}
-                      >
-                        <ArrowUpRight className="w-3.5 h-3.5" /> Para Çıkışı
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
+
 
             {/* Subcontractor debts */}
             <SubcontractorDebtSection />
