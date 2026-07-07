@@ -168,7 +168,11 @@ const SubcontractorsPage = () => {
       {/* Add Modal */}
       <Dialog open={addModal} onOpenChange={setAddModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Yeni Taşeron</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Yeni Taşeron</DialogTitle>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Borç ve ödeme takibi için firma ekleyin.</p>
+          </DialogHeader>
+
           <div className="space-y-3">
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Taşeron adı" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
             <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Telefon (opsiyonel)" className="w-full px-3 py-2 rounded-lg text-sm bg-muted border border-border text-foreground" />
