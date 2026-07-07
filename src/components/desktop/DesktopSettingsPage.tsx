@@ -29,7 +29,16 @@ const TABS = [
 
 const DesktopSettingsPage = () => {
   const { user, profile, plan } = useUser();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#setup") return "setup";
+    return "profile";
+  });
+
+  useEffect(() => {
+    const handler = () => setActiveTab("setup");
+    window.addEventListener("open-workspace-setup", handler);
+    return () => window.removeEventListener("open-workspace-setup", handler);
+  }, []);
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
