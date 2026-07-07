@@ -52,6 +52,14 @@ export const PAGE_SUGGESTIONS: Record<string, AISuggestion[]> = {
     { id: "hakedis-summary", label: "Hakediş özeti hazırla", prompt: "Aktif projelerdeki hakediş durumlarını özetle.", description: "Proje bazında hakediş ilerleyişini konsolide eder." },
     { id: "deductions", label: "Kesintileri analiz et", prompt: "Hakedişlerdeki kesinti ve stopajları analiz et.", description: "KDV, stopaj ve diğer kesintilerin dağılımını verir." },
   ],
+  procurement: [
+    { id: "proc-approvals", label: "Bekleyen onayları göster", prompt: "Onay bekleyen satın alma taleplerini listele.", description: "Yönetici/finans/direktör onayında bekleyen talepleri özetler." },
+    { id: "proc-compare", label: "Teklifleri karşılaştır", prompt: "Aktif RFQ'lardaki teklifleri karşılaştır ve en iyi tedarikçiyi öner.", description: "Fiyat, teslim, ödeme ve puana göre en iyi teklifi bulur." },
+    { id: "proc-delays", label: "Geciken teslimatları göster", prompt: "Teslimatı geciken siparişleri ve nedenlerini listele.", description: "ETA'sı geçmiş siparişleri tedarikçi bazında gösterir." },
+    { id: "proc-supplier-score", label: "Tedarikçi puanlarını analiz et", prompt: "Tedarikçi performans puanlarını analiz et ve önerilerde bulun.", description: "Teslim, kalite, fiyat ve yanıt metriklerini yorumlar." },
+    { id: "proc-budget-risk", label: "Bütçe aşımını tahmin et", prompt: "Aktif satın alma taleplerine göre bütçe aşımı riskini tahmin et.", description: "Talep ve sipariş tutarlarını proje bütçesiyle karşılaştırır." },
+    { id: "proc-forecast", label: "Fiyat trendlerini göster", prompt: "Beton, demir ve ana malzemelerin son 30 gün fiyat trendini göster.", description: "Kategori bazlı fiyat değişim önerilerini üretir." },
+  ],
   reports: [
     { id: "monthly-report", label: "Aylık rapor oluştur", prompt: "Bu ayın konsolide yönetim raporunu hazırla.", description: "Finans, proje ve personel verilerini tek raporda toplar." },
     { id: "compare-months", label: "Ayları karşılaştır", prompt: "Son 3 ayı finansal ve operasyonel olarak karşılaştır.", description: "Trendleri ve sapmaları grafiklerle özetler." },
