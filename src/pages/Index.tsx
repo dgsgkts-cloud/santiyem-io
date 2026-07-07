@@ -192,6 +192,7 @@ const TAB_TITLES: Record<string, string> = {
   communication: "İletişim Merkezi",
   procurement: "Satın Alma",
   warehouse: "Depo & Envanter",
+  fleet: "Makine & Ekipman",
   settings: "Ayarlar",
   "company-memory": "🧠 Company Memory",
   "company-kb": "🧠 Knowledge Base",
