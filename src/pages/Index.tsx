@@ -704,7 +704,10 @@ const Index = () => {
 
         <div className="mx-5 h-px bg-white/10" />
 
-        <nav className="flex-1 overflow-y-auto px-3 py-3">
+        <nav
+          className="flex-1 min-h-0 px-3 py-3"
+          style={{ overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+        >
           {visibleDrawerItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
