@@ -153,6 +153,24 @@ export function VoiceOrb() {
           </div>
         </div>
       </button>
+      {showFinanceTip && isDesktop && (
+        <div
+          className="fixed right-6 z-40 animate-in fade-in slide-in-from-bottom-2"
+          style={{ bottom: `calc(${bottomOffset} + 60px)` }}
+        >
+          <div className="relative max-w-[240px] rounded-xl bg-[#1E2732] border border-[#FF6B2B]/30 shadow-xl px-3 py-2.5">
+            <button
+              onClick={dismissTip}
+              className="absolute top-1 right-1.5 text-white/50 hover:text-white text-[14px] leading-none"
+              aria-label="Kapat"
+            >×</button>
+            <p className="text-[11px] font-semibold text-[#FF6B2B] mb-0.5">✨ Şantiyem AI</p>
+            <p className="text-[12px] text-white/90 leading-snug pr-3">
+              {(window as any).__financeVoiceTip || "Nakit durumunu analiz edebilirim."}
+            </p>
+          </div>
+        </div>
+      )}
       {open && (
         <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
           <VoiceCopilot
