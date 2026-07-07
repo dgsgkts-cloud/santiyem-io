@@ -543,7 +543,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
 
 
-      {/* 1. Manager Greeting — slim hero (-30% height) */}
+      {/* 1. Manager Greeting — warm executive header */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-muted-foreground/80 mb-1.5">
@@ -551,21 +551,49 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <span className="text-[11.5px] tracking-wide uppercase">{formatDate(new Date())}</span>
           </div>
           <h1
-            className="text-[22px] lg:text-[26px] font-medium tracking-tight text-foreground leading-tight"
+            className="text-[24px] lg:text-[30px] font-medium tracking-tight text-foreground leading-tight"
             style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
           >
             {greeting.text},{" "}
             <span className="text-muted-foreground/90 font-normal">{name}.</span>
           </h1>
-          <p className="text-[12.5px] text-muted-foreground mt-1">
-            {loaded
-              ? `${activeProjects} aktif proje · ${formatCurrency(cashTotal)} kasada · ${briefKpis.criticalRisks > 0 ? `${briefKpis.criticalRisks} kritik risk` : "kritik uyarı yok"}`
-              : "Şirket verileri hazırlanıyor…"}
+          <p className="text-[13px] text-muted-foreground mt-1.5">
+            Bugün şirketinizde olup bitenler.
           </p>
         </div>
       </header>
 
-      {/* 2. Health Cards — 4 tiles */}
+      {/* 2. Executive Brief — the hero: top 5 AI priorities */}
+      <ExecutiveMorningBrief
+        onTabChange={onTabChange}
+        onProjectSelect={onProjectSelect}
+        compact
+        maxPriorities={5}
+      />
+
+      {/* 3. Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        {quickActions.map((a) => {
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.label}
+              onClick={a.onClick}
+              disabled={a.locked}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
+                a.primary
+                  ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
+                  : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
+              } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {a.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 4. Company Health — 4 KPI tiles */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {healthCards.map((c) => {
           const Icon = c.icon;
@@ -602,35 +630,6 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         })}
       </section>
 
-      {/* 3. Manager Briefing — top 5 priorities, integrated voice button */}
-      <ExecutiveMorningBrief
-        onTabChange={onTabChange}
-        onProjectSelect={onProjectSelect}
-        compact
-        maxPriorities={5}
-      />
-
-      {/* 4. Quick Actions */}
-      <div className="flex flex-wrap gap-2">
-        {quickActions.map((a) => {
-          const Icon = a.icon;
-          return (
-            <button
-              key={a.label}
-              onClick={a.onClick}
-              disabled={a.locked}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12.5px] font-medium border transition-all ${
-                a.primary
-                  ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
-                  : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
-              } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {a.label}
-            </button>
-          );
-        })}
-      </div>
 
       {/* 5. Financial Snapshot — 4 merged metrics */}
       <Card>
