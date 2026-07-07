@@ -102,7 +102,7 @@ function makeEquipment(projects: string[]): Equipment[] {
         targetService,
         status,
         health,
-        fuelType: t.key === "forklift" ? "Benzin" : "Dizel",
+        fuelType: (t.key === "forklift" ? "Benzin" : "Dizel") as "Benzin" | "Dizel",
         hourlyCost: 180 + Math.round(r * 420),
         purchasePrice: 850_000 + Math.round(seed(idx + 41) * 6_500_000),
         utilization: Math.round(20 + seed(idx + 51) * 75),
