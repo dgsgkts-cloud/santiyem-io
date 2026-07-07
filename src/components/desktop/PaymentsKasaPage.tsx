@@ -861,7 +861,38 @@ const PaymentsKasaPage = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Sprint 22 — AI Report Summary */}
+            {(() => {
+              const income = reportHakedis.reduce((s, h) => s + Number(h.net || 0), 0);
+              const expense = reportExpenses.reduce((s, e) => s + Number(e.amount), 0);
+              const topCat = [...reportCategoryBreakdown].sort((a, b) => b.value - a.value)[0];
+              const topProject = [...projectStats].sort((a, b) => b.netKar - a.netKar)[0];
+              const insights: string[] = [];
+              insights.push(`Toplam gelir ${fmtFull(income)}, gider ${fmtFull(expense)}.`);
+              if (topCat) insights.push(`En yüksek gider kalemi: ${topCat.name}.`);
+              if (topProject) insights.push(`En kârlı proje: ${topProject.name}.`);
+              if (income > 0 && expense > 0) {
+                const marj = ((income - expense) / income) * 100;
+                insights.push(
+                  marj >= 0
+                    ? `Dönem kâr marjı %${marj.toFixed(1)} — tahsilatlar hızlanırsa nakit pozisyonu güçlenir.`
+                    : `Dönem zararı %${Math.abs(marj).toFixed(1)} — gider optimizasyonu önerilir.`,
+                );
+              }
+              return (
+                <AIInsightCard
+                  title="AI Rapor Özeti"
+                  insights={insights}
+                  actions={[
+                    { label: "PDF Açıkla", onClick: () => handleExport("pdf") },
+                    { label: "Excel Açıkla", onClick: () => handleExport("excel"), tone: "ghost" },
+                  ]}
+                />
+              );
+            })()}
           </div>
+
         </TabsContent>
       </Tabs>
 
