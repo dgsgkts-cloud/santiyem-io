@@ -33,6 +33,7 @@ const PersonnelPage = lazy(() => import("@/pages/PersonnelPage"));
 const DesktopSettingsPage = lazy(() => import("@/components/desktop/DesktopSettingsPage"));
 const MeetingCenterPage = lazy(() => import("@/components/meetings/MeetingCenterPage"));
 const CommunicationCenterPage = lazy(() => import("@/components/communication/CommunicationCenterPage"));
+const ProcurementPage = lazy(() => import("@/components/desktop/ProcurementPage"));
 
 const TabFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -84,7 +85,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
 
 // Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
 // kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
@@ -123,6 +124,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "meetings",
   "communication",
   "reports",
+  "procurement",
   "company-memory",
   "company-kb",
   "ai-decisions",
@@ -184,6 +186,7 @@ const TAB_TITLES: Record<string, string> = {
   personnel: "Puantaj & Personel",
   meetings: "Toplantı Merkezi",
   communication: "İletişim Merkezi",
+  procurement: "Satın Alma",
   settings: "Ayarlar",
   "company-memory": "🧠 Company Memory",
   "company-kb": "🧠 Knowledge Base",
@@ -207,6 +210,7 @@ const TAB_TO_PATH: Record<string, string> = {
   materials: "/malzemeler",
   "e-invoices": "/e-fatura",
   personnel: "/personel",
+  procurement: "/satin-alma",
   reminders: "/hatirlatici",
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
@@ -527,6 +531,8 @@ const Index = () => {
                   <MeetingCenterPage />
                 ) : activeTab === "communication" ? (
                   <CommunicationCenterPage />
+                ) : activeTab === "procurement" ? (
+                  <ProcurementPage />
                 ) : activeTab === "reports" ? (
                   <ComingSoonScreen
                     title="Raporlar"

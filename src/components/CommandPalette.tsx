@@ -18,7 +18,7 @@ import {
 import {
   Home, FolderOpen, FileText, MessageSquare, WalletCards, BookOpen,
   Package, HardHat, BarChart3, Settings, Sparkles, Plus, TrendingUp,
-  ShieldAlert, Wallet, Users, Zap, Clock,
+  ShieldAlert, Wallet, Users, Zap, Clock, ShoppingCart, Send, Truck,
 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useSubcontractors } from "@/hooks/useSubcontractors";
@@ -49,6 +49,7 @@ const NAV_ITEMS = [
   { id: "materials", label: "Malzeme", icon: Package },
   { id: "personnel", label: "Personel", icon: HardHat },
   { id: "e-invoices", label: "E-Fatura", icon: FileText },
+  { id: "procurement", label: "Satın Alma", icon: ShoppingCart, hint: "Talep / RFQ / Sipariş" },
   { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "settings", label: "Ayarlar", icon: Settings },
@@ -59,6 +60,8 @@ const AI_SHORTCUTS = [
   { label: "Risk raporu", prompt: "Şirketimdeki finansal ve operasyonel riskleri listele.", icon: ShieldAlert },
   { label: "Nakit tahmini", prompt: "Önümüzdeki 30 gün için nakit akışı tahmini oluştur.", icon: Wallet },
   { label: "CEO Modu", prompt: "CEO modu: gelir, gider, nakit, kâr, proje sağlığı, riskler ve önerileri tek ekranda özetle.", icon: Zap },
+  { label: "Satın alma özeti", prompt: "Bu ayki satın alma performansını ve tedarikçi puanlarını özetle.", icon: ShoppingCart },
+  { label: "Teklif karşılaştır", prompt: "Aktif RFQ'lardaki teklifleri karşılaştır ve en iyi tedarikçiyi öner.", icon: Send },
 ];
 
 const CREATE_ACTIONS = [
@@ -68,6 +71,9 @@ const CREATE_ACTIONS = [
   { label: "Yeni Malzeme", tab: "materials", icon: Package },
   { label: "Yeni Fatura", tab: "e-invoices", icon: FileText },
   { label: "Yeni Hakediş", tab: "hakedis", icon: FileText },
+  { label: "Yeni Satın Alma Talebi", tab: "procurement", icon: ShoppingCart },
+  { label: "Yeni Tedarikçi", tab: "procurement", icon: Users },
+  { label: "Yeni Sipariş", tab: "procurement", icon: Truck },
 ];
 
 const getActiveTab = (): string => {
