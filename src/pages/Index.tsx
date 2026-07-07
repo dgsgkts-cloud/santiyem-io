@@ -851,7 +851,7 @@ const Index = () => {
         </div>
         </div>
 
-        {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer />}
+        {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer minimal />}
       </div>
 
       {activeTab === "chat" && (
