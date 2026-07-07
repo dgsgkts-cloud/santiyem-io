@@ -214,6 +214,7 @@ const TAB_TO_PATH: Record<string, string> = {
   "e-invoices": "/e-fatura",
   personnel: "/personel",
   procurement: "/satin-alma",
+  warehouse: "/depo",
   reminders: "/hatirlatici",
   pricing: "/planlar",
   daily: "/gunluk-bilgi",
