@@ -974,6 +974,12 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
           <ProjectMembersManagement projectId={p.id} />
         </div>
       )}
+      </>)}
+
+      {/* Floating: AI Dock + Quick Actions */}
+      <ProjectAIDock data={aiDock} onAsk={askProjectAI} />
+      <QuickActionBar actions={quickActions} />
+
 
       {isDeletable && onDelete && user && (
         <>
