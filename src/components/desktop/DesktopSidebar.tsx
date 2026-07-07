@@ -62,6 +62,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: "SATIN ALMA",
+    items: [
+      { id: "procurement" as Tab, label: "Satın Alma", icon: ShoppingCart },
+    ],
+  },
+  {
     label: "ZEKA",
     items: [
       { id: "chat" as Tab, label: "Şantiyem AI", icon: MessageSquare },
