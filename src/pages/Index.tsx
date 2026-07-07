@@ -283,6 +283,7 @@ const Index = () => {
   const { projects, loading: projectsLoading } = useProjects();
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
   const guard = useAccessGuard();
+  useAccessSnapshotSync();
 
   // Persist active tab
   useEffect(() => {
