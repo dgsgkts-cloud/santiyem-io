@@ -68,6 +68,7 @@ export const PAGE_SUGGESTIONS: Record<string, AISuggestion[]> = {
     { id: "wh-variance", label: "Sayım sapmalarını analiz et", prompt: "Son sayımlardaki büyük sapmaları ve olası nedenlerini analiz et.", description: "Beklenen vs. sayılan farkı yüksek kalemleri özetler." },
     { id: "wh-consume", label: "Tüketim trendi", prompt: "Son 3 ayın tüketim trendini kategori bazında özetle.", description: "Aylık tüketim hızını ve proje bazlı dağılımı gösterir." },
   ],
+  reports: [
     { id: "monthly-report", label: "Aylık rapor oluştur", prompt: "Bu ayın konsolide yönetim raporunu hazırla.", description: "Finans, proje ve personel verilerini tek raporda toplar." },
     { id: "compare-months", label: "Ayları karşılaştır", prompt: "Son 3 ayı finansal ve operasyonel olarak karşılaştır.", description: "Trendleri ve sapmaları grafiklerle özetler." },
     { id: "insights", label: "Öngörüleri göster", prompt: "Verilerimden çıkarılabilecek 5 önemli öngörüyü listele.", description: "Yönetime yönelik veri temelli 5 içgörü sunar." },
