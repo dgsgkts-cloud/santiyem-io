@@ -382,27 +382,15 @@ const PaymentsKasaPage = () => {
 
               return (
                 <>
-                  <div className="rounded-xl p-4 border border-[#FF6B2B]/25" style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.08), rgba(255,143,90,0.03))" }}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-base">✨</span>
-                          <span className="text-[12px] font-semibold text-[#FF6B2B] uppercase tracking-wide">AI Finans Özeti</span>
-                        </div>
-                        <ul className="space-y-1">
-                          {insights.map((t, i) => (
-                            <li key={i} className="text-[13px] text-foreground leading-snug">• {t}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("reports")}
-                        className="shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#FF6B2B]/15 text-[#FF6B2B] hover:bg-[#FF6B2B]/25 transition-colors"
-                      >
-                        Detaylı Analiz
-                      </button>
-                    </div>
-                  </div>
+                  <AIInsightCard
+                    title="AI Finans"
+                    insights={insights}
+                    actions={[
+                      { label: "Detaylı Analiz", onClick: () => setActiveTab("reports") },
+                      { label: "Ödeme Planı", onClick: () => setActiveTab("kasa"), tone: "ghost" },
+                    ]}
+                  />
+
 
                   {/* Executive Cash Position */}
                   <div>
