@@ -135,22 +135,15 @@ const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "projects", label: "Proje Yönetimi", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş Yönetimi", icon: FileText },
-  { id: "contracts", label: "Sözleşme Takibi", icon: FileText },
+  { id: "contracts", label: "Sözleşmeler", icon: FileText },
   { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
   { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
   { id: "materials", label: "Malzeme Takibi", icon: Package },
-  { id: "personnel", label: "Puantaj & Personel", icon: HardHat },
+  { id: "personnel", label: "Personel & Puantaj", icon: HardHat },
   { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
   { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
-  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
-  { id: "company-memory", label: "🧠 Company Memory", icon: MessageSquare },
-  { id: "ai-decisions", label: "🧠 AI Decisions", icon: Zap },
-  { id: "decision-history", label: "🧠 Decision History", icon: FileText },
-  { id: "daily", label: "Günlük Bilgi", icon: Lightbulb },
-  
-  
-  { id: "reminders", label: "Hatırlatıcı", icon: CalendarClock },
-  ...(isNativeApp() ? [] : [{ id: "pricing", label: "Planlar", icon: Zap } as const]),
+  { id: "communication", label: "İletişim Merkezi", icon: Radio },
+  { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "settings", label: "Ayarlar", icon: Settings },
 ];
 
