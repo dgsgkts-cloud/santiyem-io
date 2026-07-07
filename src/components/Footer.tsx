@@ -59,16 +59,21 @@ const Footer = ({ minimal = false }: { minimal?: boolean }) => (
       <span className="text-[11px]">© 2026 Şantiyem. Tüm hakları saklıdır.</span>
     </div>
 
-    {/* Payment logos + Company info */}
-    <div className="flex flex-col items-center gap-2 px-6 py-3" style={{ borderTop: "1px solid #1E2732" }}>
-      <div className="flex items-center gap-2">
-        <PaymentLogos />
-      </div>
-      <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.</p>
-    </div>
-    <div className="text-center px-6 py-2" style={{ borderTop: "1px solid #1E2732", color: "#334155", fontSize: 10 }}>
-      Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001 | Uluçınar Mah. 12 Özgürkent Sk. No:4 Arsuz / Hatay | ☎ +90 (542) 781 81 81 | info@goktasglobal.com
-    </div>
+    {/* Payment logos + Company info — hidden inside authenticated app */}
+    {!minimal && (
+      <>
+        <div className="flex flex-col items-center gap-2 px-6 py-3" style={{ borderTop: "1px solid #1E2732" }}>
+          <div className="flex items-center gap-2">
+            <PaymentLogos />
+          </div>
+          <p className="text-[10px]" style={{ color: "#475569" }}>Ödemeler iyzico güvencesiyle 256-bit SSL ile korunmaktadır.</p>
+        </div>
+        <div className="text-center px-6 py-2" style={{ borderTop: "1px solid #1E2732", color: "#334155", fontSize: 10 }}>
+          Göktaş Global Mühendislik İnşaat İç ve Dış Tic. Lim. Şirketi | MERSİS: 0406071938000001 | Uluçınar Mah. 12 Özgürkent Sk. No:4 Arsuz / Hatay | ☎ +90 (542) 781 81 81 | info@goktasglobal.com
+        </div>
+      </>
+    )}
+
   </footer>
 );
 
