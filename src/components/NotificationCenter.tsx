@@ -47,8 +47,8 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
 
   const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
   const { projects } = useProjects();
-  const { data: payments = [] } = useCashPayments();
-  const { data: collections = [] } = useCashCollections() as any;
+  const { payments = [] } = useCashPayments();
+  const { collections = [] } = useCashCollections();
   const { reminders } = useReminders();
 
   // Cross-project tasks (frontend fetch — reuses tasks table only, no schema change)
