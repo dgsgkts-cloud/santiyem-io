@@ -58,6 +58,7 @@ async function findAnchor(sb: Sb, uid: string): Promise<string | null> {
 async function removeDemo(sb: Sb, uid: string) {
   const projectId = await findAnchor(sb, uid);
   const counts: Record<string, number> = {};
+  const add = (k: string, n: number) => { counts[k] = (counts[k] || 0) + (n || 0); };
 
   // Communication (tagged via metadata.is_demo)
   const { data: msgs } = await sb
@@ -68,8 +69,8 @@ async function removeDemo(sb: Sb, uid: string) {
   const msgIds = (msgs ?? []).map((m: any) => m.id);
   if (msgIds.length) {
     await sb.from("communication_delivery_attempts").delete().in("message_id", msgIds);
-    await sb.from("communication_messages").delete().in("id", msgIds);
-    counts.communication_messages = msgIds.length;
+    const r = await sb.from("communication_messages").delete({ count: "exact" }).in("id", msgIds);
+    add("communication_messages", r.count || msgIds.length);
   }
 
   // Meetings tagged in tags array
@@ -84,79 +85,59 @@ async function removeDemo(sb: Sb, uid: string) {
     await sb.from("meeting_transcripts").delete().in("meeting_id", mtIds);
     await sb.from("meeting_analyses").delete().in("meeting_id", mtIds);
     await sb.from("meeting_participants").delete().in("meeting_id", mtIds);
-    await sb.from("meetings").delete().in("id", mtIds);
-    counts.meetings = mtIds.length;
+    const r = await sb.from("meetings").delete({ count: "exact" }).in("id", mtIds);
+    add("meetings", r.count || mtIds.length);
   }
 
   if (projectId) {
     // Hakediş
-    const { data: hks } = await sb
-      .from("project_hakedis")
-      .select("id")
-      .eq("user_id", uid)
-      .eq("project_id", projectId);
+    const { data: hks } = await sb.from("project_hakedis").select("id").eq("user_id", uid).eq("project_id", projectId);
     const hkIds = (hks ?? []).map((h: any) => h.id);
     if (hkIds.length) {
       await sb.from("hakedis_items").delete().in("hakedis_id", hkIds);
       await sb.from("hakedis_deductions").delete().in("hakedis_id", hkIds);
-      await sb.from("project_hakedis").delete().in("id", hkIds);
+      const r = await sb.from("project_hakedis").delete({ count: "exact" }).in("id", hkIds);
+      add("project_hakedis", r.count || 0);
     }
     // Contracts
-    const { data: cts } = await sb
-      .from("contracts")
-      .select("id")
-      .eq("user_id", uid)
-      .eq("project_id", projectId);
+    const { data: cts } = await sb.from("contracts").select("id").eq("user_id", uid).eq("project_id", projectId);
     const ctIds = (cts ?? []).map((c: any) => c.id);
     if (ctIds.length) {
       await sb.from("contract_items").delete().in("contract_id", ctIds);
-      await sb.from("contracts").delete().in("id", ctIds);
+      const r = await sb.from("contracts").delete({ count: "exact" }).in("id", ctIds);
+      add("contracts", r.count || 0);
     }
-    // Diary photos + entries (trigger cleans materials entries/exits with source_type='site_diary')
-    const { data: diaries } = await sb
-      .from("site_diary_entries")
-      .select("id")
-      .eq("user_id", uid)
-      .eq("project_id", projectId);
+    // Diary photos + entries
+    const { data: diaries } = await sb.from("site_diary_entries").select("id").eq("user_id", uid).eq("project_id", projectId);
     const diaryIds = (diaries ?? []).map((d: any) => d.id);
     if (diaryIds.length) {
       await sb.from("site_diary_photos").delete().in("diary_entry_id", diaryIds);
-      await sb.from("site_diary_entries").delete().in("id", diaryIds);
+      const r = await sb.from("site_diary_entries").delete({ count: "exact" }).in("id", diaryIds);
+      add("site_diary_entries", r.count || 0);
     }
 
-    // Materials (delete entries/exits first)
-    const { data: mats } = await sb
-      .from("materials")
-      .select("id")
-      .eq("user_id", uid)
-      .eq("project_id", projectId);
+    // Materials
+    const { data: mats } = await sb.from("materials").select("id").eq("user_id", uid).eq("project_id", projectId);
     const matIds = (mats ?? []).map((m: any) => m.id);
     if (matIds.length) {
       await sb.from("material_entries").delete().in("material_id", matIds);
       await sb.from("material_exits").delete().in("material_id", matIds);
-      await sb.from("materials").delete().in("id", matIds);
+      const r = await sb.from("materials").delete({ count: "exact" }).in("id", matIds);
+      add("materials", r.count || 0);
     }
 
-    // Attendance / worker_attendance
-    await sb.from("attendance_records").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("worker_attendance").delete().eq("user_id", uid).eq("project_id", projectId);
+    // Project-scoped rows
+    const projectChildren = [
+      "attendance_records","worker_attendance","tasks",
+      "project_expenses","project_notes","project_files","project_milestones",
+      "cash_collections","cash_payments","subcontractor_payments","e_invoices",
+    ];
+    for (const t of projectChildren) {
+      const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).eq("project_id", projectId);
+      if (r.count) add(t, r.count);
+    }
 
-    // Tasks
-    await sb.from("tasks").delete().eq("project_id", projectId).eq("created_by", uid);
-
-    // Expenses / notes / files / milestones
-    await sb.from("project_expenses").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("project_notes").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("project_files").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("project_milestones").delete().eq("user_id", uid).eq("project_id", projectId);
-
-    // Cash movements linked to demo project
-    await sb.from("cash_collections").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("cash_payments").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("subcontractor_payments").delete().eq("user_id", uid).eq("project_id", projectId);
-    await sb.from("e_invoices").delete().eq("user_id", uid).eq("project_id", projectId);
-
-    // Subcontractors and personnel assigned to this project
+    // Personnel scoped to project via assignments
     const { data: pas } = await sb
       .from("personnel_project_assignments")
       .select("personnel_id")
@@ -164,42 +145,97 @@ async function removeDemo(sb: Sb, uid: string) {
       .eq("project_id", projectId);
     const persIds = Array.from(new Set((pas ?? []).map((r: any) => r.personnel_id)));
     if (persIds.length) {
-      await sb.from("personnel_project_assignments").delete().in("personnel_id", persIds);
-      await sb.from("personnel").delete().in("id", persIds).eq("user_id", uid);
-      counts.personnel = persIds.length;
+      const a = await sb.from("personnel_project_assignments").delete({ count: "exact" }).in("personnel_id", persIds);
+      add("personnel_project_assignments", a.count || 0);
+      const p = await sb.from("personnel").delete({ count: "exact" }).in("id", persIds).eq("user_id", uid);
+      add("personnel", p.count || 0);
     }
-    await sb
+
+    // Subcontractors
+    const s = await sb
       .from("subcontractors")
-      .delete()
+      .delete({ count: "exact" })
       .eq("user_id", uid)
       .or(`project_id.eq.${projectId},project_ids.cs.{${projectId}}`);
+    if (s.count) add("subcontractors", s.count);
 
-    // Cash accounts tagged in name
-    await sb.from("cash_accounts").delete().eq("user_id", uid).ilike("name", `${DEMO_TAG}%`);
-
-    // Reminders tagged
-    await sb.from("reminders").delete().eq("user_id", uid).ilike("title", `${DEMO_TAG}%`);
-
-    // Company memories (except anchor last)
-    await sb
-      .from("company_memories")
-      .delete()
-      .eq("user_id", uid)
-      .filter("metadata->>is_demo", "eq", "true")
-      .neq("category", ANCHOR_CATEGORY);
-
-    // Finally the project + anchor
-    await sb.from("projects").delete().eq("id", projectId).eq("user_id", uid);
-    await sb
-      .from("company_memories")
-      .delete()
-      .eq("user_id", uid)
-      .eq("category", ANCHOR_CATEGORY);
-    counts.project = 1;
+    // Finally the project
+    const pr = await sb.from("projects").delete({ count: "exact" }).eq("id", projectId).eq("user_id", uid);
+    add("projects", pr.count || 1);
   }
 
-  return counts;
+  // ---- Safety-net sweeps (idempotent — catch orphans from earlier partial cleans) ----
+  const like = `${DEMO_TAG}%`;
+  const tagSweeps: Array<[string, string]> = [
+    ["cash_accounts", "name"],
+    ["reminders", "title"],
+    ["cash_payments", "description"],
+    ["cash_collections", "description"],
+    ["subcontractor_payments", "note"],
+    ["project_expenses", "note"],
+    ["e_invoices", "notes"],
+    ["subcontractors", "notes"],
+    ["personnel", "note"],
+  ];
+  for (const [t, c] of tagSweeps) {
+    const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).ilike(c, like);
+    if (r.count) add(t, r.count);
+  }
+
+  // Company memories (demo-tagged, incl. anchor)
+  const cm = await sb
+    .from("company_memories")
+    .delete({ count: "exact" })
+    .eq("user_id", uid)
+    .filter("metadata->>is_demo", "eq", "true");
+  if (cm.count) add("company_memories", cm.count);
+
+  // ---- Integrity check ----
+  const leftovers = await integrityCheck(sb, uid);
+  const total_deleted = Object.values(counts).reduce((a, b) => a + b, 0);
+  return { counts, leftovers, total_deleted, verified: leftovers.total === 0 };
 }
+
+/** Counts remaining [MSY_DEMO]-tagged rows across every affected table. */
+async function integrityCheck(sb: Sb, uid: string) {
+  const like = `${DEMO_TAG}%`;
+  const probes: Array<[string, string]> = [
+    ["projects", "description"],
+    ["personnel", "note"],
+    ["subcontractors", "notes"],
+    ["cash_accounts", "name"],
+    ["cash_payments", "description"],
+    ["cash_collections", "description"],
+    ["subcontractor_payments", "note"],
+    ["e_invoices", "notes"],
+    ["project_expenses", "note"],
+    ["reminders", "title"],
+  ];
+  const per: Record<string, number> = {};
+  let total = 0;
+  for (const [t, c] of probes) {
+    const { count } = await sb
+      .from(t)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", uid)
+      .ilike(c, like);
+    if (count) { per[t] = count; total += count; }
+  }
+  // Anchor / memory
+  const anchor = await sb.from("company_memories").select("id", { count: "exact", head: true })
+    .eq("user_id", uid).filter("metadata->>is_demo", "eq", "true");
+  if (anchor.count) { per["company_memories"] = anchor.count; total += anchor.count; }
+  // Communication (metadata)
+  const comm = await sb.from("communication_messages").select("id", { count: "exact", head: true })
+    .eq("user_id", uid).filter("metadata->>is_demo", "eq", "true");
+  if (comm.count) { per["communication_messages"] = comm.count; total += comm.count; }
+  // Meetings (tags)
+  const mt = await sb.from("meetings").select("id", { count: "exact", head: true })
+    .eq("user_id", uid).contains("tags", ["msy_demo"]);
+  if (mt.count) { per["meetings"] = mt.count; total += mt.count; }
+  return { per_table: per, total };
+}
+
 
 async function loadDemo(sb: Sb, uid: string) {
   // If already loaded, remove first for a clean reload
