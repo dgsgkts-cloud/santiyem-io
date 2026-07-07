@@ -678,12 +678,13 @@ const Index = () => {
       </div>
 
       {/* ── MOBILE DRAWER OVERLAY ── */}
-      {drawerOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
+      <div
+        className={`lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity duration-200 ${
+          drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setDrawerOpen(false)}
+        aria-hidden={!drawerOpen}
+      />
 
       {/* ── MOBILE DRAWER PANEL ── */}
       <div
