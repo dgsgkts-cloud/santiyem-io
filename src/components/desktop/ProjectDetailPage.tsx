@@ -344,6 +344,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              <CEOModeToggle enabled={ceoMode} onToggle={() => setCeoMode(v => !v)} />
               {onUpdate && (
                 <button
                   onClick={() => setShowEditModal(true)}
@@ -352,46 +353,51 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                   <Pencil className="w-3.5 h-3.5" /> Düzenle
                 </button>
               )}
-              <button
-                onClick={() => setShowQrModal(true)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
-              >
-                <QrCode className="w-3.5 h-3.5" /> QR Giriş
-              </button>
-              <button
-                onClick={() => {
-                  import("@/lib/projectExport").then(m => {
-                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
-                    m.exportProjectPDF(p, tasks, ms);
-                    toast.success("PDF raporu indirildi");
-                  });
-                }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
-              >
-                <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-              <button
-                onClick={() => {
-                  import("@/lib/projectExport").then(m => {
-                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
-                    m.exportProjectExcel(p, tasks, ms);
-                    toast.success("Excel raporu indirildi");
-                  });
-                }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-              <div className="relative w-14 h-14 lg:w-16 lg:h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${displayProgress}, 100`} />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold font-mono" style={textStyle}>{displayProgress}%</span>
-              </div>
+              {!ceoMode && (
+                <>
+                  <button
+                    onClick={() => setShowQrModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
+                  >
+                    <QrCode className="w-3.5 h-3.5" /> QR Giriş
+                  </button>
+                  <button
+                    onClick={() => {
+                      import("@/lib/projectExport").then(m => {
+                        const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                        m.exportProjectPDF(p, tasks, ms);
+                        toast.success("PDF raporu indirildi");
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
+                  >
+                    <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      import("@/lib/projectExport").then(m => {
+                        const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                        m.exportProjectExcel(p, tasks, ms);
+                        toast.success("Excel raporu indirildi");
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
+                  </button>
+                </>
+              )}
+              <ProjectHealthWidget input={{
+                progressPct: displayProgress,
+                budgetUsedPct,
+                taskCompletionPct,
+                overdueCount: overdueTasksCount,
+                netCash: netCashAmt,
+                risksCount: risks.length,
+              }} />
             </div>
           </div>
         </div>
