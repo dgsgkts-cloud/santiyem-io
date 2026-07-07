@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Capacitor } from "@capacitor/core";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import QrCodeModal from "./QrCodeModal";
-import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode, Pencil } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, Calendar, DollarSign, CheckCircle2, Clock, XCircle, FileDown, FileSpreadsheet, Upload, Trash2, FileText, Plus, X, ChevronDown, MessageSquare, Send, ArrowDownLeft, ArrowUpRight, Wallet, QrCode, Pencil, Camera, ClipboardCheck, AlertTriangle } from "lucide-react";
 import EditProjectModal, { EditProjectData } from "./EditProjectModal";
 import { Project } from "@/lib/projectsData";
 import { useProjectHakedis } from "@/hooks/useProjectHakedis";
@@ -19,6 +19,12 @@ import TaskBoard from "./TaskBoard";
 import AttendancePanel from "./AttendancePanel";
 import ProjectMembersManagement from "./ProjectMembersManagement";
 import { formatCurrency, formatNumber0 } from "@/lib/formatCurrency";
+import {
+  ProjectHealthWidget, ExecutiveRibbon, ProjectTimeline, RiskCenter,
+  SmartDocumentsFolders, ProjectActivityFeed, QuickActionBar, ProjectAIDock,
+  CEOModeToggle, CEOExecutiveSummary, calcHealth,
+  type RibbonKPI, type TimelineEvent, type RiskItem, type ActivityItem, type AIDockData,
+} from "./ProjectCockpit";
 
 const STATUS_OPTIONS = [
   { label: "Devam Ediyor", color: "#3B82F6" },
@@ -84,6 +90,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
   const [currentStatus, setCurrentStatus] = useState(p.status);
   const [currentStatusColor, setCurrentStatusColor] = useState(p.statusColor);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [ceoMode, setCeoMode] = useState(false);
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle) return;
@@ -144,6 +151,112 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         : deleteTarget?.type === "note"
           ? "Notu Sil"
           : "Kaydı Sil";
+
+  /* ---------- Cockpit derived data (frontend only) ---------- */
+  const projectPayments = useMemo(() => payments.filter(x => x.project_id === p.id), [payments, p.id]);
+  const projectCollections = useMemo(() => collections.filter(x => x.project_id === p.id), [collections, p.id]);
+  const projectChecks = useMemo(() => checks.filter(x => x.project_id === p.id), [checks, p.id]);
+  const totalPaymentsAmt = projectPayments.reduce((s, x) => s + Number(x.amount), 0);
+  const totalCollectionsAmt = projectCollections.reduce((s, x) => s + Number(x.amount), 0);
+  const netCashAmt = totalCollectionsAmt - totalPaymentsAmt;
+  const budgetNum = Number(String(p.budget).replace(/[^\d]/g, "")) || 0;
+  const budgetUsedPct = budgetNum > 0 ? Math.round((totalPaymentsAmt / budgetNum) * 100) : 0;
+  const doneTasksCount = tasks.filter(t => t.status === "done").length;
+  const overdueTasksCount = tasks.filter(t => t.status !== "done" && t.due_date && new Date(t.due_date) < new Date()).length;
+  const openTasksCount = tasks.length - doneTasksCount;
+  const taskCompletionPct = tasks.length ? Math.round((doneTasksCount / tasks.length) * 100) : 0;
+
+  // Risks (derived, no backend)
+  const risks: RiskItem[] = useMemo(() => {
+    const r: RiskItem[] = [];
+    if (overdueTasksCount > 0) r.push({ id: "r1", title: `${overdueTasksCount} görev gecikmede`, probability: "Yüksek", impact: "Orta", owner: p.manager, status: "Açık", mitigation: "Sorumlulara hatırlatma gönderin ve öncelik yeniden değerlendirin." });
+    if (budgetUsedPct > 85) r.push({ id: "r2", title: "Bütçe kullanımı %85 üzerinde", probability: "Yüksek", impact: "Yüksek", owner: p.manager, status: "Açık", mitigation: "Kalan iş kalemleri için maliyet revizyonu yapın." });
+    if (netCashAmt < 0) r.push({ id: "r3", title: "Negatif nakit akışı", probability: "Orta", impact: "Yüksek", owner: p.manager, status: "İzleniyor", mitigation: "Tahsilat takibini hızlandırın, ödemeleri planlayın." });
+    const pendingHakedis = hakedisler.filter(h => /bekli/i.test(h.status)).length;
+    if (pendingHakedis > 0) r.push({ id: "r4", title: `${pendingHakedis} hakediş onay bekliyor`, probability: "Orta", impact: "Orta", owner: p.client, status: "İzleniyor", mitigation: "Onay süreci için müşteri ile iletişime geçin." });
+    return r;
+  }, [overdueTasksCount, budgetUsedPct, netCashAmt, hakedisler, p.manager, p.client]);
+
+  const health = calcHealth({
+    progressPct: displayProgress,
+    budgetUsedPct,
+    taskCompletionPct,
+    overdueCount: overdueTasksCount,
+    netCash: netCashAmt,
+    risksCount: risks.length,
+  });
+
+  // Days remaining
+  const daysRemaining = (() => {
+    const end = new Date(p.end); const now = new Date();
+    const d = Math.round((end.getTime() - now.getTime()) / 86400000);
+    return isNaN(d) ? 0 : d;
+  })();
+
+  const ribbon: RibbonKPI[] = [
+    { label: "Bütçe", value: `₺${formatNumber0(budgetNum)}`, Icon: DollarSign, tone: "neutral" },
+    { label: "Harcanan", value: `₺${formatNumber0(totalPaymentsAmt)}`, sub: `%${budgetUsedPct}`, Icon: ArrowUpRight, tone: budgetUsedPct > 85 ? "danger" : "neutral" },
+    { label: "Kalan", value: `₺${formatNumber0(Math.max(0, budgetNum - totalPaymentsAmt))}`, Icon: Wallet, tone: "positive" },
+    { label: "Tamamlanma", value: `${displayProgress}%`, Icon: CheckCircle2, tone: "positive" },
+    { label: "Kalan Gün", value: `${daysRemaining}`, sub: p.end, Icon: Calendar, tone: daysRemaining < 30 ? "warning" : "neutral" },
+    { label: "Bugün İşgücü", value: "—", sub: "Devam", Icon: Users, tone: "neutral" },
+    { label: "Açık RFI", value: "0", Icon: MessageSquare, tone: "neutral" },
+    { label: "Açık Konular", value: `${openTasksCount}`, Icon: AlertTriangle, tone: openTasksCount > 10 ? "warning" : "neutral" },
+    { label: "Yaklaşan Ödeme", value: `₺${formatNumber0(hakedisler.filter(h => /bekli|hazırla/i.test(h.status)).reduce((s, h) => s + Number(h.net || 0), 0))}`, Icon: DollarSign, tone: "warning" },
+  ];
+
+  // Timeline events (derived)
+  const timelineEvents: TimelineEvent[] = useMemo(() => {
+    const evs: TimelineEvent[] = [];
+    const ms = user && !mLoading ? milestones : p.milestones.map((m, i) => ({ id: `m${i}`, title: m.title, milestone_date: m.date, completed: m.completed } as any));
+    ms.forEach((m: any) => {
+      const d = new Date(m.milestone_date);
+      if (!isNaN(d.getTime())) evs.push({ id: `ms-${m.id}`, date: d.toISOString(), title: m.title, kind: "milestone" });
+    });
+    hakedisler.forEach((h: any, i) => {
+      const d = h.created_at ? new Date(h.created_at) : null;
+      if (d && !isNaN(d.getTime())) evs.push({ id: `pay-${h.id}`, date: d.toISOString(), title: `${h.period} hakediş`, kind: "payment" });
+    });
+    return evs;
+  }, [milestones, mLoading, p.milestones, hakedisler, user]);
+
+  // Activity feed
+  const activityItems: ActivityItem[] = useMemo(() => {
+    const arr: ActivityItem[] = [];
+    files.slice(0, 8).forEach(f => arr.push({ id: `f-${f.id}`, text: `Dosya yüklendi: ${f.file_name}`, date: new Date(f.created_at), color: "#A855F7" }));
+    notes.slice(0, 8).forEach(n => arr.push({ id: `n-${n.id}`, text: `Not eklendi: ${n.content.slice(0, 50)}`, date: new Date(n.created_at), color: "#3B82F6" }));
+    hakedisler.slice(0, 5).forEach((h: any) => h.created_at && arr.push({ id: `h-${h.id}`, text: `Hakediş: ${h.period} — ₺${formatNumber0(h.net)}`, date: new Date(h.created_at), color: "#22C55E" }));
+    tasks.slice(0, 8).forEach(t => arr.push({ id: `t-${t.id}`, text: `Görev: ${t.title}`, date: new Date(t.created_at), color: "#FF6B2B" }));
+    return arr.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 20);
+  }, [files, notes, hakedisler, tasks]);
+
+  const aiDock: AIDockData = {
+    todaySummary: [
+      `Proje sağlığı ${health.score}/100 (${health.delta >= 0 ? "+" : ""}${health.delta} bu hafta).`,
+      `${openTasksCount} açık görev, ${overdueTasksCount} gecikmede.`,
+      `Bütçe kullanımı %${budgetUsedPct}.`,
+    ],
+    criticalRisks: risks.slice(0, 3).map(r => r.title),
+    nextPayments: hakedisler.filter((h: any) => /bekli|hazırla/i.test(h.status)).slice(0, 4).map((h: any) => ({ label: h.period, amount: `₺${formatNumber0(h.net)}` })),
+    todayTasks: tasks.filter(t => t.due_date && new Date(t.due_date).toDateString() === new Date().toDateString()).slice(0, 5).map(t => t.title),
+    latestDocs: [...files].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 4).map(f => f.file_name),
+    recentNotes: notes.slice(0, 4).map(n => n.content.slice(0, 60)),
+  };
+
+  const askProjectAI = (q: string) => {
+    window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { question: `[${p.name}] ${q}` } }));
+    toast.success("AI'ya iletildi");
+  };
+
+  const quickActions = [
+    { label: "Görev Ekle", Icon: Plus, color: "#FF6B2B", onClick: () => toast.info("Görev sekmesinden ekleyin") },
+    { label: "Ödeme Ekle", Icon: DollarSign, color: "#22C55E", onClick: () => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: { tab: "payments-kasa" } })) },
+    { label: "İlerleme Kaydı", Icon: CheckCircle2, color: "#3B82F6", onClick: () => toast.info("Kilometre taşı ekleyin") },
+    { label: "Doküman", Icon: FileText, color: "#A855F7", onClick: () => fileInputRef.current?.click() },
+    { label: "Fotoğraf", Icon: Camera, color: "#F59E0B", onClick: () => fileInputRef.current?.click() },
+    { label: "Not Ekle", Icon: MessageSquare, color: "#64748B", onClick: () => document.querySelector<HTMLInputElement>("input[placeholder*='Not']")?.focus() },
+    { label: "Denetim", Icon: ClipboardCheck, color: "#EF4444", onClick: () => toast.info("Yakında") },
+  ];
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto space-y-4 lg:space-y-5">
@@ -231,6 +344,7 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
               <p className="text-[12px] lg:text-[13px]" style={labelStyle}>{p.description}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              <CEOModeToggle enabled={ceoMode} onToggle={() => setCeoMode(v => !v)} />
               {onUpdate && (
                 <button
                   onClick={() => setShowEditModal(true)}
@@ -239,51 +353,77 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
                   <Pencil className="w-3.5 h-3.5" /> Düzenle
                 </button>
               )}
-              <button
-                onClick={() => setShowQrModal(true)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
-              >
-                <QrCode className="w-3.5 h-3.5" /> QR Giriş
-              </button>
-              <button
-                onClick={() => {
-                  import("@/lib/projectExport").then(m => {
-                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
-                    m.exportProjectPDF(p, tasks, ms);
-                    toast.success("PDF raporu indirildi");
-                  });
-                }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
-              >
-                <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-              <button
-                onClick={() => {
-                  import("@/lib/projectExport").then(m => {
-                    const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
-                    m.exportProjectExcel(p, tasks, ms);
-                    toast.success("Excel raporu indirildi");
-                  });
-                }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-                style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-              <div className="relative w-14 h-14 lg:w-16 lg:h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1E2732" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeDasharray={`${displayProgress}, 100`} />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold font-mono" style={textStyle}>{displayProgress}%</span>
-              </div>
+              {!ceoMode && (
+                <>
+                  <button
+                    onClick={() => setShowQrModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#7C3AED", color: "#FFFFFF" }}
+                  >
+                    <QrCode className="w-3.5 h-3.5" /> QR Giriş
+                  </button>
+                  <button
+                    onClick={() => {
+                      import("@/lib/projectExport").then(m => {
+                        const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                        m.exportProjectPDF(p, tasks, ms);
+                        toast.success("PDF raporu indirildi");
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#1E2732", border: "1px solid #334155", color: "#E2E8F0" }}
+                  >
+                    <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      import("@/lib/projectExport").then(m => {
+                        const ms = user && !mLoading ? milestones.map(mi => ({ title: mi.title, date: mi.milestone_date, completed: mi.completed })) : p.milestones;
+                        m.exportProjectExcel(p, tasks, ms);
+                        toast.success("Excel raporu indirildi");
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+                    style={{ backgroundColor: "#22C55E", color: "#FFFFFF" }}
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
+                  </button>
+                </>
+              )}
+              <ProjectHealthWidget input={{
+                progressPct: displayProgress,
+                budgetUsedPct,
+                taskCompletionPct,
+                overdueCount: overdueTasksCount,
+                netCash: netCashAmt,
+                risksCount: risks.length,
+              }} />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Executive KPI Ribbon */}
+      <ExecutiveRibbon items={ribbon} />
+
+      {ceoMode && (
+        <CEOExecutiveSummary
+          health={health.score}
+          budget={`₺${formatNumber0(budgetNum)}`}
+          spent={`₺${formatNumber0(totalPaymentsAmt)}`}
+          cash={`₺${formatNumber0(netCashAmt)}`}
+          completion={displayProgress}
+          forecast={netCashAmt >= 0 ? "Pozitif" : "Riskli"}
+          insights={[
+            `Bütçe kullanımı %${budgetUsedPct}. ${budgetUsedPct > 85 ? "Yakın takip önerilir." : "Kontrol altında."}`,
+            `${overdueTasksCount} görev gecikmede; ${openTasksCount} açık iş var.`,
+            `Nakit akışı ₺${formatNumber0(netCashAmt)} — ${netCashAmt >= 0 ? "sağlıklı" : "negatif, tahsilatları hızlandırın"}.`,
+            `Öncelikli riskler: ${risks.slice(0, 2).map(r => r.title).join("; ") || "yok"}.`,
+          ]}
+        />
+      )}
+
+      {!ceoMode && (<>
       {/* Info cards row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
@@ -416,6 +556,12 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
           </div>
         </div>
       </div>
+
+      {/* Project Timeline */}
+      <ProjectTimeline events={timelineEvents} />
+
+      {/* Risk Center */}
+      <RiskCenter risks={risks} />
 
       {/* Hakediş Özeti */}
       <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
@@ -605,6 +751,11 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
               </button>
             </>
           )}
+        </div>
+
+        {/* Smart folders overview */}
+        <div className="mb-4">
+          <SmartDocumentsFolders files={files} onOpen={(f) => window.open(f.file_url, "_blank")} />
         </div>
 
         {fLoading ? (
@@ -810,6 +961,9 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
         )}
       </div>
 
+      {/* Aktivite Akışı */}
+      <ProjectActivityFeed items={activityItems} />
+
       {/* Görevlendirme / Kanban */}
       {user && (
         <div className="rounded-xl p-4 lg:p-5" style={cardStyle}>
@@ -834,6 +988,12 @@ const ProjectDetailPage = ({ project, onBack, onDelete, onStatusChange, onUpdate
           <ProjectMembersManagement projectId={p.id} />
         </div>
       )}
+      </>)}
+
+      {/* Floating: AI Dock + Quick Actions */}
+      <ProjectAIDock data={aiDock} onAsk={askProjectAI} />
+      <QuickActionBar actions={quickActions} />
+
 
       {isDeletable && onDelete && user && (
         <>
