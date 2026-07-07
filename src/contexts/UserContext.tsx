@@ -60,6 +60,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [plan, setPlanState] = useState<PlanType>("free");
   const [role, setRole] = useState<UserRole>("free");
   const [usage, setUsage] = useState<UsageLimits>({ ...FREE_LIMITS });
