@@ -5,7 +5,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { Plus, Trash2, ArrowLeft, Phone, Wrench, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Wrench, AlertTriangle, ChevronRight } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 
