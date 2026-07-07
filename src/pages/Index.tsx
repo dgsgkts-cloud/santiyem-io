@@ -659,7 +659,7 @@ const Index = () => {
 
       {/* ── MOBILE DRAWER PANEL ── */}
       <div
-        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] transform transition-transform duration-300 ease-out ${
+        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] flex flex-col transform transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)" }}
