@@ -548,11 +548,21 @@ const Index = () => {
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
       >
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => goToTab("dashboard")}>
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <HardHat className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Menüyü aç"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 active:scale-95 transition-all duration-200"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2 cursor-pointer pl-0.5" onClick={() => goToTab("dashboard")}>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <HardHat className="w-5 h-5 text-primary" />
+            </div>
+            <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
           </div>
-          <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
         </div>
         <div className="flex items-center gap-1">
           {/* Mobile notification bell */}
