@@ -51,6 +51,15 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         {actions}
 
         <button
+          onClick={openSubscriptionPage}
+          className="hidden md:inline-flex"
+          title={license.isTrial ? `Deneme — ${license.daysRemaining ?? 0} gün kaldı` : `${license.planLabel} planı`}
+        >
+          <PlanBadge plan={license.plan} />
+        </button>
+
+
+        <button
           onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
           className="hidden md:flex items-center gap-2 px-3 h-9 rounded-lg hover-icon-btn text-muted-foreground"
           title="Komut paleti (⌘K)"
