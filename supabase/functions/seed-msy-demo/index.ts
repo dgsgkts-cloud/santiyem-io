@@ -183,6 +183,13 @@ async function removeDemo(sb: Sb, uid: string) {
     const r = await sb.from(t).delete({ count: "exact" }).eq("user_id", uid).ilike(c, like);
     if (r.count) add(t, r.count);
   }
+  // tasks (no user_id column) — sweep by created_by + [MSY_DEMO] tag
+  {
+    const r = await sb.from("tasks").delete({ count: "exact" }).eq("created_by", uid).ilike("description", like);
+    if (r.count) add("tasks", r.count);
+    const r2 = await sb.from("tasks").delete({ count: "exact" }).eq("created_by", uid).ilike("title", like);
+    if (r2.count) add("tasks", r2.count);
+  }
 
   // Company memories (demo-tagged, incl. anchor)
   const cm = await sb
