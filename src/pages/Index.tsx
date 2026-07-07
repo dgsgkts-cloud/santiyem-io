@@ -687,53 +687,65 @@ const Index = () => {
 
       {/* ── MOBILE DRAWER PANEL ── */}
       <div
-        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[80%] max-w-[320px] flex flex-col transform transition-transform duration-300 ease-out ${
+        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[82%] max-w-[320px] flex flex-col transform transition-transform duration-200 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)" }}
+        style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)", boxShadow: drawerOpen ? "8px 0 40px -12px rgba(0,0,0,0.6)" : "none" }}
       >
         <button
           onClick={() => setDrawerOpen(false)}
-          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors"
           style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
+          aria-label="Menüyü kapat"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="px-5 pt-6 pb-4">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="relative">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isAdmin ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]" : "bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E]"}`}>
-                <User className="w-6 h-6 text-white" />
-              </div>
-              {isAdmin && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#8B5CF6", border: "2px solid #0F1419" }}>
-                  <Zap className="w-3 h-3 text-white" />
+        {/* Profile card — single source of role identity */}
+        {(() => {
+          const displayName = profile?.full_name || user?.user_metadata?.full_name || (user ? "Kullanıcı" : "Misafir");
+          const title = profile?.title || "İnşaat Mühendisi";
+          let companyShort = "";
+          try { companyShort = getCompanyProfile().companyName.split(" ").slice(0, 2).join(" "); } catch {}
+          const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+          const roleLabel = ROLE_LABELS[String(role || "").toLowerCase()] || (isAdmin ? "Yönetici" : "");
+          return (
+            <div className="px-5 pt-8 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E]" style={{ width: 42, height: 42 }}>
+                  {user ? (
+                    <span className="text-white font-bold text-[13px]">{initials}</span>
+                  ) : (
+                    <User className="w-5 h-5 text-white" />
+                  )}
                 </div>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-white font-semibold text-sm">{user ? (user.user_metadata?.full_name || "Kullanıcı") : "Misafir"}</p>
-                {isAdmin && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ backgroundColor: "rgba(139,92,246,0.25)", color: "#A78BFA" }}>ADMIN</span>}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-white font-semibold text-[14px] truncate">{displayName}</p>
+                    {roleLabel && (
+                      <span
+                        className="text-[9px] font-medium px-1.5 py-[1px] rounded shrink-0"
+                        style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FFB088" }}
+                      >
+                        {roleLabel}
+                      </span>
+                    )}
+                  </div>
+                  {user && (
+                    <p className="text-[11px] text-white/50 truncate mt-0.5">
+                      {title}{companyShort ? ` • ${companyShort}` : ""}
+                    </p>
+                  )}
+                </div>
               </div>
-              <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                isAdmin ? "bg-[#8B5CF6]/20 text-[#A78BFA]" :
-                plan === "pro" || plan === "plus" ? "bg-[#FF6B2B]/20 text-[#FF6B2B]" :
-                plan === "office_free" || plan === "office_pro" || plan === "office_custom" ? "bg-blue-500/20 text-blue-400" :
-                "bg-white/10 text-white/50"
-              }`}>
-                {isAdmin && <Zap className="w-3 h-3" />}
-                {isAdmin ? "Tam Erişim" : plan === "pro" ? "Pro Plan" : plan === "plus" ? "Plus Plan" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal Ücretsiz" : plan === "office_custom" ? "Özel Kurumsal" : "Ücretsiz"}
-              </span>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
-        <div className="mx-5 h-px bg-white/10" />
+        <div className="mx-5 h-px bg-white/[0.06]" />
 
         <nav
-          className="flex-1 min-h-0 px-3 py-3"
+          className="flex-1 min-h-0 px-3 py-4 space-y-0.5"
           style={{ overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
         >
           {visibleDrawerItems.map((item) => {
@@ -743,21 +755,21 @@ const Index = () => {
               <button
                 key={item.id}
                 onClick={() => handleDrawerNav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 rounded-xl transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
                   isActive
-                    ? "bg-[#FF6B2B]/15 text-[#FF6B2B]"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
+                    ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                    : "text-white/70 hover:text-white hover:bg-white/[0.04]"
                 }`}
-                style={{ minHeight: "48px" }}
+                style={{ minHeight: "44px" }}
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className={`text-sm ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
+                <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
+                <span className={`text-[13.5px] ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="mx-5 h-px bg-white/10" />
+        <div className="mx-5 h-px bg-white/[0.06]" />
 
         <div className="px-3 py-4">
           {user ? (
