@@ -298,9 +298,11 @@ const Index = () => {
     }
   }, [location.pathname]);
 
-  // First-run wizard: empty workspace + not completed
+  // First-run wizard: empty workspace + not completed.
+  // Super Admins are exempted per Sprint 28.6 (no onboarding, no setup banners).
   useEffect(() => {
     if (!user || projectsLoading) return;
+    if (isAdmin) return;
     if (!isFirstRunDone() && projects.length === 0) {
       setShowFirstRun(true);
       return;
@@ -311,7 +313,7 @@ const Index = () => {
     } else if (user && shouldShowThemeModal()) {
       setShowThemeModal(true);
     }
-  }, [user, projects.length, projectsLoading]);
+  }, [user, isAdmin, projects.length, projectsLoading]);
 
   // Initialize push notifications (native only, respects user preference)
   useEffect(() => {
