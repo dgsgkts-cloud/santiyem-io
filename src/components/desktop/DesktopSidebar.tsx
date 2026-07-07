@@ -162,8 +162,10 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
 
-                // Check if feature is locked
-                const isLocked =
+                // Check if feature is locked — but only after gates are
+                // ready. During loading we render items as unlocked so the
+                // user never sees a "flash of locked nav".
+                const isLocked = gatesReady && (
                   (item.id === "projects" && !canAccessProjects(plan, role)) ||
                   (item.id === "hakedis" && !canAccessHakedis(plan, role)) ||
                   (item.id === "contracts" && !isProOrAbove(plan) && role !== "admin") ||
@@ -171,9 +173,11 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                    (item.id === "site-diary" && !canAccessProjects(plan, role)) ||
                   (item.id === "materials" && !canAccessProjects(plan, role)) ||
                   (item.id === "e-invoices" && !canAccessProfitability(plan, role)) ||
-                  (item.id === "reminders" && !canAccessReminders(plan));
+                  (item.id === "reminders" && !canAccessReminders(plan))
+                );
 
                 const handleClick = () => {
+                  if (!gatesReady) return; // ignore clicks while loading
                   if (isLocked) {
                     onTabChange("pricing");
                   } else {
