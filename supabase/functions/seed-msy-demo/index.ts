@@ -242,6 +242,10 @@ async function integrityCheck(sb: Sb, uid: string) {
   const mt = await sb.from("meetings").select("id", { count: "exact", head: true })
     .eq("user_id", uid).contains("tags", ["msy_demo"]);
   if (mt.count) { per["meetings"] = mt.count; total += mt.count; }
+  // Tasks (no user_id column, scope by created_by + tag in description)
+  const tk = await sb.from("tasks").select("id", { count: "exact", head: true })
+    .eq("created_by", uid).ilike("description", like);
+  if (tk.count) { per["tasks"] = tk.count; total += tk.count; }
   return { per_table: per, total };
 }
 
