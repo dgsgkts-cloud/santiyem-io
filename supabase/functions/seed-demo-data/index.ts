@@ -503,7 +503,9 @@ async function clean(supabase: any, userId: string) {
       "worker_attendance","attendance_records","personnel_project_assignments",
     ];
     for (const t of projectChildren) {
-      const { count } = await supabase.from(t).delete({ count: "exact" }).eq("user_id", userId).in("project_id", projectIds);
+      // tasks has no user_id column; scope only by project_id
+      const q = supabase.from(t).delete({ count: "exact" }).in("project_id", projectIds);
+      const { count } = t === "tasks" ? await q : await q.eq("user_id", userId);
       if (count) add(t, count);
     }
     const pr = await supabase.from("projects").delete({ count: "exact" }).in("id", projectIds).eq("user_id", userId);
