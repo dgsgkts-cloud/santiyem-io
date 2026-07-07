@@ -971,10 +971,23 @@ Deno.serve(async (req) => {
     const action = body.action ?? "load";
 
     if (action === "remove") {
-      const counts = await removeDemo(sb, uid);
-      return new Response(JSON.stringify({ ok: true, action: "remove", counts }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const result = await removeDemo(sb, uid);
+      if (!result.verified) {
+        return new Response(JSON.stringify({
+          ok: false,
+          action: "remove",
+          error: `Cleanup incomplete: ${result.leftovers.total} [MSY_DEMO] rows remain`,
+          counts: result.counts,
+          leftovers: result.leftovers,
+          total_deleted: result.total_deleted,
+        }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({
+        ok: true, action: "remove",
+        counts: result.counts,
+        total_deleted: result.total_deleted,
+        verified: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const result = await loadDemo(sb, uid);
