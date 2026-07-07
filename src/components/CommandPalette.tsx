@@ -51,6 +51,7 @@ const NAV_ITEMS = [
   { id: "e-invoices", label: "E-Fatura", icon: FileText },
   { id: "procurement", label: "Satın Alma", icon: ShoppingCart, hint: "Talep / RFQ / Sipariş" },
   { id: "warehouse", label: "Depo & Envanter", icon: Warehouse, hint: "Stok / Transfer / Zimmet" },
+  { id: "fleet", label: "Makine & Ekipman", icon: Truck, hint: "Filo / Bakım / Yakıt / Operatör" },
   { id: "reports", label: "Raporlar", icon: BarChart3 },
   { id: "chat", label: "AI Asistan", icon: MessageSquare },
   { id: "settings", label: "Ayarlar", icon: Settings },
