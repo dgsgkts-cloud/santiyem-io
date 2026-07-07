@@ -66,6 +66,8 @@ const AI_SHORTCUTS = [
   { label: "Teklif karşılaştır", prompt: "Aktif RFQ'lardaki teklifleri karşılaştır ve en iyi tedarikçiyi öner.", icon: Send },
   { label: "Depo özeti", prompt: "Depo envanterini, kritik stokları ve tüketim trendini özetle.", icon: Warehouse },
   { label: "Kritik stokları listele", prompt: "Kritik ve tükenmiş stok kalemlerini önceliklendirerek listele.", icon: ShieldAlert },
+  { label: "Filo dashboard aç", prompt: "Filo dashboard: bakım riskleri, yakıt, kullanım oranı ve atıl ekipmanları özetle.", icon: Truck },
+  { label: "Bakım gereken ekipmanlar", prompt: "Önümüzdeki 7 gün içinde bakım gerektirecek tüm ekipmanları listele.", icon: Wrench },
 ];
 
 const CREATE_ACTIONS = [
