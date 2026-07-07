@@ -1041,12 +1041,23 @@ const PaymentsKasaPage = () => {
               </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+      </ResponsiveSheet>
 
-      {/* ═══ Kasa Account / Transaction Modal ═══ */}
-      <Dialog open={kasaModal} onOpenChange={v => { if (!v) { setKasaModal(false); setKasaAmount(""); setKasaDesc(""); } }}>
-        <DialogContent className="max-w-sm">
+      {/* ═══ Kasa Account / Transaction — ResponsiveSheet ═══ */}
+      <ResponsiveSheet
+        open={kasaModal}
+        onOpenChange={v => { if (!v) { setKasaModal(false); setKasaAmount(""); setKasaDesc(""); } }}
+        title={kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
+        description={
+          kasaModalType === "add_account"
+            ? "Yeni banka veya kasa hesabı oluşturun."
+            : kasaModalType === "deposit"
+            ? "Seçilen hesaba giriş kaydı ekleyin."
+            : "Seçilen hesaptan çıkış kaydı ekleyin."
+        }
+        size="sm"
+      >
+
           <DialogHeader>
             <DialogTitle className="text-foreground">
               {kasaModalType === "add_account" ? "Yeni Hesap" : kasaModalType === "deposit" ? "Para Girişi" : "Para Çıkışı"}
