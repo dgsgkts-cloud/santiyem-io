@@ -229,10 +229,13 @@ export const CommandPalette = () => {
 
         <CommandGroup heading="Abonelik & Plan">
           {[
-            { label: "Aboneliği görüntüle", keywords: "abonelik subscription plan lisans license" },
-            { label: "Planı yükselt", keywords: "upgrade yukselt plan" },
+            { label: "Aboneliği görüntüle", keywords: "abonelik subscription plan lisans license workspace" },
+            { label: "Planı yükselt", keywords: "upgrade yukselt plan renewal yenile" },
             { label: "Trial durumu", keywords: "trial deneme" },
-            { label: "Lisans / Faturalar", keywords: "license lisans fatura invoices" },
+            { label: "Faturalar", keywords: "invoice fatura invoices billing" },
+            { label: "Ödeme geçmişi", keywords: "payment odeme billing history" },
+            { label: "Lisans bilgileri", keywords: "license lisans workspace" },
+            { label: "Yenileme durumu", keywords: "renewal yenileme" },
           ].map((a) => (
             <CommandItem
               key={a.label}
