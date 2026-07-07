@@ -84,6 +84,10 @@ const CREATE_ACTIONS = [
   { label: "Stok Transferi", tab: "warehouse", icon: ArrowLeftRight },
   { label: "Ekipman Zimmetle", tab: "warehouse", icon: Wrench },
   { label: "Stok Sayımı Başlat", tab: "warehouse", icon: ClipboardCheck },
+  { label: "Yakıt Kaydı Ekle", tab: "fleet", icon: Fuel },
+  { label: "Bakım Oluştur", tab: "fleet", icon: Wrench },
+  { label: "Operatör Ata", tab: "fleet", icon: Users },
+  { label: "Ekipman Transferi", tab: "fleet", icon: ArrowLeftRight },
 ];
 
 const getActiveTab = (): string => {
