@@ -26,12 +26,14 @@ type OpenPayload = { autoSpeak?: boolean; requiresBriefing?: boolean };
 export function VoiceOrb() {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [showFinanceTip, setShowFinanceTip] = useState(false);
   const [pending, setPending] = useState<{
     initialContext?: string;
     initialCards?: BriefCard[];
     autoSpeak?: boolean;
   }>({});
   const access = useVoiceAccess();
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setSignedIn(!!data?.user));
