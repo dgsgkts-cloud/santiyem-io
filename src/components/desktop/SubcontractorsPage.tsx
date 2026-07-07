@@ -24,17 +24,53 @@ const SubcontractorsPage = () => {
   const enriched = useMemo(() => {
     return subcontractors.map(s => {
       const pays = allPayments.filter(p => p.subcontractor_id === s.id);
-      const totalPaid = pays.filter(p => p.status === "odendi").reduce((sum, p) => sum + Number(p.amount), 0);
+      const paid = pays.filter(p => p.status === "odendi");
+      const totalPaid = paid.reduce((sum, p) => sum + Number(p.amount), 0);
       const remaining = Number(s.contract_amount) - totalPaid;
+      const now = new Date();
       const upcoming = pays.filter(p => {
         if (!p.planned_date || p.status === "odendi") return false;
-        const days = differenceInDays(parseISO(p.planned_date), new Date());
+        const days = differenceInDays(parseISO(p.planned_date), now);
         return days >= 0 && days <= 7;
       });
+      const overdue = pays.filter(p => {
+        if (!p.planned_date || p.status === "odendi") return false;
+        return differenceInDays(now, parseISO(p.planned_date)) > 0;
+      });
+      // Average payment delay (days) — paid vs planned
+      const delays = paid
+        .filter(p => p.planned_date && p.payment_date)
+        .map(p => differenceInDays(parseISO(p.payment_date), parseISO(p.planned_date!)));
+      const avgDelay = delays.length
+        ? Math.round(delays.reduce((a, b) => a + b, 0) / delays.length)
+        : 0;
+      const completion = Number(s.contract_amount) > 0
+        ? Math.round((totalPaid / Number(s.contract_amount)) * 100)
+        : 0;
+      const lastPayment = paid
+        .map(p => p.payment_date)
+        .sort()
+        .reverse()[0];
+      // Risk scoring
+      let risk: "safe" | "watch" | "risky" = "safe";
+      if (overdue.length > 0 || (remaining > 0 && avgDelay > 7)) risk = "risky";
+      else if (upcoming.length > 0 || avgDelay > 0 || (remaining > 0 && completion < 20)) risk = "watch";
       const proj = projects.find(p => p.id === s.project_id);
-      return { ...s, totalPaid, remaining, upcomingCount: upcoming.length, projectName: proj?.name || "" };
+      return {
+        ...s,
+        totalPaid,
+        remaining,
+        upcomingCount: upcoming.length,
+        overdueCount: overdue.length,
+        avgDelay,
+        completion,
+        lastPayment,
+        risk,
+        projectName: proj?.name || "",
+      };
     });
   }, [subcontractors, allPayments, projects]);
+
 
   const handleAdd = async () => {
     if (!form.name) { toast.error("Taşeron adı zorunludur"); return; }
