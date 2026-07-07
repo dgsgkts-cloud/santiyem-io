@@ -48,9 +48,13 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
         {actions}
 
         <button
-          className="w-9 h-9 rounded-lg flex items-center justify-center hover-icon-btn"
+          onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+          className="hidden md:flex items-center gap-2 px-3 h-9 rounded-lg hover-icon-btn text-muted-foreground"
+          title="Komut paleti (⌘K)"
         >
           <Search className="w-4 h-4" />
+          <span className="text-[12px]">Ara veya komut…</span>
+          <kbd className="ml-2 text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/40 text-muted-foreground">⌘K</kbd>
         </button>
 
         {/* Notifications */}
