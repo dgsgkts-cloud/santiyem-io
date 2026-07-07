@@ -79,7 +79,12 @@ const NAV_SECTIONS = [
 void isNativeApp;
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
-  const { user, profile, plan, role, usage, signOut, isAdmin } = useUser();
+  const { user, profile, plan, role, usage, signOut, isAdmin, profileLoaded } = useUser();
+  // Feature locks must only be evaluated after subscription/role/profile
+  // queries have resolved. Otherwise the sidebar briefly renders every
+  // paid item as locked (default plan="free"/role="free") and then unlocks
+  // once the profile arrives — a jarring flash.
+  const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebarCollapsed") === "true"; } catch { return false; }
