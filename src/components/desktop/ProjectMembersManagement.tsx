@@ -104,7 +104,7 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
     setInvitations((invs ?? []) as Invitation[]);
 
     const byUser: Record<string, Record<string, boolean>> = {};
-    (((perms as PermRow[]) | null) ?? []).forEach((p) => {
+    ((perms as PermRow[] | null) ?? []).forEach((p) => {
       byUser[p.user_id] = byUser[p.user_id] || {};
       byUser[p.user_id][p.permission_key] = p.granted;
     });
