@@ -6,13 +6,18 @@ import {
   ROLE_LABELS,
   ROLE_COLORS,
   TUNABLE_KEYS,
-  FINANCIAL_KEYS,
   type ProjectRole,
   type PermissionKey,
   hasPermission,
 } from "@/lib/projectPermissions";
 import { useProjectRole } from "@/hooks/useProjectRole";
-import { Users, UserPlus, Trash2, Copy, X, Shield } from "lucide-react";
+import { Users, UserPlus, Trash2, Copy, X, Shield, Settings2 } from "lucide-react";
+import {
+  ResponsiveSheet,
+  ResponsiveTable,
+  SectionCard,
+  type ResponsiveColumn,
+} from "@/components/ui/responsive";
 
 interface Member {
   id: string;
@@ -37,25 +42,28 @@ interface PermRow {
 }
 
 const ASSIGNABLE_ROLES: ProjectRole[] = [
-  "manager", "site_engineer", "accountant", "subcontractor", "worker", "landowner",
+  "manager",
+  "site_engineer",
+  "accountant",
+  "subcontractor",
+  "worker",
+  "landowner",
 ];
 
 export default function ProjectMembersManagement({ projectId }: { projectId: string }) {
   const { user } = useUser();
-  const { role: myRole, isOwner, isManagerOrOwner } = useProjectRole(projectId);
+  const { isOwner, isManagerOrOwner } = useProjectRole(projectId);
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [permsByUser, setPermsByUser] = useState<Record<string, Record<string, boolean>>>({});
   const [loading, setLoading] = useState(true);
 
-  // invite form
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [invitePhone, setInvitePhone] = useState("");
   const [inviteRole, setInviteRole] = useState<ProjectRole>("worker");
 
-  // expanded fine-tune
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [permTarget, setPermTarget] = useState<Member | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!projectId) return;
@@ -96,7 +104,7 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
     setInvitations((invs ?? []) as Invitation[]);
 
     const byUser: Record<string, Record<string, boolean>> = {};
-    (perms as PermRow[] | null ?? []).forEach((p) => {
+    ((perms as PermRow[] | null) ?? []).forEach((p) => {
       byUser[p.user_id] = byUser[p.user_id] || {};
       byUser[p.user_id][p.permission_key] = p.granted;
     });
@@ -104,7 +112,9 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
     setLoading(false);
   }, [projectId]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   const handleInvite = async () => {
     if (!user) return;
@@ -131,9 +141,6 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
   };
 
   const copyInviteLink = (token: string) => {
-    // Canonical universal-link domain so iOS/Android can open the link
-    // directly in the Şantiyem app (santiyem://proje-davet/<token>)
-    // when installed, and fall back to the web invite page otherwise.
     const link = `https://santiyem.io/proje-davet/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Davet linki kopyalandı");
@@ -150,7 +157,10 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
       _user: uid,
       _role: newRole,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Rol güncellendi");
     fetchAll();
   };
@@ -161,7 +171,10 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
       _project: projectId,
       _user: uid,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Üye çıkarıldı");
     fetchAll();
   };
@@ -173,206 +186,279 @@ export default function ProjectMembersManagement({ projectId }: { projectId: str
       _key: key,
       _granted: granted,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     fetchAll();
   };
 
-  if (loading) return <p className="text-[13px] text-muted-foreground p-4">Yükleniyor...</p>;
+  if (loading) return <p className="text-fs-sm text-muted-foreground p-4">Yükleniyor...</p>;
 
   if (!isManagerOrOwner) {
     return (
       <div className="text-center py-12">
         <Shield className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-fs-sm text-muted-foreground">
           Bu projenin üye yönetimine erişiminiz yok.
         </p>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
-            <Users className="w-4 h-4" /> Proje Üyeleri
-          </h3>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {members.length} üye • {invitations.length} bekleyen davet
-          </p>
-        </div>
-        <button
-          onClick={() => setShowInvite(!showInvite)}
-          className="flex items-center gap-1.5 px-3 rounded-lg text-[12px] font-semibold text-white"
-          style={{ height: 32, backgroundColor: showInvite ? "#EF4444" : "#FF6B2B" }}
-        >
-          {showInvite ? <X className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
-          {showInvite ? "İptal" : "Davet Et"}
-        </button>
-      </div>
-
-      {showInvite && (
-        <div className="rounded-lg p-4 space-y-3 border border-border bg-card">
-          <p className="text-[12px] font-medium text-foreground">Yeni üye davet et</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              type="email"
-              placeholder="E-posta"
-              className="rounded-lg px-3 text-[13px] outline-none bg-background border border-border"
-              style={{ height: 36 }}
-            />
-            <input
-              value={invitePhone}
-              onChange={(e) => setInvitePhone(e.target.value)}
-              placeholder="Telefon (opsiyonel)"
-              className="rounded-lg px-3 text-[13px] outline-none bg-background border border-border"
-              style={{ height: 36 }}
-            />
+  const memberColumns: ResponsiveColumn<Member>[] = [
+    {
+      key: "name",
+      header: "Üye",
+      primary: true,
+      cell: (m) => (
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `${ROLE_COLORS[m.role]}20` }}
+          >
+            <span className="text-fs-xs font-bold" style={{ color: ROLE_COLORS[m.role] }}>
+              {(m.profile?.full_name || "?").charAt(0).toUpperCase()}
+            </span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as ProjectRole)}
-              className="flex-1 rounded-lg px-3 text-[13px] outline-none bg-background border border-border"
-              style={{ height: 36 }}
-            >
-              {ASSIGNABLE_ROLES.map((r) => (
-                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-              ))}
-            </select>
+          <div className="min-w-0">
+            <div className="text-fs-sm font-medium truncate text-foreground">
+              {m.profile?.full_name || "İsimsiz"}
+              {m.user_id === user?.id && (
+                <span className="text-fs-xs text-muted-foreground ml-1">(siz)</span>
+              )}
+            </div>
+            <div className="text-fs-xs text-muted-foreground truncate">
+              {m.profile?.title || ""}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "role",
+      header: "Rol",
+      cell: (m) =>
+        m.role === "owner" ? (
+          <span
+            className="px-2 py-0.5 rounded-md text-fs-xs font-medium"
+            style={{
+              backgroundColor: `${ROLE_COLORS[m.role]}15`,
+              color: ROLE_COLORS[m.role],
+            }}
+          >
+            {ROLE_LABELS[m.role]}
+          </span>
+        ) : (
+          <select
+            value={m.role}
+            onChange={(e) => changeRole(m.user_id, e.target.value as ProjectRole)}
+            className="rounded px-2 py-1 text-fs-xs outline-none bg-background border border-border"
+          >
+            {ASSIGNABLE_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABELS[r]}
+              </option>
+            ))}
+          </select>
+        ),
+    },
+    {
+      key: "actions",
+      header: "İşlem",
+      align: "right",
+      cell: (m) =>
+        m.role === "owner" ? (
+          <span className="text-fs-xs text-muted-foreground">—</span>
+        ) : (
+          <div className="flex items-center justify-end gap-1">
             <button
-              onClick={handleInvite}
-              className="px-4 rounded-lg text-[12px] font-semibold text-white"
-              style={{ height: 36, backgroundColor: "#22C55E" }}
+              onClick={() => setPermTarget(m)}
+              className="text-fs-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
-              Davet oluştur
+              <Settings2 className="w-3 h-3" /> İnce ayar
+            </button>
+            <button
+              onClick={() => removeMember(m.user_id)}
+              className="p-1.5 rounded text-muted-foreground hover:text-red-500"
+              title="Üyeyi çıkar"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+        ),
+    },
+  ];
+
+  const inviteColumns: ResponsiveColumn<Invitation>[] = [
+    {
+      key: "who",
+      header: "Davet",
+      primary: true,
+      cell: (inv) => (
+        <div className="min-w-0">
+          <div className="text-fs-sm text-foreground truncate">
+            {inv.email || inv.phone || "—"}
+          </div>
+          <div className="text-fs-xs text-muted-foreground truncate">
+            {ROLE_LABELS[inv.role]} •{" "}
+            {new Date(inv.expires_at).toLocaleDateString("tr-TR")} tarihine kadar
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      header: "İşlem",
+      align: "right",
+      cell: (inv) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => copyInviteLink(inv.token)}
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground"
+            title="Davet linkini kopyala"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => cancelInvitation(inv.id)}
+            className="p-1.5 rounded text-muted-foreground hover:text-red-500"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const overrides = permTarget ? permsByUser[permTarget.user_id] || {} : {};
+
+  return (
+    <div className="space-y-4">
+      <SectionCard
+        title={
+          <span className="flex items-center gap-2">
+            <Users className="w-4 h-4" /> Proje Üyeleri
+          </span>
+        }
+        subtitle={`${members.length} üye • ${invitations.length} bekleyen davet`}
+        action={
+          <button
+            onClick={() => setShowInvite(true)}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-fs-xs font-semibold text-white"
+            style={{ backgroundColor: "#FF6B2B" }}
+          >
+            <UserPlus className="w-3.5 h-3.5" /> Davet Et
+          </button>
+        }
+      >
+        <ResponsiveTable<Member>
+          columns={memberColumns}
+          rows={members}
+          rowKey={(m) => m.id}
+          empty={
+            <p className="text-fs-sm text-muted-foreground text-center py-6">Üye yok</p>
+          }
+        />
+      </SectionCard>
+
+      {invitations.length > 0 && (
+        <SectionCard title="Bekleyen Davetler">
+          <ResponsiveTable<Invitation>
+            columns={inviteColumns}
+            rows={invitations}
+            rowKey={(i) => i.id}
+          />
+        </SectionCard>
+      )}
+
+      <ResponsiveSheet
+        open={showInvite}
+        onOpenChange={setShowInvite}
+        title="Yeni üye davet et"
+        size="md"
+        footer={
+          <button
+            onClick={handleInvite}
+            className="w-full h-11 rounded-lg text-fs-sm font-semibold text-white"
+            style={{ backgroundColor: "#22C55E" }}
+          >
+            Davet oluştur
+          </button>
+        }
+      >
+        <div className="space-y-3">
+          <input
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            type="email"
+            placeholder="E-posta"
+            className="w-full h-11 rounded-lg px-3 text-fs-sm outline-none bg-background border border-border"
+          />
+          <input
+            value={invitePhone}
+            onChange={(e) => setInvitePhone(e.target.value)}
+            placeholder="Telefon (opsiyonel)"
+            className="w-full h-11 rounded-lg px-3 text-fs-sm outline-none bg-background border border-border"
+          />
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value as ProjectRole)}
+            className="w-full h-11 rounded-lg px-3 text-fs-sm outline-none bg-background border border-border"
+          >
+            {ASSIGNABLE_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABELS[r]}
+              </option>
+            ))}
+          </select>
+          <p className="text-fs-xs text-muted-foreground">
             Daveti oluşturduktan sonra link kopyalayıp paylaşabilirsiniz.
           </p>
         </div>
-      )}
+      </ResponsiveSheet>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Üyeler</p>
-        {members.map((m) => {
-          const isMeRow = m.user_id === user?.id;
-          const isOwnerRow = m.role === "owner";
-          const overrides = permsByUser[m.user_id] || {};
-          return (
-            <div key={m.id} className="rounded-lg border border-border bg-card">
-              <div className="flex items-center gap-3 p-3">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${ROLE_COLORS[m.role]}20` }}
+      <ResponsiveSheet
+        open={!!permTarget}
+        onOpenChange={(v) => !v && setPermTarget(null)}
+        title={permTarget ? `${permTarget.profile?.full_name || "Üye"} — İzinler` : ""}
+        size="md"
+      >
+        {permTarget && (
+          <div className="space-y-2">
+            <p className="text-fs-xs uppercase text-muted-foreground">Kişiye özel görünürlük</p>
+            {TUNABLE_KEYS.map(({ key, label, financial }) => {
+              const effective = hasPermission(
+                permTarget.role,
+                key,
+                overrides as Partial<Record<PermissionKey, boolean>>,
+              );
+              const disabled = financial && !isOwner;
+              return (
+                <label
+                  key={key}
+                  className={`flex items-center justify-between text-fs-sm py-2 border-b border-border/40 ${
+                    disabled ? "opacity-50" : ""
+                  }`}
                 >
-                  <span className="text-[11px] font-bold" style={{ color: ROLE_COLORS[m.role] }}>
-                    {(m.profile?.full_name || "?").charAt(0).toUpperCase()}
+                  <span className="text-foreground">
+                    {label}
+                    {financial && (
+                      <span className="ml-1 text-fs-xs text-[#FF6B2B]">(sadece sahip)</span>
+                    )}
                   </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium truncate text-foreground">
-                    {m.profile?.full_name || "İsimsiz"} {isMeRow && <span className="text-[10px] text-muted-foreground">(siz)</span>}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">{m.profile?.title || ""}</p>
-                </div>
-                <span
-                  className="px-2 py-0.5 rounded-md text-[10px] font-medium"
-                  style={{ backgroundColor: `${ROLE_COLORS[m.role]}15`, color: ROLE_COLORS[m.role] }}
-                >
-                  {ROLE_LABELS[m.role]}
-                </span>
-                {!isOwnerRow && (
-                  <>
-                    <select
-                      value={m.role}
-                      onChange={(e) => changeRole(m.user_id, e.target.value as ProjectRole)}
-                      className="rounded px-1.5 py-0.5 text-[10px] outline-none bg-background border border-border"
-                    >
-                      {ASSIGNABLE_ROLES.map((r) => (
-                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => setExpanded(expanded === m.user_id ? null : m.user_id)}
-                      className="text-[10px] px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground"
-                    >
-                      İnce ayar
-                    </button>
-                    <button
-                      onClick={() => removeMember(m.user_id)}
-                      className="p-1 rounded text-muted-foreground hover:text-red-500"
-                      title="Üyeyi çıkar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
-              </div>
-              {expanded === m.user_id && !isOwnerRow && (
-                <div className="border-t border-border p-3 space-y-2">
-                  <p className="text-[10px] uppercase text-muted-foreground">Kişiye özel görünürlük</p>
-                  {TUNABLE_KEYS.map(({ key, label, financial }) => {
-                    const effective = hasPermission(m.role, key, overrides as Partial<Record<PermissionKey, boolean>>);
-                    const disabled = financial && !isOwner;
-                    return (
-                      <label
-                        key={key}
-                        className={`flex items-center justify-between text-[12px] py-1 ${disabled ? "opacity-50" : ""}`}
-                      >
-                        <span className="text-foreground">
-                          {label}
-                          {financial && <span className="ml-1 text-[10px] text-[#FF6B2B]">(sadece sahip)</span>}
-                        </span>
-                        <input
-                          type="checkbox"
-                          disabled={disabled}
-                          checked={effective}
-                          onChange={(e) => togglePermission(m.user_id, key, e.target.checked)}
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {invitations.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Bekleyen davetler</p>
-          {invitations.map((inv) => (
-            <div key={inv.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-foreground truncate">
-                  {inv.email || inv.phone || "—"}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {ROLE_LABELS[inv.role]} • {new Date(inv.expires_at).toLocaleDateString("tr-TR")} tarihine kadar
-                </p>
-              </div>
-              <button
-                onClick={() => copyInviteLink(inv.token)}
-                className="p-1.5 rounded text-muted-foreground hover:text-foreground"
-                title="Davet linkini kopyala"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => cancelInvitation(inv.id)}
-                className="p-1.5 rounded text-muted-foreground hover:text-red-500"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                  <input
+                    type="checkbox"
+                    disabled={disabled}
+                    checked={effective}
+                    onChange={(e) => togglePermission(permTarget.user_id, key, e.target.checked)}
+                  />
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </ResponsiveSheet>
     </div>
   );
 }
