@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { ResponsiveSheet } from "@/components/ui/responsive";
 
 interface AddProjectModalProps {
   open: boolean;
@@ -18,8 +18,8 @@ interface AddProjectModalProps {
 }
 
 const FIELDS = [
-  { key: "name", label: "Proje Adı *", placeholder: "Villa Projesi - Çeşme", required: true },
-  { key: "client", label: "Müşteri / İşveren *", placeholder: "Mehmet Bey", required: true },
+  { key: "name", label: "Proje Adı *", placeholder: "Villa Projesi - Çeşme" },
+  { key: "client", label: "Müşteri / İşveren *", placeholder: "Mehmet Bey" },
   { key: "location", label: "Lokasyon", placeholder: "Çeşme, İzmir" },
   { key: "manager", label: "Şantiye Şefi", placeholder: "Ali Mühendis" },
   { key: "site_responsible", label: "Şantiye Sorumlusu", placeholder: "Burak Usta" },
@@ -29,12 +29,8 @@ const FIELDS = [
   { key: "description", label: "Açıklama", placeholder: "Proje detayları...", multiline: true },
 ] as const;
 
-type FormData = Record<string, string>;
-
 const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
-  const [form, setForm] = useState<FormData>({});
-
-  if (!open) return null;
+  const [form, setForm] = useState<Record<string, string>>({});
 
   const handleSubmit = () => {
     if (!form.name?.trim() || !form.client?.trim()) return;
@@ -53,60 +49,60 @@ const AddProjectModal = ({ open, onClose, onAdd }: AddProjectModalProps) => {
     onClose();
   };
 
-  const inputStyle = {  };
+  const inputCls =
+    "w-full px-3 py-2 rounded-lg text-fs-sm outline-none bg-background border border-border text-foreground";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-xl p-5 max-h-[90vh] overflow-y-auto bg-background border border-border">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[16px] font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Yeni Proje Ekle</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {FIELDS.map(f => (
-            <div key={f.key}>
-              <label className="text-[11px] font-semibold uppercase tracking-wide mb-1 block text-muted-foreground">{f.label}</label>
-              {f.key === "description" ? (
-                <textarea
-                  value={form[f.key] || ""}
-                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder={f.placeholder}
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-lg text-[13px] outline-none resize-none"
-                  style={inputStyle}
-                />
-              ) : (
-                <input
-                  value={form[f.key] || ""}
-                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder={f.placeholder}
-                  className="w-full px-3 py-2 rounded-lg text-[13px] outline-none"
-                  style={inputStyle}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-[13px] font-medium text-muted-foreground">
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      title="Yeni Proje Ekle"
+      size="lg"
+      footer={
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg text-fs-sm font-medium text-muted-foreground border border-border"
+          >
             İptal
           </button>
           <button
             onClick={handleSubmit}
             disabled={!form.name?.trim() || !form.client?.trim()}
-            className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40"
+            className="flex-1 py-2.5 rounded-lg text-fs-sm font-semibold text-white disabled:opacity-40"
             style={{ backgroundColor: "#FF6B2B" }}
           >
             Proje Ekle
           </button>
         </div>
+      }
+    >
+      <div className="space-y-3">
+        {FIELDS.map((f) => (
+          <div key={f.key}>
+            <label className="text-fs-xs font-semibold uppercase tracking-wide mb-1 block text-muted-foreground">
+              {f.label}
+            </label>
+            {f.key === "description" ? (
+              <textarea
+                value={form[f.key] || ""}
+                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                rows={3}
+                className={inputCls + " resize-none"}
+              />
+            ) : (
+              <input
+                value={form[f.key] || ""}
+                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                className={inputCls}
+              />
+            )}
+          </div>
+        ))}
       </div>
-    </div>
+    </ResponsiveSheet>
   );
 };
 
