@@ -309,9 +309,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] truncate text-muted-foreground leading-tight mt-0.5">
-                  {title}{companyShort ? ` • ${companyShort}` : ""}
-                </p>
+              </div>
+
               </div>
               <button
                 onClick={() => onTabChange("settings")}
