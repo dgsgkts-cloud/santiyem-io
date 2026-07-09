@@ -9,6 +9,7 @@ import {
   Truck, Warehouse, ShieldCheck, CircleDot, Download, ChevronDown,
   Crown, AlertTriangle, Code2, TrendingUp, Clock, AlertCircle, CheckCircle2,
   CreditCard, Calendar, Infinity as InfinityIcon,
+  ArrowUpRight, ArrowDown, GitCompare, Phone, RefreshCw, LifeBuoy, Rocket,
 } from "lucide-react";
 import {
   useLicense, PLAN_META, FEATURE_LABELS, minPlanFor,
@@ -234,37 +235,53 @@ export const SubscriptionCenter = () => {
         </div>
       </div>
 
-      {/* Current plan */}
-      <div className="rounded-2xl border border-border p-5" style={{ background: `linear-gradient(160deg, ${PLAN_META[license.plan === "super_admin" ? "enterprise" : license.plan].bg}, transparent 70%)` }}>
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: PLAN_META[license.plan].bg, border: `1px solid ${PLAN_META[license.plan].border}` }}>
-              <Sparkles className="w-4 h-4" style={{ color: PLAN_META[license.plan].color }} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[15px] font-semibold text-foreground">Mevcut Plan</span>
-                <SafePlanBadge plan={license.plan} />
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {license.isTrial ? `Deneme süresi — ${license.daysRemaining ?? 0} gün kaldı` : license.isSuperAdmin ? "Platform yetkilisi — sınırsız erişim" : "Aktif abonelik"}
-              </div>
-            </div>
-          </div>
-          {!license.isSuperAdmin && nextPlan && (
-            <button onClick={() => openUpgrade(nextPlan)} className="h-8 px-3 rounded-md text-[12px] font-semibold text-white shadow-sm hover-scale" style={{ background: "#FF6B2B" }}>
-              Planı yükselt
-            </button>
-          )}
-        </div>
+      {/* ═══ HERO ═══ Requirement #11 */}
+      <SubscriptionHero
+        license={license}
+        sub={sub}
+        paymentMethod={paymentMethod}
+        aiUsed={aiUsed}
+        aiUnlimited={aiUnlimited}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+        onCompare={() => {
+          document.getElementById("plan-comparison")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        onDowngrade={() => {
+          const prev: Partial<Record<LicensePlan, LicensePlan>> = { enterprise: "business", business: "pro", pro: "starter" };
+          const target = prev[license.plan];
+          if (target) setDowngradeTarget(target);
+          else toast.info("Zaten en düşük planı kullanıyorsunuz.");
+        }}
+        onContactSales={() => window.open("mailto:enterprise@santiyem.io?subject=Enterprise%20Görüşme", "_blank")}
+        nextPlan={nextPlan}
+      />
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-          <StatCard label="Durum" value={license.subscriptionActive ? "Aktif" : "Süresi doldu"} tone={license.subscriptionActive ? "success" : "danger"} />
-          <StatCard label="Yenileme" value={fmt(sub?.next_payment_date)} hint={sub?.status === "cancelled" ? "İptal edildi" : "Otomatik"} />
-          <StatCard label="Deneme" value={license.isTrial ? `${license.daysRemaining ?? 0} gün` : "—"} tone={license.isTrial ? "warn" : "default"} />
-          <StatCard label="AI kredi" value={aiUnlimited ? "∞" : `${license.limits.aiPerDay - aiUsed}`} hint="Bugün kalan" />
-        </div>
-      </div>
+      {/* ═══ Recommended upgrade ═══ Requirement #11 */}
+      {!license.isSuperAdmin && nextPlan && (
+        <RecommendedUpgradeCard
+          currentPlan={license.plan}
+          nextPlan={nextPlan}
+          gainedFeatures={gainedFeatures}
+          onUpgrade={() => openUpgrade(nextPlan)}
+        />
+      )}
+
+      {/* ═══ Billing Actions Bar ═══ Requirement #13 */}
+      <BillingActionsBar
+        canUpgrade={!license.isSuperAdmin && !!nextPlan}
+        canDowngrade={license.plan !== "starter" && !license.isSuperAdmin}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+        onDowngrade={() => {
+          const prev: Partial<Record<LicensePlan, LicensePlan>> = { enterprise: "business", business: "pro", pro: "starter" };
+          const target = prev[license.plan];
+          if (target) setDowngradeTarget(target);
+        }}
+        onUpdatePayment={() => setShowLegacy(true)}
+        onViewInvoices={() => setInvoicesSheet(true)}
+        onManageAutoRenew={() => setShowLegacy(true)}
+        onContactSupport={() => window.open("mailto:destek@santiyem.io?subject=Abonelik%20Destek", "_blank")}
+      />
+
 
       {/* Renewal section (requirement #9) */}
       <div className="rounded-2xl border border-border p-5 bg-card">
@@ -398,7 +415,8 @@ export const SubscriptionCenter = () => {
       </div>
 
       {/* Plan comparison — collapsed by default (requirement #5) */}
-      <div className="rounded-2xl border border-border p-5 bg-card">
+      <div id="plan-comparison" className="rounded-2xl border border-border p-5 bg-card scroll-mt-20">
+
         <SectionHeader title="Bir üst plan ile kazanacaklarınız" subtitle={nextPlan ? `${PLAN_META[nextPlan].label} planına geçince açılacak yetenekler` : "En üst plandasınız"} />
         {nextPlan ? (
           <>
@@ -584,33 +602,325 @@ const InvoiceTable = ({ rows }: { rows: any[] }) => (
   </div>
 );
 
+/* ────── Subscription Hero — Requirement #11 ────── */
+const SubscriptionHero = ({
+  license, sub, paymentMethod, aiUsed, aiUnlimited,
+  onUpgrade, onCompare, onDowngrade, onContactSales, nextPlan,
+}: {
+  license: ReturnType<typeof useLicense>;
+  sub: any;
+  paymentMethod: string;
+  aiUsed: number;
+  aiUnlimited: boolean;
+  onUpgrade: () => void;
+  onCompare: () => void;
+  onDowngrade: () => void;
+  onContactSales: () => void;
+  nextPlan?: LicensePlan;
+}) => {
+  const displayPlan: LicensePlan = license.isSuperAdmin ? "enterprise" : license.plan;
+  const meta = PLAN_META[displayPlan];
+  const price = PLAN_PRICES[displayPlan];
+  const statusLabel = license.isTrial ? "Deneme" : license.subscriptionActive ? "Aktif" : "Süresi doldu";
+  const statusColor = license.isTrial ? "#F59E0B" : license.subscriptionActive ? "#22C55E" : "#EF4444";
+  const isTop = !nextPlan;
+
+  return (
+    <div
+      className="relative rounded-2xl border p-6 overflow-hidden"
+      style={{
+        borderColor: meta.border,
+        background: `linear-gradient(135deg, ${meta.bg}, rgba(15,20,25,0.6) 55%, rgba(255,107,43,0.08) 100%)`,
+      }}
+    >
+      <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(700px 200px at 90% -10%, ${meta.color}22, transparent 65%)` }} />
+      <div className="relative flex flex-col lg:flex-row lg:items-center gap-5">
+        {/* Left: plan identity */}
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.bg, border: `1px solid ${meta.border}` }}>
+            <Sparkles className="w-5 h-5" style={{ color: meta.color }} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Mevcut Plan</span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: `${statusColor}22`, color: statusColor }}>
+                <CircleDot className="w-2.5 h-2.5" /> {statusLabel}
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-2 flex-wrap">
+              <h3 className="text-[22px] font-bold text-foreground leading-tight">{meta.label}</h3>
+              {price > 0 && !license.isTrial && (
+                <span className="text-[13px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">{price.toLocaleString("tr-TR")} ₺</span> / ay
+                </span>
+              )}
+            </div>
+            {license.isTrial && (
+              <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: "rgba(245,158,11,0.14)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.4)" }}>
+                <Zap className="w-3 h-3" /> Deneme süresi: {license.daysRemaining ?? 0} gün kaldı
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Middle: billing meta */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 lg:min-w-[280px]">
+          <div className="rounded-lg border border-border/70 bg-background/40 p-2.5">
+            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              <Calendar className="w-3 h-3" /> Sıradaki Fatura
+            </div>
+            <div className="mt-1 text-[13px] font-semibold text-foreground">{fmt(sub?.next_payment_date)}</div>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-background/40 p-2.5">
+            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              <CreditCard className="w-3 h-3" /> Ödeme
+            </div>
+            <div className="mt-1 text-[13px] font-semibold text-foreground truncate">{paymentMethod}</div>
+          </div>
+        </div>
+
+        {/* Right: CTAs */}
+        <div className="flex flex-col gap-2 lg:min-w-[200px]">
+          {isTop ? (
+            <button
+              onClick={onContactSales}
+              className="h-10 px-4 rounded-lg text-[13px] font-semibold text-white shadow-lg hover-scale inline-flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(135deg,#FF6B2B,#F59E0B)" }}
+            >
+              <Phone className="w-4 h-4" /> Satış Ekibiyle Görüş
+            </button>
+          ) : (
+            <button
+              onClick={onUpgrade}
+              className="h-10 px-4 rounded-lg text-[13px] font-semibold text-white shadow-lg hover-scale inline-flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(135deg,#FF6B2B,#F59E0B)" }}
+            >
+              <ArrowUpRight className="w-4 h-4" /> Planı Yükselt
+            </button>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={onCompare}
+              className="h-9 px-2 rounded-lg text-[11px] font-semibold border border-border text-foreground hover:border-[#FF6B2B] hover:text-[#FF6B2B] transition-colors inline-flex items-center justify-center gap-1"
+            >
+              <GitCompare className="w-3.5 h-3.5" /> Paketleri Karşılaştır
+            </button>
+            <button
+              onClick={onDowngrade}
+              className="h-9 px-2 rounded-lg text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center justify-center gap-1"
+            >
+              <ArrowDown className="w-3.5 h-3.5" /> Planı Düşür
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ────── Recommended upgrade — Requirement #11 ────── */
+const RecommendedUpgradeCard = ({
+  currentPlan, nextPlan, gainedFeatures, onUpgrade,
+}: {
+  currentPlan: LicensePlan;
+  nextPlan: LicensePlan;
+  gainedFeatures: LicenseFeature[];
+  onUpgrade: () => void;
+}) => {
+  const meta = PLAN_META[nextPlan];
+  const highlights = gainedFeatures.slice(0, 5);
+  const isEnterprise = nextPlan === "enterprise";
+  return (
+    <div
+      className="rounded-2xl border p-5 relative overflow-hidden"
+      style={{ borderColor: meta.border, background: `linear-gradient(135deg, ${meta.bg}, transparent 70%)` }}
+    >
+      <div className="absolute -top-6 -right-6 w-40 h-40 rounded-full opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle, ${meta.color}, transparent 70%)` }} />
+      <div className="relative flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF6B2B", color: "#fff" }}>Önerilen Yükseltme</span>
+            <span className="text-[12px] text-muted-foreground">{PLAN_META[currentPlan].label} → <span className="font-semibold" style={{ color: meta.color }}>{meta.label}</span></span>
+          </div>
+          <h4 className="mt-2 text-[15px] font-semibold text-foreground">
+            {isEnterprise ? "Enterprise ile sınırları kaldırın" : `${meta.label} planı ile daha fazlasını açın`}
+          </h4>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {highlights.length === 0 && (
+              <div className="text-[12px] text-muted-foreground">Yeni modüller açılacak, tüm sınırlar genişleyecek.</div>
+            )}
+            {highlights.map(f => (
+              <div key={f} className="flex items-center gap-2 text-[12px] text-foreground">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{FEATURE_LABELS[f]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="shrink-0">
+          <button
+            onClick={onUpgrade}
+            className="h-11 px-5 rounded-lg text-[13px] font-semibold text-white shadow-lg hover-scale inline-flex items-center gap-2"
+            style={{ background: `linear-gradient(135deg, ${meta.color}, #FF6B2B)` }}
+          >
+            <Rocket className="w-4 h-4" /> {meta.label}'a Geç
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ────── Billing Actions Bar — Requirement #13 ────── */
+const BillingActionsBar = ({
+  canUpgrade, canDowngrade, onUpgrade, onDowngrade, onUpdatePayment,
+  onViewInvoices, onManageAutoRenew, onContactSupport,
+}: {
+  canUpgrade: boolean;
+  canDowngrade: boolean;
+  onUpgrade: () => void;
+  onDowngrade: () => void;
+  onUpdatePayment: () => void;
+  onViewInvoices: () => void;
+  onManageAutoRenew: () => void;
+  onContactSupport: () => void;
+}) => {
+  const actions = [
+    { icon: ArrowUpRight, label: "Planı Yükselt",              onClick: onUpgrade,          disabled: !canUpgrade,   accent: true },
+    { icon: ArrowDown,    label: "Planı Düşür",                onClick: onDowngrade,        disabled: !canDowngrade },
+    { icon: CreditCard,   label: "Ödeme Yöntemini Güncelle",   onClick: onUpdatePayment },
+    { icon: FileText,     label: "Faturaları Görüntüle",       onClick: onViewInvoices },
+    { icon: RefreshCw,    label: "Otomatik Yenilemeyi Yönet",  onClick: onManageAutoRenew },
+    { icon: LifeBuoy,     label: "Destek ile İletişime Geç",   onClick: onContactSupport },
+  ];
+  return (
+    <div className="sticky top-2 z-10 rounded-2xl border border-border bg-card/95 backdrop-blur-md p-2 shadow-sm">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {actions.map((a, i) => (
+          <button
+            key={i}
+            onClick={a.onClick}
+            disabled={a.disabled}
+            className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-semibold transition-colors ${
+              a.accent
+                ? "text-white shadow-sm disabled:opacity-40"
+                : "border border-border text-foreground hover:border-[#FF6B2B] hover:text-[#FF6B2B] disabled:opacity-40 disabled:hover:border-border disabled:hover:text-foreground"
+            }`}
+            style={a.accent ? { background: "#FF6B2B" } : undefined}
+          >
+            <a.icon className="w-3.5 h-3.5" />
+            <span className="whitespace-nowrap">{a.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ────── Downgrade dialog — Requirement #12 ────── */
 const DowngradeDialog = ({ current, target, onClose }: { current: LicensePlan; target: LicensePlan; onClose: () => void }) => {
-  const lost = (Object.keys(FEATURE_LABELS) as LicenseFeature[]).filter(f => {
+  const [confirmed, setConfirmed] = useState(false);
+  const rank: Record<LicensePlan, number> = { starter: 1, pro: 2, business: 3, enterprise: 4, trial: 2, demo: 4, super_admin: 5 };
+  const lostFeatures = (Object.keys(FEATURE_LABELS) as LicenseFeature[]).filter(f => {
     const need = minPlanFor(f);
-    const rank: Record<LicensePlan, number> = { starter: 1, pro: 2, business: 3, enterprise: 4, trial: 2, demo: 4, super_admin: 5 };
     return rank[need] > rank[target] && rank[need] <= rank[current];
   });
+
+  // Quantitative losses (personnel/project/warehouse count drop).
+  const LIMITS: Record<LicensePlan, { projects: number; personnel: number; warehouses: number; ai: number }> = {
+    starter:    { projects: 2,  personnel: 10,  warehouses: 1,  ai: 20 },
+    pro:        { projects: 10, personnel: 100, warehouses: 3,  ai: 300 },
+    business:   { projects: 50, personnel: -1,  warehouses: -1, ai: 1500 },
+    enterprise: { projects: -1, personnel: -1,  warehouses: -1, ai: -1 },
+    trial:      { projects: -1, personnel: -1,  warehouses: -1, ai: 300 },
+    demo:       { projects: -1, personnel: -1,  warehouses: -1, ai: -1 },
+    super_admin:{ projects: -1, personnel: -1,  warehouses: -1, ai: -1 },
+  };
+  const cur = LIMITS[current];
+  const tgt = LIMITS[target];
+  const quantLoss = (label: string, curV: number, tgtV: number, suffix = "") => {
+    if (tgtV === -1) return null; // target unlimited → no downgrade in this dim
+    if (curV === -1) return `${label}: Sınırsız → ${tgtV.toLocaleString("tr-TR")}${suffix}`;
+    if (curV > tgtV) return `${label}: ${curV.toLocaleString("tr-TR")} → ${tgtV.toLocaleString("tr-TR")}${suffix} (−${(curV - tgtV).toLocaleString("tr-TR")})`;
+    return null;
+  };
+  const quantLosses = [
+    quantLoss("Proje limiti", cur.projects, tgt.projects),
+    quantLoss("Personel hakkı", cur.personnel, tgt.personnel),
+    quantLoss("Depo sayısı", cur.warehouses, tgt.warehouses),
+    quantLoss("Günlük AI kredisi", cur.ai, tgt.ai),
+  ].filter(Boolean) as string[];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in" onClick={onClose}>
-      <div className="max-w-md w-full rounded-2xl border border-border bg-popover p-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="w-5 h-5 text-amber-400" />
-          <h4 className="text-[14px] font-semibold text-foreground">Plan düşürme onayı</h4>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in" onClick={onClose}>
+      <div className="max-w-lg w-full rounded-2xl border border-border bg-popover p-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.14)", border: "1px solid rgba(239,68,68,0.4)" }}>
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+          </div>
+          <div>
+            <h4 className="text-[15px] font-semibold text-foreground">Plan düşürme onayı</h4>
+            <p className="text-[11px] text-muted-foreground">
+              {PLAN_META[current].label} → {PLAN_META[target].label}
+            </p>
+          </div>
         </div>
-        <p className="text-[12px] text-muted-foreground">
-          {PLAN_META[current].label} → {PLAN_META[target].label} geçişi ile aşağıdaki modüller kilitlenecek. Verileriniz silinmez, salt-okunur olur.
-        </p>
-        <div className="mt-3 rounded-lg border border-border p-3 max-h-40 overflow-y-auto space-y-1">
-          {lost.length === 0 && <div className="text-[11px] text-muted-foreground">Kaybedilen bir modül yok.</div>}
-          {lost.map(f => (
-            <div key={f} className="flex items-center gap-2 text-[12px] text-foreground">
-              <X className="w-3.5 h-3.5 text-red-400" /> {FEATURE_LABELS[f]}
+
+        <div className="text-[12px] text-foreground bg-muted/40 border border-border rounded-lg p-3">
+          <div className="font-semibold text-red-400 mb-1">Aşağıdakileri kaybedeceksiniz:</div>
+        </div>
+
+        <div className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
+          {quantLosses.length > 0 && (
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Kapasite</div>
+              <div className="space-y-1">
+                {quantLosses.map((l, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[12px] text-foreground">
+                    <ArrowDown className="w-3.5 h-3.5 text-red-400 shrink-0" /> {l}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
+          {lostFeatures.length > 0 && (
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Modüller</div>
+              <div className="space-y-1">
+                {lostFeatures.map(f => (
+                  <div key={f} className="flex items-center gap-2 text-[12px] text-foreground">
+                    <X className="w-3.5 h-3.5 text-red-400 shrink-0" /> {FEATURE_LABELS[f]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {quantLosses.length === 0 && lostFeatures.length === 0 && (
+            <div className="text-[12px] text-muted-foreground">Kaybedilen bir modül veya kapasite yok.</div>
+          )}
         </div>
+
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Verileriniz asla silinmez — kilitli modüller salt-okunur moda geçer ve tekrar yükseltince tekrar açılır.
+        </p>
+
+        <label className="mt-4 flex items-start gap-2 p-3 rounded-lg border border-border cursor-pointer hover:border-foreground/30 transition-colors">
+          <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 accent-[#EF4444]" />
+          <span className="text-[12px] text-foreground">
+            Yukarıdaki kayıpları anladım ve <strong>{PLAN_META[target].label}</strong> planına geçmek istiyorum.
+          </span>
+        </label>
+
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="h-8 px-3 rounded-md text-[12px] border border-border text-muted-foreground">Vazgeç</button>
-          <button onClick={() => { toast.success("Plan düşürme talebi alındı"); onClose(); }} className="h-8 px-3 rounded-md text-[12px] font-semibold text-white" style={{ background: "#EF4444" }}>Yine de düşür</button>
+          <button onClick={onClose} className="h-9 px-3 rounded-md text-[12px] border border-border text-muted-foreground hover:text-foreground">Vazgeç</button>
+          <button
+            onClick={() => { toast.success("Plan düşürme talebi alındı"); onClose(); }}
+            disabled={!confirmed}
+            className="h-9 px-3 rounded-md text-[12px] font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: "#EF4444" }}
+          >
+            Yine de düşür
+          </button>
         </div>
       </div>
     </div>
@@ -618,3 +928,4 @@ const DowngradeDialog = ({ current, target, onClose }: { current: LicensePlan; t
 };
 
 export default SubscriptionCenter;
+
