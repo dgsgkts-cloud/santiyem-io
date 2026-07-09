@@ -623,7 +623,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         </div>
       </header>
 
-      {/* 2. Executive Brief — the hero: top 5 AI priorities */}
+      {/* 1. Bugünün Operasyon Özeti — premium KPI ribbon */}
+      <TodayOperationsRibbon onTabChange={onTabChange} />
+
+      {/* 2. Yönetici Brifingi — Bugünün Kritik Konuları */}
       <div className="!mt-0">
         <ExecutiveMorningBrief
           onTabChange={onTabChange}
@@ -632,6 +635,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
           maxPriorities={5}
         />
       </div>
+
+      {/* 3. Bugünün Planı — optional timeline (hidden if empty) */}
+      <TodayTimeline />
 
       {/* 3. Quick Actions — 44px touch minimum */}
       <div className="flex flex-wrap gap-2">
