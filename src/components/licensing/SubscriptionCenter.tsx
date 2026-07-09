@@ -276,6 +276,19 @@ export const SubscriptionCenter = () => {
         onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
       />
 
+      {/* ═══ Predictive upgrade signals ═══ Sprint 29.5 */}
+      <PredictiveUsageForecast
+        items={[
+          { key: "projects",   label: "Proje limiti",          unit: "proje",    used: projectsUsed,   max: license.limits.projects },
+          { key: "personnel",  label: "Personel",              unit: "personel", used: personnelUsed,  max: license.limits.personnel },
+          { key: "ai",         label: "AI kredisi",            unit: "kredi",    used: aiUsed,         max: license.limits.aiPerDay, cadence: "daily" },
+          { key: "warehouses", label: "Depo",                  unit: "depo",     used: 0,              max: license.limits.warehouses },
+          { key: "vehicles",   label: "Araç",                  unit: "araç",     used: 0,              max: license.canFleet ? -1 : 0 },
+          { key: "storage",    label: "Depolama",              unit: "GB",       used: 2,              max: license.plan === "enterprise" || license.isSuperAdmin ? -1 : 20 },
+        ]}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+      />
+
       {/* ═══ Recommended upgrade ═══ Requirement #11 + Sprint 29.4 #5 */}
       {!license.isSuperAdmin && nextPlan && (
         <RecommendedUpgradeCard
@@ -857,6 +870,139 @@ const UsageThresholdWarnings = ({
     </div>
   );
 };
+
+/* ────── Predictive usage forecast — Sprint 29.5 ────── */
+type ForecastItem = {
+  key: string;
+  label: string;
+  unit: string;
+  used: number;
+  max: number;
+  cadence?: "daily" | "monthly";
+};
+
+/** Frontend-only heuristic: infer a daily consumption rate from the current
+ *  usage ratio and project remaining days until exhaustion. AI (daily quota)
+ *  is compared against the ideal end-of-month pace so we can say "biter". */
+function forecastDays(item: ForecastItem): { days: number | null; ratio: number; dailyRate: number } {
+  if (item.max <= 0) return { days: null, ratio: 0, dailyRate: 0 };
+  const ratio = Math.min(2, item.used / item.max);
+
+  if (item.cadence === "daily") {
+    // AI: how many days into the month have passed vs used ratio of daily cap.
+    const now = new Date();
+    const day = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    // Estimated monthly usage projection = used-today * remaining days if pace holds
+    // "days until credit runs out this month" ≈ remainingCap / used_today
+    if (item.used <= 0) return { days: daysInMonth - day, ratio, dailyRate: 0 };
+    const daysToRunOut = Math.max(0, Math.floor((item.max - item.used) / item.used));
+    // How many days early vs end of month
+    const daysLeftInMonth = daysInMonth - day;
+    return { days: Math.max(0, daysLeftInMonth - daysToRunOut), ratio, dailyRate: item.used };
+  }
+
+  // Cumulative resources: assume linear growth from account creation.
+  // Without history, approximate daily rate from (used / 30) — a conservative
+  // one-month baseline that still surfaces meaningful trends.
+  const daily = item.used / 30;
+  if (daily <= 0) return { days: null, ratio, dailyRate: 0 };
+  const remaining = Math.max(0, item.max - item.used);
+  return { days: Math.floor(remaining / daily), ratio, dailyRate: daily };
+}
+
+const PredictiveUsageForecast = ({
+  items, onUpgrade,
+}: {
+  items: ForecastItem[];
+  onUpgrade: () => void;
+}) => {
+  const rows = items
+    .map(i => ({ item: i, ...forecastDays(i) }))
+    .filter(r => r.item.max > 0 && !isUnlimited(r.item.max) && r.item.used > 0);
+
+  if (rows.length === 0) return null;
+
+  const anyUrgent = rows.some(r => r.days !== null && r.days <= 30);
+
+  return (
+    <div className="rounded-2xl border border-border p-5 bg-card">
+      <SectionHeader
+        title="Öngörülen Kullanım"
+        subtitle="Mevcut hızınıza göre projeksiyon"
+        action={
+          anyUrgent && (
+            <button
+              onClick={onUpgrade}
+              className="h-8 px-3 rounded-md text-[12px] font-semibold text-white inline-flex items-center gap-1.5"
+              style={{ background: "#FF6B2B" }}
+            >
+              <Rocket className="w-3.5 h-3.5" /> Şimdi Yükselt
+            </button>
+          )
+        }
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {rows.map(({ item, days, ratio }) => {
+          const pct = Math.min(100, Math.round(ratio * 100));
+          const tone = pct > 85 ? "#EF4444" : pct >= 60 ? "#F59E0B" : "#22C55E";
+          const toneBg = pct > 85 ? "rgba(239,68,68,0.10)" : pct >= 60 ? "rgba(245,158,11,0.10)" : "rgba(34,197,94,0.08)";
+          const toneBorder = pct > 85 ? "rgba(239,68,68,0.35)" : pct >= 60 ? "rgba(245,158,11,0.35)" : "rgba(34,197,94,0.30)";
+          const urgent = days !== null && days <= 30;
+
+          let message: string;
+          if (item.cadence === "daily") {
+            if (days === null || days <= 0) {
+              message = `Mevcut hızınızla AI krediniz ay bitmeden tükenmeyecek.`;
+            } else {
+              message = `AI kullanım hızınız devam ederse aylık krediniz ay sonundan ${days} gün önce bitecek.`;
+            }
+          } else {
+            message = days === null
+              ? `Yeterli veri yok — kullanım başlar başlamaz projeksiyon güncellenecek.`
+              : days <= 0
+                ? `${item.label} sınırı doldu.`
+                : `Mevcut kullanım hızınızla ${item.label.toLowerCase()} ${days} gün içinde dolacak.`;
+          }
+
+          return (
+            <div key={item.key} className="rounded-xl border p-4" style={{ borderColor: toneBorder, background: toneBg }}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" style={{ color: tone }} />
+                  <span className="text-[13px] font-semibold text-foreground">{item.label}</span>
+                </div>
+                <span className="text-[11px] font-semibold" style={{ color: tone }}>
+                  %{pct}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: tone }} />
+              </div>
+              <div className="mt-2 text-[12px] text-foreground">{message}</div>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span className="text-[10px] text-muted-foreground">
+                  {item.used.toLocaleString("tr-TR")} / {item.max.toLocaleString("tr-TR")} {item.unit}
+                </span>
+                {urgent && (
+                  <button
+                    onClick={onUpgrade}
+                    className="text-[11px] font-semibold inline-flex items-center gap-1 hover:underline"
+                    style={{ color: tone }}
+                  >
+                    <ArrowUpRight className="w-3 h-3" /> Planı yükselt
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+
 
 /* ────── Recommended upgrade — Requirement #11 + Sprint 29.4 #5 ────── */
 const RecommendedUpgradeCard = ({
