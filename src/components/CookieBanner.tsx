@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { useUser } from "@/contexts/UserContext";
 
 const CookieBanner = () => {
-  if (Capacitor.isNativePlatform()) return null;
-
+  const { user, loading } = useUser();
   const [visible, setVisible] = useState(false);
   const [hiding, setHiding] = useState(false);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform() || loading || user) return;
     const consent = localStorage.getItem("cookieConsent");
     if (!consent) setVisible(true);
-  }, []);
+  }, [loading, user]);
 
   const accept = () => {
     setHiding(true);
@@ -21,7 +22,7 @@ const CookieBanner = () => {
     }, 300);
   };
 
-  if (!visible) return null;
+  if (Capacitor.isNativePlatform() || loading || user || !visible) return null;
 
   return (
     <div
