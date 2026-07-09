@@ -73,7 +73,10 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   };
 
   return (
-    <div className="border-t border-border bg-card/60 backdrop-blur-sm p-4">
+    <div
+      className="border-t border-border bg-card/60 backdrop-blur-sm px-4 pt-3"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+    >
       <div className="max-w-3xl mx-auto">
         {/* Attachment previews */}
         {attachments.length > 0 && (

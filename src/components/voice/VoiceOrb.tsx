@@ -102,21 +102,59 @@ export function VoiceOrb() {
     try { localStorage.setItem("finance_voice_tip_dismissed", "1"); } catch { /* noop */ }
   };
 
+  // Sprint M2.0 — Hide the floating mic while the on-screen keyboard is open
+  // (any text input/textarea/contenteditable is focused).
+  const [inputActive, setInputActive] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const a = document.activeElement as HTMLElement | null;
+      if (!a) return setInputActive(false);
+      const tag = a.tagName;
+      setInputActive(
+        tag === "INPUT" || tag === "TEXTAREA" || a.isContentEditable === true,
+      );
+    };
+    document.addEventListener("focusin", check);
+    document.addEventListener("focusout", check);
+    return () => {
+      document.removeEventListener("focusin", check);
+      document.removeEventListener("focusout", check);
+    };
+  }, []);
+
   if (!signedIn) return null;
 
 
   const isNative = Capacitor.isNativePlatform();
-  const bottomOffset = isNative
-    ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
-    : "calc(env(safe-area-inset-bottom, 0px) + 24px)";
-
-  // Sprint 21.1 — Desktop mic moves to bottom-right, mobile keeps bottom-center above tab bar.
+  // Sprint M2.0 — Mobile mic moves to bottom-right (WhatsApp-style FAB) above tab bar.
   const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
+  const bottomOffset = isDesktop
+    ? (isNative
+        ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
+        : "calc(env(safe-area-inset-bottom, 0px) + 24px)")
+    : "calc(env(safe-area-inset-bottom, 0px) + 88px)";
+
   const positionClass = isDesktop
     ? "fixed right-6 z-40 group"
-    : "fixed left-1/2 -translate-x-1/2 z-40 group";
+    : "fixed right-4 z-40 group";
   const orbSize = isDesktop ? "w-12 h-12" : "w-14 h-14";
   const iconSize = isDesktop ? "w-5 h-5" : "w-6 h-6";
+
+  if (inputActive && !isDesktop) {
+    // Keyboard-open guard on mobile — render only the overlay portal if open.
+    return open ? (
+      <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
+        <VoiceCopilot
+          onClose={() => { setOpen(false); setPending({}); }}
+          access={access}
+          initialContext={pending.initialContext}
+          initialCards={pending.initialCards}
+          autoSpeak={pending.autoSpeak}
+          autoStart={pending.autoSpeak}
+        />
+      </VoiceErrorBoundary>
+    ) : null;
+  }
 
   return (
     <>
