@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,8 @@ import { usePersonnel, EMPLOYMENT_TYPE_LABELS, type Personnel } from "@/hooks/us
 import { useProjects } from "@/hooks/useProjects";
 import PersonnelForm from "./PersonnelForm";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { SectionCard } from "@/components/ui/responsive/SectionCard";
+import { ResponsiveTable, type ResponsiveColumn } from "@/components/ui/responsive/ResponsiveTable";
 
 const TYPE_COLORS: Record<string, string> = {
   daily_wage: "bg-amber-500/15 text-amber-400 border-amber-500/40",
@@ -47,6 +48,73 @@ export default function PersonnelList() {
     setShowForm(true);
   };
 
+  const columns: ResponsiveColumn<Personnel>[] = [
+    {
+      key: "name",
+      header: "Ad Soyad",
+      primary: true,
+      cell: (p) => (
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <span className="font-medium truncate">{p.full_name}</span>
+          {!p.is_active && <Badge variant="outline" className="opacity-60">Pasif</Badge>}
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Tip",
+      cell: (p) => (
+        <Badge variant="outline" className={TYPE_COLORS[p.employment_type]}>
+          {EMPLOYMENT_TYPE_LABELS[p.employment_type]}
+        </Badge>
+      ),
+    },
+    {
+      key: "phone",
+      header: "Telefon",
+      cell: (p) => p.phone ? (
+        <span className="inline-flex items-center gap-1 text-fs-sm"><Phone className="w-3 h-3" />{p.phone}</span>
+      ) : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "occupation",
+      header: "Görev",
+      cell: (p) => p.occupation ?? <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "wage",
+      header: "Ücret",
+      cell: (p) => {
+        if (p.employment_type === "daily_wage" && p.daily_wage) return `${p.daily_wage} ₺/gün`;
+        if (p.employment_type === "monthly_salary" && p.monthly_salary) return `${p.monthly_salary} ₺/ay`;
+        return <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      key: "projects",
+      header: "Projeler",
+      cell: (p) => {
+        const names = assignments.filter((a) => a.personnel_id === p.id).map((a) => projectName(a.project_id));
+        return names.length ? <span className="truncate">{names.join(", ")}</span> : <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      cell: (p) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }} className="text-red-400">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -56,63 +124,37 @@ export default function PersonnelList() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
         />
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {(["all", "daily_wage", "monthly_salary", "subcontractor_crew"] as const).map((k) => (
             <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}
-              className={filter === k ? "bg-[#FF6B2B] hover:bg-[#FF6B2B]/90" : ""}>
+              className={filter === k ? "bg-primary hover:bg-primary/90" : ""}>
               {k === "all" ? "Tümü" : EMPLOYMENT_TYPE_LABELS[k as keyof typeof EMPLOYMENT_TYPE_LABELS]}
             </Button>
           ))}
         </div>
-        <Button className="ml-auto bg-[#FF6B2B] hover:bg-[#FF6B2B]/90" onClick={() => { setEditing(null); setShowForm(true); }}>
+        <Button className="ml-auto bg-primary hover:bg-primary/90" onClick={() => { setEditing(null); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-1" /> Yeni Kişi
         </Button>
       </div>
 
-      {loading ? (
-        <p className="text-muted-foreground text-sm">Yükleniyor...</p>
-      ) : filtered.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">Henüz personel kaydı yok. "Yeni Kişi" ile ekleyin.</p>
-        </Card>
-      ) : (
-        <div className="grid gap-2">
-          {filtered.map((p) => {
-            const assigns = assignments.filter((a) => a.personnel_id === p.id);
-            return (
-              <Card key={p.id} className="p-3 group hover:border-[#FF6B2B]/40 transition">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium">{p.full_name}</span>
-                      <Badge variant="outline" className={TYPE_COLORS[p.employment_type]}>
-                        {EMPLOYMENT_TYPE_LABELS[p.employment_type]}
-                      </Badge>
-                      {!p.is_active && <Badge variant="outline" className="opacity-60">Pasif</Badge>}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                      {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
-                      {p.occupation && <span>{p.occupation}</span>}
-                      {p.employment_type === "daily_wage" && p.daily_wage ? <span>{p.daily_wage} ₺/gün</span> : null}
-                      {p.employment_type === "monthly_salary" && p.monthly_salary ? <span>{p.monthly_salary} ₺/ay</span> : null}
-                      {assigns.length > 0 && <span>{assigns.map((a) => projectName(a.project_id)).join(", ")}</span>}
-                    </div>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(p)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} className="text-red-400">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      <SectionCard padded={false}>
+        {loading ? (
+          <p className="text-fs-sm text-muted-foreground p-4">Yükleniyor...</p>
+        ) : (
+          <ResponsiveTable
+            columns={columns}
+            rows={filtered}
+            rowKey={(p) => p.id}
+            onRowClick={(p) => openEdit(p)}
+            empty={
+              <div className="p-8 text-center">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-fs-sm text-muted-foreground">Henüz personel kaydı yok. "Yeni Kişi" ile ekleyin.</p>
+              </div>
+            }
+          />
+        )}
+      </SectionCard>
 
       <PersonnelForm open={showForm} onClose={() => { setShowForm(false); setEditing(null); }} initial={editing} />
 
