@@ -161,6 +161,12 @@ export function useExecutiveBrief() {
           pendingPayments: 0,
           tasksDueToday: 0,
           laborDeltaPct: null,
+          expectedCollectionsAmount: 0,
+          expectedCollectionsCount: 0,
+          paymentsDueTodayAmount: 0,
+          paymentsDueTodayCount: 0,
+          pendingHakedisCount: 0,
+          todayEvents: [],
         } as ExecutiveKpis,
       };
     }
