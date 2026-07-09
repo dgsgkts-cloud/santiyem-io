@@ -454,7 +454,8 @@
   }
 
   .safe-area-top { padding-top: env(safe-area-inset-top, 0px); }
-  .safe-area-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  /* Sprint M2.1 — additive safe-area (never collapses the base gutter to 0). */
+  .safe-area-x { padding-left: max(env(safe-area-inset-left, 0px), 1.25rem); padding-right: max(env(safe-area-inset-right, 0px), 1.25rem); }
 
   @supports (-webkit-touch-callout: none) {
     input, textarea, select { font-size: max(16px, 1rem); }
