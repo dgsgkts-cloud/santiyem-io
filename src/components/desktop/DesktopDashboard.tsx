@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
 import { TodayOperationsRibbon } from "@/components/dashboard/TodayOperationsRibbon";
 import { TodayTimeline } from "@/components/dashboard/TodayTimeline";
+import { AIQuickAskHero } from "@/components/dashboard/AIQuickAskHero";
 import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
 import { useDisplayName } from "@/hooks/useDisplayName";
@@ -625,7 +626,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         </div>
       </header>
 
-      {/* 1. Bugünün Operasyon Özeti — premium KPI ribbon */}
+      {/* 2. Şantiyem AI — primary interaction hero */}
+      <AIQuickAskHero onSend={onSend} onTabChange={onTabChange} />
+
+      {/* 3. Bugünün Operasyon Özeti — premium KPI ribbon */}
       <TodayOperationsRibbon onTabChange={onTabChange} />
 
       {/* 2. Yönetici Brifingi — Bugünün Kritik Konuları */}
