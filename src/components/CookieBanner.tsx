@@ -26,15 +26,17 @@ const CookieBanner = () => {
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-[9999] transition-transform duration-300 ${hiding ? "translate-y-full" : "translate-y-0"}`}
-      style={{
-        backgroundColor: "#161C23",
-        borderTop: "1px solid #1E2732",
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.4)",
-      }}
+      className={`fixed bottom-0 left-0 right-0 z-[9999] transition-transform duration-300 pointer-events-none ${hiding ? "translate-y-full" : "translate-y-0"}`}
     >
       {/* Desktop / Tablet */}
-      <div className="hidden sm:flex items-center justify-between gap-4 px-6 py-4">
+      <div
+        className="hidden sm:flex items-center justify-between gap-4 px-6 py-4 pointer-events-auto"
+        style={{
+          backgroundColor: "#161C23",
+          borderTop: "1px solid #1E2732",
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.4)",
+        }}
+      >
         <p className="text-[13px] max-w-[600px]" style={{ color: "#94A3B8" }}>
           🍪 Bu site, hizmet kalitesini artırmak amacıyla yalnızca zorunlu çerezler kullanmaktadır. Sitemizi kullanmaya devam ederek çerez politikamızı kabul etmiş sayılırsınız.
         </p>
