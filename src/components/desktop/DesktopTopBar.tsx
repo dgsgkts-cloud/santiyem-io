@@ -50,13 +50,16 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
       <div className="flex items-center gap-2">
         {actions}
 
-        <button
-          onClick={openSubscriptionPage}
-          className="hidden md:inline-flex"
-          title={license.isTrial ? `Deneme — ${license.daysRemaining ?? 0} gün kaldı` : `${license.planLabel} planı`}
-        >
-          <PlanBadge plan={license.plan} />
-        </button>
+        {!license.isSuperAdmin && (
+          <button
+            onClick={openSubscriptionPage}
+            className="hidden md:inline-flex"
+            title={license.isTrial ? `Deneme — ${license.daysRemaining ?? 0} gün kaldı` : `${license.planLabel} planı`}
+          >
+            <PlanBadge plan={license.plan} />
+          </button>
+        )}
+
 
 
         <button
