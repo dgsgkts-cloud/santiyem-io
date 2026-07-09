@@ -278,7 +278,7 @@ export default function FleetPage() {
   }, [equipment, search, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-[#0B0F14] text-white/90">
+    <div className="bg-[#0B0F14] text-white/90">
       {/* header */}
       <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0B0F14]/85 backdrop-blur-xl">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center gap-4">
@@ -714,7 +714,7 @@ function FuelTab({ entries, equipment }: { entries: FuelEntry[]; equipment: Equi
           <h3 className="text-sm font-semibold text-white">Son Yakıt Kayıtları</h3>
           <button className="text-xs text-[#FF6B2B] hover:underline">Yeni Kayıt</button>
         </div>
-        <div className="max-h-[420px] overflow-y-auto">
+        <div>
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-[#0B0F14]/95 backdrop-blur">
               <tr className="text-[11px] text-white/50 uppercase tracking-wider">
@@ -757,7 +757,7 @@ function OperatorsTab({ items }: { items: OperatorAssignment[] }) {
         <h3 className="text-sm font-semibold text-white">Operatör Atamaları</h3>
         <button className="text-xs text-[#FF6B2B] hover:underline flex items-center gap-1"><Plus className="w-3 h-3" /> Yeni Atama</button>
       </div>
-      <div className="max-h-[600px] overflow-y-auto">
+      <div>
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-[#0B0F14]/95 backdrop-blur">
             <tr className="text-[11px] text-white/50 uppercase tracking-wider">
