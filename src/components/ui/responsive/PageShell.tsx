@@ -32,11 +32,15 @@ export function PageShell({
     <div
       className={cn(
         "w-full no-overflow-x",
-        "px-5 sm:px-6 lg:px-8 py-5 lg:py-6",
-        "safe-area-bottom safe-area-x",
+        "py-5 lg:py-6",
+        "safe-area-bottom",
         className
       )}
-      style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
+      style={{
+        paddingLeft: "max(env(safe-area-inset-left, 0px), 20px)",
+        paddingRight: "max(env(safe-area-inset-right, 0px), 20px)",
+        paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)",
+      }}
     >
       <div
         className={cn(bleed ? "w-full" : "mx-auto w-full")}
