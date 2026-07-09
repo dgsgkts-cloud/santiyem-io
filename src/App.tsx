@@ -124,6 +124,7 @@ const App = () => (
               <Route path="/ekip/:token" element={<EkipTakip />} />
               <Route path="/proje-davet/:token" element={<InviteAccept />} />
               <Route path="/saha" element={<ConstructionMode />} />
+              <Route path="/setup" element={<SetupPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
