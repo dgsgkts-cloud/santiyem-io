@@ -10,7 +10,7 @@ import type { WarehouseData } from "./useWarehouseData";
 
 export const StatePill = ({ state }: { state: StockState }) => {
   const m = STATE_META[state];
-  return <span className={`text-fs-2xs px-2 py-0.5 rounded-full border ${m.color}`}>{m.label}</span>;
+  return <span className={`text-fs-xs px-2 py-0.5 rounded-full border ${m.color}`}>{m.label}</span>;
 };
 
 export const MoveBadge = ({ kind }: { kind: Movement["kind"] }) => {
@@ -24,7 +24,7 @@ export const MoveBadge = ({ kind }: { kind: Movement["kind"] }) => {
   };
   const { label, icon: Icon, color } = map[kind];
   return (
-    <span className={`text-fs-2xs px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${color}`}>
+    <span className={`text-fs-xs px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${color}`}>
       <Icon className="w-2.5 h-2.5" /> {label}
     </span>
   );
@@ -85,7 +85,7 @@ export const SmartAlerts = ({ data }: { data: WarehouseData }) => {
     <ResponsiveGrid variant="auto" minItemWidth={160} className="gap-2">
       {alerts.map(a => (
         <div key={a.label} className={`rounded-xl border p-3 ${a.color}`}>
-          <div className="flex items-center gap-1.5 text-fs-2xs uppercase tracking-wide opacity-70">
+          <div className="flex items-center gap-1.5 text-fs-xs uppercase tracking-wide opacity-70">
             <a.icon className="w-3 h-3" /> {a.label}
           </div>
           <div className="text-fs-xl font-semibold mt-1 tabular-nums">{a.value}</div>
