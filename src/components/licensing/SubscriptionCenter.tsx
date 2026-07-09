@@ -9,6 +9,7 @@ import {
   Truck, Warehouse, ShieldCheck, CircleDot, Download, ChevronDown,
   Crown, AlertTriangle, Code2, TrendingUp, Clock, AlertCircle, CheckCircle2,
   CreditCard, Calendar, Infinity as InfinityIcon,
+  ArrowUpRight, ArrowDown, GitCompare, Phone, RefreshCw, LifeBuoy, Rocket,
 } from "lucide-react";
 import {
   useLicense, PLAN_META, FEATURE_LABELS, minPlanFor,
