@@ -415,7 +415,8 @@ export const SubscriptionCenter = () => {
       </div>
 
       {/* Plan comparison — collapsed by default (requirement #5) */}
-      <div className="rounded-2xl border border-border p-5 bg-card">
+      <div id="plan-comparison" className="rounded-2xl border border-border p-5 bg-card scroll-mt-20">
+
         <SectionHeader title="Bir üst plan ile kazanacaklarınız" subtitle={nextPlan ? `${PLAN_META[nextPlan].label} planına geçince açılacak yetenekler` : "En üst plandasınız"} />
         {nextPlan ? (
           <>
