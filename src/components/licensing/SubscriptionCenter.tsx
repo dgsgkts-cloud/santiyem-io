@@ -162,7 +162,7 @@ export const SubscriptionCenter = () => {
           <h3 className="text-[16px] font-semibold text-foreground">Abonelik & Lisans Merkezi</h3>
           <p className="text-[12px] text-muted-foreground mt-0.5">Plan, kullanım, faturalar ve koltuk yönetimi tek panelde.</p>
         </div>
-        {license.isSuperAdmin && <ViewAsSimulator />}
+        {/* Sprint — Platform Owner tools moved to Settings › Geliştirici Araçları */}
       </div>
 
       {/* Workspace status glass card */}
