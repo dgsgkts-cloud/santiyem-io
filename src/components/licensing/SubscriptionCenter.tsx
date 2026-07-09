@@ -143,6 +143,7 @@ export const SubscriptionCenter = () => {
   const [showDev, setShowDev] = useState(false);
   const [showFullMatrix, setShowFullMatrix] = useState(false);
   const [invoicesSheet, setInvoicesSheet] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   useEffect(() => {
     if (!user) return;
@@ -254,15 +255,35 @@ export const SubscriptionCenter = () => {
         }}
         onContactSales={() => window.open("mailto:enterprise@santiyem.io?subject=Enterprise%20Görüşme", "_blank")}
         nextPlan={nextPlan}
+        usage={{
+          projects: { used: projectsUsed, max: license.limits.projects },
+          personnel: { used: personnelUsed, max: license.limits.personnel },
+          warehouses: { used: 0, max: license.limits.warehouses },
+          ai: { used: aiUsed, max: license.limits.aiPerDay },
+        }}
+        billingCycle={billingCycle}
+        onBillingCycleChange={setBillingCycle}
       />
 
-      {/* ═══ Recommended upgrade ═══ Requirement #11 */}
+      {/* ═══ Usage threshold warnings ═══ Sprint 29.4 #3 */}
+      <UsageThresholdWarnings
+        items={[
+          { key: "projects",   label: "proje",             used: projectsUsed,  max: license.limits.projects },
+          { key: "personnel",  label: "personel",          used: personnelUsed, max: license.limits.personnel },
+          { key: "warehouses", label: "depo",              used: 0,             max: license.limits.warehouses },
+          { key: "ai",         label: "AI kredisi",        used: aiUsed,        max: license.limits.aiPerDay, isPct: true },
+        ]}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+      />
+
+      {/* ═══ Recommended upgrade ═══ Requirement #11 + Sprint 29.4 #5 */}
       {!license.isSuperAdmin && nextPlan && (
         <RecommendedUpgradeCard
           currentPlan={license.plan}
           nextPlan={nextPlan}
           gainedFeatures={gainedFeatures}
           onUpgrade={() => openUpgrade(nextPlan)}
+          billingCycle={billingCycle}
         />
       )}
 
@@ -602,10 +623,11 @@ const InvoiceTable = ({ rows }: { rows: any[] }) => (
   </div>
 );
 
-/* ────── Subscription Hero — Requirement #11 ────── */
+/* ────── Subscription Hero — Requirement #11 + Sprint 29.4 #1,#2 ────── */
 const SubscriptionHero = ({
   license, sub, paymentMethod, aiUsed, aiUnlimited,
   onUpgrade, onCompare, onDowngrade, onContactSales, nextPlan,
+  usage, billingCycle, onBillingCycleChange,
 }: {
   license: ReturnType<typeof useLicense>;
   sub: any;
@@ -617,10 +639,20 @@ const SubscriptionHero = ({
   onDowngrade: () => void;
   onContactSales: () => void;
   nextPlan?: LicensePlan;
+  usage: {
+    projects: { used: number; max: number };
+    personnel: { used: number; max: number };
+    warehouses: { used: number; max: number };
+    ai: { used: number; max: number };
+  };
+  billingCycle: "monthly" | "yearly";
+  onBillingCycleChange: (v: "monthly" | "yearly") => void;
 }) => {
   const displayPlan: LicensePlan = license.isSuperAdmin ? "enterprise" : license.plan;
   const meta = PLAN_META[displayPlan];
-  const price = PLAN_PRICES[displayPlan];
+  const monthlyPrice = PLAN_PRICES[displayPlan];
+  const yearlyMonthly = Math.round(monthlyPrice * 0.8); // 20% off
+  const price = billingCycle === "yearly" ? yearlyMonthly : monthlyPrice;
   const statusLabel = license.isTrial ? "Deneme" : license.subscriptionActive ? "Aktif" : "Süresi doldu";
   const statusColor = license.isTrial ? "#F59E0B" : license.subscriptionActive ? "#22C55E" : "#EF4444";
   const isTop = !nextPlan;
@@ -652,12 +684,35 @@ const SubscriptionHero = ({
               {price > 0 && !license.isTrial && (
                 <span className="text-[13px] text-muted-foreground">
                   <span className="font-semibold text-foreground">{price.toLocaleString("tr-TR")} ₺</span> / ay
+                  {billingCycle === "yearly" && (
+                    <span className="ml-1 text-[11px] text-emerald-400 font-semibold">(yıllık ödeme)</span>
+                  )}
                 </span>
               )}
             </div>
             {license.isTrial && (
               <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold" style={{ background: "rgba(245,158,11,0.14)", color: "#F59E0B", border: "1px solid rgba(245,158,11,0.4)" }}>
                 <Zap className="w-3 h-3" /> Deneme süresi: {license.daysRemaining ?? 0} gün kaldı
+              </div>
+            )}
+
+            {/* Billing cycle toggle — Sprint 29.4 #2 */}
+            {!license.isSuperAdmin && !license.isTrial && monthlyPrice > 0 && (
+              <div className="mt-3 inline-flex flex-col gap-1">
+                <div className="inline-flex items-center rounded-lg border border-border bg-background/60 p-0.5">
+                  {(["monthly","yearly"] as const).map(c => (
+                    <button
+                      key={c}
+                      onClick={() => onBillingCycleChange(c)}
+                      className={`h-7 px-3 rounded-md text-[11px] font-semibold transition-colors ${billingCycle === c ? "bg-[#FF6B2B] text-white" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {c === "monthly" ? "Aylık" : "Yıllık"}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[10px] font-semibold text-emerald-400">
+                  Yıllık ödeme ile %20 tasarruf edin
+                </span>
               </div>
             )}
           </div>
@@ -714,22 +769,112 @@ const SubscriptionHero = ({
           </div>
         </div>
       </div>
+
+      {/* ═ Usage summary strip — Sprint 29.4 #1 ═ */}
+      <div className="relative mt-5 pt-4 border-t border-border/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <HeroUsageStat icon={FileText}  label="Projeler" used={usage.projects.used}  max={usage.projects.max} />
+        <HeroUsageStat icon={Users}     label="Personel" used={usage.personnel.used} max={usage.personnel.max} />
+        <HeroUsageStat icon={Warehouse} label="Depo"     used={usage.warehouses.used} max={usage.warehouses.max} />
+        <HeroUsageStat icon={Bot}       label="AI"       used={usage.ai.used}         max={usage.ai.max} pctOnly />
+      </div>
     </div>
   );
 };
 
-/* ────── Recommended upgrade — Requirement #11 ────── */
+const HeroUsageStat = ({ icon: Icon, label, used, max, pctOnly = false }: { icon: any; label: string; used: number; max: number; pctOnly?: boolean }) => {
+  const unlimited = isUnlimited(max);
+  const pct = unlimited ? 0 : Math.min(100, Math.round((used / Math.max(1, max)) * 100));
+  const tone = pct >= 100 ? "#EF4444" : pct >= 90 ? "#F59E0B" : pct >= 80 ? "#FACC15" : "#22C55E";
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/40 p-2.5">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+        <Icon className="w-3 h-3" /> {label}
+      </div>
+      <div className="mt-1 flex items-baseline justify-between gap-2">
+        <span className="text-[13px] font-bold text-foreground">
+          {unlimited ? "Sınırsız" : pctOnly ? `%${pct}` : `${used.toLocaleString("tr-TR")} / ${max.toLocaleString("tr-TR")}`}
+        </span>
+        {!unlimited && !pctOnly && (
+          <span className="text-[10px] font-semibold" style={{ color: tone }}>%{pct}</span>
+        )}
+      </div>
+      {!unlimited && (
+        <div className="mt-1.5 h-1 rounded-full bg-muted overflow-hidden">
+          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: tone }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ────── Usage threshold warnings — Sprint 29.4 #3 ────── */
+const UsageThresholdWarnings = ({
+  items, onUpgrade,
+}: {
+  items: Array<{ key: string; label: string; used: number; max: number; isPct?: boolean }>;
+  onUpgrade: () => void;
+}) => {
+  const alerts = items
+    .map(i => {
+      if (isUnlimited(i.max) || i.max === 0) return null;
+      const pct = Math.min(999, Math.round((i.used / Math.max(1, i.max)) * 100));
+      if (pct < 80) return null;
+      return { ...i, pct };
+    })
+    .filter(Boolean) as Array<{ key: string; label: string; used: number; max: number; isPct?: boolean; pct: number }>;
+
+  if (alerts.length === 0) return null;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {alerts.map(a => {
+        const level = a.pct >= 100 ? "danger" : a.pct >= 90 ? "critical" : "warn";
+        const cfg = level === "danger"
+          ? { color: "#EF4444", bg: "rgba(239,68,68,0.10)", border: "rgba(239,68,68,0.4)", title: "Sınıra ulaşıldı" }
+          : level === "critical"
+          ? { color: "#F59E0B", bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.4)", title: "Sınıra çok yaklaştınız" }
+          : { color: "#FACC15", bg: "rgba(250,204,21,0.08)", border: "rgba(250,204,21,0.35)", title: "Kullanım yüksek" };
+        const msg = a.isPct
+          ? `${a.label.charAt(0).toUpperCase() + a.label.slice(1)}nizin %${a.pct}'i kullanıldı`
+          : `${a.used.toLocaleString("tr-TR")} / ${a.max.toLocaleString("tr-TR")} ${a.label} kullanıldı`;
+        return (
+          <div key={a.key} className="rounded-xl border p-4 flex items-start gap-3" style={{ borderColor: cfg.border, background: cfg.bg }}>
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: cfg.color }} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold text-foreground">{cfg.title}: {a.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{msg}</div>
+            </div>
+            <button
+              onClick={onUpgrade}
+              className="h-8 px-3 rounded-md text-[11px] font-semibold text-white shrink-0 inline-flex items-center gap-1"
+              style={{ background: cfg.color }}
+            >
+              <ArrowUpRight className="w-3 h-3" /> Yükselt
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ────── Recommended upgrade — Requirement #11 + Sprint 29.4 #5 ────── */
 const RecommendedUpgradeCard = ({
-  currentPlan, nextPlan, gainedFeatures, onUpgrade,
+  currentPlan, nextPlan, gainedFeatures, onUpgrade, billingCycle,
 }: {
   currentPlan: LicensePlan;
   nextPlan: LicensePlan;
   gainedFeatures: LicenseFeature[];
   onUpgrade: () => void;
+  billingCycle: "monthly" | "yearly";
 }) => {
   const meta = PLAN_META[nextPlan];
   const highlights = gainedFeatures.slice(0, 5);
   const isEnterprise = nextPlan === "enterprise";
+  const nextMonthly = PLAN_PRICES[nextPlan];
+  const displayPrice = billingCycle === "yearly" ? Math.round(nextMonthly * 0.8) : nextMonthly;
+  // Estimated ROI heuristic — pure UI (no business logic change).
+  const roiPerMonth = nextPlan === "pro" ? 8_500 : nextPlan === "business" ? 22_000 : 55_000;
   return (
     <div
       className="rounded-2xl border p-5 relative overflow-hidden"
@@ -741,10 +886,17 @@ const RecommendedUpgradeCard = ({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF6B2B", color: "#fff" }}>Önerilen Yükseltme</span>
             <span className="text-[12px] text-muted-foreground">{PLAN_META[currentPlan].label} → <span className="font-semibold" style={{ color: meta.color }}>{meta.label}</span></span>
+            {!isEnterprise && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: "rgba(34,197,94,0.14)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.35)" }}>
+                <Zap className="w-2.5 h-2.5" /> 14 gün ücretsiz deneme
+              </span>
+            )}
           </div>
           <h4 className="mt-2 text-[15px] font-semibold text-foreground">
             {isEnterprise ? "Enterprise ile sınırları kaldırın" : `${meta.label} planı ile daha fazlasını açın`}
           </h4>
+
+          {/* Newly unlocked features */}
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {highlights.length === 0 && (
               <div className="text-[12px] text-muted-foreground">Yeni modüller açılacak, tüm sınırlar genişleyecek.</div>
@@ -755,6 +907,20 @@ const RecommendedUpgradeCard = ({
                 <span>{FEATURE_LABELS[f]}</span>
               </div>
             ))}
+          </div>
+
+          {/* ROI + pricing */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {!isEnterprise && nextMonthly > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-border bg-background/60 text-foreground">
+                <CreditCard className="w-3 h-3 text-muted-foreground" />
+                {displayPrice.toLocaleString("tr-TR")} ₺ / ay
+                {billingCycle === "yearly" && <span className="text-emerald-400 ml-1">(yıllık)</span>}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-border bg-background/60 text-emerald-400">
+              <TrendingUp className="w-3 h-3" /> Tahmini geri dönüş: ~{roiPerMonth.toLocaleString("tr-TR")} ₺/ay
+            </span>
           </div>
         </div>
         <div className="shrink-0">
