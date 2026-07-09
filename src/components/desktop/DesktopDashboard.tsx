@@ -175,7 +175,7 @@ const Skeleton = ({ className = "", style }: { className?: string; style?: React
 /* -------------------------------------------------------------------------- */
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile, user, plan, role } = useUser();
+  const { user, plan, role } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const autoReminders = useAutoReminders();
