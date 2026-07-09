@@ -166,7 +166,7 @@ function useMonthlyTotals() {
 // TAB — Finans Özeti
 function FinanceOverviewTab() {
   const { monthly, totals } = useMonthlyTotals();
-  const { data: accounts = [] } = useCashAccounts();
+  const { accounts = [] } = useCashAccounts();
   const cashOnHand = (accounts || []).reduce((s, a) => s + Number(a.balance || 0), 0);
 
   const kpis = [
