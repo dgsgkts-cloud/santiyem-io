@@ -235,37 +235,53 @@ export const SubscriptionCenter = () => {
         </div>
       </div>
 
-      {/* Current plan */}
-      <div className="rounded-2xl border border-border p-5" style={{ background: `linear-gradient(160deg, ${PLAN_META[license.plan === "super_admin" ? "enterprise" : license.plan].bg}, transparent 70%)` }}>
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: PLAN_META[license.plan].bg, border: `1px solid ${PLAN_META[license.plan].border}` }}>
-              <Sparkles className="w-4 h-4" style={{ color: PLAN_META[license.plan].color }} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[15px] font-semibold text-foreground">Mevcut Plan</span>
-                <SafePlanBadge plan={license.plan} />
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {license.isTrial ? `Deneme süresi — ${license.daysRemaining ?? 0} gün kaldı` : license.isSuperAdmin ? "Platform yetkilisi — sınırsız erişim" : "Aktif abonelik"}
-              </div>
-            </div>
-          </div>
-          {!license.isSuperAdmin && nextPlan && (
-            <button onClick={() => openUpgrade(nextPlan)} className="h-8 px-3 rounded-md text-[12px] font-semibold text-white shadow-sm hover-scale" style={{ background: "#FF6B2B" }}>
-              Planı yükselt
-            </button>
-          )}
-        </div>
+      {/* ═══ HERO ═══ Requirement #11 */}
+      <SubscriptionHero
+        license={license}
+        sub={sub}
+        paymentMethod={paymentMethod}
+        aiUsed={aiUsed}
+        aiUnlimited={aiUnlimited}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+        onCompare={() => {
+          document.getElementById("plan-comparison")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        onDowngrade={() => {
+          const prev: Partial<Record<LicensePlan, LicensePlan>> = { enterprise: "business", business: "pro", pro: "starter" };
+          const target = prev[license.plan];
+          if (target) setDowngradeTarget(target);
+          else toast.info("Zaten en düşük planı kullanıyorsunuz.");
+        }}
+        onContactSales={() => window.open("mailto:enterprise@santiyem.io?subject=Enterprise%20Görüşme", "_blank")}
+        nextPlan={nextPlan}
+      />
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-          <StatCard label="Durum" value={license.subscriptionActive ? "Aktif" : "Süresi doldu"} tone={license.subscriptionActive ? "success" : "danger"} />
-          <StatCard label="Yenileme" value={fmt(sub?.next_payment_date)} hint={sub?.status === "cancelled" ? "İptal edildi" : "Otomatik"} />
-          <StatCard label="Deneme" value={license.isTrial ? `${license.daysRemaining ?? 0} gün` : "—"} tone={license.isTrial ? "warn" : "default"} />
-          <StatCard label="AI kredi" value={aiUnlimited ? "∞" : `${license.limits.aiPerDay - aiUsed}`} hint="Bugün kalan" />
-        </div>
-      </div>
+      {/* ═══ Recommended upgrade ═══ Requirement #11 */}
+      {!license.isSuperAdmin && nextPlan && (
+        <RecommendedUpgradeCard
+          currentPlan={license.plan}
+          nextPlan={nextPlan}
+          gainedFeatures={gainedFeatures}
+          onUpgrade={() => openUpgrade(nextPlan)}
+        />
+      )}
+
+      {/* ═══ Billing Actions Bar ═══ Requirement #13 */}
+      <BillingActionsBar
+        canUpgrade={!license.isSuperAdmin && !!nextPlan}
+        canDowngrade={license.plan !== "starter" && !license.isSuperAdmin}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+        onDowngrade={() => {
+          const prev: Partial<Record<LicensePlan, LicensePlan>> = { enterprise: "business", business: "pro", pro: "starter" };
+          const target = prev[license.plan];
+          if (target) setDowngradeTarget(target);
+        }}
+        onUpdatePayment={() => setShowLegacy(true)}
+        onViewInvoices={() => setInvoicesSheet(true)}
+        onManageAutoRenew={() => setShowLegacy(true)}
+        onContactSupport={() => window.open("mailto:destek@santiyem.io?subject=Abonelik%20Destek", "_blank")}
+      />
+
 
       {/* Renewal section (requirement #9) */}
       <div className="rounded-2xl border border-border p-5 bg-card">
