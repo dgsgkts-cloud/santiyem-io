@@ -626,7 +626,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         </div>
       </header>
 
-      {/* 1. Bugünün Operasyon Özeti — premium KPI ribbon */}
+      {/* 2. Şantiyem AI — primary interaction hero */}
+      <AIQuickAskHero onSend={onSend} onTabChange={onTabChange} />
+
+      {/* 3. Bugünün Operasyon Özeti — premium KPI ribbon */}
       <TodayOperationsRibbon onTabChange={onTabChange} />
 
       {/* 2. Yönetici Brifingi — Bugünün Kritik Konuları */}
