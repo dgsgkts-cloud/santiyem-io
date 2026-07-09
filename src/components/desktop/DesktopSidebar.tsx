@@ -11,6 +11,7 @@ import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 // Localized role labels — extend as new roles are added
 const ROLE_LABELS: Record<string, string> = {
