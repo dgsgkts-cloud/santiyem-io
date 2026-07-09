@@ -1,139 +1,101 @@
-## Sprint M1.4 — Procurement Responsive Migration
 
-Migrate `src/components/desktop/ProcurementPage.tsx` (780 lines, single monolith) onto the frozen Responsive Design System. Frontend only. Zero backend/schema/business-logic changes. All existing features preserved.
+## 1. Current scroll architecture map
 
-### Current state (audit)
-
-- **One file, 780 lines** with 7 sub-views + CEO view + FAB defined inline.
-- **Custom shell** wraps whole page (`min-h-screen bg-[#0F1419] p-6 lg:p-8`) instead of `PageShell`.
-- **Custom cards everywhere** (`rounded-2xl border border-white/10 bg-white/[0.02] p-5`) instead of `SectionCard`.
-- **Custom KPI tile** (`KPI` local component) instead of `KpiCard`.
-- **Custom grids** (`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7`) instead of `ResponsiveGrid`.
-- **Raw HTML table** in `RFQView` — desktop-only, no card fallback for <768px.
-- **No drawers** currently, but RFQ + FAB Quick Create actions and order/request "Görüntüle" need `ResponsiveSheet` detail panels to reach full parity across breakpoints.
-- **Fixed font sizes** everywhere: `text-[10px]`, `text-[11px]`, `text-[9px]`, `text-2xl`, `text-3xl` → must move to `text-fs-*` tokens.
-- **Hardcoded neutrals**: `bg-white/[0.02]`, `border-white/10`, `text-white/40`, `bg-[#0F1419]`, `bg-[#151A21]` → semantic tokens (`bg-card`, `border-border`, `text-muted-foreground`, `bg-background`).
-- **Brand ember `#FF6B2B` and status colors** (emerald/amber/red/blue/cyan) may remain per rules.
-
-### Migration structure
-
-Decompose the monolith into a `procurement/` feature folder. Parent shell becomes composition, each view ≤250 lines, no component >300.
+Desktop shell (`src/pages/Index.tsx`, line 529–609):
 
 ```text
-src/components/desktop/procurement/
-├── ProcurementHeader.tsx          — title, CEO toggle, command palette button
-├── ProcurementTabs.tsx            — sub-tab bar (horizontal scroll on mobile intact)
-├── ProcurementKpiRibbon.tsx       — 7 KpiCards in ResponsiveGrid
-├── AIInsightsCard.tsx             — SectionCard variant (ember accent)
-├── ProcurementDashboardView.tsx   — KPI + AI + trend chart + category split
-├── ProcurementRequestsView.tsx    — filters + ResponsiveGrid of request cards
-├── ProcurementRFQView.tsx         — offer table → ResponsiveTable
-├── ProcurementOrdersView.tsx      — ResponsiveGrid of order cards
-├── ProcurementDeliveriesView.tsx  — SectionCard list w/ stage tracker
-├── ProcurementSuppliersView.tsx   — ResponsiveGrid of supplier score cards
-├── ProcurementAnalyticsView.tsx   — 2× SectionCard (spend / aging)
-├── ProcurementCEOView.tsx         — CEO summary layout
-├── ProcurementQuickCreateFAB.tsx  — FAB unchanged
-├── ProcurementDetailSheet.tsx     — ResponsiveSheet host for request/order/supplier detail
-├── useProcurementDemoData.ts      — extracted hook (existing `useDemoData`)
-└── procurementConstants.ts        — CATS/PRIORITIES/STATUSES/DELIV_STAGES + helpers
+<div class="flex h-screen">                        ← app viewport lock
+  <DesktopSidebar />                                ← own scroll (nav has overflow-y:auto)
+  <div class="flex-1 flex flex-col overflow-hidden">← disables body-level scroll
+    <DesktopTopBar />
+    <div ref=scrollRef                              ← THE canonical scroll container
+         class="flex-1 min-h-0 overflow-y-auto">
+      <div class="flex min-h-full flex-col">
+        <div class="flex-1 pb-12">
+          <ActiveModulePage />                      ← must NOT re-declare height/scroll
+        </div>
+      </div>
+      <Footer minimal />
+    </div>
+  </div>
+</div>
 ```
 
-`ProcurementPage.tsx` becomes a <150-line composition shell using `PageShell`, holding tab/CEO/detail state.
+There is already exactly one intended vertical scroll container per pane: sidebar `<nav>` and `scrollRef` div. All module pages must render as passive content inside `scrollRef`.
 
-### Concrete rewrites
+## 2. Modules that violate the contract
 
-1. **Page shell** — replace `<div className="min-h-screen bg-[#0F1419] p-6 lg:p-8">` with `<PageShell title="Satın Alma Merkezi" eyebrow="SATIN ALMA & TEDARİK ZİNCİRİ" actions={<ProcurementHeaderActions/>}>`. Removes hardcoded bg/padding.
-2. **KPI ribbon** — 7 tiles → `ResponsiveGrid` (auto-collapses 2/4/7 cols) + `KpiCard` per metric. Delta/tone map preserved.
-3. **Section cards** — every `rounded-2xl border border-white/10 bg-white/[0.02] p-5` block wrapped in `<SectionCard title=…>`; header removed from body.
-4. **Request grid** — inline card list wrapped in `ResponsiveGrid` (columns: 1/2/3 across sm/md/xl). Hover-only action bar kept but padding tokens replace `px-2 py-1.5 text-[11px]`.
-5. **RFQ table** — raw `<table>` swapped for `ResponsiveTable<Offer>` with columns Tedarikçi / Fiyat (right) / Teslim / Ödeme / Garanti / Puan / Eylem. `primary: true` on Tedarikçi for mobile card mode. "Best offer" row keeps emerald tinting via `rowClassName`.
-6. **Orders grid** → `ResponsiveGrid` + `SectionCard` per order (or keep custom card but tokenize).
-7. **Deliveries list** → stack of `SectionCard`s, stage tracker unchanged.
-8. **Suppliers grid** → `ResponsiveGrid` + supplier card (tokenized).
-9. **Analytics** → two `SectionCard`s inside `ResponsiveGrid` (1/2 cols).
-10. **CEO view** → 3× `KpiCard` ribbon + `AIInsightsCard` + `SectionCard` for upcoming deliveries.
-11. **Detail sheets** — introduce `ProcurementDetailSheet` powered by `ResponsiveSheet`; wire "Görüntüle" (order), request tile click, and supplier tile click into it so mobile users get the same detail affordance as desktop. RFQ "Sipariş Ver" opens a confirmation `ResponsiveSheet` (size `sm`).
-12. **Quick Create FAB** — actions stay; each action opens a `ResponsiveSheet` (right drawer / bottom sheet) with a placeholder form (matches existing "no business logic change" — it currently does nothing but render buttons; we preserve the current no-op behavior, only replacing the popover with `ResponsiveSheet` when clicked, or leave as-is if simpler). Decision: keep current popover behavior; do NOT introduce new logic. Only tokenize colors.
+Grouped by the actual root wrapper each module emits:
 
-### Design token sweep
+**A. Passive wrapper — works correctly (control group)**
+- `EInvoicesPage` — `<div class="p-4 lg:p-6 space-y-4">`
+- `MaterialsPage` — `<div class="p-4 lg:p-6 ... max-w-7xl mx-auto">`
+- `SiteDiaryPage` — `<div class="max-w-6xl mx-auto p-4 lg:p-6">`
+- `DesktopHakedisPage` — `<div class="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">`
+- `PersonnelPage` — `<div class="p-4 md:p-6 max-w-7xl mx-auto">`
+- `ReportsPage` — `<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">`
+- `DesktopSettingsPage` — `<div class="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">`
 
-- `text-[9px]` → `text-fs-2xs` (fallback `text-fs-xs`)
-- `text-[10px]` / `text-[11px]` → `text-fs-xs`
-- `text-2xl` / `text-3xl` (KPI values) → provided by `KpiCard` typography
-- `bg-white/[0.02]` → `bg-card` / `bg-muted/40`
-- `border-white/10` → `border-border`
-- `text-white`, `text-white/70`, `text-white/50`, `text-white/40` → `text-foreground`, `text-muted-foreground`
-- `bg-[#0F1419]` / `bg-[#151A21]` → `bg-background` / `bg-card`
-- Preserve brand `#FF6B2B` (ember) and status colors (emerald/amber/red/blue/cyan).
+**B. PageShell wrapper — broken (adds `min-h-full smooth-scroll`)**
+- `DesktopDashboard` — `<PageShell maxWidth={1120}>`
+- `PaymentsKasaPage` — `<PageShell maxWidth={1400}>`
+- `ProcurementPage` — `<PageShell ...>`
+- `ProjectDetailPage` — `<PageShell maxWidth={1200}>`
 
-### Feature parity checklist (no regressions)
+**C. Extra height-claiming wrapper on top of PageShell / body**
+- `WarehousePage` — `<div class="min-h-screen bg-background"><PageShell>…</PageShell></div>`
+- `FleetPage` — `<div class="min-h-screen bg-[#0B0F14]">` (also has inner `overflow-y-auto` panels with `max-h-[420px]` / `max-h-[600px]` that create nested vertical scroll)
 
-- 7 sub-tabs + CEO toggle
-- 7 dashboard KPIs w/ delta arrows
-- AI Insights card (4 items + "Detaylı özet" → `canvas-followup` event)
-- Requests: search, status filter chips, approval timeline, Onayla/Reddet/RFQ actions
-- RFQ: best-offer highlight, Sipariş Ver / Seç, Tedarikçi Ekle
-- Orders: paid badge, ETA, Görüntüle/PDF/Teslim actions
-- Deliveries: 5-stage tracker, delayed state
-- Suppliers: score ring, 5 sub-metrics, total spend
-- Analytics: revenue share + aging buckets
-- CEO view: total spend, top supplier, budget risk, upcoming deliveries
-- Quick Create FAB: 3 actions
-- Command palette (`⌘K`) button intact
-- `canvas-followup` event intact
-- `useProjects` / `useSubcontractors` hook usage intact — no behavior change
+## 3. Root cause
 
-### Responsive QA matrix
+Two structural problems, not a browser/event bug:
 
-Verify at 390 / 430 / 768 / 1024 / 1440 / 1920:
-- No horizontal overflow, no clipped actions, no double scroll.
-- KPI ribbon: 2 cols mobile → 4 tablet → 7 desktop.
-- RFQ table collapses to cards <768px via `ResponsiveTable`.
-- Sub-tab bar scrolls horizontally on mobile.
-- FAB stays inside safe area.
-- Ember + status colors identical on all breakpoints.
+1. **`PageShell` claims height and scroll semantics** it doesn't own.
+   `src/components/ui/responsive/PageShell.tsx` line 34:
+   `"w-full min-h-full smooth-scroll no-overflow-x"`.
+   `.smooth-scroll` (src/index.css:509) sets `scroll-behavior: smooth`, `-webkit-overflow-scrolling: touch`, `overscroll-behavior: contain`. Those properties belong on the actual scroll container (`scrollRef` in Index.tsx), not on a passive content wrapper. `min-h-full` combined with the flex column parent forces the page body to exactly fill the viewport, and the smooth-scroll/overscroll rules on that same node interfere with wheel delta propagation to the real scroll container above it. Every PageShell-using module (Dashboard, Payments, Procurement, ProjectDetail) inherits the same defect — this matches the reported "Dashboard + some migrated modules" symptom exactly.
 
-### Component health budget
+2. **`min-h-screen` on module roots** (Warehouse, Fleet) creates a 100vh box inside a scroll container that is itself smaller than 100vh (viewport minus TopBar). This pushes content off the parent's scroll range and, together with the nested `max-h-[420/600px] overflow-y-auto` panels in `FleetPage`, creates two vertical scroll layers over the same region — the wheel is captured by whichever child is under the cursor.
 
-```text
-ProcurementPage.tsx                  <150
-procurement/*View.tsx                each <250
-procurement/AIInsightsCard.tsx       <80
-procurement/ProcurementKpiRibbon.tsx <60
-procurement/ProcurementTabs.tsx      <60
-procurement/ProcurementHeader.tsx    <80
-procurement/QuickCreateFAB.tsx       <70
-procurement/DetailSheet.tsx          <150
-useProcurementDemoData.ts            <120
-```
+The reason Sidebar / E-Fatura / Hakediş / Şantiye Günlüğü / Malzeme / Personel work: their roots are pure padded `<div>`s with no height or scroll declarations, so `scrollRef` is the only scroller in the chain.
 
-No component >500; target none >300.
+## 4. Unified architecture (single strategy)
 
-### Guardrails
+Contract for every module page:
 
-- No changes to `useProjects`, `useSubcontractors` hooks or their data shapes.
-- No SQL, no edge functions, no RLS, no schema.
-- No new business logic — approve/reject/order buttons keep whatever no-op behavior they have today (the current file has none wired up).
-- Design System Freeze respected — zero edits to `PageShell`, `SectionCard`, `ResponsiveGrid`, `ResponsiveTable`, `ResponsiveSheet`, `KpiCard`, tokens.
-- Licensing / FeatureGate / LimitGuard / AccessGuard usage unchanged (none present in current file — nothing to break).
-- Noir + Ember palette preserved; only layout adapts across breakpoints.
+- Root element is a plain `<div>` with padding + `max-w-*` only.
+- Never use: `h-screen`, `min-h-screen`, `100vh`, `100dvh`, `min-h-full`, `overflow-y-auto`, `overflow-scroll`, `overscroll-*`, `-webkit-overflow-scrolling`, `scroll-behavior` on the page root.
+- Nested vertical scroll (`max-h-[…] overflow-y-auto`) is only allowed inside modal/sheet/dialog surfaces, never in the main content flow.
+- `PageShell` becomes a pure layout primitive: max-width, header, padding, safe-area. No height, no scroll semantics.
+- The only vertical scroll containers in the app remain:
+  - `DesktopSidebar` `<nav>` (independent sidebar scroll)
+  - `Index.tsx` `scrollRef` div (single content scroll on desktop)
+  - `Index.tsx` mobile `scrollRef` div (single content scroll on mobile)
+  - Modal/sheet bodies
 
-### Final report (returned after implementation)
+## 5. Files to change (frontend only)
 
-```text
-Procurement Completion %:      100
-Responsive Components Used:    PageShell, SectionCard, ResponsiveGrid,
-                               ResponsiveTable, ResponsiveSheet, KpiCard
-Remaining Legacy Components:   0
-Remaining Legacy Drawers:      0
-Remaining Non-responsive Tbl:  0
-Largest Component:             <line count of biggest post-split file>
-Components >300 lines:         <list or none>
-Components >500 lines:         0
-Design Debt:                   none (brand + status colors preserved)
-Architecture Health %:         100
-TypeScript:                    clean
-Build:                         pass
-QA:                            pass at 390/430/768/1024/1440/1920
-```
+1. `src/components/ui/responsive/PageShell.tsx`
+   - Replace root className `"w-full min-h-full smooth-scroll no-overflow-x"` with `"w-full no-overflow-x"`. Remove `min-h-full` and `smooth-scroll`. Keep padding / safe-area / max-width behavior identical.
+
+2. `src/components/desktop/WarehousePage.tsx`
+   - Remove the outer `<div className="min-h-screen bg-background">` wrapper. Render `<PageShell>` (and sibling `StockSheet` / `QuickActionFAB`) as a fragment. Background is already provided by `scrollRef`'s `bg-background`.
+
+3. `src/components/desktop/FleetPage.tsx`
+   - Remove the `min-h-screen` on the page root (line 281). Convert page root to a padded passive wrapper (`p-4 lg:p-6 space-y-4 max-w-7xl mx-auto`) matching working modules; keep the dark palette via existing tokens.
+   - Convert the two nested vertical scrollers (`max-h-[420px] overflow-y-auto` at line 717, `max-h-[600px] overflow-y-auto` at line 760) to natural flow (drop `max-h-*` and `overflow-y-auto`), so the outer `scrollRef` handles all wheel scrolling. The right-side detail panel (`overflow-y-auto` inside its own fixed sheet at line 949) stays — it is a sheet surface, allowed by the contract.
+
+4. `src/pages/Index.tsx` — no structural change required. Optionally move `.smooth-scroll` class onto the desktop `scrollRef` div (line 554) and mobile `scrollRef` div (line 857) so smooth wheel behavior is applied on the actual scroller. This is a small, safe additive edit.
+
+No changes to: `EInvoicesPage`, `MaterialsPage`, `SiteDiaryPage`, `DesktopHakedisPage`, `PersonnelPage`, `ReportsPage`, `DesktopSettingsPage`, `DesktopDashboard`, `PaymentsKasaPage`, `ProcurementPage`, `ProjectDetailPage` — after PageShell is fixed they inherit correct behavior automatically.
+
+No backend, schema, hook, business logic, licensing, or permission changes.
+
+## Verification plan
+
+After the edits, drive Playwright over `/dashboard`, `/odemeler-kasa`, `/satin-alma`, `/depo`, `/makine-ekipman`, `/raporlar`, `/settings` at 1280×1800 and:
+
+- Assert exactly one element in the main pane has `scrollHeight > clientHeight` and `overflow-y` in (`auto`, `scroll`) — should be the `scrollRef` div.
+- Dispatch `wheel` events over the content area and assert `scrollRef.scrollTop` increases.
+- Confirm sidebar `<nav>` still scrolls independently.
+- Re-check working modules (E-Fatura, Hakediş, Malzeme, Personel, Şantiye Günlüğü) show no regression.

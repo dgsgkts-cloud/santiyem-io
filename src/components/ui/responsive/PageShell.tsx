@@ -31,7 +31,7 @@ export function PageShell({
   return (
     <div
       className={cn(
-        "w-full min-h-full smooth-scroll no-overflow-x",
+        "w-full no-overflow-x",
         "px-3 sm:px-4 lg:px-6 py-4 lg:py-6",
         "safe-area-bottom safe-area-x",
         className

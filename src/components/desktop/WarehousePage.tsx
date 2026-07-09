@@ -28,7 +28,7 @@ export default function WarehousePage() {
   const [openStock, setOpenStock] = useState<Stock | null>(null);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <PageShell
         title={
           <span className="flex items-center gap-2">
@@ -60,6 +60,6 @@ export default function WarehousePage() {
 
       <StockSheet stock={openStock} onClose={() => setOpenStock(null)} data={data} />
       <QuickActionFAB />
-    </div>
+    </>
   );
 }
