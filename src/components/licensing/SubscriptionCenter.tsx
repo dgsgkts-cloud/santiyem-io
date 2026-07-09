@@ -276,6 +276,19 @@ export const SubscriptionCenter = () => {
         onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
       />
 
+      {/* ═══ Predictive upgrade signals ═══ Sprint 29.5 */}
+      <PredictiveUsageForecast
+        items={[
+          { key: "projects",   label: "Proje limiti",          unit: "proje",    used: projectsUsed,   max: license.limits.projects },
+          { key: "personnel",  label: "Personel",              unit: "personel", used: personnelUsed,  max: license.limits.personnel },
+          { key: "ai",         label: "AI kredisi",            unit: "kredi",    used: aiUsed,         max: license.limits.aiPerDay, cadence: "daily" },
+          { key: "warehouses", label: "Depo",                  unit: "depo",     used: 0,              max: license.limits.warehouses },
+          { key: "vehicles",   label: "Araç",                  unit: "araç",     used: 0,              max: license.canFleet ? -1 : 0 },
+          { key: "storage",    label: "Depolama",              unit: "GB",       used: 2,              max: license.plan === "enterprise" || license.isSuperAdmin ? -1 : 20 },
+        ]}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+      />
+
       {/* ═══ Recommended upgrade ═══ Requirement #11 + Sprint 29.4 #5 */}
       {!license.isSuperAdmin && nextPlan && (
         <RecommendedUpgradeCard
