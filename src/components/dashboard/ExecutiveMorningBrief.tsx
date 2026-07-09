@@ -14,6 +14,7 @@ import { useExecutiveBrief, type Finding } from "@/hooks/useExecutiveBrief";
 import { HealthScoreCard } from "./executive/HealthScoreCard";
 import { ActionCard } from "./executive/ActionCard";
 import { useUser } from "@/contexts/UserContext";
+import { useDisplayName } from "@/hooks/useDisplayName";
 import { canvasStore } from "@/hooks/useCanvasTurns";
 import { Button } from "@/components/ui/button";
 
