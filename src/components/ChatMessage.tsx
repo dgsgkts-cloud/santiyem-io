@@ -167,7 +167,18 @@ const parseBlocks = (raw: string): Block[] => {
   let last = 0;
   let m: RegExpExecArray | null;
 
-  const stripped = raw.replace(/^\s*(?:📖\s*)?Kaynak:\s*Lovable Cloud[^\n]*\n?/gim, "");
+  // Sprint M2.0 — Scrub internal tool payload leakage (::actions [...], raw JSON blobs
+  // with actions/payload/confirmationRequired). These are internal and must never
+  // be shown to the user.
+  let stripped = raw.replace(/^\s*(?:📖\s*)?Kaynak:\s*Lovable Cloud[^\n]*\n?/gim, "");
+
+  // Strip malformed / unclosed ::actions [...] arrays (no ::/actions terminator)
+  stripped = stripped.replace(/::actions\s*\[[\s\S]*?\](?!\s*::\/)/g, "");
+  // Strip fenced ```json blocks that contain internal keys
+  stripped = stripped.replace(/```(?:json)?\s*\n?\{[\s\S]*?"(?:actions|payload|confirmationRequired|expectedImpact)"[\s\S]*?\}\s*\n?```/gi, "");
+  // Strip standalone JSON object/array leakage containing internal keys
+  stripped = stripped.replace(/\{[^{}]*"(?:confirmationRequired|expectedImpact)"[^{}]*\}/g, "");
+  stripped = stripped.replace(/\[\s*\{[^]*?"(?:type"\s*:\s*"send_whatsapp|confirmationRequired|expectedImpact)[^]*?\}\s*\]/g, "");
 
   BLOCK_RE.lastIndex = 0;
   while ((m = BLOCK_RE.exec(stripped)) !== null) {
