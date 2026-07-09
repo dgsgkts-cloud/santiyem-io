@@ -623,22 +623,6 @@ const InvoiceTable = ({ rows }: { rows: any[] }) => (
   </div>
 );
 
-/* ────── Subscription Hero — Requirement #11 ────── */
-const SubscriptionHero = ({
-  license, sub, paymentMethod, aiUsed, aiUnlimited,
-  onUpgrade, onCompare, onDowngrade, onContactSales, nextPlan,
-}: {
-  license: ReturnType<typeof useLicense>;
-  sub: any;
-  paymentMethod: string;
-  aiUsed: number;
-  aiUnlimited: boolean;
-  onUpgrade: () => void;
-  onCompare: () => void;
-  onDowngrade: () => void;
-  onContactSales: () => void;
-  nextPlan?: LicensePlan;
-}) => {
 /* ────── Subscription Hero — Requirement #11 + Sprint 29.4 #1,#2 ────── */
 const SubscriptionHero = ({
   license, sub, paymentMethod, aiUsed, aiUnlimited,
