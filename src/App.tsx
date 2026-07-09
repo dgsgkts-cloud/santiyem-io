@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -69,7 +69,7 @@ const PageLoader = () => (
   </div>
 );
 
-const AppShell = ({ children }: { children: React.ReactNode }) => {
+const AppShell = ({ children }: { children: ReactNode }) => {
   // Global fix for stuck body pointer-events / overflow after Radix modals
   // close — restores mouse-wheel scrolling on desktop.
   useBodyScrollUnlocker();
