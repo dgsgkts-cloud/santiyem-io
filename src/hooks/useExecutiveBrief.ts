@@ -12,6 +12,13 @@ export interface Finding {
   action?: { tab: string; projectId?: string; label?: string };
 }
 
+export interface TodayEvent {
+  id: string;
+  time?: string;
+  label: string;
+  kind: "hakedis" | "task" | "payment" | "collection" | "delivery" | "meeting";
+}
+
 export interface ExecutiveKpis {
   healthScore: number;
   cashOnHand: number;
@@ -24,6 +31,13 @@ export interface ExecutiveKpis {
   pendingPayments: number;
   tasksDueToday: number;
   laborDeltaPct: number | null;
+  // Sprint 30.0 — Today Operations extras
+  expectedCollectionsAmount: number;
+  expectedCollectionsCount: number;
+  paymentsDueTodayAmount: number;
+  paymentsDueTodayCount: number;
+  pendingHakedisCount: number;
+  todayEvents: TodayEvent[];
 }
 
 interface Row { [k: string]: unknown }
