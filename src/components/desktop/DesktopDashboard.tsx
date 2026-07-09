@@ -590,14 +590,16 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
       <TrialBanner />
       <PinnedInsights />
-      <WorkspaceSetupCard />
+      <div style={{ marginBottom: 40 }}>
+        <WorkspaceSetupCard />
+      </div>
 
       {/* 1. Manager Greeting — warm executive header */}
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-4 !mt-0" style={{ marginBottom: 32 }}>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-muted-foreground/80 mb-1.5">
+          <div className="flex items-center gap-2 text-foreground/70" style={{ marginBottom: 8 }}>
             <greeting.Icon className="w-3.5 h-3.5" />
-            <span className="text-fs-xs tracking-wide uppercase">{formatDate(new Date())}</span>
+            <span className="text-fs-xs tracking-wide uppercase font-medium">{formatDate(new Date())}</span>
           </div>
           <h1
             className="text-fs-2xl font-medium tracking-tight text-foreground leading-tight"
@@ -606,19 +608,21 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             {greeting.text},{" "}
             <span className="text-muted-foreground/90 font-normal">{name}.</span>
           </h1>
-          <p className="text-fs-sm text-muted-foreground mt-1.5">
+          <p className="text-fs-sm text-muted-foreground" style={{ marginTop: 12 }}>
             Bugün şirketinizde olup bitenler.
           </p>
         </div>
       </header>
 
       {/* 2. Executive Brief — the hero: top 5 AI priorities */}
-      <ExecutiveMorningBrief
-        onTabChange={onTabChange}
-        onProjectSelect={onProjectSelect}
-        compact
-        maxPriorities={5}
-      />
+      <div className="!mt-0">
+        <ExecutiveMorningBrief
+          onTabChange={onTabChange}
+          onProjectSelect={onProjectSelect}
+          compact
+          maxPriorities={5}
+        />
+      </div>
 
       {/* 3. Quick Actions — 44px touch minimum */}
       <div className="flex flex-wrap gap-2">

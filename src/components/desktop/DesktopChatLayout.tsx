@@ -315,7 +315,7 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
       </div>
 
       {/* Right - AI Canvas (primary visual output) */}
-      <div className="w-[380px] shrink-0 flex flex-col border-l border-border overflow-hidden bg-background">
+      <div className="w-[380px] [@media(min-width:1600px)]:w-[420px] shrink-0 flex flex-col border-l border-border overflow-hidden bg-background">
         <div className="flex-1 min-h-0 overflow-y-auto">
           <AICanvas />
         </div>

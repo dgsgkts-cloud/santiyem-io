@@ -230,19 +230,19 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       {/* Bottom section */}
       <div className="mt-auto shrink-0 overflow-hidden border-t border-sidebar-border">
         {/* Plan badge — expanded only */}
-        {!collapsed && (
+        {!collapsed && !isAdmin && (
           <div className="px-3 pt-3 pb-2">
             <div className="flex items-center justify-between mb-2">
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  backgroundColor: isAdmin ? "rgba(139,92,246,0.2)" : plan === "pro" || plan === "plus" || plan === "team" ? "rgba(255,107,43,0.15)" : plan === "enterprise" || isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: isAdmin ? "#A78BFA" : plan === "pro" || plan === "plus" || plan === "team" ? "#FF6B2B" : plan === "enterprise" || isOfficePlan(plan) ? "#60A5FA" : "#64748B",
+                  backgroundColor: plan === "pro" || plan === "plus" || plan === "team" ? "rgba(255,107,43,0.15)" : plan === "enterprise" || isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
+                  color: plan === "pro" || plan === "plus" || plan === "team" ? "#FF6B2B" : plan === "enterprise" || isOfficePlan(plan) ? "#60A5FA" : "#64748B",
                 }}
               >
-                {isAdmin ? "Admin 🔧" : plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
+                {plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
               </span>
-              {!isAdmin && plan === "free" && !isNativeApp() && (
+              {plan === "free" && !isNativeApp() && (
                 <button
                   onClick={() => onTabChange("pricing")}
                   className="text-[11px] font-medium hover-upgrade-link"
@@ -252,7 +252,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               )}
             </div>
 
-            {!isAdmin && plan === "free" && (
+            {plan === "free" && (
               <div className="mb-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px] text-muted-foreground">AI Soruları</span>
@@ -309,10 +309,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] truncate text-muted-foreground leading-tight mt-0.5">
-                  {title}{companyShort ? ` • ${companyShort}` : ""}
-                </p>
               </div>
+
               <button
                 onClick={() => onTabChange("settings")}
                 className="shrink-0 p-1.5 rounded-md hover-icon-btn"
