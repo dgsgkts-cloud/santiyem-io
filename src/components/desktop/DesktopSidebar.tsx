@@ -102,8 +102,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Kullanıcı";
-  const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+  const { firstName: cachedFirst, fullName: cachedFull, hasName: nameHasName, ready: nameReady } = useDisplayName();
+  const displayName = cachedFull;
+  const initials = (cachedFull || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
   const title = profile?.title || "İnşaat Mühendisi";
   const companyShort = useMemo(() => {
     try {
