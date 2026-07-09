@@ -66,10 +66,8 @@ function buildSpokenBrief(args: {
 
 export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabled = true, compact = false, maxPriorities }: Props) {
   const { user } = useUser();
-  const firstName = useMemo(() => {
-    const n = (user?.user_metadata as { full_name?: string } | undefined)?.full_name?.split(" ")[0];
-    return n || "";
-  }, [user]);
+  const { firstName } = useDisplayName();
+  void user;
   const greeting = useGreeting(firstName);
   const { loading, findings, insights, kpis, refresh } = useExecutiveBrief();
   const [expanded, setExpanded] = useState(false);
