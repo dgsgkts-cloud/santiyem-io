@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive/ResponsiveSheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -74,109 +74,110 @@ export default function PersonnelForm({ open, onClose, initial }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{initial?.id ? "Kişiyi Düzenle" : "Yeni Kişi"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={initial?.id ? "Kişiyi Düzenle" : "Yeni Kişi"}
+      size="lg"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>İptal</Button>
+          <Button onClick={handleSave} disabled={saving || !fullName.trim()} className="bg-primary hover:bg-primary/90">
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-3">
+        <div>
+          <Label>Ad Soyad *</Label>
+          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label>Ad Soyad *</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <Label>Telefon (QR eşleşmesi için)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XX..." />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Telefon (QR eşleşmesi için)</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XX..." />
-            </div>
-            <div>
-              <Label>Görev / Meslek</Label>
-              <Input value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Mühendis, demirci..." />
-            </div>
+          <div>
+            <Label>Görev / Meslek</Label>
+            <Input value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Mühendis, demirci..." />
           </div>
+        </div>
 
+        <div>
+          <Label>Çalışma Tipi *</Label>
+          <Select value={type} onValueChange={(v) => setType(v as EmploymentType)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(EMPLOYMENT_TYPE_LABELS) as EmploymentType[]).map((k) => (
+                <SelectItem key={k} value={k}>{EMPLOYMENT_TYPE_LABELS[k]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {type === "daily_wage" && (
           <div>
-            <Label>Çalışma Tipi *</Label>
-            <Select value={type} onValueChange={(v) => setType(v as EmploymentType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Label>Günlük Yevmiye (₺) *</Label>
+            <Input type="number" inputMode="decimal" value={dailyWage} onChange={(e) => setDailyWage(e.target.value)} />
+          </div>
+        )}
+        {type === "monthly_salary" && (
+          <div>
+            <Label>Aylık Maaş (₺) *</Label>
+            <Input type="number" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
+            <p className="text-fs-xs text-muted-foreground mt-1">
+              Birden fazla projeye atarsanız aşağıdan dağılım yüzdesi girin.
+            </p>
+          </div>
+        )}
+        {type === "subcontractor_crew" && (
+          <div>
+            <Label>Bağlı Taşeron</Label>
+            <Select value={subId} onValueChange={setSubId}>
+              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(EMPLOYMENT_TYPE_LABELS) as EmploymentType[]).map((k) => (
-                  <SelectItem key={k} value={k}>{EMPLOYMENT_TYPE_LABELS[k]}</SelectItem>
+                {subcontractors.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-fs-xs text-muted-foreground mt-1">
+              Bu kişi için yevmiye/maaş hesaplanmaz; sadece yoklama tutulur.
+            </p>
           </div>
+        )}
 
-          {type === "daily_wage" && (
-            <div>
-              <Label>Günlük Yevmiye (₺) *</Label>
-              <Input type="number" inputMode="decimal" value={dailyWage} onChange={(e) => setDailyWage(e.target.value)} />
-            </div>
-          )}
-          {type === "monthly_salary" && (
-            <div>
-              <Label>Aylık Maaş (₺) *</Label>
-              <Input type="number" inputMode="decimal" value={salary} onChange={(e) => setSalary(e.target.value)} />
-              <p className="text-xs text-muted-foreground mt-1">
-                Birden fazla projeye atarsanız aşağıdan dağılım yüzdesi girin.
-              </p>
-            </div>
-          )}
-          {type === "subcontractor_crew" && (
-            <div>
-              <Label>Bağlı Taşeron</Label>
-              <Select value={subId} onValueChange={setSubId}>
-                <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-                <SelectContent>
-                  {subcontractors.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Bu kişi için yevmiye/maaş hesaplanmaz; sadece yoklama tutulur.
-              </p>
-            </div>
-          )}
-
-          <div>
-            <Label>Projeler</Label>
-            <div className="space-y-2 max-h-40 overflow-y-auto border border-border rounded p-2">
-              {projects.length === 0 && <p className="text-xs text-muted-foreground">Proje yok</p>}
-              {projects.map((p) => {
-                const checked = projectIds.includes(p.id);
-                return (
-                  <div key={p.id} className="flex items-center gap-2">
-                    <Checkbox checked={checked} onCheckedChange={() => toggleProject(p.id)} />
-                    <span className="flex-1 text-sm">{p.name}</span>
-                    {type === "monthly_salary" && checked && (
-                      <Input
-                        type="number"
-                        className="w-20 h-7"
-                        placeholder="%"
-                        value={shares[p.id] ?? ""}
-                        onChange={(e) => setShares((prev) => ({ ...prev, [p.id]: Number(e.target.value) }))}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        <div>
+          <Label>Projeler</Label>
+          <div className="space-y-2 max-h-40 overflow-y-auto border border-border rounded p-2">
+            {projects.length === 0 && <p className="text-fs-xs text-muted-foreground">Proje yok</p>}
+            {projects.map((p) => {
+              const checked = projectIds.includes(p.id);
+              return (
+                <div key={p.id} className="flex items-center gap-2">
+                  <Checkbox checked={checked} onCheckedChange={() => toggleProject(p.id)} />
+                  <span className="flex-1 text-fs-sm">{p.name}</span>
+                  {type === "monthly_salary" && checked && (
+                    <Input
+                      type="number"
+                      className="w-20 h-7"
+                      placeholder="%"
+                      value={shares[p.id] ?? ""}
+                      onChange={(e) => setShares((prev) => ({ ...prev, [p.id]: Number(e.target.value) }))}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
-
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={isActive} onCheckedChange={(v) => setIsActive(!!v)} />
-            Aktif
-          </label>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>İptal</Button>
-          <Button onClick={handleSave} disabled={saving || !fullName.trim()} className="bg-[#FF6B2B] hover:bg-[#FF6B2B]/90">
-            {saving ? "Kaydediliyor..." : "Kaydet"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <label className="flex items-center gap-2 text-fs-sm">
+          <Checkbox checked={isActive} onCheckedChange={(v) => setIsActive(!!v)} />
+          Aktif
+        </label>
+      </div>
+    </ResponsiveSheet>
   );
 }
