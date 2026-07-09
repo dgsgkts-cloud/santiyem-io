@@ -1,112 +1,139 @@
-## Sprint M1.3C — Projects Module Finalization
+## Sprint M1.4 — Procurement Responsive Migration
 
-Final responsive migration pass for the Projects module. Frontend only. No backend, schema, or business logic changes.
+Migrate `src/components/desktop/ProcurementPage.tsx` (780 lines, single monolith) onto the frozen Responsive Design System. Frontend only. Zero backend/schema/business-logic changes. All existing features preserved.
 
-### Scope
+### Current state (audit)
 
-Six legacy components remain outside the frozen Responsive Design System (`PageShell`, `SectionCard`, `ResponsiveGrid`, `ResponsiveTable`, `ResponsiveSheet`, `KpiCard`). This sprint migrates them, replaces custom modals/drawers with `ResponsiveSheet`, converts remaining tables to `ResponsiveTable`, purges hardcoded spacing/font values, and enforces the ≤300 (≤500 hard) line budget.
+- **One file, 780 lines** with 7 sub-views + CEO view + FAB defined inline.
+- **Custom shell** wraps whole page (`min-h-screen bg-[#0F1419] p-6 lg:p-8`) instead of `PageShell`.
+- **Custom cards everywhere** (`rounded-2xl border border-white/10 bg-white/[0.02] p-5`) instead of `SectionCard`.
+- **Custom KPI tile** (`KPI` local component) instead of `KpiCard`.
+- **Custom grids** (`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7`) instead of `ResponsiveGrid`.
+- **Raw HTML table** in `RFQView` — desktop-only, no card fallback for <768px.
+- **No drawers** currently, but RFQ + FAB Quick Create actions and order/request "Görüntüle" need `ResponsiveSheet` detail panels to reach full parity across breakpoints.
+- **Fixed font sizes** everywhere: `text-[10px]`, `text-[11px]`, `text-[9px]`, `text-2xl`, `text-3xl` → must move to `text-fs-*` tokens.
+- **Hardcoded neutrals**: `bg-white/[0.02]`, `border-white/10`, `text-white/40`, `bg-[#0F1419]`, `bg-[#151A21]` → semantic tokens (`bg-card`, `border-border`, `text-muted-foreground`, `bg-background`).
+- **Brand ember `#FF6B2B` and status colors** (emerald/amber/red/blue/cyan) may remain per rules.
 
-### Migration Targets
+### Migration structure
 
-1. **TaskBoard** (`src/components/desktop/TaskBoard.tsx`, 565 lines)
-   - Split by responsibility into `task-board/` subfolder:
-     - `TaskBoardHeader.tsx` — title, view switcher, search, AI summary
-     - `TaskBoardFilters.tsx` — status/priority/assignee/mine/today/overdue chips
-     - `TaskKanbanView.tsx` — 3 columns, DnD, sticky headers, pagination
-     - `TaskListView.tsx` — uses `ResponsiveTable` (rows → cards on mobile)
-     - `TaskCalendarView.tsx`, `TaskTimelineView.tsx` — thin wrappers
-     - `TaskDrawer.tsx` — detail sheet, migrated from raw `Sheet` → `ResponsiveSheet`
-     - `TaskAddForm.tsx` — quick-add row
-     - `useTaskBoardState.ts` — filter/query/pagination/DnD state hook
-   - Parent `TaskBoard.tsx` becomes composition shell (<200 lines).
-   - Preserve DnD, sticky headers, internal scroll, filters, search, AI summary, pagination, view switcher, drawer — zero behavior change.
-
-2. **AttendancePanel** (340 lines)
-   - Wrap in `SectionCard`; KPI row → `ResponsiveGrid` + `KpiCard` (On-site, Total entries, Exited, Teams).
-   - Attendance list → `ResponsiveTable` (worker, occupation, check-in, check-out, duration).
-   - PDF-range dialog → `ResponsiveSheet`.
-   - Extract `AttendanceExportSheet.tsx` if parent exceeds 300 lines.
-
-3. **ProjectMembersManagement** (378 lines)
-   - Wrap in `SectionCard`; members list → `ResponsiveTable` (name, role, joined, actions).
-   - Invitations list → second `ResponsiveTable`.
-   - Invite form → `ResponsiveSheet` (replaces inline expand block).
-   - Fine-tune permissions panel extracted to `MemberPermissionsSheet.tsx` (also `ResponsiveSheet`).
-
-4. **EditProjectModal** & **AddProjectModal**
-   - Replace custom fixed-inset modal with `ResponsiveSheet` (right drawer / bottom sheet).
-   - Drop hardcoded `text-[16px]/[13px]/[11px]` in favor of `text-fs-*` tokens; drop inline `#FF6B2B` in favor of `bg-primary`.
-
-5. **QrCodeModal**
-   - Replace custom modal shell with `ResponsiveSheet`.
-   - Keep QR canvas, PNG/poster download, regenerate button unchanged.
-
-6. **DeleteConfirmModal**
-   - Replace custom fixed-inset modal with `ResponsiveSheet` (size `sm`).
-   - Preserve 2s loading animation, red confirm button, item-name warning per project memory.
-
-### Table Migration Sweep
-
-Confirm the following surfaces already use `ResponsiveTable`; migrate any that don't:
-- Milestones, Project Files, Notes, Recent Activity (from `project-detail/*` sections)
-- Attendance, Members (above)
-
-### Design Debt Purge
-
-Sweep migrated files for:
-- Hardcoded `px`/`rem` spacing → Tailwind spacing scale (`p-4`, `gap-3`)
-- Fixed `text-[NNpx]` → `text-fs-xs/sm/base/lg/xl` tokens
-- Inline `style={{ backgroundColor / color / border }}` for non-brand values → semantic tokens (`bg-card`, `text-muted-foreground`, `border-border`)
-- Brand ember `#FF6B2B` / status colors may remain (per rules).
-
-### Component Health Budget
-
-Post-migration line counts (targets):
+Decompose the monolith into a `procurement/` feature folder. Parent shell becomes composition, each view ≤250 lines, no component >300.
 
 ```text
-TaskBoard.tsx                 ~180
-task-board/*.tsx              each <250
-AttendancePanel.tsx           <300
-ProjectMembersManagement.tsx  <300
-EditProjectModal.tsx          <180
-AddProjectModal.tsx           <180
-QrCodeModal.tsx               <180
-DeleteConfirmModal.tsx        <120
+src/components/desktop/procurement/
+├── ProcurementHeader.tsx          — title, CEO toggle, command palette button
+├── ProcurementTabs.tsx            — sub-tab bar (horizontal scroll on mobile intact)
+├── ProcurementKpiRibbon.tsx       — 7 KpiCards in ResponsiveGrid
+├── AIInsightsCard.tsx             — SectionCard variant (ember accent)
+├── ProcurementDashboardView.tsx   — KPI + AI + trend chart + category split
+├── ProcurementRequestsView.tsx    — filters + ResponsiveGrid of request cards
+├── ProcurementRFQView.tsx         — offer table → ResponsiveTable
+├── ProcurementOrdersView.tsx      — ResponsiveGrid of order cards
+├── ProcurementDeliveriesView.tsx  — SectionCard list w/ stage tracker
+├── ProcurementSuppliersView.tsx   — ResponsiveGrid of supplier score cards
+├── ProcurementAnalyticsView.tsx   — 2× SectionCard (spend / aging)
+├── ProcurementCEOView.tsx         — CEO summary layout
+├── ProcurementQuickCreateFAB.tsx  — FAB unchanged
+├── ProcurementDetailSheet.tsx     — ResponsiveSheet host for request/order/supplier detail
+├── useProcurementDemoData.ts      — extracted hook (existing `useDemoData`)
+└── procurementConstants.ts        — CATS/PRIORITIES/STATUSES/DELIV_STAGES + helpers
 ```
 
-No component >500. Target: none >300 except where a single cohesive view demands it (justify in report).
+`ProcurementPage.tsx` becomes a <150-line composition shell using `PageShell`, holding tab/CEO/detail state.
 
-### QA Matrix
+### Concrete rewrites
+
+1. **Page shell** — replace `<div className="min-h-screen bg-[#0F1419] p-6 lg:p-8">` with `<PageShell title="Satın Alma Merkezi" eyebrow="SATIN ALMA & TEDARİK ZİNCİRİ" actions={<ProcurementHeaderActions/>}>`. Removes hardcoded bg/padding.
+2. **KPI ribbon** — 7 tiles → `ResponsiveGrid` (auto-collapses 2/4/7 cols) + `KpiCard` per metric. Delta/tone map preserved.
+3. **Section cards** — every `rounded-2xl border border-white/10 bg-white/[0.02] p-5` block wrapped in `<SectionCard title=…>`; header removed from body.
+4. **Request grid** — inline card list wrapped in `ResponsiveGrid` (columns: 1/2/3 across sm/md/xl). Hover-only action bar kept but padding tokens replace `px-2 py-1.5 text-[11px]`.
+5. **RFQ table** — raw `<table>` swapped for `ResponsiveTable<Offer>` with columns Tedarikçi / Fiyat (right) / Teslim / Ödeme / Garanti / Puan / Eylem. `primary: true` on Tedarikçi for mobile card mode. "Best offer" row keeps emerald tinting via `rowClassName`.
+6. **Orders grid** → `ResponsiveGrid` + `SectionCard` per order (or keep custom card but tokenize).
+7. **Deliveries list** → stack of `SectionCard`s, stage tracker unchanged.
+8. **Suppliers grid** → `ResponsiveGrid` + supplier card (tokenized).
+9. **Analytics** → two `SectionCard`s inside `ResponsiveGrid` (1/2 cols).
+10. **CEO view** → 3× `KpiCard` ribbon + `AIInsightsCard` + `SectionCard` for upcoming deliveries.
+11. **Detail sheets** — introduce `ProcurementDetailSheet` powered by `ResponsiveSheet`; wire "Görüntüle" (order), request tile click, and supplier tile click into it so mobile users get the same detail affordance as desktop. RFQ "Sipariş Ver" opens a confirmation `ResponsiveSheet` (size `sm`).
+12. **Quick Create FAB** — actions stay; each action opens a `ResponsiveSheet` (right drawer / bottom sheet) with a placeholder form (matches existing "no business logic change" — it currently does nothing but render buttons; we preserve the current no-op behavior, only replacing the popover with `ResponsiveSheet` when clicked, or leave as-is if simpler). Decision: keep current popover behavior; do NOT introduce new logic. Only tokenize colors.
+
+### Design token sweep
+
+- `text-[9px]` → `text-fs-2xs` (fallback `text-fs-xs`)
+- `text-[10px]` / `text-[11px]` → `text-fs-xs`
+- `text-2xl` / `text-3xl` (KPI values) → provided by `KpiCard` typography
+- `bg-white/[0.02]` → `bg-card` / `bg-muted/40`
+- `border-white/10` → `border-border`
+- `text-white`, `text-white/70`, `text-white/50`, `text-white/40` → `text-foreground`, `text-muted-foreground`
+- `bg-[#0F1419]` / `bg-[#151A21]` → `bg-background` / `bg-card`
+- Preserve brand `#FF6B2B` (ember) and status colors (emerald/amber/red/blue/cyan).
+
+### Feature parity checklist (no regressions)
+
+- 7 sub-tabs + CEO toggle
+- 7 dashboard KPIs w/ delta arrows
+- AI Insights card (4 items + "Detaylı özet" → `canvas-followup` event)
+- Requests: search, status filter chips, approval timeline, Onayla/Reddet/RFQ actions
+- RFQ: best-offer highlight, Sipariş Ver / Seç, Tedarikçi Ekle
+- Orders: paid badge, ETA, Görüntüle/PDF/Teslim actions
+- Deliveries: 5-stage tracker, delayed state
+- Suppliers: score ring, 5 sub-metrics, total spend
+- Analytics: revenue share + aging buckets
+- CEO view: total spend, top supplier, budget risk, upcoming deliveries
+- Quick Create FAB: 3 actions
+- Command palette (`⌘K`) button intact
+- `canvas-followup` event intact
+- `useProjects` / `useSubcontractors` hook usage intact — no behavior change
+
+### Responsive QA matrix
 
 Verify at 390 / 430 / 768 / 1024 / 1440 / 1920:
 - No horizontal overflow, no clipped actions, no double scroll.
-- Tables collapse to cards <768px.
-- Sheets: right drawer ≥768px, bottom sheet <768px.
-- DnD works on desktop; touch DnD unchanged on mobile.
-- All modals dismiss via backdrop, X, and Escape.
+- KPI ribbon: 2 cols mobile → 4 tablet → 7 desktop.
+- RFQ table collapses to cards <768px via `ResponsiveTable`.
+- Sub-tab bar scrolls horizontally on mobile.
+- FAB stays inside safe area.
+- Ember + status colors identical on all breakpoints.
 
-### Final Report (returned after implementation)
+### Component health budget
 
 ```text
-Projects Completion %:        100
-Responsive Components Used:   PageShell, SectionCard, ResponsiveGrid,
-                              ResponsiveTable, ResponsiveSheet, KpiCard
-Remaining Legacy Components:  0
-Remaining Legacy Drawers:     0
-Remaining Non-responsive Tbl: 0
-Largest Component:            <line count of biggest post-split file>
-Components >300 lines:        <list or none>
-Components >500 lines:        0
-Design Debt:                  none (brand colors preserved)
-Architecture Health %:        100
-TypeScript:                   clean
-Build:                        pass
-QA:                           pass at 390/430/768/1024/1440/1920
+ProcurementPage.tsx                  <150
+procurement/*View.tsx                each <250
+procurement/AIInsightsCard.tsx       <80
+procurement/ProcurementKpiRibbon.tsx <60
+procurement/ProcurementTabs.tsx      <60
+procurement/ProcurementHeader.tsx    <80
+procurement/QuickCreateFAB.tsx       <70
+procurement/DetailSheet.tsx          <150
+useProcurementDemoData.ts            <120
 ```
+
+No component >500; target none >300.
 
 ### Guardrails
 
-- No changes to hooks (`useTasks`, `useTeam`, `useWorkerAttendance`, `useProjectRole`, `useProjectNotes`, etc.).
-- No SQL, no edge functions, no RLS.
-- Design System Freeze respected — no edits to `PageShell`, `SectionCard`, `ResponsiveGrid`, `ResponsiveTable`, `ResponsiveSheet`, `KpiCard`, tokens.
+- No changes to `useProjects`, `useSubcontractors` hooks or their data shapes.
+- No SQL, no edge functions, no RLS, no schema.
+- No new business logic — approve/reject/order buttons keep whatever no-op behavior they have today (the current file has none wired up).
+- Design System Freeze respected — zero edits to `PageShell`, `SectionCard`, `ResponsiveGrid`, `ResponsiveTable`, `ResponsiveSheet`, `KpiCard`, tokens.
+- Licensing / FeatureGate / LimitGuard / AccessGuard usage unchanged (none present in current file — nothing to break).
 - Noir + Ember palette preserved; only layout adapts across breakpoints.
+
+### Final report (returned after implementation)
+
+```text
+Procurement Completion %:      100
+Responsive Components Used:    PageShell, SectionCard, ResponsiveGrid,
+                               ResponsiveTable, ResponsiveSheet, KpiCard
+Remaining Legacy Components:   0
+Remaining Legacy Drawers:      0
+Remaining Non-responsive Tbl:  0
+Largest Component:             <line count of biggest post-split file>
+Components >300 lines:         <list or none>
+Components >500 lines:         0
+Design Debt:                   none (brand + status colors preserved)
+Architecture Health %:         100
+TypeScript:                    clean
+Build:                         pass
+QA:                            pass at 390/430/768/1024/1440/1920
+```
