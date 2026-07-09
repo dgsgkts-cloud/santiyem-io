@@ -255,15 +255,35 @@ export const SubscriptionCenter = () => {
         }}
         onContactSales={() => window.open("mailto:enterprise@santiyem.io?subject=Enterprise%20Görüşme", "_blank")}
         nextPlan={nextPlan}
+        usage={{
+          projects: { used: projectsUsed, max: license.limits.projects },
+          personnel: { used: personnelUsed, max: license.limits.personnel },
+          warehouses: { used: 0, max: license.limits.warehouses },
+          ai: { used: aiUsed, max: license.limits.aiPerDay },
+        }}
+        billingCycle={billingCycle}
+        onBillingCycleChange={setBillingCycle}
       />
 
-      {/* ═══ Recommended upgrade ═══ Requirement #11 */}
+      {/* ═══ Usage threshold warnings ═══ Sprint 29.4 #3 */}
+      <UsageThresholdWarnings
+        items={[
+          { key: "projects",   label: "proje",             used: projectsUsed,  max: license.limits.projects },
+          { key: "personnel",  label: "personel",          used: personnelUsed, max: license.limits.personnel },
+          { key: "warehouses", label: "depo",              used: 0,             max: license.limits.warehouses },
+          { key: "ai",         label: "AI kredisi",        used: aiUsed,        max: license.limits.aiPerDay, isPct: true },
+        ]}
+        onUpgrade={() => nextPlan && openUpgrade(nextPlan)}
+      />
+
+      {/* ═══ Recommended upgrade ═══ Requirement #11 + Sprint 29.4 #5 */}
       {!license.isSuperAdmin && nextPlan && (
         <RecommendedUpgradeCard
           currentPlan={license.plan}
           nextPlan={nextPlan}
           gainedFeatures={gainedFeatures}
           onUpgrade={() => openUpgrade(nextPlan)}
+          billingCycle={billingCycle}
         />
       )}
 
