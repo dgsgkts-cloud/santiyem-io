@@ -20,6 +20,7 @@ import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
+const SetupPage = lazy(() => import("./pages/Setup"));
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
