@@ -311,7 +311,6 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 </div>
               </div>
 
-              </div>
               <button
                 onClick={() => onTabChange("settings")}
                 className="shrink-0 p-1.5 rounded-md hover-icon-btn"
