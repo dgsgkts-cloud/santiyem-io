@@ -18,6 +18,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import NativeSetup from "@/components/NativeSetup";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
 import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
+import { useBodyScrollUnlocker } from "@/hooks/useBodyScrollUnlocker";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
 const SetupPage = lazy(() => import("./pages/Setup"));
@@ -68,15 +69,24 @@ const PageLoader = () => (
   </div>
 );
 
+const AppShell = ({ children }: { children: React.ReactNode }) => {
+  // Global fix for stuck body pointer-events / overflow after Radix modals
+  // close — restores mouse-wheel scrolling on desktop.
+  useBodyScrollUnlocker();
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <UserProvider>
         <ThemeProvider>
         <ActionExecutorProvider>
+        <AppShell>
         <OfflineBanner />
         <Toaster />
         <Sonner />
+
 
         <BrowserRouter>
           <ScrollToTop />
