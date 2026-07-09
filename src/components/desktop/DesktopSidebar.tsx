@@ -11,6 +11,7 @@ import logo from "@/assets/muhendis-logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 // Localized role labels — extend as new roles are added
 const ROLE_LABELS: Record<string, string> = {
@@ -102,8 +103,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || "Kullanıcı";
-  const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+  const { firstName: cachedFirst, fullName: cachedFull, hasName: nameHasName, ready: nameReady } = useDisplayName();
+  const displayName = cachedFull;
+  const initials = (cachedFull || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
   const title = profile?.title || "İnşaat Mühendisi";
   const companyShort = useMemo(() => {
     try {
@@ -282,7 +284,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {displayName}{roleLabel ? ` · ${roleLabel}` : ""}
+                {nameHasName ? `${displayName}${roleLabel ? ` · ${roleLabel}` : ""}` : "…"}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -299,7 +301,13 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[13px] font-semibold truncate text-foreground leading-tight">{displayName}</p>
+                  {nameHasName ? (
+                    <p className="text-[13px] font-semibold truncate text-foreground leading-tight">{displayName}</p>
+                  ) : !nameReady ? (
+                    <span aria-hidden className="inline-block h-3 w-24 rounded bg-muted/40 animate-pulse" />
+                  ) : (
+                    <p className="text-[13px] font-semibold truncate text-foreground leading-tight">—</p>
+                  )}
                   {roleLabel && (
                     <span
                       className="text-[9px] font-medium px-1.5 py-[1px] rounded shrink-0"

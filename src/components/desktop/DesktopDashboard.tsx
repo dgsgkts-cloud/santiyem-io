@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
 import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
+import { useDisplayName } from "@/hooks/useDisplayName";
 
 
 import {
@@ -174,7 +175,7 @@ const Skeleton = ({ className = "", style }: { className?: string; style?: React
 /* -------------------------------------------------------------------------- */
 
 const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashboardProps) => {
-  const { profile, user, plan, role } = useUser();
+  const { user, plan, role } = useUser();
   const { projects } = useProjects();
   const { reminders } = useReminders();
   const autoReminders = useAutoReminders();
@@ -213,7 +214,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     []
   );
 
-  const name = profile?.full_name?.split(" ")[0] || "Mühendis";
+  const { ready: nameReady, firstName, hasName } = useDisplayName();
+  const name = firstName;
   const greeting = getGreeting();
   const profitLocked = !canAccessProfitability(plan, role);
 
@@ -602,11 +604,18 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             <span className="text-fs-xs tracking-wide uppercase font-medium">{formatDate(new Date())}</span>
           </div>
           <h1
-            className="text-fs-2xl font-medium tracking-tight text-foreground leading-tight"
+            className="text-fs-2xl font-medium tracking-tight text-foreground leading-tight flex items-center gap-2"
             style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
           >
-            {greeting.text},{" "}
-            <span className="text-muted-foreground/90 font-normal">{name}.</span>
+            <span>{greeting.text}{hasName ? "," : "."}</span>
+            {!nameReady ? (
+              <span
+                aria-hidden
+                className="inline-block h-[0.9em] w-[8ch] rounded-md bg-muted/40 animate-pulse align-middle"
+              />
+            ) : hasName ? (
+              <span className="text-muted-foreground/90 font-normal">{name}.</span>
+            ) : null}
           </h1>
           <p className="text-fs-sm text-muted-foreground" style={{ marginTop: 12 }}>
             Bugün şirketinizde olup bitenler.
