@@ -1,14 +1,25 @@
-import { useState, useMemo, useCallback } from "react";
+// Sprint M1.7 — Hakediş (Progress Payment) responsive migration.
+// Frontend-only: uses PageShell / SectionCard / ResponsiveGrid / ResponsiveTable /
+// ResponsiveSheet / KpiCard. No backend, schema, or business-logic changes —
+// hooks (useProjects, useAllHakedis, useProjectHakedis), cash-collections insert,
+// AI analysis, confetti, PDF export and approval flow are preserved unchanged.
+
+import { useState, useMemo } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Capacitor } from "@capacitor/core";
 import EmptyState from "./EmptyState";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown, X, RefreshCw, Bot, TrendingUp, AlertTriangle, CheckCircle, Clock, FileText, Edit3, Bell, Send } from "lucide-react";
+import {
+  ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown,
+  RefreshCw, Bot, AlertTriangle, CheckCircle, Edit3, Bell, Send,
+} from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { useAllHakedis, useProjectHakedis, ProjectHakedis } from "@/hooks/useProjectHakedis";
-import { exportHakedisPDF, exportHakedisExcel, type PDFSignatureInfo, type PDFOptions, type HakedisWorkItem } from "@/lib/hakedisExport";
-import { getCompanyProfile, isCompanyProfileComplete } from "@/lib/companyProfile";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from "recharts";
+import {
+  exportHakedisPDF, exportHakedisExcel,
+  type PDFSignatureInfo, type HakedisWorkItem,
+} from "@/lib/hakedisExport";
+import { BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Bar, Line, ComposedChart } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -16,6 +27,13 @@ import confetti from "canvas-confetti";
 import HakedisItemsSection from "./HakedisItemsSection";
 import HakedisWizard from "./HakedisWizard";
 import MetricTooltip from "@/components/MetricTooltip";
+import {
+  PageShell, SectionCard, ResponsiveGrid, ResponsiveTable, ResponsiveSheet, KpiCard,
+  type ResponsiveColumn,
+} from "@/components/ui/responsive";
+import {
+  formatCurrencyFull, formatCurrencyFull as fmt, formatCurrencyShort as fmtShort,
+} from "@/lib/formatCurrency";
 
 const STATUS_OPTIONS = [
   { label: "Taslak", color: "#64748B", emoji: "📝" },
@@ -26,8 +44,6 @@ const STATUS_OPTIONS = [
   { label: "Ödendi", color: "#10B981", emoji: "✅" },
 ];
 
-import { formatCurrencyFull, formatCurrencyFull as fmt, formatCurrencyShort as fmtShort } from "@/lib/formatCurrency";
-
 const LEGAL_INTEREST_RATE = 0.48;
 const DAILY_RATE = LEGAL_INTEREST_RATE / 365;
 
@@ -37,14 +53,12 @@ const fireConfetti = () => {
   setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { y: 0.5 }, colors }), 200);
 };
 
-// Compute enriched status
 const getEnrichedStatus = (h: ProjectHakedis) => {
   const now = Date.now();
   if (h.status === "Ödendi") return { label: "Ödendi ✅", color: "#10B981", emoji: "✅", sortOrder: 5 };
   if (h.status === "Taslak") return { label: "Taslak", color: "#64748B", emoji: "📝", sortOrder: 4 };
   if (h.status === "Reddedildi") return { label: "Reddedildi", color: "#EF4444", emoji: "❌", sortOrder: 3 };
 
-  // Check overdue
   const created = new Date(h.created_at).getTime();
   const daysSinceCreated = Math.round((now - created) / (1000 * 60 * 60 * 24));
   const expectedDate = h.expected_payment_date ? new Date(h.expected_payment_date).getTime() : null;
@@ -54,12 +68,10 @@ const getEnrichedStatus = (h: ProjectHakedis) => {
   if (isOverdue && daysOverdue > 0) {
     return { label: `Gecikmiş — ${daysOverdue} gündür ödenmedi`, color: "#EF4444", emoji: "⚠️", sortOrder: 0, overdueDays: daysOverdue };
   }
-
   if (h.status === "Gönderildi") {
     const daysWaiting = expectedDate ? Math.max(0, Math.round((expectedDate - now) / (1000 * 60 * 60 * 24))) : daysSinceCreated;
     return { label: `Gönderildi — ${daysSinceCreated} gün`, color: "#3B82F6", emoji: "📤", sortOrder: 2, daysWaiting };
   }
-
   return { label: `Ödeme Bekleniyor — ${daysSinceCreated} gün`, color: "#F59E0B", emoji: "⏳", sortOrder: 1, daysWaiting: daysSinceCreated };
 };
 
@@ -71,51 +83,64 @@ const DesktopHakedisPage = () => {
   if (projectsLoading) return <div className="p-6 text-center text-muted-foreground">Yükleniyor...</div>;
 
   if (selectedProjectId) {
-    return <ProjectDetailView projectId={selectedProjectId} projects={projects} allHakedisler={allHakedisler} onBack={() => setSelectedProjectId(null)} />;
+    return (
+      <ProjectDetailView
+        projectId={selectedProjectId}
+        projects={projects}
+        allHakedisler={allHakedisler}
+        onBack={() => setSelectedProjectId(null)}
+      />
+    );
   }
 
   const handleRefresh = async () => {
     await Promise.all([refetchProjects(), refetchAllHakedis()]);
   };
 
-  return <ProjectListView projects={projects} allHakedisler={allHakedisler} onSelectProject={setSelectedProjectId} onRefresh={handleRefresh} />;
+  return (
+    <ProjectListView
+      projects={projects}
+      allHakedisler={allHakedisler}
+      onSelectProject={setSelectedProjectId}
+      onRefresh={handleRefresh}
+    />
+  );
 };
 
 // ─── LEVEL 1: Project List ───────────────────────────────────
-const ProjectListView = ({ projects, allHakedisler, onSelectProject, onRefresh }: { projects: any[]; allHakedisler: any[]; onSelectProject: (id: string) => void; onRefresh?: () => Promise<void> }) => {
-  const projectCards = useMemo(() => {
-    return projects.map(p => {
-      const hakedisler = allHakedisler.filter(h => h.project_id === p.id);
-      const contract = Number(p.contract_amount) || 0;
-      const totalHakedis = hakedisler.reduce((s: number, h: any) => s + h.amount, 0);
-      const remaining = contract - totalHakedis;
-      const pct = contract > 0 ? Math.min(100, Math.round((totalHakedis / contract) * 100)) : 0;
-      const collected = hakedisler.filter((h: any) => h.status === "Ödendi").reduce((s: number, h: any) => s + h.net, 0);
-      const pending = hakedisler.filter((h: any) => ["Bekliyor", "Onaylandı", "Gönderildi"].includes(h.status)).reduce((s: number, h: any) => s + h.net, 0);
-
-      const now = Date.now();
-      const overdueItems = hakedisler.filter((h: any) => {
-        if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
-        if (h.expected_payment_date) return now > new Date(h.expected_payment_date).getTime();
-        return (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
-      });
-      const overdueAmount = overdueItems.reduce((s: number, h: any) => s + h.net, 0);
-      const maxOverdueDays = overdueItems.length > 0
-        ? Math.max(...overdueItems.map((h: any) => {
-          if (h.expected_payment_date) return Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24));
-          return Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-        }))
-        : 0;
-
-      return { ...p, hakedisler, contract, totalHakedis, remaining, pct, collected, pending, overdueAmount, maxOverdueDays };
+const ProjectListView = ({
+  projects, allHakedisler, onSelectProject, onRefresh,
+}: {
+  projects: any[]; allHakedisler: any[];
+  onSelectProject: (id: string) => void; onRefresh?: () => Promise<void>;
+}) => {
+  const projectCards = useMemo(() => projects.map(p => {
+    const hakedisler = allHakedisler.filter(h => h.project_id === p.id);
+    const contract = Number(p.contract_amount) || 0;
+    const totalHakedis = hakedisler.reduce((s: number, h: any) => s + h.amount, 0);
+    const remaining = contract - totalHakedis;
+    const pct = contract > 0 ? Math.min(100, Math.round((totalHakedis / contract) * 100)) : 0;
+    const collected = hakedisler.filter((h: any) => h.status === "Ödendi").reduce((s: number, h: any) => s + h.net, 0);
+    const pending = hakedisler.filter((h: any) => ["Bekliyor", "Onaylandı", "Gönderildi"].includes(h.status)).reduce((s: number, h: any) => s + h.net, 0);
+    const now = Date.now();
+    const overdueItems = hakedisler.filter((h: any) => {
+      if (h.status === "Ödendi" || h.status === "Taslak" || h.status === "Reddedildi") return false;
+      if (h.expected_payment_date) return now > new Date(h.expected_payment_date).getTime();
+      return (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
     });
-  }, [projects, allHakedisler]);
+    const overdueAmount = overdueItems.reduce((s: number, h: any) => s + h.net, 0);
+    const maxOverdueDays = overdueItems.length > 0
+      ? Math.max(...overdueItems.map((h: any) => h.expected_payment_date
+          ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+          : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24))))
+      : 0;
+    return { ...p, hakedisler, contract, totalHakedis, remaining, pct, collected, pending, overdueAmount, maxOverdueDays };
+  }), [projects, allHakedisler]);
 
   if (projects.length === 0) {
     return (
-      <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">
-        <h2 className="text-base md:text-lg font-bold mb-4 text-foreground">Hakediş Yönetimi</h2>
-        <div className="rounded-xl bg-card border border-border">
+      <PageShell title="Hakediş Yönetimi">
+        <SectionCard>
           <EmptyState
             icon="🧾"
             title="Henüz hakediş yok"
@@ -123,92 +148,118 @@ const ProjectListView = ({ projects, allHakedisler, onSelectProject, onRefresh }
             buttonText="Proje Ekle"
             onButtonClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: "projects" }))}
           />
-        </div>
-      </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4">
-      <h2 className="text-base md:text-lg font-bold text-foreground">Hakediş Yönetimi</h2>
+    <PageShell title="Hakediş Yönetimi" subtitle="Projelerinize ait tüm hakediş süreçleri">
       <PullToRefresh onRefresh={onRefresh}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ResponsiveGrid variant="auto" minItemWidth={320} className="gap-4">
           {projectCards.map(p => (
             <div key={p.id} className="rounded-xl overflow-hidden relative bg-card border border-border">
               {p.maxOverdueDays > 0 && (
-                <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}>
+                <div
+                  className="px-4 py-1.5 text-fs-xs font-medium flex items-center gap-1.5"
+                  style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#EF4444" }}
+                >
                   <AlertTriangle className="w-3 h-3" /> {p.maxOverdueDays} gündür ödeme bekliyor
                 </div>
               )}
               <div className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-semibold truncate text-foreground">{p.name}</p>
-                    <p className="text-[12px] mt-0.5 text-muted-foreground">{p.client}</p>
+                    <p className="text-fs-sm font-semibold truncate text-foreground">{p.name}</p>
+                    <p className="text-fs-xs mt-0.5 text-muted-foreground truncate">{p.client}</p>
                   </div>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0 ml-2" style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}>
+                  <span
+                    className="text-fs-xs font-medium px-2 py-0.5 rounded-md shrink-0"
+                    style={{ backgroundColor: `${p.status_color}15`, color: p.status_color }}
+                  >
                     {p.status}
                   </span>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-[12px]">
+                  <div className="flex justify-between text-fs-xs">
                     <span className="text-muted-foreground">Sözleşme Tutarı:</span>
-                    <span className="text-muted-foreground">{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
+                    <span className="text-muted-foreground tabular-nums">{p.contract > 0 ? fmt(p.contract) : "Belirtilmedi"}</span>
                   </div>
-                  <div className="flex justify-between text-[12px]">
+                  <div className="flex justify-between text-fs-xs">
                     <span className="text-muted-foreground">Toplam Hakediş:</span>
-                    <span className="font-semibold text-foreground">{fmt(p.totalHakedis)}</span>
+                    <span className="font-semibold text-foreground tabular-nums">{fmt(p.totalHakedis)}</span>
                   </div>
                   {p.contract > 0 && (
-                    <div className="flex justify-between text-[12px]">
+                    <div className="flex justify-between text-fs-xs">
                       <span className="text-muted-foreground">Kalan:</span>
-                      <span className="font-semibold" style={{ color: p.remaining >= 0 ? "#22C55E" : "#EF4444" }}>{fmt(p.remaining)}</span>
+                      <span className="font-semibold tabular-nums" style={{ color: p.remaining >= 0 ? "#22C55E" : "#EF4444" }}>{fmt(p.remaining)}</span>
                     </div>
                   )}
                 </div>
                 {p.contract > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
+                    <div className="flex-1 h-2 rounded-full bg-muted">
                       <div className="h-full rounded-full transition-all" style={{ backgroundColor: p.pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, p.pct)}%` }} />
                     </div>
-                    <span className="text-[11px] font-mono font-semibold text-muted-foreground">%{p.pct}</span>
+                    <span className="text-fs-xs font-mono font-semibold text-muted-foreground tabular-nums">%{p.pct}</span>
                   </div>
                 )}
-                <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: "1px solid #1E2732" }}>
-                  <div><p className="text-[10px] text-muted-foreground">✅ Tahsil</p><MetricTooltip full={formatCurrencyFull(p.collected)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p></MetricTooltip></div>
-                  <div><p className="text-[10px] text-muted-foreground">⏳ Bekleyen</p><MetricTooltip full={formatCurrencyFull(p.pending)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p></MetricTooltip></div>
-                  <div><p className="text-[10px] text-muted-foreground">⚠️ Gecikmiş</p><MetricTooltip full={formatCurrencyFull(p.overdueAmount)}><p className="text-[12px] font-semibold truncate cursor-help" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p></MetricTooltip></div>
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
+                  <div>
+                    <p className="text-fs-xs text-muted-foreground">✅ Tahsil</p>
+                    <MetricTooltip full={formatCurrencyFull(p.collected)}>
+                      <p className="text-fs-xs font-semibold truncate cursor-help tabular-nums" style={{ color: "#22C55E" }}>{fmtShort(p.collected)}</p>
+                    </MetricTooltip>
+                  </div>
+                  <div>
+                    <p className="text-fs-xs text-muted-foreground">⏳ Bekleyen</p>
+                    <MetricTooltip full={formatCurrencyFull(p.pending)}>
+                      <p className="text-fs-xs font-semibold truncate cursor-help tabular-nums" style={{ color: "#F59E0B" }}>{fmtShort(p.pending)}</p>
+                    </MetricTooltip>
+                  </div>
+                  <div>
+                    <p className="text-fs-xs text-muted-foreground">⚠️ Gecikmiş</p>
+                    <MetricTooltip full={formatCurrencyFull(p.overdueAmount)}>
+                      <p className="text-fs-xs font-semibold truncate cursor-help tabular-nums" style={{ color: p.overdueAmount > 0 ? "#EF4444" : "#64748B" }}>{fmtShort(p.overdueAmount)}</p>
+                    </MetricTooltip>
+                  </div>
                 </div>
-                <button onClick={() => onSelectProject(p.id)} className="w-full py-2 rounded-lg text-[12px] font-semibold transition-colors" style={{ backgroundColor: "#1E2732", color: "#FF6B2B" }}>
+                <button
+                  onClick={() => onSelectProject(p.id)}
+                  className="w-full h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold transition-colors bg-muted hover:bg-muted/70"
+                  style={{ color: "#FF6B2B" }}
+                >
                   Detay →
                 </button>
               </div>
             </div>
           ))}
-        </div>
+        </ResponsiveGrid>
       </PullToRefresh>
-    </div>
+    </PageShell>
   );
 };
 
 // ─── LEVEL 2: Project Detail ─────────────────────────────────
-const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void }) => {
+const ProjectDetailView = ({ projectId, projects, onBack }: {
+  projectId: string; projects: any[]; allHakedisler: any[]; onBack: () => void;
+}) => {
   const { user } = useUser();
   const project = projects.find((p: any) => p.id === projectId);
-  const { hakedisler, loading, addHakedis, deleteHakedis, updateHakedis, updateHakedisStatus, setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis } = useProjectHakedis(projectId);
+  const {
+    hakedisler, loading, deleteHakedis, updateHakedis, updateHakedisStatus,
+    setExpectedPaymentDate, sendForApproval, resendForApproval, refetch: refetchHakedis,
+  } = useProjectHakedis(projectId);
+
   const [approvalModal, setApprovalModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
   const [approvalEmail, setApprovalEmail] = useState("");
   const [approvalSending, setApprovalSending] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [editModal, setEditModal] = useState<ProjectHakedis | null>(null);
   const [editPeriod, setEditPeriod] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editKdvRate, setEditKdvRate] = useState("20");
   const [editExpectedDate, setEditExpectedDate] = useState("");
-  const [formPeriod, setFormPeriod] = useState("");
-  const [formAmount, setFormAmount] = useState("");
-  const [formKdvRate, setFormKdvRate] = useState("20");
   const [statusMenuId, setStatusMenuId] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -222,12 +273,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
   const [pdfIncludeWarning, setPdfIncludeWarning] = useState(true);
   const [pdfProgress, setPdfProgress] = useState<number | null>(null);
 
-  // Payment reminder modal
   const [reminderModal, setReminderModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number } | null>(null);
   const [reminderDate, setReminderDate] = useState("");
   const [reminderDays, setReminderDays] = useState("3");
-
-  // Payment confirmation modal
   const [paymentModal, setPaymentModal] = useState<{ open: boolean; hakedisId: string; hakedisNet: number; hakedisNum: number } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
 
@@ -246,14 +294,10 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     return (now - new Date(h.created_at).getTime()) > 30 * 24 * 60 * 60 * 1000;
   });
 
-  // Sort hakedisler: overdue first
-  const sortedHakedisler = useMemo(() => {
-    return [...hakedisler].sort((a, b) => {
-      const sa = getEnrichedStatus(a);
-      const sb = getEnrichedStatus(b);
-      return sa.sortOrder - sb.sortOrder;
-    });
-  }, [hakedisler]);
+  const sortedHakedisler = useMemo(
+    () => [...hakedisler].sort((a, b) => getEnrichedStatus(a).sortOrder - getEnrichedStatus(b).sortOrder),
+    [hakedisler]
+  );
 
   const chartData = useMemo(() => {
     const months: Record<string, { name: string; hakedis: number; tahsil: number; gecikme: number }> = {};
@@ -279,18 +323,9 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
   const maxMonth = chartData.length > 0 ? chartData.reduce((max, d) => d.hakedis > max.hakedis ? d : max, chartData[0]) : null;
   const collectionRate = totalNet > 0 ? Math.round((collected / totalNet) * 100) : 0;
 
-  const handleAdd = () => {
-    if (!formPeriod || !formAmount) return;
-    addHakedis(formPeriod, parseFloat(formAmount), parseFloat(formKdvRate) / 100);
-    setFormPeriod("");
-    setFormAmount("");
-    setShowAddForm(false);
-  };
-
   const handleStatusChange = (hakedisId: string, label: string, color: string) => {
     updateHakedisStatus(hakedisId, label, color);
     setStatusMenuId(null);
-    // Show reminder modal when status changes to "Gönderildi"
     if (label === "Gönderildi") {
       const h = hakedisler.find(x => x.id === hakedisId);
       if (h) {
@@ -306,8 +341,6 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     setPaymentModal(null);
     fireConfetti();
     toast.success(`${h ? fmt(h.net) : ""} tahsil edildi! Tebrikler! 🎉`);
-
-    // Auto-create collection record in cash_collections
     if (h && user) {
       try {
         const projectName = project?.name || "Proje";
@@ -341,11 +374,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
         const prev = hakedisler[hakedisler.length - 2];
         const curr = hakedisler[hakedisler.length - 1];
         const change = prev.amount > 0 ? ((curr.amount - prev.amount) / prev.amount) * 100 : 0;
-        if (change > 30) {
-          analysisPrompts.push(`⚠️ ${curr.period} döneminde önceki döneme göre %${Math.round(change)} artış tespit edildi.`);
-        } else {
-          analysisPrompts.push("✅ Hakediş kalemleri arasında anormal artış tespit edilmedi.");
-        }
+        if (change > 30) analysisPrompts.push(`⚠️ ${curr.period} döneminde önceki döneme göre %${Math.round(change)} artış tespit edildi.`);
+        else analysisPrompts.push("✅ Hakediş kalemleri arasında anormal artış tespit edilmedi.");
       } else {
         analysisPrompts.push("✅ Hakediş kalemleri arasında anormal artış tespit edilmedi.");
       }
@@ -373,7 +403,6 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     if (hakedisler.length > 0 && !aiAnalysis && !aiLoading) generateAIAnalysis();
   }, [hakedisler.length]);
 
-  // Show wizard if active
   if (showWizard) {
     return (
       <HakedisWizard
@@ -385,674 +414,709 @@ const ProjectDetailView = ({ projectId, projects, onBack }: { projectId: string;
     );
   }
 
+  const headerActions = (
+    <>
+      {hakedisler.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowPdfModal(true)}
+            className="flex items-center gap-1.5 px-3 h-11 min-h-[44px] rounded-lg text-fs-xs font-semibold bg-muted text-foreground"
+          >
+            <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş" : "⬇️ PDF"}
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const allIds = hakedisler.map(h => h.id);
+                const { data: allItems } = await supabase.from("hakedis_items").select("*").in("hakedis_id", allIds).order("sort_order");
+                const wi: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
+                  description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                  unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                }));
+                exportHakedisExcel(hakedisler, project?.name || "Proje", wi.length > 0 ? wi : undefined, project?.client);
+                toast.success("✅ Excel indirildi");
+              } catch { toast.error("Excel oluşturulamadı. Sayfayı yenileyip tekrar deneyin."); }
+            }}
+            className="flex items-center gap-1.5 px-3 h-11 min-h-[44px] rounded-lg text-fs-xs font-semibold"
+            style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#22C55E" }}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+          </button>
+        </>
+      )}
+      <button
+        onClick={() => setShowWizard(true)}
+        className="flex items-center gap-1.5 px-3 h-11 min-h-[44px] rounded-lg text-fs-xs font-semibold text-white"
+        style={{ backgroundColor: "#FF6B2B" }}
+      >
+        <Plus className="w-3.5 h-3.5" /> Yeni Hakediş
+      </button>
+    </>
+  );
+
+  const overdueColumns: ResponsiveColumn<ProjectHakedis>[] = [
+    { key: "num", header: "Hakediş", primary: true, cell: h => <span className="font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</span> },
+    { key: "amount", header: "Tutar", align: "right", cell: h => <span className="font-mono tabular-nums text-foreground">{fmt(h.net)}</span> },
+    { key: "created", header: "Düzenleme", cell: h => <span className="text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</span> },
+    {
+      key: "days", header: "Gecikme", align: "right",
+      cell: h => {
+        const days = h.expected_payment_date
+          ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+          : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        return <span className="font-semibold tabular-nums" style={{ color: "#EF4444" }}>{days} gün</span>;
+      },
+    },
+    {
+      key: "interest", header: "Yasal Faiz", align: "right",
+      cell: h => {
+        const days = h.expected_payment_date
+          ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
+          : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        const interest = Math.round(h.net * DAILY_RATE * days);
+        return <span className="font-mono font-semibold tabular-nums" style={{ color: "#EF4444" }}>{fmt(interest)}</span>;
+      },
+    },
+  ];
+
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto space-y-4 md:space-y-5">
-      <DeleteConfirmModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => { if (deleteTarget) deleteHakedis(deleteTarget.id); }}
-        title={`${deleteTarget?.type || "Hakedişi"} Sil`}
-        itemName={deleteTarget?.name}
-      />
-      {/* Top bar */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
-          <ArrowLeft className="w-4 h-4" /> Hakediş Yönetimi
-        </button>
-        <div className="flex items-center gap-2">
-          {hakedisler.length > 0 && (
-            <>
-              <button onClick={() => setShowPdfModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold bg-muted text-foreground">
-                <FileDown className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const allIds = hakedisler.map(h => h.id);
-                    const { data: allItems } = await supabase.from("hakedis_items").select("*").in("hakedis_id", allIds).order("sort_order");
-                    const wi: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
-                      description: i.description, unit: i.unit, quantity: Number(i.quantity),
-                      unit_price: Number(i.unit_price), total_price: Number(i.total_price),
-                    }));
-                    exportHakedisExcel(hakedisler, project?.name || "Proje", wi.length > 0 ? wi : undefined, project?.client);
-                    toast.success("✅ Excel indirildi");
-                  } catch { toast.error("Excel oluşturulamadı. Sayfayı yenileyip tekrar deneyin."); }
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold"
-                style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#22C55E" }}
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-              </button>
-            </>
+    <>
+      <PageShell
+        title={
+          <span className="flex items-center gap-2 min-w-0">
+            <button onClick={onBack} className="p-1 -ml-1 rounded-md hover:bg-muted text-muted-foreground shrink-0" aria-label="Geri">
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <span className="truncate">{project?.name || "Proje"}</span>
+          </span>
+        }
+        subtitle={project?.client}
+        actions={headerActions}
+      >
+        <DeleteConfirmModal
+          open={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={async () => { if (deleteTarget) deleteHakedis(deleteTarget.id); }}
+          title={`${deleteTarget?.type || "Hakedişi"} Sil`}
+          itemName={deleteTarget?.name}
+        />
+
+        <div className="space-y-4 lg:space-y-5">
+          {/* KPI ribbon */}
+          <ResponsiveGrid variant="auto" minItemWidth={200} className="gap-3">
+            <KpiCard label="Sözleşme Tutarı" value={contract > 0 ? fmt(contract) : "—"} />
+            <KpiCard label="Toplam Hakediş" value={fmt(totalAmount)} />
+            <KpiCard label="Tahsil Edilen" value={fmt(collected)} accent="#22C55E" />
+            <KpiCard
+              label={pending > 0 ? "Bekleyen" : "Gecikmiş"}
+              value={fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0))}
+              accent={overdueItems.length > 0 ? "#EF4444" : "#F59E0B"}
+            />
+          </ResponsiveGrid>
+
+          {/* Contract usage */}
+          {contract > 0 && (
+            <SectionCard title="Sözleşme Kullanım Durumu">
+              <div className="h-3 rounded-full mb-2 bg-muted">
+                <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
+              </div>
+              <div className="flex flex-wrap justify-between gap-2 text-fs-xs">
+                <span className="text-muted-foreground">Kullanılan: <span className="tabular-nums">{fmt(totalAmount)}</span></span>
+                <span className="font-semibold tabular-nums" style={{ color: "#FF6B2B" }}>%{pct}</span>
+                <span className="text-muted-foreground">Kalan: <span className="tabular-nums">{fmt(remaining)}</span></span>
+              </div>
+            </SectionCard>
           )}
-          <button onClick={() => setShowWizard(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white" style={{ backgroundColor: "#FF6B2B" }}>
-            <Plus className="w-3.5 h-3.5" /> Yeni Hakediş Hazırla
-          </button>
-        </div>
-      </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-foreground">{project?.name}</h2>
-        <p className="text-[13px] text-muted-foreground">{project?.client}</p>
-      </div>
+          {/* AI Analysis */}
+          <SectionCard
+            title={<span className="flex items-center gap-2"><Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} /> AI Proje Analizi</span>}
+            action={
+              <button
+                onClick={generateAIAnalysis} disabled={aiLoading}
+                className="flex items-center gap-1 text-fs-xs font-medium"
+                style={{ color: "#FF6B2B" }}
+              >
+                <RefreshCw className={`w-3 h-3 ${aiLoading ? "animate-spin" : ""}`} /> Yenile
+              </button>
+            }
+            className="border-[#FF6B2B]/30"
+          >
+            {aiLoading ? (
+              <div className="py-4 text-center text-fs-xs text-muted-foreground">Analiz oluşturuluyor...</div>
+            ) : aiAnalysis ? (
+              <div className="space-y-2">
+                {aiAnalysis.map((a, i) => <p key={i} className="text-fs-xs leading-relaxed text-muted-foreground">{a}</p>)}
+              </div>
+            ) : (
+              <p className="text-fs-xs text-muted-foreground">Henüz analiz oluşturulmadı.</p>
+            )}
+          </SectionCard>
 
-      {/* Financial Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Sözleşme Tutarı", value: contract > 0 ? fmt(contract) : "—", color: "#64748B" },
-          { label: "Toplam Hakediş", value: fmt(totalAmount) },
-          { label: "Tahsil Edilen", value: fmt(collected), color: "#22C55E" },
-          { label: pending > 0 ? "Bekleyen" : "Gecikmiş", value: fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0)), color: overdueItems.length > 0 ? "#EF4444" : "#F59E0B" },
-        ].map(s => (
-          <div key={s.label} className="rounded-xl p-4 bg-card border border-border">
-            <p className="text-[10px] font-semibold uppercase tracking-wide mb-1 text-muted-foreground">{s.label}</p>
-            <p className="text-xl font-bold" style={{ color: s.color, fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Progress bar */}
-      {contract > 0 && (
-        <div className="rounded-xl p-4 bg-card border border-border">
-          <p className="text-[13px] font-semibold mb-3 text-foreground">Sözleşme Kullanım Durumu</p>
-          <div className="h-3 rounded-full mb-2 bg-muted">
-            <div className="h-full rounded-full transition-all" style={{ backgroundColor: pct > 90 ? "#EF4444" : "#FF6B2B", width: `${Math.min(100, pct)}%` }} />
-          </div>
-          <div className="flex justify-between text-[12px]">
-            <span className="text-muted-foreground">Kullanılan: {fmt(totalAmount)}</span>
-            <span className="font-semibold" style={{ color: "#FF6B2B" }}>%{pct}</span>
-            <span className="text-muted-foreground">Kalan: {fmt(remaining)}</span>
-          </div>
-        </div>
-      )}
-
-      {/* AI Analysis */}
-      <div className="rounded-xl p-4" style={{ border: "1px solid rgba(255,107,43,0.3)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4" style={{ color: "#FF6B2B" }} />
-            <p className="text-[13px] font-semibold text-foreground">AI Proje Analizi</p>
-          </div>
-          <button onClick={generateAIAnalysis} disabled={aiLoading} className="flex items-center gap-1 text-[11px] font-medium" style={{ color: "#FF6B2B" }}>
-            <RefreshCw className={`w-3 h-3 ${aiLoading ? "animate-spin" : ""}`} /> Yenile
-          </button>
-        </div>
-        {aiLoading ? (
-          <div className="py-4 text-center text-[12px] text-muted-foreground">Analiz oluşturuluyor...</div>
-        ) : aiAnalysis ? (
-          <div className="space-y-2">
-            {aiAnalysis.map((a, i) => <p key={i} className="text-[12px] leading-relaxed text-muted-foreground">{a}</p>)}
-          </div>
-        ) : (
-          <p className="text-[12px] text-muted-foreground">Henüz analiz oluşturulmadı.</p>
-        )}
-      </div>
-
-      {/* Chart */}
-      {chartData.length > 0 && (
-        <div className="rounded-xl p-4 bg-card border border-border">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[13px] font-semibold text-foreground">Aylık Nakit Akışı</p>
-            <div className="flex gap-1">
-              {(["6", "12", "all"] as const).map(r => (
-                <button key={r} onClick={() => setChartRange(r)} className="text-[10px] px-2 py-1 rounded-md font-medium" style={{ backgroundColor: chartRange === r ? "#FF6B2B" : "#1E2732", color: chartRange === r ? "#fff" : "#64748B" }}>
-                  {r === "6" ? "6 Ay" : r === "12" ? "12 Ay" : "Tümü"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="h-[220px] overflow-x-auto">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData}>
-                <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#64748B", fontSize: 10 }} tickFormatter={v => fmtShort(v)} />
-                <Tooltip contentStyle={{ backgroundColor: "#1C242D", border: "1px solid #2D3748", borderRadius: 8, fontSize: 12 }} labelStyle={{  }} formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]} />
-                <Legend formatter={v => v === "hakedis" ? "Hakediş" : v === "tahsil" ? "Tahsilat" : "Gecikmiş"} />
-                <Bar dataKey="hakedis" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="tahsil" fill="#22C55E" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="gecikme" stroke="#EF4444" strokeWidth={2} dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-3 gap-3 mt-3 pt-3" style={{ borderTop: "1px solid #1E2732" }}>
-            <div><p className="text-[10px] text-muted-foreground">Ort. Aylık Hakediş</p><p className="text-[13px] font-semibold text-foreground">{fmt(avgMonthly)}</p></div>
-            <div><p className="text-[10px] text-muted-foreground">En Yüksek Ay</p><p className="text-[13px] font-semibold text-foreground">{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
-            <div><p className="text-[10px] text-muted-foreground">Tahsilat Oranı</p><p className="text-[13px] font-semibold" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
-          </div>
-        </div>
-      )}
-
-      {/* Hakedis Timeline - sorted with overdue first */}
-      <div className="rounded-xl p-4 bg-card border border-border">
-        <p className="text-[13px] font-semibold mb-4 text-foreground">Hakediş Geçmişi</p>
-        {loading ? (
-          <div className="py-4 text-center text-[12px] text-muted-foreground">Yükleniyor...</div>
-        ) : hakedisler.length === 0 ? (
-          <div className="py-4 text-center text-[12px] text-muted-foreground">Bu projeye ait hakediş yok.</div>
-        ) : (
-          <div className="space-y-0">
-            {sortedHakedisler.map((h, i) => {
-              const enriched = getEnrichedStatus(h);
-              const createdDate = new Date(h.created_at);
-              const hakedisNum = hakedisler.indexOf(h) + 1;
-
-              return (
-                <div key={h.id} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: enriched.color }} />
-                    {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1 bg-border" />}
-                  </div>
-                  <div className="flex-1 mb-4 rounded-lg p-3" style={{ borderLeft: `3px solid ${enriched.color}` }}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisNum}</p>
-                          {h.expected_payment_date && <Bell className="w-3 h-3" style={{ color: "#F59E0B" }} />}
-                        </div>
-                        <p className="text-[11px] mt-0.5 text-muted-foreground">
-                          {h.period} • Düzenleme: {createdDate.toLocaleDateString("tr-TR")}
-                          {h.expected_payment_date && ` • Beklenen: ${new Date(h.expected_payment_date).toLocaleDateString("tr-TR")}`}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {/* Payment button for non-paid */}
-                        {h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi" && (
-                          <button
-                            onClick={() => setPaymentModal({ open: true, hakedisId: h.id, hakedisNet: h.net, hakedisNum })}
-                            className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md transition-colors hover:opacity-90"
-                            style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#22C55E" }}
-                          >
-                            <CheckCircle className="w-3 h-3" /> Ödeme Geldi
-                          </button>
-                        )}
-                        {/* Status dropdown */}
-                        <div className="relative">
-                          <button onClick={() => setStatusMenuId(statusMenuId === h.id ? null : h.id)}
-                            className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md"
-                            style={{ backgroundColor: `${enriched.color}15`, color: enriched.color }}>
-                            <span>{enriched.emoji}</span>
-                            <span className="max-w-[120px] truncate">{enriched.label}</span>
-                            <ChevronDown className="w-3 h-3" />
-                          </button>
-                          {statusMenuId === h.id && (
-                            <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[140px] bg-card border border-border">
-                              {STATUS_OPTIONS.map(opt => (
-                                <button key={opt.label} onClick={() => handleStatusChange(h.id, opt.label, opt.color)}
-                                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/5 flex items-center gap-2" style={{ color: opt.color }}>
-                                  <span>{opt.emoji}</span> {opt.label}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                      <div><p className="text-[10px] text-muted-foreground">Tutar</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.amount)}</p></div>
-                      <div><p className="text-[10px] text-muted-foreground">KDV</p><p className="text-[12px] font-mono text-muted-foreground">{fmt(h.kdv)}</p></div>
-                      <div><p className="text-[10px] text-muted-foreground">Net</p><p className="text-[12px] font-mono font-semibold text-foreground">{fmt(h.net)}</p></div>
-                    </div>
-
-                    {h.payment_date && (
-                      <p className="text-[11px] mt-1.5" style={{ color: "#22C55E" }}>
-                        ✅ Ödeme: {new Date(h.payment_date).toLocaleDateString("tr-TR")}
-                        {h.status === "Ödendi" && ` — Bekleme: ${Math.round((new Date(h.payment_date).getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))} gün`}
-                      </p>
-                    )}
-
-                    {/* Approval status badge */}
-                    {h.approval_status && h.approval_status !== "taslak" && (
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md" style={{
-                          backgroundColor: h.approval_status === "onaylandi" ? "rgba(34,197,94,0.15)" :
-                            h.approval_status === "itiraz_edildi" ? "rgba(239,68,68,0.15)" :
-                            h.approval_status === "revize_edildi" ? "rgba(59,130,246,0.15)" :
-                            "rgba(245,158,11,0.15)",
-                          color: h.approval_status === "onaylandi" ? "#22C55E" :
-                            h.approval_status === "itiraz_edildi" ? "#EF4444" :
-                            h.approval_status === "revize_edildi" ? "#3B82F6" :
-                            "#F59E0B"
-                        }}>
-                          {h.approval_status === "onaylandi" ? "✅ Müşteri Onayladı" :
-                           h.approval_status === "itiraz_edildi" ? "❌ İtiraz Edildi" :
-                           h.approval_status === "revize_edildi" ? "🔄 Revize Edildi" :
-                           "⏳ Onay Bekliyor"}
-                          {h.revision_count > 0 && ` (R${h.revision_count})`}
-                        </span>
-                        {h.client_email && <span className="text-[10px] text-muted-foreground">{h.client_email}</span>}
-                      </div>
-                    )}
-
-                    {/* Client rejection note */}
-                    {h.approval_status === "itiraz_edildi" && h.client_note && (
-                      <div className="mt-1.5 p-2 rounded-lg text-[11px]" style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                        <span className="font-semibold" style={{ color: "#EF4444" }}>İtiraz Notu:</span>
-                        <span className="ml-1 text-muted-foreground">{h.client_note}</span>
-                      </div>
-                    )}
-
-                    <HakedisItemsSection hakedisId={h.id} />
-
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border flex-wrap">
-                      <button onClick={async () => {
-                        const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
-                        const wi = (items || []).map((i: any) => ({ description: i.description, unit: i.unit, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) }));
-                        exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
-                      }} className="text-[10px] font-medium flex items-center gap-1 text-muted-foreground">
-                        <FileDown className="w-3 h-3" /> {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "⬇️ İndir"}
-                      </button>
-
-                      {/* Send for approval button */}
-                      {h.approval_status === "taslak" && h.status !== "Ödendi" && (
-                        <button
-                          onClick={() => {
-                            setApprovalEmail(project?.client || "");
-                            setApprovalModal({ open: true, hakedisId: h.id, hakedisNet: h.net_total || h.net, hakedisNum });
-                          }}
-                          className="text-[10px] font-medium flex items-center gap-1 px-2 py-1 rounded-md"
-                          style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}
-                        >
-                          <Send className="w-3 h-3" /> Onaya Gönder
-                        </button>
-                      )}
-
-                      {/* Resend for approval (after rejection) */}
-                      {h.approval_status === "itiraz_edildi" && (
-                        <button
-                          onClick={() => resendForApproval(h.id)}
-                          className="text-[10px] font-medium flex items-center gap-1 px-2 py-1 rounded-md"
-                          style={{ backgroundColor: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
-                        >
-                          <RefreshCw className="w-3 h-3" /> Tekrar Gönder
-                        </button>
-                      )}
-
-                      <button onClick={() => {
-                        setEditModal(h);
-                        setEditPeriod(h.period);
-                        const kdvRate = h.amount > 0 ? Math.round((h.kdv / h.amount) * 100) : 20;
-                        setEditKdvRate(String(kdvRate));
-                        setEditAmount(String(h.amount));
-                        setEditExpectedDate(h.expected_payment_date || "");
-                      }} className="text-[10px] font-medium flex items-center gap-1" style={{ color: "#3B82F6" }}>
-                        <Edit3 className="w-3 h-3" /> Düzenle
-                      </button>
-                      <button onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })} className="text-[10px] font-medium flex items-center gap-1 ml-auto" style={{ color: "#EF4444" }}>
-                        <Trash2 className="w-3 h-3" /> Sil
-                      </button>
-                    </div>
-                  </div>
+          {/* Chart */}
+          {chartData.length > 0 && (
+            <SectionCard
+              title="Aylık Nakit Akışı"
+              action={
+                <div className="flex gap-1">
+                  {(["6", "12", "all"] as const).map(r => (
+                    <button
+                      key={r} onClick={() => setChartRange(r)}
+                      className="text-fs-xs px-2 h-9 min-h-[44px] sm:min-h-0 rounded-md font-medium transition-colors"
+                      style={{ backgroundColor: chartRange === r ? "#FF6B2B" : "hsl(var(--muted))", color: chartRange === r ? "#fff" : "hsl(var(--muted-foreground))" }}
+                    >
+                      {r === "6" ? "6 Ay" : r === "12" ? "12 Ay" : "Tümü"}
+                    </button>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        )}
-        <button onClick={() => setShowWizard(true)} className="w-full py-2.5 rounded-lg text-[12px] font-semibold text-white mt-2" style={{ backgroundColor: "#FF6B2B" }}>
-          + Yeni Hakediş Hazırla
-        </button>
-      </div>
+              }
+            >
+              <div className="h-[220px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={chartData}>
+                    <XAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 10 }} />
+                    <YAxis tick={{ fill: "#64748B", fontSize: 10 }} tickFormatter={v => fmtShort(v)} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                      formatter={(v: number, name: string) => [fmt(v), name === "hakedis" ? "Hakediş" : name === "tahsil" ? "Tahsilat" : "Gecikmiş"]}
+                    />
+                    <Legend formatter={v => v === "hakedis" ? "Hakediş" : v === "tahsil" ? "Tahsilat" : "Gecikmiş"} />
+                    <Bar dataKey="hakedis" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="tahsil" fill="#22C55E" radius={[4, 4, 0, 0]} />
+                    <Line type="monotone" dataKey="gecikme" stroke="#EF4444" strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/60">
+                <div><p className="text-fs-xs text-muted-foreground">Ort. Aylık Hakediş</p><p className="text-fs-sm font-semibold text-foreground tabular-nums">{fmt(avgMonthly)}</p></div>
+                <div><p className="text-fs-xs text-muted-foreground">En Yüksek Ay</p><p className="text-fs-sm font-semibold text-foreground tabular-nums">{maxMonth ? `${maxMonth.name} — ${fmt(maxMonth.hakedis)}` : "—"}</p></div>
+                <div><p className="text-fs-xs text-muted-foreground">Tahsilat Oranı</p><p className="text-fs-sm font-semibold tabular-nums" style={{ color: collectionRate > 70 ? "#22C55E" : "#F59E0B" }}>%{collectionRate}</p></div>
+              </div>
+            </SectionCard>
+          )}
 
-      {/* Approval Send Modal */}
-      {approvalModal?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-          <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-card border border-border">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-foreground">📧 Hakediş Onaya Gönder</h3>
-              <button onClick={() => setApprovalModal(null)} className="text-muted-foreground"><X className="w-5 h-5" /></button>
-            </div>
-            <p className="text-xs text-muted-foreground">Hakediş #{approvalModal.hakedisNum} — {fmt(approvalModal.hakedisNet)}</p>
-            <div>
-              <label className="text-xs mb-1 block text-muted-foreground">Müşteri E-posta Adresi *</label>
-              <input
-                type="email"
-                value={approvalEmail}
-                onChange={e => setApprovalEmail(e.target.value)}
-                placeholder="musteri@firma.com"
-                className="w-full h-10 rounded-lg px-3 text-sm bg-background border border-border text-foreground"
-              />
-            </div>
-            <div className="p-3 rounded-lg text-xs" style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", color: "#60A5FA" }}>
-              Müşteriye email ile hakediş detayları ve onay/itiraz linkleri gönderilecektir. Link 30 gün geçerlidir.
-            </div>
+          {/* Timeline */}
+          <SectionCard title="Hakediş Geçmişi">
+            {loading ? (
+              <div className="py-4 text-center text-fs-xs text-muted-foreground">Yükleniyor...</div>
+            ) : hakedisler.length === 0 ? (
+              <div className="py-4 text-center text-fs-xs text-muted-foreground">Bu projeye ait hakediş yok.</div>
+            ) : (
+              <div className="space-y-0">
+                {sortedHakedisler.map((h, i) => {
+                  const enriched = getEnrichedStatus(h);
+                  const createdDate = new Date(h.created_at);
+                  const hakedisNum = hakedisler.indexOf(h) + 1;
+                  return (
+                    <div key={h.id} className="flex gap-3">
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className="w-3 h-3 rounded-full mt-1" style={{ backgroundColor: enriched.color }} />
+                        {i < hakedisler.length - 1 && <div className="w-0.5 flex-1 my-1 bg-border" />}
+                      </div>
+                      <div className="flex-1 min-w-0 mb-4 rounded-lg p-3 bg-card border border-border" style={{ borderLeft: `3px solid ${enriched.color}` }}>
+                        <div className="flex items-start justify-between gap-2 flex-wrap">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-fs-sm font-semibold text-foreground">Hakediş #{hakedisNum}</p>
+                              {h.expected_payment_date && <Bell className="w-3 h-3" style={{ color: "#F59E0B" }} />}
+                            </div>
+                            <p className="text-fs-xs mt-0.5 text-muted-foreground">
+                              {h.period} • Düzenleme: {createdDate.toLocaleDateString("tr-TR")}
+                              {h.expected_payment_date && ` • Beklenen: ${new Date(h.expected_payment_date).toLocaleDateString("tr-TR")}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi" && (
+                              <button
+                                onClick={() => setPaymentModal({ open: true, hakedisId: h.id, hakedisNet: h.net, hakedisNum })}
+                                className="flex items-center gap-1 text-fs-xs font-medium px-2 h-9 min-h-[44px] sm:min-h-0 rounded-md transition-colors hover:opacity-90"
+                                style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#22C55E" }}
+                              >
+                                <CheckCircle className="w-3 h-3" /> Ödeme Geldi
+                              </button>
+                            )}
+                            <div className="relative">
+                              <button
+                                onClick={() => setStatusMenuId(statusMenuId === h.id ? null : h.id)}
+                                className="flex items-center gap-1 text-fs-xs font-medium px-2 h-9 min-h-[44px] sm:min-h-0 rounded-md"
+                                style={{ backgroundColor: `${enriched.color}15`, color: enriched.color }}
+                              >
+                                <span>{enriched.emoji}</span>
+                                <span className="max-w-[140px] truncate">{enriched.label}</span>
+                                <ChevronDown className="w-3 h-3" />
+                              </button>
+                              {statusMenuId === h.id && (
+                                <div className="absolute z-50 top-full right-0 mt-1 rounded-lg py-1 shadow-xl min-w-[160px] bg-card border border-border">
+                                  {STATUS_OPTIONS.map(opt => (
+                                    <button
+                                      key={opt.label}
+                                      onClick={() => handleStatusChange(h.id, opt.label, opt.color)}
+                                      className="w-full text-left px-3 py-1.5 text-fs-xs hover:bg-muted flex items-center gap-2"
+                                      style={{ color: opt.color }}
+                                    >
+                                      <span>{opt.emoji}</span> {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                          <div><p className="text-fs-xs text-muted-foreground">Tutar</p><p className="text-fs-xs font-mono font-semibold text-foreground tabular-nums">{fmt(h.amount)}</p></div>
+                          <div><p className="text-fs-xs text-muted-foreground">KDV</p><p className="text-fs-xs font-mono text-muted-foreground tabular-nums">{fmt(h.kdv)}</p></div>
+                          <div><p className="text-fs-xs text-muted-foreground">Net</p><p className="text-fs-xs font-mono font-semibold text-foreground tabular-nums">{fmt(h.net)}</p></div>
+                        </div>
+
+                        {h.payment_date && (
+                          <p className="text-fs-xs mt-1.5" style={{ color: "#22C55E" }}>
+                            ✅ Ödeme: {new Date(h.payment_date).toLocaleDateString("tr-TR")}
+                            {h.status === "Ödendi" && ` — Bekleme: ${Math.round((new Date(h.payment_date).getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))} gün`}
+                          </p>
+                        )}
+
+                        {h.approval_status && h.approval_status !== "taslak" && (
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span
+                              className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
+                              style={{
+                                backgroundColor: h.approval_status === "onaylandi" ? "rgba(34,197,94,0.15)"
+                                  : h.approval_status === "itiraz_edildi" ? "rgba(239,68,68,0.15)"
+                                  : h.approval_status === "revize_edildi" ? "rgba(59,130,246,0.15)" : "rgba(245,158,11,0.15)",
+                                color: h.approval_status === "onaylandi" ? "#22C55E"
+                                  : h.approval_status === "itiraz_edildi" ? "#EF4444"
+                                  : h.approval_status === "revize_edildi" ? "#3B82F6" : "#F59E0B",
+                              }}
+                            >
+                              {h.approval_status === "onaylandi" ? "✅ Müşteri Onayladı"
+                                : h.approval_status === "itiraz_edildi" ? "❌ İtiraz Edildi"
+                                : h.approval_status === "revize_edildi" ? "🔄 Revize Edildi"
+                                : "⏳ Onay Bekliyor"}
+                              {h.revision_count > 0 && ` (R${h.revision_count})`}
+                            </span>
+                            {h.client_email && <span className="text-fs-xs text-muted-foreground">{h.client_email}</span>}
+                          </div>
+                        )}
+
+                        {h.approval_status === "itiraz_edildi" && h.client_note && (
+                          <div className="mt-1.5 p-2 rounded-lg text-fs-xs" style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                            <span className="font-semibold" style={{ color: "#EF4444" }}>İtiraz Notu:</span>
+                            <span className="ml-1 text-muted-foreground">{h.client_note}</span>
+                          </div>
+                        )}
+
+                        <HakedisItemsSection hakedisId={h.id} />
+
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border flex-wrap">
+                          <button
+                            onClick={async () => {
+                              const { data: items } = await supabase.from("hakedis_items").select("*").eq("hakedis_id", h.id).order("sort_order");
+                              const wi = (items || []).map((i: any) => ({
+                                description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                                unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                              }));
+                              exportHakedisPDF([h], project?.name || "Proje", { includeHeader: true, includeSignature: true, includeWarning: true, signatureInfo: pdfSig }, project?.client, undefined, undefined, wi.length > 0 ? wi : undefined);
+                            }}
+                            className="text-fs-xs font-medium flex items-center gap-1 text-muted-foreground min-h-[44px] sm:min-h-0"
+                          >
+                            <FileDown className="w-3 h-3" /> {Capacitor.isNativePlatform() ? "📤 Paylaş" : "⬇️ İndir"}
+                          </button>
+
+                          {h.approval_status === "taslak" && h.status !== "Ödendi" && (
+                            <button
+                              onClick={() => {
+                                setApprovalEmail(project?.client || "");
+                                setApprovalModal({ open: true, hakedisId: h.id, hakedisNet: h.net_total || h.net, hakedisNum });
+                              }}
+                              className="text-fs-xs font-medium flex items-center gap-1 px-2 h-9 min-h-[44px] sm:min-h-0 rounded-md"
+                              style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}
+                            >
+                              <Send className="w-3 h-3" /> Onaya Gönder
+                            </button>
+                          )}
+                          {h.approval_status === "itiraz_edildi" && (
+                            <button
+                              onClick={() => resendForApproval(h.id)}
+                              className="text-fs-xs font-medium flex items-center gap-1 px-2 h-9 min-h-[44px] sm:min-h-0 rounded-md"
+                              style={{ backgroundColor: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
+                            >
+                              <RefreshCw className="w-3 h-3" /> Tekrar Gönder
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setEditModal(h);
+                              setEditPeriod(h.period);
+                              const kdvRate = h.amount > 0 ? Math.round((h.kdv / h.amount) * 100) : 20;
+                              setEditKdvRate(String(kdvRate));
+                              setEditAmount(String(h.amount));
+                              setEditExpectedDate(h.expected_payment_date || "");
+                            }}
+                            className="text-fs-xs font-medium flex items-center gap-1 min-h-[44px] sm:min-h-0"
+                            style={{ color: "#3B82F6" }}
+                          >
+                            <Edit3 className="w-3 h-3" /> Düzenle
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget({ id: h.id, name: h.period, type: "Hakedişi" })}
+                            className="text-fs-xs font-medium flex items-center gap-1 ml-auto min-h-[44px] sm:min-h-0"
+                            style={{ color: "#EF4444" }}
+                          >
+                            <Trash2 className="w-3 h-3" /> Sil
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <button
-              onClick={async () => {
-                if (!approvalEmail.trim() || !approvalEmail.includes("@")) { toast.error("Geçerli bir email adresi girin"); return; }
-                setApprovalSending(true);
-                await sendForApproval(approvalModal.hakedisId, approvalEmail.trim(), project?.name || "Proje");
-                setApprovalSending(false);
-                setApprovalModal(null);
-              }}
-              disabled={approvalSending}
-              className="w-full h-10 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+              onClick={() => setShowWizard(true)}
+              className="w-full h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white mt-2"
               style={{ backgroundColor: "#FF6B2B" }}
             >
-              {approvalSending ? "Gönderiliyor..." : "📧 Onay Talebi Gönder"}
+              + Yeni Hakediş Hazırla
             </button>
+          </SectionCard>
+
+          {/* Overdue Section */}
+          {overdueItems.length > 0 && (
+            <SectionCard
+              title={
+                <span className="flex items-center gap-2" style={{ color: "#EF4444" }}>
+                  <AlertTriangle className="w-4 h-4" /> Gecikmiş Ödeme Tespit Edildi
+                </span>
+              }
+              className="border-red-500/30 bg-red-500/5"
+            >
+              <ResponsiveTable
+                columns={overdueColumns}
+                rows={overdueItems}
+                rowKey={h => h.id}
+              />
+              <p className="text-fs-xs mt-3 text-muted-foreground">
+                Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir.
+              </p>
+            </SectionCard>
+          )}
+        </div>
+      </PageShell>
+
+      {/* Approval Send Sheet */}
+      <ResponsiveSheet
+        open={!!approvalModal?.open}
+        onOpenChange={o => { if (!o) setApprovalModal(null); }}
+        title="📧 Hakediş Onaya Gönder"
+        description={approvalModal ? `Hakediş #${approvalModal.hakedisNum} — ${fmt(approvalModal.hakedisNet)}` : undefined}
+        size="md"
+        footer={
+          <button
+            onClick={async () => {
+              if (!approvalModal) return;
+              if (!approvalEmail.trim() || !approvalEmail.includes("@")) { toast.error("Geçerli bir email adresi girin"); return; }
+              setApprovalSending(true);
+              await sendForApproval(approvalModal.hakedisId, approvalEmail.trim(), project?.name || "Proje");
+              setApprovalSending(false);
+              setApprovalModal(null);
+            }}
+            disabled={approvalSending}
+            className="w-full h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: "#FF6B2B" }}
+          >
+            {approvalSending ? "Gönderiliyor..." : "📧 Onay Talebi Gönder"}
+          </button>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-fs-xs mb-1 block text-muted-foreground">Müşteri E-posta Adresi *</label>
+            <input
+              type="email"
+              value={approvalEmail}
+              onChange={e => setApprovalEmail(e.target.value)}
+              placeholder="musteri@firma.com"
+              className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+            />
+          </div>
+          <div
+            className="p-3 rounded-lg text-fs-xs"
+            style={{ backgroundColor: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", color: "#60A5FA" }}
+          >
+            Müşteriye email ile hakediş detayları ve onay/itiraz linkleri gönderilecektir. Link 30 gün geçerlidir.
           </div>
         </div>
-      )}
+      </ResponsiveSheet>
 
-      {/* Overdue Section */}
-      {overdueItems.length > 0 && (
-        <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />
-            <p className="text-[13px] font-semibold" style={{ color: "#EF4444" }}>Gecikmiş Ödeme Tespit Edildi</p>
-          </div>
-            {/* Desktop table */}
-            <div className="overflow-x-auto hidden md:block">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr>
-                    {["Hakediş", "Tutar", "Düzenleme", "Gecikme", "Yasal Faiz"].map(h => (
-                      <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wide" style={{ color: "#94A3B8", fontSize: 10, borderBottom: "1px solid rgba(239,68,68,0.2)" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {overdueItems.map((h) => {
-                    const days = h.expected_payment_date
-                      ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
-                      : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                    const interest = Math.round(h.net * DAILY_RATE * days);
-                    return (
-                      <tr key={h.id}>
-                        <td className="px-3 py-2 font-mono text-foreground">#{hakedisler.indexOf(h) + 1}</td>
-                        <td className="px-3 py-2 font-mono text-foreground">{fmt(h.net)}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{new Date(h.created_at).toLocaleDateString("tr-TR")}</td>
-                        <td className="px-3 py-2 font-semibold" style={{ color: "#EF4444" }}>{days} gün</td>
-                        <td className="px-3 py-2 font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {/* Mobile cards */}
-            <div className="md:hidden space-y-2">
-              {overdueItems.map((h) => {
-                const days = h.expected_payment_date
-                  ? Math.round((now - new Date(h.expected_payment_date).getTime()) / (1000 * 60 * 60 * 24))
-                  : Math.round((now - new Date(h.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                const interest = Math.round(h.net * DAILY_RATE * days);
-                return (
-                  <div key={h.id} className="rounded-lg p-3 bg-card border border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[13px] font-semibold text-foreground">Hakediş #{hakedisler.indexOf(h) + 1}</span>
-                      <span className="text-[12px] font-semibold" style={{ color: "#EF4444" }}>{days} gün gecikmiş</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[12px]">
-                      <div><span className="text-muted-foreground">Tutar:</span> <span className="font-mono font-semibold text-foreground">{fmt(h.net)}</span></div>
-                      <div><span className="text-muted-foreground">Faiz:</span> <span className="font-mono font-semibold" style={{ color: "#EF4444" }}>{fmt(interest)}</span></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          <p className="text-[10px] mt-3" style={{ color: "#475569" }}>
-            Bu hesaplama 3095 sayılı Kanun kapsamında yasal faiz hakkını göstermektedir.
-          </p>
-        </div>
-      )}
-
-      {/* Add form modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowAddForm(false)}>
-          <div className="rounded-xl p-5 w-full max-w-md space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">Yeni Hakediş Ekle</h3>
-              <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
-              <input value={formPeriod} onChange={e => setFormPeriod(e.target.value)} placeholder="örn: Ocak 2026"
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
-                <input type="number" value={formAmount} onChange={e => setFormAmount(e.target.value)} placeholder="örn: 485000"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
-                <input type="number" value={formKdvRate} onChange={e => setFormKdvRate(e.target.value)} placeholder="20"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-              </div>
-            </div>
-            <button onClick={handleAdd} disabled={!formPeriod || !formAmount}
-              className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
-              Hakediş Ekle
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Reminder Modal */}
-      {reminderModal?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setReminderModal(null)}>
-          <div className="rounded-xl p-5 w-full max-w-sm space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-2">
-              <Bell className="w-5 h-5" style={{ color: "#FF6B2B" }} />
-              <h3 className="text-[15px] font-semibold text-foreground">📅 Ödeme Hatırlatıcısı Kur</h3>
-            </div>
-            <p className="text-[12px] text-muted-foreground">Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım.</p>
-            <div>
-              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi</label>
-              <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none" />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Kaç gün önce uyarılsın?</label>
-              <select value={reminderDays} onChange={e => setReminderDays(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none">
-                <option value="3">3 gün önce</option>
-                <option value="1">1 gün önce</option>
-                <option value="0">Vade günü</option>
-                <option value="-1">Vade geçince (1 gün sonra)</option>
-              </select>
-            </div>
-            <button onClick={handleReminderSave} disabled={!reminderDate}
-              className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
+      {/* Payment Reminder Sheet */}
+      <ResponsiveSheet
+        open={!!reminderModal?.open}
+        onOpenChange={o => { if (!o) setReminderModal(null); }}
+        title={<span className="flex items-center gap-2"><Bell className="w-4 h-4" style={{ color: "#FF6B2B" }} /> Ödeme Hatırlatıcısı Kur</span>}
+        description="Bu hakedişin ödeme tarihini belirleyerek hatırlatıcı kuralım."
+        size="sm"
+        footer={
+          <div className="space-y-2">
+            <button
+              onClick={handleReminderSave}
+              disabled={!reminderDate}
+              className="w-full h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white disabled:opacity-40"
+              style={{ backgroundColor: "#FF6B2B" }}
+            >
               🔔 Hatırlatıcı Kur
             </button>
-            <button onClick={() => setReminderModal(null)} className="w-full text-center text-[12px] text-muted-foreground">
+            <button onClick={() => setReminderModal(null)} className="w-full text-center text-fs-xs text-muted-foreground min-h-[44px]">
               Şimdi Değil
             </button>
           </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi</label>
+            <input
+              type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)}
+              className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+            />
+          </div>
+          <div>
+            <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">Kaç gün önce uyarılsın?</label>
+            <select
+              value={reminderDays} onChange={e => setReminderDays(e.target.value)}
+              className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+            >
+              <option value="3">3 gün önce</option>
+              <option value="1">1 gün önce</option>
+              <option value="0">Vade günü</option>
+              <option value="-1">Vade geçince (1 gün sonra)</option>
+            </select>
+          </div>
         </div>
-      )}
+      </ResponsiveSheet>
 
-      {/* Payment Confirmation Modal */}
-      {paymentModal?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPaymentModal(null)}>
-          <div className="rounded-xl p-5 w-full max-w-sm space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" style={{ color: "#22C55E" }} />
-              <h3 className="text-[15px] font-semibold text-foreground">Ödeme Onayı</h3>
-            </div>
-            <p className="text-[13px]" style={{ color: "#CBD5E1" }}>
-              Hakediş #{paymentModal.hakedisNum} — <span className="font-bold" style={{ color: "#22C55E" }}>{fmt(paymentModal.hakedisNet)}</span> ödemesi tahsil edildi olarak işaretlensin mi?
-            </p>
+      {/* Payment Confirmation Sheet */}
+      <ResponsiveSheet
+        open={!!paymentModal?.open}
+        onOpenChange={o => { if (!o) setPaymentModal(null); }}
+        title={<span className="flex items-center gap-2"><CheckCircle className="w-4 h-4" style={{ color: "#22C55E" }} /> Ödeme Onayı</span>}
+        size="sm"
+        footer={
+          paymentModal && (
             <div className="flex gap-2">
-              <button onClick={() => handlePaymentConfirm(paymentModal.hakedisId)}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white" style={{ backgroundColor: "#22C55E" }}>
+              <button
+                onClick={() => handlePaymentConfirm(paymentModal.hakedisId)}
+                className="flex-1 h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white"
+                style={{ backgroundColor: "#22C55E" }}
+              >
                 ✅ Evet, Tahsil Edildi
               </button>
-              <button onClick={() => setPaymentModal(null)}
-                className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
+              <button
+                onClick={() => setPaymentModal(null)}
+                className="px-4 h-11 min-h-[44px] rounded-lg text-fs-xs font-medium bg-muted text-muted-foreground"
+              >
                 İptal
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          )
+        }
+      >
+        {paymentModal && (
+          <p className="text-fs-sm text-foreground/85">
+            Hakediş #{paymentModal.hakedisNum} — <span className="font-bold" style={{ color: "#22C55E" }}>{fmt(paymentModal.hakedisNet)}</span> ödemesi tahsil edildi olarak işaretlensin mi?
+          </p>
+        )}
+      </ResponsiveSheet>
 
-      {/* Edit Hakediş Modal */}
-      {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setEditModal(null)}>
-          <div className="rounded-xl p-5 w-full max-w-md space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">✏️ Hakediş Düzenle</h3>
-              <button onClick={() => setEditModal(null)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
+      {/* Edit Hakediş Sheet */}
+      <ResponsiveSheet
+        open={!!editModal}
+        onOpenChange={o => { if (!o) setEditModal(null); }}
+        title="✏️ Hakediş Düzenle"
+        size="md"
+        footer={
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (!editModal) return;
+                const amount = parseFloat(editAmount);
+                if (!editPeriod || isNaN(amount)) { toast.error("Dönem ve tutar gerekli"); return; }
+                const kdvRate = parseFloat(editKdvRate) / 100;
+                const kdv = Math.round(amount * kdvRate * 100) / 100;
+                const net = amount + kdv;
+                await updateHakedis(editModal.id, {
+                  period: editPeriod, amount, kdv, net,
+                  expected_payment_date: editExpectedDate || null,
+                });
+                setEditModal(null);
+              }}
+              disabled={!editPeriod || !editAmount}
+              className="flex-1 h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white disabled:opacity-40"
+              style={{ backgroundColor: "#FF6B2B" }}
+            >
+              💾 Kaydet
+            </button>
+            <button onClick={() => setEditModal(null)} className="px-4 h-11 min-h-[44px] rounded-lg text-fs-xs font-medium bg-muted text-muted-foreground">
+              İptal
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">Dönem</label>
+            <input
+              value={editPeriod} onChange={e => setEditPeriod(e.target.value)} placeholder="örn: Ocak 2026"
+              className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
+              <input
+                type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="örn: 485000"
+                className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+              />
             </div>
             <div>
-              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Dönem</label>
-              <input value={editPeriod} onChange={e => setEditPeriod(e.target.value)} placeholder="örn: Ocak 2026"
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Tutar (₺)</label>
-                <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="örn: 485000"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
-                <input type="number" value={editKdvRate} onChange={e => setEditKdvRate(e.target.value)} placeholder="20"
-                  className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi (opsiyonel)</label>
-              <input type="date" value={editExpectedDate} onChange={e => setEditExpectedDate(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-[13px] outline-none bg-background border border-border text-foreground" />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  const amount = parseFloat(editAmount);
-                  if (!editPeriod || isNaN(amount)) { toast.error("Dönem ve tutar gerekli"); return; }
-                  const kdvRate = parseFloat(editKdvRate) / 100;
-                  const kdv = Math.round(amount * kdvRate * 100) / 100;
-                  const net = amount + kdv;
-                  await updateHakedis(editModal.id, {
-                    period: editPeriod,
-                    amount,
-                    kdv,
-                    net,
-                    expected_payment_date: editExpectedDate || null,
-                  });
-                  setEditModal(null);
-                }}
-                disabled={!editPeriod || !editAmount}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-40" style={{ backgroundColor: "#FF6B2B" }}>
-                💾 Kaydet
-              </button>
-              <button onClick={() => setEditModal(null)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>
-                İptal
-              </button>
+              <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">KDV Oranı (%)</label>
+              <input
+                type="number" value={editKdvRate} onChange={e => setEditKdvRate(e.target.value)} placeholder="20"
+                className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+              />
             </div>
           </div>
+          <div>
+            <label className="text-fs-xs font-semibold mb-1 block text-muted-foreground">Beklenen Ödeme Tarihi (opsiyonel)</label>
+            <input
+              type="date" value={editExpectedDate} onChange={e => setEditExpectedDate(e.target.value)}
+              className="w-full h-11 min-h-[44px] rounded-lg px-3 text-fs-sm bg-background border border-border text-foreground"
+            />
+          </div>
         </div>
-      )}
+      </ResponsiveSheet>
 
-      {/* PDF Signature Modal */}
-      {showPdfModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowPdfModal(false)}>
-          <div className="rounded-xl p-5 w-full max-w-lg space-y-4 bg-card border border-border" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">📄 PDF Ayarları</h3>
-              <button onClick={() => setShowPdfModal(false)} className="text-muted-foreground"><X className="w-4 h-4" /></button>
-            </div>
-
-            {/* Signature fields */}
-            {(["hazirlayan", "kontrolEden", "isveren"] as const).map((key, ki) => {
-              const labels = ["Hazırlayan", "Kontrol Eden (opsiyonel)", "İşveren / Onaylayan (opsiyonel)"];
-              const colors = ["#FF6B2B", "#3B82F6", "#22C55E"];
-              return (
-                <div key={key} className="rounded-lg p-3 space-y-2 bg-background border border-border">
-                  <p className="text-[11px] font-semibold" style={{ color: colors[ki] }}>{labels[ki]}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input placeholder="Adı Soyadı" value={pdfSig[key]?.name || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: e.target.value, title: p[key]?.title || "" } }))}
-                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" />
-                    <input placeholder="Ünvanı" value={pdfSig[key]?.title || ""} onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: p[key]?.name || "", title: e.target.value } }))}
-                      className="rounded-lg px-3 py-1.5 text-[12px] outline-none" />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Checkboxes */}
-            <div className="space-y-2 rounded-lg p-3 bg-background border border-border">
-              {[
-                { label: "Firma başlığı ekle", checked: pdfIncludeHeader, set: setPdfIncludeHeader },
-                { label: "İmza alanı ekle", checked: pdfIncludeSignature, set: setPdfIncludeSignature },
-                { label: "Uyarı metni ekle", checked: pdfIncludeWarning, set: setPdfIncludeWarning },
-              ].map(opt => (
-                <label key={opt.label} className="flex items-center gap-2 text-[12px] cursor-pointer" style={{ color: "#CBD5E1" }}>
-                  <input type="checkbox" checked={opt.checked} onChange={e => opt.set(e.target.checked)}
-                    className="rounded accent-[#FF6B2B]" />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-
-            {/* Progress bar */}
-            {pdfProgress !== null && (
-              <div className="space-y-1">
-                <div className="h-2 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                  <div className="h-full rounded-full transition-all duration-300" style={{ backgroundColor: "#FF6B2B", width: `${pdfProgress}%` }} />
-                </div>
-                <p className="text-[11px] text-center text-muted-foreground">PDF hazırlanıyor... %{pdfProgress}</p>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                disabled={pdfProgress !== null}
-                onClick={async () => {
-                  localStorage.setItem("santiyem_pdf_sig", JSON.stringify(pdfSig));
-                  setPdfProgress(0);
-                  try {
-                    // Fetch all work items for all hakedisler
-                    const allIds = hakedisler.map(h => h.id);
-                    const { data: allItems } = await supabase
-                      .from("hakedis_items")
-                      .select("*")
-                      .in("hakedis_id", allIds)
-                      .order("sort_order", { ascending: true });
-                    const workItems: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
-                      description: i.description, unit: i.unit, quantity: Number(i.quantity),
-                      unit_price: Number(i.unit_price), total_price: Number(i.total_price),
-                    }));
-                    exportHakedisPDF(
-                      hakedisler,
-                      project?.name || "Proje",
-                      {
-                        includeHeader: pdfIncludeHeader,
-                        includeSignature: pdfIncludeSignature,
-                        includeWarning: pdfIncludeWarning,
-                        signatureInfo: pdfSig,
-                        onProgress: (pct) => setPdfProgress(pct),
-                      },
-                      project?.client,
-                      undefined,
-                      undefined,
-                      workItems.length > 0 ? workItems : undefined,
-                    );
-                    setTimeout(() => {
-                      setPdfProgress(null);
-                      setShowPdfModal(false);
-                      toast.success("✅ PDF indirildi");
-                    }, 400);
-                  } catch (err) {
-                    console.error("PDF oluşturma hatası:", err);
+      {/* PDF Signature Sheet */}
+      <ResponsiveSheet
+        open={showPdfModal}
+        onOpenChange={o => { if (!o) setShowPdfModal(false); }}
+        title="📄 PDF Ayarları"
+        size="lg"
+        footer={
+          <div className="flex gap-2">
+            <button
+              disabled={pdfProgress !== null}
+              onClick={async () => {
+                localStorage.setItem("santiyem_pdf_sig", JSON.stringify(pdfSig));
+                setPdfProgress(0);
+                try {
+                  const allIds = hakedisler.map(h => h.id);
+                  const { data: allItems } = await supabase
+                    .from("hakedis_items")
+                    .select("*")
+                    .in("hakedis_id", allIds)
+                    .order("sort_order", { ascending: true });
+                  const workItems: HakedisWorkItem[] = (allItems || []).map((i: any) => ({
+                    description: i.description, unit: i.unit, quantity: Number(i.quantity),
+                    unit_price: Number(i.unit_price), total_price: Number(i.total_price),
+                  }));
+                  exportHakedisPDF(
+                    hakedisler,
+                    project?.name || "Proje",
+                    {
+                      includeHeader: pdfIncludeHeader,
+                      includeSignature: pdfIncludeSignature,
+                      includeWarning: pdfIncludeWarning,
+                      signatureInfo: pdfSig,
+                      onProgress: (pct) => setPdfProgress(pct),
+                    },
+                    project?.client,
+                    undefined,
+                    undefined,
+                    workItems.length > 0 ? workItems : undefined,
+                  );
+                  setTimeout(() => {
                     setPdfProgress(null);
-                    toast.error("PDF oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
-                  }
-                }}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold text-white disabled:opacity-50" style={{ backgroundColor: "#FF6B2B" }}>
-                {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "📄 PDF Oluştur"}
-              </button>
-              <button onClick={() => setShowPdfModal(false)} className="px-4 py-2.5 rounded-lg text-[12px] font-medium" style={{ backgroundColor: "#1E2732", color: "#94A3B8" }}>İptal</button>
-            </div>
+                    setShowPdfModal(false);
+                    toast.success("✅ PDF indirildi");
+                  }, 400);
+                } catch (err) {
+                  console.error("PDF oluşturma hatası:", err);
+                  setPdfProgress(null);
+                  toast.error("PDF oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
+                }
+              }}
+              className="flex-1 h-11 min-h-[44px] rounded-lg text-fs-sm font-semibold text-white disabled:opacity-50"
+              style={{ backgroundColor: "#FF6B2B" }}
+            >
+              {Capacitor.isNativePlatform() ? "📤 Paylaş / Kaydet" : "📄 PDF Oluştur"}
+            </button>
+            <button
+              onClick={() => setShowPdfModal(false)}
+              className="px-4 h-11 min-h-[44px] rounded-lg text-fs-xs font-medium bg-muted text-muted-foreground"
+            >
+              İptal
+            </button>
           </div>
+        }
+      >
+        <div className="space-y-4">
+          {(["hazirlayan", "kontrolEden", "isveren"] as const).map((key, ki) => {
+            const labels = ["Hazırlayan", "Kontrol Eden (opsiyonel)", "İşveren / Onaylayan (opsiyonel)"];
+            const colors = ["#FF6B2B", "#3B82F6", "#22C55E"];
+            return (
+              <div key={key} className="rounded-lg p-3 space-y-2 bg-background border border-border">
+                <p className="text-fs-xs font-semibold" style={{ color: colors[ki] }}>{labels[ki]}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    placeholder="Adı Soyadı"
+                    value={pdfSig[key]?.name || ""}
+                    onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: e.target.value, title: p[key]?.title || "" } }))}
+                    className="h-11 min-h-[44px] rounded-lg px-3 text-fs-xs bg-card border border-border text-foreground"
+                  />
+                  <input
+                    placeholder="Ünvanı"
+                    value={pdfSig[key]?.title || ""}
+                    onChange={e => setPdfSig(p => ({ ...p, [key]: { ...p[key], name: p[key]?.name || "", title: e.target.value } }))}
+                    className="h-11 min-h-[44px] rounded-lg px-3 text-fs-xs bg-card border border-border text-foreground"
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="space-y-2 rounded-lg p-3 bg-background border border-border">
+            {[
+              { label: "Firma başlığı ekle", checked: pdfIncludeHeader, set: setPdfIncludeHeader },
+              { label: "İmza alanı ekle", checked: pdfIncludeSignature, set: setPdfIncludeSignature },
+              { label: "Uyarı metni ekle", checked: pdfIncludeWarning, set: setPdfIncludeWarning },
+            ].map(opt => (
+              <label key={opt.label} className="flex items-center gap-2 text-fs-xs cursor-pointer text-foreground/80 min-h-[44px]">
+                <input
+                  type="checkbox" checked={opt.checked}
+                  onChange={e => opt.set(e.target.checked)}
+                  className="rounded accent-[#FF6B2B] w-4 h-4"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+
+          {pdfProgress !== null && (
+            <div className="space-y-1">
+              <div className="h-2 rounded-full bg-muted">
+                <div className="h-full rounded-full transition-all duration-300" style={{ backgroundColor: "#FF6B2B", width: `${pdfProgress}%` }} />
+              </div>
+              <p className="text-fs-xs text-center text-muted-foreground">PDF hazırlanıyor... %{pdfProgress}</p>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </ResponsiveSheet>
+    </>
   );
 };
 
 export default DesktopHakedisPage;
+
+// Import guard (kept unused to preserve the previous BarChart import surface).
+export { BarChart };
