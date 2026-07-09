@@ -416,6 +416,65 @@ export function useExecutiveBrief() {
     const criticalRisks = findings.filter((f) => f.severity === "critical").length;
     const pendingPayments = subPending.length + upcomingChecks.length + overdueChecks.length;
 
+    // ── Sprint 30.0 — Today Operations extras ─────────
+    const sameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+    const hakedisExpectedToday = data.hakedis.filter((h) => {
+      if (h.payment_date) return false;
+      const ed = h.expected_payment_date ? new Date(String(h.expected_payment_date)) : null;
+      return ed && sameDay(ed, now);
+    });
+    const expectedCollectionsAmount = hakedisExpectedToday.reduce(
+      (s, h) => s + Number(h.net || h.amount || 0),
+      0
+    );
+
+    const checksDueToday = data.checks.filter((c) => {
+      const paid = c.status === "odendi" || c.status === "tahsil_edildi";
+      const dt = c.due_date ? new Date(String(c.due_date)) : null;
+      return !paid && dt && sameDay(dt, now);
+    });
+    const paymentsDueTodayAmount =
+      checksDueToday.reduce((s, c) => s + Number(c.amount || 0), 0) +
+      subDueToday.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const paymentsDueTodayCount = checksDueToday.length + subDueToday.length;
+
+    const pendingHakedisCount = data.hakedis.filter(
+      (h) => h.approval_status === "beklemede" || (!h.payment_date && h.approval_status !== "reddedildi")
+    ).length;
+
+    // Build today's timeline — sorted, deduped, capped at 6.
+    const todayEvents: TodayEvent[] = [];
+    for (const h of hakedisExpectedToday) {
+      todayEvents.push({
+        id: `hakedis-${String(h.id)}`,
+        label: `Hakediş tahsilatı beklentisi (${Number(h.net || h.amount || 0).toLocaleString("tr-TR")} ₺)`,
+        kind: "collection",
+      });
+    }
+    for (const c of checksDueToday) {
+      todayEvents.push({
+        id: `check-${String(c.id)}`,
+        label: `Çek vadesi: ${Number(c.amount || 0).toLocaleString("tr-TR")} ₺`,
+        kind: "payment",
+      });
+    }
+    for (const p of subDueToday) {
+      todayEvents.push({
+        id: `sub-${String(p.id)}`,
+        label: `Taşeron ödemesi: ${Number(p.amount || 0).toLocaleString("tr-TR")} ₺`,
+        kind: "payment",
+      });
+    }
+    for (const t of tasksDueToday.slice(0, 4)) {
+      todayEvents.push({
+        id: `task-${String(t.id)}`,
+        label: `Görev: ${String(t.title || "").slice(0, 60)}`,
+        kind: "task",
+      });
+    }
+
     // Severity order
     const order: Record<Severity, number> = { critical: 0, important: 1, info: 2 };
     findings.sort((a, b) => order[a.severity] - order[b.severity]);
@@ -435,6 +494,12 @@ export function useExecutiveBrief() {
         pendingPayments,
         tasksDueToday: tasksDueToday.length,
         laborDeltaPct,
+        expectedCollectionsAmount,
+        expectedCollectionsCount: hakedisExpectedToday.length,
+        paymentsDueTodayAmount,
+        paymentsDueTodayCount,
+        pendingHakedisCount,
+        todayEvents: todayEvents.slice(0, 6),
       },
     };
   }, [data]);
