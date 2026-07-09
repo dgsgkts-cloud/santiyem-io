@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Wallet, Users, Briefcase } from "lucide-react";
 import { useLaborCost } from "@/hooks/useAttendanceGrid";
+import { KpiCard } from "@/components/ui/responsive/KpiCard";
+import { ResponsiveGrid } from "@/components/ui/responsive/ResponsiveGrid";
+import { SectionCard } from "@/components/ui/responsive/SectionCard";
 
 const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
@@ -18,58 +20,51 @@ export default function LaborCostSummary({ projectId, canViewCost }: Props) {
   const { data, loading } = useLaborCost(projectId, month);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Button size="icon" variant="outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <span className="font-semibold min-w-[160px] text-center">{MONTH_NAMES[month.getMonth()]} {month.getFullYear()}</span>
+        <span className="font-semibold min-w-[160px] text-center text-fs-md">{MONTH_NAMES[month.getMonth()]} {month.getFullYear()}</span>
         <Button size="icon" variant="outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
 
       {loading || !data ? (
-        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+        <SectionCard><p className="text-fs-sm text-muted-foreground">Yükleniyor...</p></SectionCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <ResponsiveGrid variant="kpi">
           {canViewCost && (
             <>
-              <Card className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
-                  <Users className="w-4 h-4" /> YEVMİYELİ
-                </div>
-                <div className="text-2xl font-bold">{fmt(Number(data.daily_wage_cost))}</div>
-                <div className="text-xs text-muted-foreground mt-1">{data.daily_wage_count} kişi</div>
-              </Card>
-              <Card className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
-                  <Briefcase className="w-4 h-4" /> MAKTU AYLIK
-                </div>
-                <div className="text-2xl font-bold">{fmt(Number(data.monthly_salary_cost))}</div>
-                <div className="text-xs text-muted-foreground mt-1">{data.monthly_salary_count} kişi</div>
-              </Card>
-              <Card className="p-4 border-[#FF6B2B]/40 bg-[#FF6B2B]/5">
-                <div className="flex items-center gap-2 text-[#FF6B2B] text-xs mb-2">
-                  <Wallet className="w-4 h-4" /> TOPLAM PERSONEL MALİYETİ
-                </div>
-                <div className="text-2xl font-bold text-[#FF6B2B]">{fmt(Number(data.total_cost))}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Gider olarak Kasa raporlarına ayrı kategori yansır
-                </div>
-              </Card>
+              <KpiCard
+                label="Yevmiyeli"
+                value={fmt(Number(data.daily_wage_cost))}
+                hint={`${data.daily_wage_count} kişi`}
+                icon={Users}
+              />
+              <KpiCard
+                label="Maktu Aylık"
+                value={fmt(Number(data.monthly_salary_cost))}
+                hint={`${data.monthly_salary_count} kişi`}
+                icon={Briefcase}
+              />
+              <KpiCard
+                label="Toplam Personel Maliyeti"
+                value={fmt(Number(data.total_cost))}
+                hint="Kasa raporlarına ayrı kategori olarak yansır"
+                icon={Wallet}
+                accent="primary"
+              />
             </>
           )}
-          <Card className={`p-4 ${canViewCost ? "" : "md:col-span-3"}`}>
-            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
-              <Users className="w-4 h-4" /> TAŞERON EKİBİ (KONTROL)
-            </div>
-            <div className="text-lg font-semibold">{data.subcontractor_crew_count} kişi · {data.subcontractor_crew_days} adam-gün</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Maliyet taşeron sözleşmesinden gelir, puantajdan hesaplanmaz.
-            </div>
-          </Card>
-        </div>
+          <KpiCard
+            label="Taşeron Ekibi (Kontrol)"
+            value={`${data.subcontractor_crew_count} kişi`}
+            hint={`${data.subcontractor_crew_days} adam-gün · maliyet taşeron sözleşmesinden`}
+            icon={Users}
+          />
+        </ResponsiveGrid>
       )}
     </div>
   );
