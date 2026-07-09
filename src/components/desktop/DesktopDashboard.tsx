@@ -213,7 +213,8 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     []
   );
 
-  const name = profile?.full_name?.split(" ")[0] || "Mühendis";
+  const { ready: nameReady, firstName, hasName } = useDisplayName();
+  const name = firstName;
   const greeting = getGreeting();
   const profitLocked = !canAccessProfitability(plan, role);
 
