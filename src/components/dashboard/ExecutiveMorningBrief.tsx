@@ -289,15 +289,21 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
 
       {/* ── Compact header: title strip + subtle voice button ── */}
       {compact && (
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-            <h3 className="text-[13px] font-semibold text-foreground tracking-tight truncate">
-              Yönetici Brifingi
-            </h3>
-            <span className="text-[11px] text-muted-foreground truncate">
-              {loading ? "hazırlanıyor…" : findings.length === 0 ? "sakin" : `${findings.length} bulgu`}
-            </span>
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+              <h3 className="text-fs-base font-semibold text-foreground tracking-tight truncate">
+                Bugünün Kritik Konuları
+              </h3>
+            </div>
+            <p className="text-fs-xs text-muted-foreground mt-1">
+              {loading
+                ? "Şirket verileri analiz ediliyor…"
+                : findings.length === 0
+                  ? "Bugün dikkat gerektiren bir konu yok. Şantiye sakin."
+                  : "Bugün dikkat gerektiren operasyonel riskler."}
+            </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {voiceEnabled && (
