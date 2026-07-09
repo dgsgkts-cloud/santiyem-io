@@ -284,7 +284,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {displayName}{roleLabel ? ` · ${roleLabel}` : ""}
+                {nameHasName ? `${displayName}${roleLabel ? ` · ${roleLabel}` : ""}` : "…"}
               </TooltipContent>
             </Tooltip>
           ) : (
