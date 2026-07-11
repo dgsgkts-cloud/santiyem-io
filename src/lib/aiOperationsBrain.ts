@@ -153,17 +153,44 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   const projected30 = cashOnHand + inflow30 - outflow30;
 
   if (cashOnHand > 0 && projected30 < 0) {
+    // Estimate deficit day: run a naive daily balance and find first negative.
+    let running = cashOnHand;
+    const events = [
+      ...incoming30.map((x) => ({ date: x.date, delta: +x.amount })),
+      ...outgoing30.map((x) => ({ date: x.date, delta: -x.amount })),
+    ].sort((a, b) => a.date.getTime() - b.date.getTime());
+    let deficitDate: Date | null = null;
+    for (const e of events) {
+      running += e.delta;
+      if (running < 0) {
+        deficitDate = e.date;
+        break;
+      }
+    }
+    const deficitDays = deficitDate ? daysBetween(deficitDate, now) : 30;
     insights.push({
       id: "cash-shortfall-30",
       kind: "risk",
       domain: "finance",
       priority: "critical",
-      title: "Önümüzdeki 30 günde nakit açığı riski",
+      title: `Yaklaşık ${deficitDays} gün içinde nakit açığı öngörülüyor`,
       detail: `Kasa ${fmtTRY(cashOnHand)} + tahsilat ${fmtTRY(inflow30)} − ödeme ${fmtTRY(outflow30)} = ${fmtTRY(projected30)}`,
+      cause:
+        "Beklenen tahsilatlar planlanan ödemelerden geride kalıyor; çıkış hızı giriş hızını aşıyor.",
+      impact:
+        "Vadeler karşılanmazsa taşeron ve tedarikçi ilişkileri bozulabilir; kredi maliyeti artabilir.",
       recommendation:
-        "Beklenen tahsilatları hızlandırmayı veya bir ödeme planı yapmayı düşünün.",
+        "Düşük öncelikli ödemeleri erteleyin, tahsilatları hızlandırın, satın alma takvimini gözden geçirin.",
+      suggestedSteps: [
+        "Beklenen hakediş tahsilatlarını arayarak teyit edin.",
+        "Kritik olmayan taşeron ödemelerini 7–10 gün öteleyin.",
+        "Bu ayki satın alma taleplerini önceliklendirin.",
+      ],
+      topActionLabel: "Nakit planını gözden geçir",
+      expectedImpact: `Yaklaşık ${fmtTRY(Math.abs(projected30))} açığı kapatma`,
       actions: [
-        makeAction("cash-open", "Kasayı aç", "open_payment", { priority: "high" }),
+        makeAction("cash-open", "Nakit Planını Aç", "open_payment", { priority: "high" }),
+        makeAction("cash-collections", "Tahsilatları Gör", "open_report"),
         makeAction("cash-task", "Tahsilat görevi oluştur", "create_task", {
           priority: "high",
           payload: { title: "Beklenen tahsilatları hızlandır", priority: "high" },
@@ -178,13 +205,25 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
       priority: "high",
       title: "30 günlük ödemeler mevcut kasayı aşıyor",
       detail: `Ödeme ${fmtTRY(outflow30)} > Kasa ${fmtTRY(cashOnHand)} — tahsilatlarla kapanıyor`,
+      cause: "Nakit stoğu, önümüzdeki ay ödemelerini tek başına karşılamıyor.",
+      impact: "Tahsilat gecikirse aynı hafta içinde kasa açığa düşebilir.",
+      recommendation:
+        "Tahsilat takvimini yakın takibe alın, gerekirse ödeme sıralamasını yeniden planlayın.",
+      suggestedSteps: [
+        "Bu haftanın beklenen tahsilatlarını teyit edin.",
+        "Kritik olmayan ödemeleri bir sonraki tahsilat sonrasına planlayın.",
+      ],
+      topActionLabel: "Haftalık nakit takibi kur",
+      expectedImpact: "Nakit görünürlüğünde 4 hafta öngörü",
       actions: [
+        makeAction("cash-open-tight", "Nakit Planını Aç", "open_payment"),
         makeAction("cash-remind", "Hatırlatma oluştur", "create_task", {
           payload: { title: "Kasa dengesini haftalık takip et", priority: "medium" },
         }),
       ],
     });
   }
+
 
   // Overdue subcontractor payments
   const subOverdue = input.subPayments.filter((p) => {
