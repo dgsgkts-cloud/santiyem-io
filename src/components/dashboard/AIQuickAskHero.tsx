@@ -9,6 +9,8 @@ import { Sparkles, ArrowRight, Send } from "lucide-react";
 interface Props {
   onSend?: (text: string) => void;
   onTabChange: (tab: string) => void;
+  /** Sprint 31 — optional AI-generated headline for the ticker strip. */
+  topInsight?: string | null;
 }
 
 const QUICK_PROMPTS = [
