@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
+import { computeAIOperations, type AIOperationsSummary } from "@/lib/aiOperationsBrain";
 
 export type Severity = "critical" | "important" | "info";
 
@@ -68,6 +69,8 @@ export function useExecutiveBrief() {
     materialExits: Row[];
     tasks: Row[];
     workerAttendanceToday: Row[];
+    personnel: Row[];
+    subcontractors: Row[];
     laborThis: number;
     laborPrev: number;
   } | null>(null);
@@ -97,17 +100,21 @@ export function useExecutiveBrief() {
       exitsR,
       tasksR,
       attendanceR,
+      personnelR,
+      subcontractorsR,
     ] = await Promise.all([
       q(supabase.from("projects").select("id,name,status,progress,end_date").eq("user_id", user.id)),
       q(supabase.from("cash_accounts").select("id,balance,name").eq("user_id", user.id)),
       q(supabase.from("cash_checks").select("id,amount,due_date,status").eq("user_id", user.id)),
       q(supabase.from("project_hakedis").select("id,project_id,amount,net,status,payment_date,expected_payment_date,approval_status,approval_sent_at,created_at").eq("user_id", user.id)),
       q(supabase.from("subcontractor_payments").select("id,amount,status,payment_date,planned_date,subcontractor_id").eq("user_id", user.id)),
-      q(supabase.from("project_expenses").select("id,amount,expense_date").eq("user_id", user.id).gte("expense_date", iso(prevMonthStart))),
+      q(supabase.from("project_expenses").select("id,amount,expense_date,category").eq("user_id", user.id).gte("expense_date", iso(prevMonthStart))),
       q(supabase.from("materials").select("id,name,unit,min_stock,project_id").eq("user_id", user.id)),
       q(supabase.from("material_exits").select("material_id,quantity,exit_date").eq("user_id", user.id).gte("exit_date", iso(in30ago))),
       q(supabase.from("tasks").select("id,title,status,due_date,project_id").eq("created_by", user.id)),
       q(supabase.from("worker_attendance").select("id,full_name,team_size,entry_type,check_in,check_out").eq("user_id", user.id).gte("check_in", iso(now))),
+      q(supabase.from("personnel").select("id,full_name").eq("user_id", user.id)),
+      q(supabase.from("subcontractors").select("id,name").eq("user_id", user.id)),
     ]);
 
     setData({
@@ -121,6 +128,8 @@ export function useExecutiveBrief() {
       materialExits: (exitsR.data as Row[]) || [],
       tasks: (tasksR.data as Row[]) || [],
       workerAttendanceToday: (attendanceR.data as Row[]) || [],
+      personnel: (personnelR.data as Row[]) || [],
+      subcontractors: (subcontractorsR.data as Row[]) || [],
       laborThis: 0,
       laborPrev: 0,
     });
@@ -504,5 +513,19 @@ export function useExecutiveBrief() {
     };
   }, [data]);
 
-  return { loading, findings, insights, kpis, refresh: fetchAll };
+  const ops: AIOperationsSummary = useMemo(() => {
+    if (!data) {
+      return {
+        topInsight: null,
+        topRisks: [],
+        topOpportunities: [],
+        todayPriorities: [],
+        all: [],
+        headline: null,
+      };
+    }
+    return computeAIOperations({ now: new Date(), ...data });
+  }, [data]);
+
+  return { loading, findings, insights, kpis, ops, refresh: fetchAll };
 }
