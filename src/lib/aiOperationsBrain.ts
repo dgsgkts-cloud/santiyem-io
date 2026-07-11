@@ -340,37 +340,66 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
 
   if (projectRisks.length > 0) {
     const top = projectRisks[0];
+    const isLate = top.slip > 0;
+    // Rough recovery estimate: assume 1 extra worker recovers ~0.4 day per week.
+    const recoverWorkers = isLate ? Math.max(2, Math.min(8, Math.ceil(top.slip / 2))) : 0;
     insights.push({
       id: `project-risk-${String(top.p.id)}`,
       kind: "risk",
       domain: "projects",
-      priority: top.slip > 7 ? "critical" : top.slip > 0 ? "high" : "medium",
-      title:
-        top.slip > 0
-          ? `${String(top.p.name)} planın ${top.slip} gün gerisinde`
-          : `${String(top.p.name)} ilerleme oranı düşük (%${top.prog})`,
+      priority: top.slip > 7 ? "critical" : isLate ? "high" : "medium",
+      title: isLate
+        ? `${String(top.p.name)} planın ${top.slip} gün gerisinde`
+        : `${String(top.p.name)} ilerleme oranı düşük (%${top.prog})`,
       detail: top.end
         ? `Bitiş: ${top.end.toLocaleDateString("tr-TR")} · İlerleme %${top.prog}`
         : `İlerleme %${top.prog}`,
-      recommendation:
-        top.slip > 0
-          ? "Kritik yol aktivitelerini gözden geçirin ve ekip kapasitesini artırın."
-          : "Proje planını revize etmeyi ve engelleri belirlemeyi düşünün.",
+      cause: isLate
+        ? "Düşük iş gücü, geciken malzeme teslimatları veya bekleyen kontrol/onay süreçleri gecikmenin muhtemel nedenleri."
+        : "Planlanan ilerleme temposu tutmuyor; blok noktalar plana yansımıyor olabilir.",
+      impact: isLate
+        ? "Teslim tarihinin kayması hakediş, ceza ve müşteri ilişkileri açısından risk oluşturur."
+        : "Kritik yol aktivitelerinde birikme yaşanırsa gecikme kısa sürede büyüyebilir.",
+      recommendation: isLate
+        ? `${recoverWorkers} kişilik takviye planlayın, bekleyen satın almaları onaylayın, mesai/vardiya seçeneklerini değerlendirin.`
+        : "Proje planını revize edin ve engelleri ekiple birlikte belirleyin.",
+      suggestedSteps: isLate
+        ? [
+            `Diğer projelerden ${recoverWorkers} kişilik takviye planlayın.`,
+            "Bekleyen satın alma taleplerini onaylayın.",
+            "Kritik yol için mesai/vardiya planı çıkarın.",
+          ]
+        : [
+            "Kritik yol aktivitelerini yeniden listeleyin.",
+            "Ekipten engel/darboğaz listesini isteyin.",
+          ],
+      topActionLabel: isLate
+        ? `${String(top.p.name)} için ${recoverWorkers} kişilik takviye planla`
+        : `${String(top.p.name)} planını revize et`,
+      expectedImpact: isLate
+        ? `Yaklaşık ${Math.max(2, Math.round(top.slip / 3))} takvim günü kazanım`
+        : "İlerleme temposunda görünürlük artışı",
       actions: [
-        makeAction(`proj-open-${top.p.id}`, "Projeyi aç", "open_project", {
-          payload: { projectId: String(top.p.id) },
-        }),
-        makeAction(`proj-task-${top.p.id}`, "Aksiyon görevi oluştur", "create_task", {
+        makeAction(`proj-recover-${top.p.id}`, "Görev Oluştur", "create_task", {
           priority: "high",
           payload: {
-            title: `${String(top.p.name)} — plan gecikmesi aksiyonu`,
+            title: `${String(top.p.name)} — plan gecikmesi kurtarma aksiyonu`,
             projectId: String(top.p.id),
             priority: "high",
           },
         }),
+        makeAction(`proj-personnel-${top.p.id}`, "Personel Planla", "open_personnel"),
+        makeAction(`proj-purchase-${top.p.id}`, "Satın Alma Aç", "create_purchase_request", {
+          priority: "high",
+          payload: { projectId: String(top.p.id) },
+        }),
+        makeAction(`proj-open-${top.p.id}`, "Projeyi Aç", "open_project", {
+          payload: { projectId: String(top.p.id) },
+        }),
       ],
     });
   }
+
 
   // Budget overrun risk (if budget field exists)
   for (const p of activeProjects) {
