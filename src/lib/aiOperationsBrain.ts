@@ -50,7 +50,6 @@ export interface AIOperationsSummary {
   /** Short natural-language sentence for the AI Hero ticker. */
   headline: string | null;
 }
-}
 
 type Row = { [k: string]: unknown };
 
