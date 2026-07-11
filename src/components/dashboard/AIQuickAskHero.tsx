@@ -83,8 +83,16 @@ export const AIQuickAskHero = ({ onSend, onTabChange, topInsight }: Props) => {
             <p className="text-fs-xs text-muted-foreground mt-0.5">
               Şirketiniz hakkında ne isterseniz sorun — projeler, nakit, personel, riskler.
             </p>
-          </div>
         </div>
+
+        {/* Sprint 31 — live AI insight ticker */}
+        {topInsight && (
+          <div className="mb-3 rounded-lg border border-[#FF6B2B]/25 bg-[#FF6B2B]/8 px-3 py-2 flex items-start gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" strokeWidth={2.4} />
+            <p className="text-fs-xs text-foreground/90 leading-snug">{topInsight}</p>
+          </div>
+        )}
+
 
         {/* Input */}
         <div className="flex flex-col sm:flex-row gap-2 items-stretch">
