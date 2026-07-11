@@ -238,19 +238,33 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
       kind: "risk",
       domain: "finance",
       priority: "critical",
-      title: `${subOverdue.length} taşeron ödemesi gecikmiş`,
+      title: `${subOverdue.length} taşeron ödemesi vadesi geçmiş`,
       detail: `Toplam ${fmtTRY(total)}`,
+      cause: "Tahsilat gecikmesi veya ödeme planı eksikliği taşeron vadelerinin kaçmasına yol açmış.",
+      impact: "Tedarikçi ilişkileri zayıflar; kritik iş gücü ve malzeme kesintileri oluşabilir.",
       recommendation:
-        "Nakit varsa öncelikli ödeme planlayın; yoksa taşeronla iletişime geçin.",
+        "Yüksek riskli taşeronları önceliklendirin ve düşük öncelikli ödemeleri planlı biçimde erteleyin.",
+      suggestedSteps: [
+        "Taşeronları risk/etki matrisine göre gruplayın.",
+        "Kritik olanlara kısmi ödeme + kalan bakiye planı önerin.",
+        "Kalanlara yazılı ödeme takvimi paylaşın.",
+      ],
+      topActionLabel: `${subOverdue.length} taşeron için ödeme planı oluştur`,
+      expectedImpact: `${fmtTRY(total)} tutarında ödeme yükünün yönetilmesi`,
       actions: [
-        makeAction("sub-open", "Taşeronları aç", "open_payment"),
-        makeAction("sub-plan", "Ödeme görevi oluştur", "create_task", {
+        makeAction("sub-plan-open", "Ödeme Planı Oluştur", "create_task", {
           priority: "high",
-          payload: { title: `${subOverdue.length} taşeron ödemesini planla`, priority: "high" },
+          payload: {
+            title: `${subOverdue.length} taşeron ödeme planı`,
+            priority: "high",
+          },
         }),
+        makeAction("sub-open", "Ödeme Takvimi Aç", "open_payment"),
+        makeAction("sub-group", "Taşeronları Grupla", "open_report"),
       ],
     });
   }
+
 
   // Expected collections opportunity (this month)
   const collectionsThisMonth = input.hakedis
