@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
+import { computeAIOperations, type AIOperationsSummary } from "@/lib/aiOperationsBrain";
 
 export type Severity = "critical" | "important" | "info";
 
