@@ -32,7 +32,7 @@ const ask = (text: string, onSend?: (t: string) => void, onTabChange?: (t: strin
   }
 };
 
-export const AIQuickAskHero = ({ onSend, onTabChange }: Props) => {
+export const AIQuickAskHero = ({ onSend, onTabChange, topInsight }: Props) => {
   const [value, setValue] = useState("");
 
   const submit = () => {
