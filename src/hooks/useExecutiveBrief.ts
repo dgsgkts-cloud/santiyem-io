@@ -513,5 +513,19 @@ export function useExecutiveBrief() {
     };
   }, [data]);
 
-  return { loading, findings, insights, kpis, refresh: fetchAll };
+  const ops: AIOperationsSummary = useMemo(() => {
+    if (!data) {
+      return {
+        topInsight: null,
+        topRisks: [],
+        topOpportunities: [],
+        todayPriorities: [],
+        all: [],
+        headline: null,
+      };
+    }
+    return computeAIOperations({ now: new Date(), ...data });
+  }, [data]);
+
+  return { loading, findings, insights, kpis, ops, refresh: fetchAll };
 }
