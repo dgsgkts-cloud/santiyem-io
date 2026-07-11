@@ -24,20 +24,32 @@ export interface AIInsight {
   priority: AIPriority;
   title: string;
   detail?: string;
-  /** Optional short recommendation the AI would say aloud. */
+  /** Sprint 31.1 — why this happened (root-cause hypothesis). */
+  cause?: string;
+  /** Sprint 31.1 — why it matters (business impact). */
+  impact?: string;
+  /** Short recommendation the AI would say aloud. */
   recommendation?: string;
+  /** Sprint 31.1 — bullet steps user should take. */
+  suggestedSteps?: string[];
+  /** Sprint 31.1 — short one-liner for the "Top Action Today" strip. */
+  topActionLabel?: string;
+  /** Sprint 31.1 — expected impact copy for the top-action strip. */
+  expectedImpact?: string;
   /** Follow-up actions the user can execute from the card. */
   actions?: AIAction[];
 }
 
 export interface AIOperationsSummary {
   topInsight: AIInsight | null;
+  topAction: AIInsight | null;
   topRisks: AIInsight[];
   topOpportunities: AIInsight[];
   todayPriorities: AIInsight[];
   all: AIInsight[];
   /** Short natural-language sentence for the AI Hero ticker. */
   headline: string | null;
+}
 }
 
 type Row = { [k: string]: unknown };
