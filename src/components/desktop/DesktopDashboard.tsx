@@ -186,7 +186,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { contracts } = useContracts();
   const { accounts } = useCashAccounts();
   const { checks } = useCashChecks();
-  const { kpis: briefKpis } = useExecutiveBrief();
+  const { kpis: briefKpis, ops: aiOps } = useExecutiveBrief();
 
   // Sprint 19 — swap login title for a dashboard-specific one immediately after render.
   useEffect(() => {
