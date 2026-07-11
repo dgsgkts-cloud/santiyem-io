@@ -83,7 +83,10 @@ export const AIQuickAskHero = ({ onSend, onTabChange, topInsight }: Props) => {
             <p className="text-fs-xs text-muted-foreground mt-0.5">
               Şirketiniz hakkında ne isterseniz sorun — projeler, nakit, personel, riskler.
             </p>
+          </div>
         </div>
+
+
 
         {/* Sprint 31 — live AI insight ticker */}
         {topInsight && (
