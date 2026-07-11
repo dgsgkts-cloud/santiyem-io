@@ -69,6 +69,8 @@ export function useExecutiveBrief() {
     materialExits: Row[];
     tasks: Row[];
     workerAttendanceToday: Row[];
+    personnel: Row[];
+    subcontractors: Row[];
     laborThis: number;
     laborPrev: number;
   } | null>(null);
