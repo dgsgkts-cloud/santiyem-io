@@ -1,9 +1,8 @@
-// Sprint 31 — AI Operations Brief
-// Renders the AI Operations Brain output as an executive morning brief:
-// top risks, opportunities, today's priorities — each with priority chip and
-// AI-suggested actions wired through the shared useActionExecutor.
+// Sprint 31 / 31.1 — AI Operations Brief & Autopilot panel.
+// Renders enriched insights (cause · impact · recommendation · suggested steps)
+// plus a top-of-brief "Today's Top Action" card for Executive Mode.
 
-import { AlertTriangle, Sparkles, Target, TrendingUp } from "lucide-react";
+import { AlertTriangle, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import type { AIInsight, AIOperationsSummary, AIPriority } from "@/lib/aiOperationsBrain";
 import { useActionExecutor } from "@/hooks/useActionExecutor";
 
@@ -34,9 +33,20 @@ const priorityStyle: Record<AIPriority, { chip: string; label: string; dot: stri
   },
 };
 
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <span className="block text-[9.5px] font-semibold uppercase tracking-widest text-muted-foreground/80">
+      {label}
+    </span>
+    <span className="text-[11.5px] text-foreground/85 leading-snug">{value}</span>
+  </div>
+);
+
 const InsightRow = ({ insight }: { insight: AIInsight }) => {
   const { execute, isBusy } = useActionExecutor();
   const style = priorityStyle[insight.priority];
+  const hasAutopilot =
+    insight.cause || insight.impact || insight.recommendation || insight.suggestedSteps?.length;
   return (
     <div className="rounded-xl border border-border/60 bg-background/40 p-3 flex flex-col gap-2">
       <div className="flex items-start gap-2">
@@ -58,13 +68,33 @@ const InsightRow = ({ insight }: { insight: AIInsight }) => {
           {insight.detail && (
             <p className="text-[11.5px] text-muted-foreground mt-0.5">{insight.detail}</p>
           )}
-          {insight.recommendation && (
-            <p className="text-[11.5px] text-foreground/70 mt-1 italic">
-              💡 {insight.recommendation}
-            </p>
-          )}
         </div>
       </div>
+
+      {hasAutopilot && (
+        <div className="pl-3.5 flex flex-col gap-1.5">
+          {insight.cause && <Field label="Neden" value={insight.cause} />}
+          {insight.impact && <Field label="Etki" value={insight.impact} />}
+          {insight.recommendation && (
+            <Field label="Öneri" value={insight.recommendation} />
+          )}
+          {insight.suggestedSteps && insight.suggestedSteps.length > 0 && (
+            <div>
+              <span className="block text-[9.5px] font-semibold uppercase tracking-widest text-muted-foreground/80 mb-0.5">
+                Adımlar
+              </span>
+              <ul className="space-y-0.5">
+                {insight.suggestedSteps.map((s, i) => (
+                  <li key={i} className="text-[11.5px] text-foreground/85 leading-snug">
+                    {i + 1}. {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {insight.actions && insight.actions.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pl-3.5">
           {insight.actions.map((a) => (
@@ -79,6 +109,55 @@ const InsightRow = ({ insight }: { insight: AIInsight }) => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+const TopActionCard = ({ insight }: { insight: AIInsight }) => {
+  const { execute, isBusy } = useActionExecutor();
+  const primary = insight.actions?.[0];
+  return (
+    <div
+      className="relative w-full rounded-2xl overflow-hidden border border-[#FF6B2B]/40 mb-4"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,107,43,0.16) 0%, rgba(255,143,90,0.06) 55%, hsl(var(--card)) 100%)",
+      }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl opacity-40"
+        style={{ background: "radial-gradient(circle, rgba(255,107,43,0.35), transparent 70%)" }}
+      />
+      <div className="relative p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-9 h-9 rounded-xl bg-[#FF6B2B]/20 border border-[#FF6B2B]/40 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 text-[#FF6B2B]" strokeWidth={2.4} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6B2B]">
+              Bugünün Öncelikli Aksiyonu
+            </div>
+            <div className="text-fs-md font-semibold text-foreground leading-tight mt-0.5">
+              {insight.topActionLabel ?? insight.title}
+            </div>
+            {insight.expectedImpact && (
+              <div className="text-[11.5px] text-muted-foreground mt-0.5">
+                Beklenen etki: <span className="text-foreground/85">{insight.expectedImpact}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        {primary && (
+          <button
+            onClick={() => execute(primary)}
+            disabled={isBusy(primary.id)}
+            className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#FF6B2B] text-white text-fs-sm font-semibold hover:brightness-110 disabled:opacity-50 transition-all shadow-sm shadow-[#FF6B2B]/25"
+          >
+            {primary.label}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
@@ -122,7 +201,7 @@ const Section = ({
 export const AIOperationsBrief = ({ ops }: Props) => {
   const hasAny =
     ops.topRisks.length + ops.topOpportunities.length + ops.todayPriorities.length > 0;
-  if (!hasAny) return null;
+  if (!hasAny && !ops.topAction) return null;
 
   return (
     <section
@@ -145,10 +224,12 @@ export const AIOperationsBrief = ({ ops }: Props) => {
               AI Operasyon Brifingi
             </h3>
             <p className="text-fs-xs text-muted-foreground">
-              Şirket verilerinizden türetilen bugünkü riskler, fırsatlar ve öncelikler.
+              Ne oldu · Neden oldu · Ne yapılmalı — tek panelde.
             </p>
           </div>
         </header>
+
+        {ops.topAction && <TopActionCard insight={ops.topAction} />}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Section

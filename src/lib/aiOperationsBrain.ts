@@ -24,14 +24,25 @@ export interface AIInsight {
   priority: AIPriority;
   title: string;
   detail?: string;
-  /** Optional short recommendation the AI would say aloud. */
+  /** Sprint 31.1 — why this happened (root-cause hypothesis). */
+  cause?: string;
+  /** Sprint 31.1 — why it matters (business impact). */
+  impact?: string;
+  /** Short recommendation the AI would say aloud. */
   recommendation?: string;
+  /** Sprint 31.1 — bullet steps user should take. */
+  suggestedSteps?: string[];
+  /** Sprint 31.1 — short one-liner for the "Top Action Today" strip. */
+  topActionLabel?: string;
+  /** Sprint 31.1 — expected impact copy for the top-action strip. */
+  expectedImpact?: string;
   /** Follow-up actions the user can execute from the card. */
   actions?: AIAction[];
 }
 
 export interface AIOperationsSummary {
   topInsight: AIInsight | null;
+  topAction: AIInsight | null;
   topRisks: AIInsight[];
   topOpportunities: AIInsight[];
   todayPriorities: AIInsight[];
@@ -142,17 +153,44 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   const projected30 = cashOnHand + inflow30 - outflow30;
 
   if (cashOnHand > 0 && projected30 < 0) {
+    // Estimate deficit day: run a naive daily balance and find first negative.
+    let running = cashOnHand;
+    const events = [
+      ...incoming30.map((x) => ({ date: x.date, delta: +x.amount })),
+      ...outgoing30.map((x) => ({ date: x.date, delta: -x.amount })),
+    ].sort((a, b) => a.date.getTime() - b.date.getTime());
+    let deficitDate: Date | null = null;
+    for (const e of events) {
+      running += e.delta;
+      if (running < 0) {
+        deficitDate = e.date;
+        break;
+      }
+    }
+    const deficitDays = deficitDate ? daysBetween(deficitDate, now) : 30;
     insights.push({
       id: "cash-shortfall-30",
       kind: "risk",
       domain: "finance",
       priority: "critical",
-      title: "Önümüzdeki 30 günde nakit açığı riski",
+      title: `Yaklaşık ${deficitDays} gün içinde nakit açığı öngörülüyor`,
       detail: `Kasa ${fmtTRY(cashOnHand)} + tahsilat ${fmtTRY(inflow30)} − ödeme ${fmtTRY(outflow30)} = ${fmtTRY(projected30)}`,
+      cause:
+        "Beklenen tahsilatlar planlanan ödemelerden geride kalıyor; çıkış hızı giriş hızını aşıyor.",
+      impact:
+        "Vadeler karşılanmazsa taşeron ve tedarikçi ilişkileri bozulabilir; kredi maliyeti artabilir.",
       recommendation:
-        "Beklenen tahsilatları hızlandırmayı veya bir ödeme planı yapmayı düşünün.",
+        "Düşük öncelikli ödemeleri erteleyin, tahsilatları hızlandırın, satın alma takvimini gözden geçirin.",
+      suggestedSteps: [
+        "Beklenen hakediş tahsilatlarını arayarak teyit edin.",
+        "Kritik olmayan taşeron ödemelerini 7–10 gün öteleyin.",
+        "Bu ayki satın alma taleplerini önceliklendirin.",
+      ],
+      topActionLabel: "Nakit planını gözden geçir",
+      expectedImpact: `Yaklaşık ${fmtTRY(Math.abs(projected30))} açığı kapatma`,
       actions: [
-        makeAction("cash-open", "Kasayı aç", "open_payment", { priority: "high" }),
+        makeAction("cash-open", "Nakit Planını Aç", "open_payment", { priority: "high" }),
+        makeAction("cash-collections", "Tahsilatları Gör", "open_report"),
         makeAction("cash-task", "Tahsilat görevi oluştur", "create_task", {
           priority: "high",
           payload: { title: "Beklenen tahsilatları hızlandır", priority: "high" },
@@ -167,13 +205,25 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
       priority: "high",
       title: "30 günlük ödemeler mevcut kasayı aşıyor",
       detail: `Ödeme ${fmtTRY(outflow30)} > Kasa ${fmtTRY(cashOnHand)} — tahsilatlarla kapanıyor`,
+      cause: "Nakit stoğu, önümüzdeki ay ödemelerini tek başına karşılamıyor.",
+      impact: "Tahsilat gecikirse aynı hafta içinde kasa açığa düşebilir.",
+      recommendation:
+        "Tahsilat takvimini yakın takibe alın, gerekirse ödeme sıralamasını yeniden planlayın.",
+      suggestedSteps: [
+        "Bu haftanın beklenen tahsilatlarını teyit edin.",
+        "Kritik olmayan ödemeleri bir sonraki tahsilat sonrasına planlayın.",
+      ],
+      topActionLabel: "Haftalık nakit takibi kur",
+      expectedImpact: "Nakit görünürlüğünde 4 hafta öngörü",
       actions: [
+        makeAction("cash-open-tight", "Nakit Planını Aç", "open_payment"),
         makeAction("cash-remind", "Hatırlatma oluştur", "create_task", {
           payload: { title: "Kasa dengesini haftalık takip et", priority: "medium" },
         }),
       ],
     });
   }
+
 
   // Overdue subcontractor payments
   const subOverdue = input.subPayments.filter((p) => {
@@ -188,19 +238,33 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
       kind: "risk",
       domain: "finance",
       priority: "critical",
-      title: `${subOverdue.length} taşeron ödemesi gecikmiş`,
+      title: `${subOverdue.length} taşeron ödemesi vadesi geçmiş`,
       detail: `Toplam ${fmtTRY(total)}`,
+      cause: "Tahsilat gecikmesi veya ödeme planı eksikliği taşeron vadelerinin kaçmasına yol açmış.",
+      impact: "Tedarikçi ilişkileri zayıflar; kritik iş gücü ve malzeme kesintileri oluşabilir.",
       recommendation:
-        "Nakit varsa öncelikli ödeme planlayın; yoksa taşeronla iletişime geçin.",
+        "Yüksek riskli taşeronları önceliklendirin ve düşük öncelikli ödemeleri planlı biçimde erteleyin.",
+      suggestedSteps: [
+        "Taşeronları risk/etki matrisine göre gruplayın.",
+        "Kritik olanlara kısmi ödeme + kalan bakiye planı önerin.",
+        "Kalanlara yazılı ödeme takvimi paylaşın.",
+      ],
+      topActionLabel: `${subOverdue.length} taşeron için ödeme planı oluştur`,
+      expectedImpact: `${fmtTRY(total)} tutarında ödeme yükünün yönetilmesi`,
       actions: [
-        makeAction("sub-open", "Taşeronları aç", "open_payment"),
-        makeAction("sub-plan", "Ödeme görevi oluştur", "create_task", {
+        makeAction("sub-plan-open", "Ödeme Planı Oluştur", "create_task", {
           priority: "high",
-          payload: { title: `${subOverdue.length} taşeron ödemesini planla`, priority: "high" },
+          payload: {
+            title: `${subOverdue.length} taşeron ödeme planı`,
+            priority: "high",
+          },
         }),
+        makeAction("sub-open", "Ödeme Takvimi Aç", "open_payment"),
+        makeAction("sub-group", "Taşeronları Grupla", "open_report"),
       ],
     });
   }
+
 
   // Expected collections opportunity (this month)
   const collectionsThisMonth = input.hakedis
@@ -276,37 +340,66 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
 
   if (projectRisks.length > 0) {
     const top = projectRisks[0];
+    const isLate = top.slip > 0;
+    // Rough recovery estimate: assume 1 extra worker recovers ~0.4 day per week.
+    const recoverWorkers = isLate ? Math.max(2, Math.min(8, Math.ceil(top.slip / 2))) : 0;
     insights.push({
       id: `project-risk-${String(top.p.id)}`,
       kind: "risk",
       domain: "projects",
-      priority: top.slip > 7 ? "critical" : top.slip > 0 ? "high" : "medium",
-      title:
-        top.slip > 0
-          ? `${String(top.p.name)} planın ${top.slip} gün gerisinde`
-          : `${String(top.p.name)} ilerleme oranı düşük (%${top.prog})`,
+      priority: top.slip > 7 ? "critical" : isLate ? "high" : "medium",
+      title: isLate
+        ? `${String(top.p.name)} planın ${top.slip} gün gerisinde`
+        : `${String(top.p.name)} ilerleme oranı düşük (%${top.prog})`,
       detail: top.end
         ? `Bitiş: ${top.end.toLocaleDateString("tr-TR")} · İlerleme %${top.prog}`
         : `İlerleme %${top.prog}`,
-      recommendation:
-        top.slip > 0
-          ? "Kritik yol aktivitelerini gözden geçirin ve ekip kapasitesini artırın."
-          : "Proje planını revize etmeyi ve engelleri belirlemeyi düşünün.",
+      cause: isLate
+        ? "Düşük iş gücü, geciken malzeme teslimatları veya bekleyen kontrol/onay süreçleri gecikmenin muhtemel nedenleri."
+        : "Planlanan ilerleme temposu tutmuyor; blok noktalar plana yansımıyor olabilir.",
+      impact: isLate
+        ? "Teslim tarihinin kayması hakediş, ceza ve müşteri ilişkileri açısından risk oluşturur."
+        : "Kritik yol aktivitelerinde birikme yaşanırsa gecikme kısa sürede büyüyebilir.",
+      recommendation: isLate
+        ? `${recoverWorkers} kişilik takviye planlayın, bekleyen satın almaları onaylayın, mesai/vardiya seçeneklerini değerlendirin.`
+        : "Proje planını revize edin ve engelleri ekiple birlikte belirleyin.",
+      suggestedSteps: isLate
+        ? [
+            `Diğer projelerden ${recoverWorkers} kişilik takviye planlayın.`,
+            "Bekleyen satın alma taleplerini onaylayın.",
+            "Kritik yol için mesai/vardiya planı çıkarın.",
+          ]
+        : [
+            "Kritik yol aktivitelerini yeniden listeleyin.",
+            "Ekipten engel/darboğaz listesini isteyin.",
+          ],
+      topActionLabel: isLate
+        ? `${String(top.p.name)} için ${recoverWorkers} kişilik takviye planla`
+        : `${String(top.p.name)} planını revize et`,
+      expectedImpact: isLate
+        ? `Yaklaşık ${Math.max(2, Math.round(top.slip / 3))} takvim günü kazanım`
+        : "İlerleme temposunda görünürlük artışı",
       actions: [
-        makeAction(`proj-open-${top.p.id}`, "Projeyi aç", "open_project", {
-          payload: { projectId: String(top.p.id) },
-        }),
-        makeAction(`proj-task-${top.p.id}`, "Aksiyon görevi oluştur", "create_task", {
+        makeAction(`proj-recover-${top.p.id}`, "Görev Oluştur", "create_task", {
           priority: "high",
           payload: {
-            title: `${String(top.p.name)} — plan gecikmesi aksiyonu`,
+            title: `${String(top.p.name)} — plan gecikmesi kurtarma aksiyonu`,
             projectId: String(top.p.id),
             priority: "high",
           },
         }),
+        makeAction(`proj-personnel-${top.p.id}`, "Personel Planla", "open_personnel"),
+        makeAction(`proj-purchase-${top.p.id}`, "Satın Alma Aç", "create_purchase_request", {
+          priority: "high",
+          payload: { projectId: String(top.p.id) },
+        }),
+        makeAction(`proj-open-${top.p.id}`, "Projeyi Aç", "open_project", {
+          payload: { projectId: String(top.p.id) },
+        }),
       ],
     });
   }
+
 
   // Budget overrun risk (if budget field exists)
   for (const p of activeProjects) {
@@ -426,18 +519,50 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   }
   if (materialsRunOut14.length > 0) {
     const soon = materialsRunOut14.sort((a, b) => a.days - b.days).slice(0, 3);
+    // Suggested reorder ~= 14 days of consumption for the most urgent item.
+    const urgent = soon[0];
+    const urgentMat = input.materials.find((m) => String(m.name) === urgent.name);
+    const rec = urgentMat ? exitsByMat.get(String(urgentMat.id)) : null;
+    const perDay = rec ? rec.qty / 30 : 0;
+    const requirement = Math.ceil(perDay * 14);
+    const suggested = Math.ceil(requirement * 1.1);
+    const unit = urgentMat ? String((urgentMat as Row).unit || "") : "";
     insights.push({
       id: "stock-runout-14",
       kind: "risk",
       domain: "procurement",
-      priority: soon[0].days <= 7 ? "high" : "medium",
-      title: `${materialsRunOut14.length} malzeme 14 gün içinde tükenebilir`,
+      priority: urgent.days <= 7 ? "high" : "medium",
+      title: `${urgent.name} stoğu ~${urgent.days} gün içinde tükenebilir`,
       detail: soon.map((s) => `${s.name} (~${s.days} gün)`).join(", "),
+      cause:
+        "Son 30 günlük tüketim hızı, mevcut stok seviyesinin altında bir gün sayısına işaret ediyor.",
+      impact:
+        "Malzeme kesintisi kritik yol aktivitelerini durdurabilir; işçilik verimi düşer.",
+      recommendation:
+        requirement > 0
+          ? `Tahmini ihtiyaç ${requirement} ${unit}; ~${suggested} ${unit} siparişi önerilir.`
+          : "Kritik malzemeler için satın alma talebi açın ve tedarikçileri karşılaştırın.",
+      suggestedSteps: [
+        "Kritik malzemelerin gerçek stok sayımını doğrulayın.",
+        "Onaylı tedarikçilerden hızlı teklif alın.",
+        "Satın alma talebini bugün açın.",
+      ],
+      topActionLabel:
+        requirement > 0
+          ? `${urgent.name}: ~${suggested} ${unit} satın alma talebi aç`
+          : `${urgent.name} için satın alma talebi aç`,
+      expectedImpact: "Kritik yol kesintisinin önlenmesi",
       actions: [
-        makeAction("stock-open-2", "Envanteri aç", "open_inventory"),
+        makeAction("stock-purchase-run", "Talep Oluştur", "create_purchase_request", {
+          priority: "high",
+        }),
+        makeAction("stock-purchase-open", "Satın Alma Aç", "create_purchase_request"),
+        makeAction("stock-suppliers", "Tedarikçileri Gör", "open_report"),
+        makeAction("stock-open-2", "Envanteri Aç", "open_inventory"),
       ],
     });
   }
+
 
   // ───────────────────────── TASKS ─────────────────────────
   const openTasks = input.tasks.filter(
@@ -506,6 +631,16 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   const prios = sorted.filter((i) => i.kind === "priority");
 
   const topInsight = sorted[0] ?? null;
+  // Executive Mode: highest-priority insight that carries an executable action
+  // and a written top-action label.
+  const topAction =
+    sorted.find(
+      (i) =>
+        i.topActionLabel &&
+        i.actions &&
+        i.actions.length > 0 &&
+        (i.priority === "critical" || i.priority === "high"),
+    ) ?? null;
   const headline = topInsight
     ? topInsight.priority === "critical"
       ? `Bugün dikkat: ${topInsight.title}.`
@@ -514,6 +649,7 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
 
   return {
     topInsight,
+    topAction,
     topRisks: risks.slice(0, 3),
     topOpportunities: opps.slice(0, 3),
     todayPriorities: prios.slice(0, 5),
