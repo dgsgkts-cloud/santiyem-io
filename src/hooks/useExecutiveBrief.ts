@@ -517,6 +517,7 @@ export function useExecutiveBrief() {
     if (!data) {
       return {
         topInsight: null,
+        topAction: null,
         topRisks: [],
         topOpportunities: [],
         todayPriorities: [],
