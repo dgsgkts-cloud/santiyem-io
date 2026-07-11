@@ -631,6 +631,16 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   const prios = sorted.filter((i) => i.kind === "priority");
 
   const topInsight = sorted[0] ?? null;
+  // Executive Mode: highest-priority insight that carries an executable action
+  // and a written top-action label.
+  const topAction =
+    sorted.find(
+      (i) =>
+        i.topActionLabel &&
+        i.actions &&
+        i.actions.length > 0 &&
+        (i.priority === "critical" || i.priority === "high"),
+    ) ?? null;
   const headline = topInsight
     ? topInsight.priority === "critical"
       ? `Bugün dikkat: ${topInsight.title}.`
@@ -639,6 +649,7 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
 
   return {
     topInsight,
+    topAction,
     topRisks: risks.slice(0, 3),
     topOpportunities: opps.slice(0, 3),
     todayPriorities: prios.slice(0, 5),
