@@ -628,10 +628,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
       </header>
 
       {/* 2. Şantiyem AI — primary interaction hero */}
-      <AIQuickAskHero onSend={onSend} onTabChange={onTabChange} />
+      <AIQuickAskHero onSend={onSend} onTabChange={onTabChange} topInsight={aiOps.headline} />
+
+      {/* Sprint 31 — AI Operations Brain: risks, opportunities, priorities */}
+      <AIOperationsBrief ops={aiOps} />
 
       {/* 3. Bugünün Operasyon Özeti — premium KPI ribbon */}
       <TodayOperationsRibbon onTabChange={onTabChange} />
+
 
       {/* 2. Yönetici Brifingi — Bugünün Kritik Konuları */}
       <div className="!mt-0">
