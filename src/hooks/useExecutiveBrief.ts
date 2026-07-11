@@ -113,7 +113,7 @@ export function useExecutiveBrief() {
       q(supabase.from("material_exits").select("material_id,quantity,exit_date").eq("user_id", user.id).gte("exit_date", iso(in30ago))),
       q(supabase.from("tasks").select("id,title,status,due_date,project_id").eq("created_by", user.id)),
       q(supabase.from("worker_attendance").select("id,full_name,team_size,entry_type,check_in,check_out").eq("user_id", user.id).gte("check_in", iso(now))),
-      q(supabase.from("personnel").select("id,full_name,role,active").eq("user_id", user.id)),
+      q(supabase.from("personnel").select("id,full_name").eq("user_id", user.id)),
       q(supabase.from("subcontractors").select("id,name").eq("user_id", user.id)),
     ]);
 
