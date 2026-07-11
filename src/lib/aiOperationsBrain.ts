@@ -519,18 +519,50 @@ export function computeAIOperations(input: BrainInput): AIOperationsSummary {
   }
   if (materialsRunOut14.length > 0) {
     const soon = materialsRunOut14.sort((a, b) => a.days - b.days).slice(0, 3);
+    // Suggested reorder ~= 14 days of consumption for the most urgent item.
+    const urgent = soon[0];
+    const urgentMat = input.materials.find((m) => String(m.name) === urgent.name);
+    const rec = urgentMat ? exitsByMat.get(String(urgentMat.id)) : null;
+    const perDay = rec ? rec.qty / 30 : 0;
+    const requirement = Math.ceil(perDay * 14);
+    const suggested = Math.ceil(requirement * 1.1);
+    const unit = urgentMat ? String((urgentMat as Row).unit || "") : "";
     insights.push({
       id: "stock-runout-14",
       kind: "risk",
       domain: "procurement",
-      priority: soon[0].days <= 7 ? "high" : "medium",
-      title: `${materialsRunOut14.length} malzeme 14 gün içinde tükenebilir`,
+      priority: urgent.days <= 7 ? "high" : "medium",
+      title: `${urgent.name} stoğu ~${urgent.days} gün içinde tükenebilir`,
       detail: soon.map((s) => `${s.name} (~${s.days} gün)`).join(", "),
+      cause:
+        "Son 30 günlük tüketim hızı, mevcut stok seviyesinin altında bir gün sayısına işaret ediyor.",
+      impact:
+        "Malzeme kesintisi kritik yol aktivitelerini durdurabilir; işçilik verimi düşer.",
+      recommendation:
+        requirement > 0
+          ? `Tahmini ihtiyaç ${requirement} ${unit}; ~${suggested} ${unit} siparişi önerilir.`
+          : "Kritik malzemeler için satın alma talebi açın ve tedarikçileri karşılaştırın.",
+      suggestedSteps: [
+        "Kritik malzemelerin gerçek stok sayımını doğrulayın.",
+        "Onaylı tedarikçilerden hızlı teklif alın.",
+        "Satın alma talebini bugün açın.",
+      ],
+      topActionLabel:
+        requirement > 0
+          ? `${urgent.name}: ~${suggested} ${unit} satın alma talebi aç`
+          : `${urgent.name} için satın alma talebi aç`,
+      expectedImpact: "Kritik yol kesintisinin önlenmesi",
       actions: [
-        makeAction("stock-open-2", "Envanteri aç", "open_inventory"),
+        makeAction("stock-purchase-run", "Talep Oluştur", "create_purchase_request", {
+          priority: "high",
+        }),
+        makeAction("stock-purchase-open", "Satın Alma Aç", "create_purchase_request"),
+        makeAction("stock-suppliers", "Tedarikçileri Gör", "open_report"),
+        makeAction("stock-open-2", "Envanteri Aç", "open_inventory"),
       ],
     });
   }
+
 
   // ───────────────────────── TASKS ─────────────────────────
   const openTasks = input.tasks.filter(
