@@ -90,11 +90,32 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      // SPRINT 35 — one radius scale (control 14 / card 16 / dialog 20)
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "8px",
+        md: "10px",
+        lg: "var(--radius-control, 14px)",
+        xl: "var(--radius-card, 16px)",
+        "2xl": "var(--radius-dialog, 20px)",
+        "3xl": "24px",
+        control: "var(--radius-control, 14px)",
+        card: "var(--radius-card, 16px)",
+        dialog: "var(--radius-dialog, 20px)",
+        pill: "999px",
       },
+      // SPRINT 35 — one shadow system
+      boxShadow: {
+        sm: "var(--shadow-soft)",
+        DEFAULT: "var(--shadow-soft)",
+        md: "var(--shadow-card)",
+        lg: "var(--shadow-raised)",
+        xl: "var(--shadow-raised)",
+        "2xl": "var(--shadow-raised)",
+        soft: "var(--shadow-soft)",
+        card: "var(--shadow-card)",
+        raised: "var(--shadow-raised)",
+      },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

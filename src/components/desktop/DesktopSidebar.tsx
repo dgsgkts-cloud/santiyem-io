@@ -251,7 +251,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             <TooltipTrigger asChild>
               <button
                 onClick={() => onTabChange("settings")}
-                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-[14px] bg-muted/40 border border-border/60"
+                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-control bg-muted/40 border border-border/60"
                 style={{ height: 44 }}
               >
                 <span
@@ -421,7 +421,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             <TooltipTrigger asChild>
               <button
                 onClick={user ? signOut : () => navigate("/login")}
-                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-[12px] hover-logout"
+                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-md hover-logout"
                 style={{ height: 36 }}
               >
                 <LogOut className="w-4 h-4" />
@@ -432,7 +432,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         ) : (
           <button
             onClick={user ? signOut : () => navigate("/login")}
-            className="ds-press ds-focus-ring w-full flex items-center gap-3 rounded-[12px] hover-logout ds-body-strong"
+            className="ds-press ds-focus-ring w-full flex items-center gap-3 rounded-md hover-logout ds-body-strong"
             style={{ height: 36, padding: "0 12px" }}
           >
             <LogOut className="w-4 h-4" />
