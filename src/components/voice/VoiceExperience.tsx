@@ -20,6 +20,11 @@ interface Props {
   initialContext?: string;
   initialCards?: RealtimeCard[];
   autoSpeak?: boolean;
+  /** Sprint 32.2 — "wake" sessions self-terminate after silence. */
+  sessionMode?: "manual" | "wake";
+  conversationMode?: boolean;
+  greeting?: string;
+  onSessionEnd?: (reason: "silence" | "turn-complete" | "user") => void;
 }
 
 /** Probe: can this browser + backend actually run the primary engine? */
@@ -55,10 +60,13 @@ export function VoiceExperience(props: Props) {
   }, [reconnecting]);
 
   if (useLegacy) {
+    // The legacy copilot has no wake-session contract — strip those props.
+    const { sessionMode: _sm, conversationMode: _cm, greeting: _g, onSessionEnd, ...legacyProps } = props;
     return (
       <>
         <VoiceCopilot
-          {...props}
+          {...legacyProps}
+          onClose={() => { onSessionEnd?.("user"); legacyProps.onClose(); }}
           initialCards={props.initialCards?.map((c) => ({ ...c, type: "info" as const }))}
         />
         {reconnecting && (
@@ -80,6 +88,10 @@ export function VoiceExperience(props: Props) {
       initialContext={props.initialContext}
       initialCards={props.initialCards}
       autoSpeak={props.autoSpeak}
+      sessionMode={props.sessionMode}
+      conversationMode={props.conversationMode}
+      greeting={props.greeting}
+      onSessionEnd={props.onSessionEnd}
     />
   );
 }

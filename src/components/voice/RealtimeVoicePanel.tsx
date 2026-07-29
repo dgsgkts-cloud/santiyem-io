@@ -10,6 +10,8 @@ import { X, Mic, MicOff, Square, Keyboard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVoiceEngine } from "@/hooks/useVoiceEngine";
 import { isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
+import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
+import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { VOICE_UI_EVENT } from "@/lib/voice/voiceTools";
 import { VoiceDebugPanel } from "./VoiceDebugPanel";
 import "@/styles/voice.css";
@@ -29,6 +31,18 @@ interface Props {
   initialContext?: string;
   initialCards?: RealtimeCard[];
   autoSpeak?: boolean;
+  /**
+   * "wake" sessions were started by the wake word and end themselves after
+   * silence so the app can return to wake-word listening. "manual" is the
+   * unchanged Push-to-Talk behaviour.
+   */
+  sessionMode?: "manual" | "wake";
+  /** Wake sessions only: keep the mic open for natural back-and-forth. */
+  conversationMode?: boolean;
+  /** Spoken once as soon as a wake session goes live. */
+  greeting?: string;
+  /** Fired when a wake session closes itself. */
+  onSessionEnd?: (reason: "silence" | "turn-complete" | "user") => void;
 }
 
 const STATE_LABEL: Record<string, string> = {
@@ -56,6 +70,10 @@ export function RealtimeVoicePanel({
   initialContext,
   initialCards = [],
   autoSpeak = false,
+  sessionMode = "manual",
+  conversationMode = false,
+  greeting,
+  onSessionEnd,
 }: Props) {
   const engineConfig = useMemo(
     () => ({ instructionsSuffix: initialContext }),
@@ -68,6 +86,12 @@ export function RealtimeVoicePanel({
   const [muted, setMuted] = useState(false);
   const startedRef = useRef(false);
   const spokeRef = useRef(false);
+  // Wake-session bookkeeping.
+  const greetedRef = useRef(false);
+  const endedRef = useRef(false);
+  const spokeOnceRef = useRef(false);
+  const activityRef = useRef(Date.now());
+  const turnCompletedAtRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const debug = isVoiceDebugEnabled();
 
@@ -107,6 +131,14 @@ export function RealtimeVoicePanel({
     voice.sendText(initialContext);
   }, [autoSpeak, initialContext, voice]);
 
+  // Wake sessions greet the user once, as soon as the session is live.
+  useEffect(() => {
+    if (sessionMode !== "wake" || !greeting || greetedRef.current) return;
+    if (voice.state !== "listening") return;
+    greetedRef.current = true;
+    voice.sendText(greeting);
+  }, [sessionMode, greeting, voice]);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [voice.transcripts.length]);
@@ -115,6 +147,58 @@ export function RealtimeVoicePanel({
   const busy = voice.state === "connecting";
 
   const handleClose = () => { void voice.disconnect(); onClose(); };
+
+  // --- automatic session end (wake sessions only) ----------------------
+  // Any speech, thinking or new transcript counts as activity; after the
+  // silence window the session closes and the app returns to wake-word mode.
+  useEffect(() => {
+    if (sessionMode !== "wake") return;
+    activityRef.current = Date.now();
+  }, [sessionMode, voice.state, voice.transcripts.length]);
+
+  // Track when the assistant finishes a turn (speaking → listening).
+  useEffect(() => {
+    if (sessionMode !== "wake") return;
+    if (voice.state === "speaking") { spokeOnceRef.current = true; return; }
+    if (voice.state === "listening" && spokeOnceRef.current) {
+      turnCompletedAtRef.current = Date.now();
+    }
+  }, [sessionMode, voice.state]);
+
+  useEffect(() => {
+    if (sessionMode !== "wake") return;
+
+    const endSession = (reason: "silence" | "turn-complete") => {
+      if (endedRef.current) return;
+      endedRef.current = true;
+      void voice.disconnect();
+      onSessionEnd?.(reason);
+      onClose();
+    };
+
+    const id = window.setInterval(() => {
+      if (endedRef.current) return;
+      // Never cut the assistant off mid-sentence.
+      if (voice.state === "speaking" || voice.state === "thinking") return;
+      if (voice.state === "connecting") return;
+
+      const now = Date.now();
+      if (now - activityRef.current >= CONVERSATION_SILENCE_MS) {
+        endSession("silence");
+        return;
+      }
+      // Conversation Mode off → one request per wake word.
+      if (
+        !conversationMode &&
+        turnCompletedAtRef.current &&
+        now - turnCompletedAtRef.current >= SINGLE_TURN_GRACE_MS
+      ) {
+        endSession("turn-complete");
+      }
+    }, 500);
+
+    return () => window.clearInterval(id);
+  }, [sessionMode, conversationMode, voice, onClose, onSessionEnd]);
 
   const toggleMute = () => {
     if (muted) { voice.unmute(); setMuted(false); } else { voice.mute(); setMuted(true); }
@@ -127,19 +211,37 @@ export function RealtimeVoicePanel({
     setDraft("");
   };
 
+  // Map engine state onto the shared orb visual vocabulary.
+  const orbState: OrbState =
+    voice.statusMessage ? "reconnecting"
+    : voice.state === "speaking" ? "speaking"
+    : voice.state === "thinking" ? "thinking"
+    : voice.state === "connecting" ? "reconnecting"
+    : voice.state === "disconnected" ? "disconnected"
+    : connected ? "listening"
+    : "idle";
+
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl">
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
-        <div>
-          <p className="text-sm font-semibold text-foreground">Şantiyem AI · Sesli Mod</p>
-          <p className="text-xs text-muted-foreground">
-            {voice.statusMessage ?? STATE_LABEL[voice.state] ?? "Hazır"}
-          </p>
+        <div className="flex items-center gap-3">
+          <VoiceOrbVisual state={orbState} size="sm" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Şantiyem AI · Sesli Mod</p>
+            <p className="text-xs text-muted-foreground">
+              {voice.statusMessage ?? STATE_LABEL[voice.state] ?? "Hazır"}
+              {sessionMode === "wake" && conversationMode && connected && (
+                <span className="ml-1 text-muted-foreground/70">· Sohbet modu</span>
+              )}
+            </p>
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Kapat">
           <X className="h-5 w-5" />
         </Button>
       </header>
+
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {cards.length > 0 && (

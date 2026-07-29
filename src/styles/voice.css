@@ -134,3 +134,77 @@
   animation: voice-wave 0.7s ease-in-out infinite;
   transform-origin: bottom center;
 }
+
+/* ============================================================
+   Sprint 32.2 — Dual Voice Experience orb states
+   One bespoke animation per state; never a generic spinner.
+   ============================================================ */
+
+/* Wake-word standby: slow, low-energy emerald breathing. */
+@keyframes orb-wake-ring {
+  0%   { transform: scale(0.95); opacity: 0.45; }
+  70%  { transform: scale(1.75); opacity: 0; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+@keyframes orb-breathe-soft {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+.orb-wake-ring { animation: orb-wake-ring 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.orb-breathe-soft { animation: orb-breathe-soft 3.2s ease-in-out infinite; }
+
+/* Wake word detected: a single confident burst. */
+@keyframes orb-burst {
+  0%   { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.orb-burst { animation: orb-burst 0.7s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+.orb-burst-delay { animation-delay: 0.22s; }
+
+/* Thinking: an orbiting conic arc. */
+@keyframes orb-arc-spin { to { transform: rotate(360deg); } }
+@keyframes orb-thinking-shell {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(0.97); }
+}
+.orb-thinking-arc {
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, rgba(255,107,43,0.95) 330deg, transparent 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+  animation: orb-arc-spin 1.15s linear infinite;
+}
+.orb-thinking-shell { animation: orb-thinking-shell 1.9s ease-in-out infinite; }
+
+/* Speaking: outward sonar pulse synced with the waveform bars. */
+@keyframes orb-speak-ring {
+  0%   { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes orb-speak-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+.orb-speak-ring { animation: orb-speak-ring 1.4s ease-out infinite; }
+.orb-speak-pulse { animation: orb-speak-pulse 1.4s ease-in-out infinite; }
+
+/* Reconnecting: a calm horizontal sweep, no spinner. */
+@keyframes orb-reconnect {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+.orb-reconnect { animation: orb-reconnect 1.3s ease-in-out infinite; }
+
+/* Always-listening status chip. */
+@keyframes voice-status-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.85); }
+}
+.voice-status-dot { animation: voice-status-dot 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-wake-ring, .orb-breathe-soft, .orb-burst, .orb-thinking-arc,
+  .orb-thinking-shell, .orb-speak-ring, .orb-speak-pulse,
+  .orb-reconnect, .voice-status-dot {
+    animation: none !important;
+  }
+}

@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
-import { Mic, Lock } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
+import { useVoiceSettings } from "@/hooks/useVoiceSettings";
+import { useWakeWordEngine } from "@/hooks/useWakeWordEngine";
+import { wakePhrasesFor } from "@/lib/voice/voiceSettings";
+import { playSleepChime, playWakeChime } from "@/lib/voice/wakeChime";
 import { VoiceExperience } from "./VoiceExperience";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
+import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
 
@@ -19,6 +23,10 @@ type BriefCard = {
 
 type OpenPayload = { autoSpeak?: boolean; requiresBriefing?: boolean };
 
+/** Spoken acknowledgement after the wake word — kept short by design. */
+const WAKE_GREETING =
+  'Kullanıcı seni uyandırdı. Sadece "Dinliyorum." de, başka hiçbir şey ekleme ve sonra sessizce bekle.';
+
 /**
  * Global floating microphone button that opens the Voice Copilot overlay.
  * Hidden on the marketing landing (unauthenticated users).
@@ -27,12 +35,17 @@ export function VoiceOrb() {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [showFinanceTip, setShowFinanceTip] = useState(false);
+  const [wokeUp, setWokeUp] = useState(false);
   const [pending, setPending] = useState<{
     initialContext?: string;
     initialCards?: BriefCard[];
     autoSpeak?: boolean;
   }>({});
   const access = useVoiceAccess();
+  const { settings } = useVoiceSettings();
+  const sessionModeRef = useRef<"manual" | "wake">("manual");
+  const [sessionMode, setSessionMode] = useState<"manual" | "wake">("manual");
+
 
 
   useEffect(() => {
@@ -122,7 +135,48 @@ export function VoiceOrb() {
     };
   }, []);
 
+  // ---------------------------------------------------------------
+  // Sprint 32.2 — Always Listening
+  // The wake-word engine only runs when the user opted in, has voice
+  // access and is signed in. It is suspended while a conversation is
+  // already open so the two never fight over the microphone.
+  // ---------------------------------------------------------------
+  const alwaysListening =
+    signedIn && access.hasAccess && settings.mode === "always-listening";
+
+  const closeSession = useCallback((reason: "silence" | "turn-complete" | "user") => {
+    setOpen(false);
+    setPending({});
+    setWokeUp(false);
+    sessionModeRef.current = "manual";
+    setSessionMode("manual");
+    // Audible confirmation that we went back to standby.
+    if (reason !== "user") playSleepChime();
+  }, []);
+
+  const handleWake = useCallback(() => {
+    if (sessionModeRef.current === "wake") return;
+    sessionModeRef.current = "wake";
+    setSessionMode("wake");
+    playWakeChime();
+    setWokeUp(true);
+    setPending({});
+    setOpen(true);
+    // Clear the "wake detected" flash once the session takes over.
+    window.setTimeout(() => setWokeUp(false), 1200);
+  }, []);
+
+  const wake = useWakeWordEngine({
+    enabled: alwaysListening,
+    phrases: wakePhrasesFor(settings),
+    provider: settings.wakeWordProvider,
+    suspended: open,
+    onWake: handleWake,
+  });
+
   if (!signedIn) return null;
+
+
 
 
   const isNative = Capacitor.isNativePlatform();
@@ -137,60 +191,79 @@ export function VoiceOrb() {
   const positionClass = isDesktop
     ? "fixed right-6 z-40 group"
     : "fixed right-4 z-40 group";
-  const orbSize = isDesktop ? "w-12 h-12" : "w-14 h-14";
-  const iconSize = isDesktop ? "w-5 h-5" : "w-6 h-6";
+  const orbVisualSize = isDesktop ? "sm" : "md";
+
+  // Idle orb state. Live conversation states are owned by the panel.
+  const orbState: OrbState = !access.hasAccess
+    ? "locked"
+    : wokeUp
+      ? "wake-detected"
+      : wake.active
+        ? "wake-listening"
+        : "idle";
+
+  const session = (
+    <VoiceErrorBoundary onClose={() => closeSession("user")}>
+      <VoiceExperience
+        onClose={() => closeSession("user")}
+        access={access}
+        initialContext={pending.initialContext}
+        initialCards={pending.initialCards}
+        autoSpeak={pending.autoSpeak}
+        autoStart={pending.autoSpeak || sessionMode === "wake"}
+        sessionMode={sessionMode}
+        conversationMode={settings.conversationMode}
+        greeting={sessionMode === "wake" ? WAKE_GREETING : undefined}
+        onSessionEnd={closeSession}
+      />
+    </VoiceErrorBoundary>
+  );
 
   if (inputActive && !isDesktop) {
     // Keyboard-open guard on mobile — render only the overlay portal if open.
-    return open ? (
-      <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
-        <VoiceExperience
-          onClose={() => { setOpen(false); setPending({}); }}
-          access={access}
-          initialContext={pending.initialContext}
-          initialCards={pending.initialCards}
-          autoSpeak={pending.autoSpeak}
-          autoStart={pending.autoSpeak}
-        />
-      </VoiceErrorBoundary>
-    ) : null;
+    return open ? session : null;
   }
 
   return (
     <>
       <button
-        onClick={() => { setPending({}); setOpen(true); }}
+        onClick={() => { setPending({}); sessionModeRef.current = "manual"; setSessionMode("manual"); setOpen(true); }}
         aria-label="Şantiyem AI · Sesli Mod"
         className={positionClass}
         style={{ bottom: bottomOffset }}
       >
-        <div className="relative">
-          {access.hasAccess && !isDesktop && (
-            <div className="absolute inset-0 rounded-full bg-[#FF6B2B]/20 voice-orb-ring pointer-events-none" style={{ opacity: 0.5 }} />
-          )}
-          <div
-            className={`relative ${orbSize} rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-active:scale-95 backdrop-blur-xl ${
-              access.hasAccess
-                ? "bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5A]"
-                : "bg-[#1E2732]/90"
-            }`}
-            style={{
-              boxShadow: access.hasAccess
-                ? (isDesktop
-                    ? "0 6px 16px -8px rgba(255,107,43,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset"
-                    : "0 10px 24px -12px rgba(255,107,43,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset")
-                : "0 6px 16px -8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset",
-            }}
-          >
-            <Mic className={`${iconSize} text-white`} strokeWidth={2.2} />
-            {!access.hasAccess && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#0F1419] border border-[#2A3441] flex items-center justify-center">
-                <Lock className="w-3 h-3 text-white/70" />
-              </div>
-            )}
+        <VoiceOrbVisual
+          state={orbState}
+          size={orbVisualSize}
+          className="transition-transform duration-300 group-hover:scale-105 group-active:scale-95"
+        />
+      </button>
+
+      {/* Always Listening status — hidden entirely in Push-to-Talk mode. */}
+      {alwaysListening && !open && (
+        <div
+          className="pointer-events-none fixed right-4 z-40 sm:right-6"
+          style={{ bottom: `calc(${bottomOffset} + ${isDesktop ? 56 : 64}px)` }}
+        >
+          <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-[#0F1419]/90 px-2.5 py-1 backdrop-blur-md">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                wake.active ? "bg-emerald-400 voice-status-dot" : "bg-white/25"
+              }`}
+            />
+            <span className="text-[11px] font-medium text-white/80">
+              {wake.active
+                ? `${settings.wakeWord} dinleniyor`
+                : wake.state === "denied"
+                  ? "Mikrofon izni gerekli"
+                  : wake.state === "unsupported"
+                    ? "Bu tarayıcıda desteklenmiyor"
+                    : "Duraklatıldı"}
+            </span>
           </div>
         </div>
-      </button>
+      )}
+
       {showFinanceTip && isDesktop && (
         <div
           className="fixed right-6 z-40 animate-in fade-in slide-in-from-bottom-2"
@@ -209,18 +282,8 @@ export function VoiceOrb() {
           </div>
         </div>
       )}
-      {open && (
-        <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
-          <VoiceExperience
-            onClose={() => { setOpen(false); setPending({}); }}
-            access={access}
-            initialContext={pending.initialContext}
-            initialCards={pending.initialCards}
-            autoSpeak={pending.autoSpeak}
-            autoStart={pending.autoSpeak}
-          />
-        </VoiceErrorBoundary>
-      )}
+      {open && session}
     </>
+
   );
 }
