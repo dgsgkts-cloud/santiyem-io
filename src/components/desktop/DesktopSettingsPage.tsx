@@ -1,3 +1,4 @@
+import { SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useState, useEffect } from "react";
 import { useUser, PlanType } from "@/contexts/UserContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -28,7 +29,23 @@ const TABS = [
   { id: "team", label: "Ekip", icon: Users },
   { id: "security", label: "Güvenlik", icon: Shield },
   { id: "demo", label: "Demo Veri", icon: Sparkles },
+  { id: "about", label: "Hakkında", icon: Info },
 ];
+
+/** About page — the single large brand lockup. */
+const AboutTab = () => (
+  <div className="flex flex-col items-center text-center py-8">
+    <SantiyemWordmark size="lg" stacked tagline="Construction Operating System" className="brand-logo-enter" />
+    <p className="mt-6 max-w-md text-[13px] leading-relaxed text-muted-foreground">
+      Şantiyem AI; projelerinizi, hakedişlerinizi, nakit akışınızı ve saha operasyonlarınızı tek
+      merkezden yöneten yapay zekâ destekli inşaat işletim sistemidir.
+    </p>
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+      <span className="brand-badge border border-border px-3 py-1 text-[11px] font-medium text-muted-foreground">Şantiyem AI</span>
+      <span className="brand-badge border border-border px-3 py-1 text-[11px] font-medium text-muted-foreground">santiyem.io</span>
+    </div>
+  </div>
+);
 
 const DesktopSettingsPage = () => {
   const { user, profile, plan } = useUser();
@@ -97,6 +114,7 @@ const DesktopSettingsPage = () => {
               </div>
             </div>
           )}
+          {activeTab === "about" && <AboutTab />}
           {activeTab === "setup" && <WorkspaceSetupTab />}
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
