@@ -139,6 +139,7 @@ export function useProjectHakedis(projectId: string) {
       body: {
         templateName: "hakedis-approval-request",
         recipientEmail: clientEmail,
+        resourceId: hakedisId,
         idempotencyKey: `hakedis-approval-${hakedisId}-${Date.now()}`,
         templateData: {
           projectName,
@@ -205,6 +206,7 @@ export function useProjectHakedis(projectId: string) {
       body: {
         templateName: "hakedis-approval-request",
         recipientEmail: h.client_email,
+        resourceId: hakedisId,
         idempotencyKey: `hakedis-resend-${hakedisId}-${Date.now()}`,
         templateData: {
           projectName: project?.name || "Proje",

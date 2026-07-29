@@ -123,6 +123,7 @@ export function useContractSignatures(contractId: string) {
       body: {
         templateName: "signature-request",
         recipientEmail: data.recipientEmail,
+        resourceId: result.id,
         idempotencyKey: `sig-req-${result.id}`,
         templateData: {
           recipientName: data.recipientName,
@@ -147,6 +148,7 @@ export function useContractSignatures(contractId: string) {
       body: {
         templateName: "signature-reminder",
         recipientEmail: request.recipient_email,
+        resourceId: request.id,
         idempotencyKey: `sig-remind-${request.id}-${Date.now()}`,
         templateData: {
           recipientName: request.recipient_name,
