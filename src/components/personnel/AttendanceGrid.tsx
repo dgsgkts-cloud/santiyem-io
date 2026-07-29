@@ -6,6 +6,7 @@ import { usePersonnel, EMPLOYMENT_TYPE_LABELS } from "@/hooks/usePersonnel";
 import { useAttendanceGrid, STATUS_COLORS, STATUS_SHORT, nextStatus, type AttendanceStatus } from "@/hooks/useAttendanceGrid";
 import { exportAttendancePDF, exportAttendanceExcel } from "@/lib/attendanceExport";
 import UnmatchedQRBanner from "./UnmatchedQRBanner";
+import EmptyState from "@/components/desktop/EmptyState";
 
 const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
