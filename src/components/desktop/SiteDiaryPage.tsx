@@ -14,6 +14,10 @@ import { tr } from "date-fns/locale";
 import { toast } from "sonner";
 import { takePhoto, pickFromGallery } from "@/lib/capturePhoto";
 
+import {
+  OpsStatStrip, OpsSectionHeader, OpsEmpty, OpsSkeletonRows, OpsListShell, OpsRow, OpsRowAction,
+} from "@/components/operations/opsUi";
+
 const WEATHER_OPTIONS = [
   { icon: "☀️", label: "Güneşli", lucide: Sun },
   { icon: "🌤️", label: "Parçalı Bulutlu", lucide: CloudSun },
@@ -52,6 +56,9 @@ const SiteDiaryPage = () => {
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: string } | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
+  // SPRINT 38F — secondary panels are collapsed by default so today stays above the fold
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showAttendance, setShowAttendance] = useState(false);
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
   const entries = dbEntries;
