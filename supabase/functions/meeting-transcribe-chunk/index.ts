@@ -72,7 +72,6 @@ serve(async (req) => {
     if (!text) return json({ text: "" });
 
     // Persist as final segment
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     await admin.from("meeting_transcripts").insert({
       meeting_id: meetingId,
       user_id: user.id,
