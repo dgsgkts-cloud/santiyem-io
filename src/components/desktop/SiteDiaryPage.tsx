@@ -342,21 +342,79 @@ const SiteDiaryPage = () => {
 
         {selectedProjectId && (
           <PullToRefresh onRefresh={refetch}>
-            <>
-              {/* Worker Attendance Section */}
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <HardHat className="w-4 h-4 text-primary" /> İşçi Devam Takibi
-                  </h3>
+            <div className="space-y-4">
+              {/* SPRINT 38F — today first: one glance answers "bugün ne oldu?" */}
+              {(() => {
+                const todayEntry = recent.find(e => isToday(parseISO(e.entry_date)));
+                const weekCount = recent.filter(e => isThisWeek(parseISO(e.entry_date), { weekStartsOn: 1 })).length;
+                const todayWorkers = todayEntry ? totalWorkers(todayEntry.crews) : 0;
+                const todayPhotos = todayEntry ? entryPhotos(todayEntry.id).length : 0;
+                const ws = todayEntry ? WORK_STATUS.find(w => w.value === todayEntry.work_status) : null;
+                return (
+                  <section className="space-y-2">
+                    <div className="rounded-card border border-border/80 bg-card shadow-soft p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="ds-label">Bugün · {format(new Date(), "d MMMM EEEE", { locale: tr })}</p>
+                          <p className="ds-body font-semibold text-foreground mt-1 truncate">
+                            {todayEntry
+                              ? (todayEntry.work_done?.slice(0, 80) || "Kayıt girildi")
+                              : "Bugünün kaydı henüz girilmedi"}
+                          </p>
+                          <p className="ds-caption text-muted-foreground mt-0.5">
+                            {todayEntry
+                              ? `${ws?.label || "Çalışma"} · ${todayWorkers} işçi${todayPhotos ? ` · ${todayPhotos} fotoğraf` : ""}`
+                              : "Hava, ekip ve yapılan işi 1 dakikada kaydedin."}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (todayEntry) { setSelectedEntry(todayEntry); setView("detail"); }
+                            else { resetForm(); setView("form"); }
+                          }}
+                          className="shrink-0 h-10 px-4 rounded-control text-fs-sm font-semibold text-white"
+                          style={{ backgroundColor: "#FF6B2B" }}
+                        >
+                          {todayEntry ? "Kaydı Aç" : "Kaydı Gir"}
+                        </button>
+                      </div>
+                    </div>
+                    <OpsStatStrip
+                      stats={[
+                        { label: "Bugün İşçi", value: todayWorkers, tone: todayWorkers > 0 ? "positive" : "neutral" },
+                        { label: "Bugün Fotoğraf", value: todayPhotos, tone: "info" },
+                        { label: "Bu Hafta Kayıt", value: weekCount, tone: "neutral" },
+                        { label: "Toplam Kayıt", value: recent.length, tone: "neutral" },
+                      ]}
+                    />
+                  </section>
+                );
+              })()}
+
+              {/* Attendance — secondary, collapsed by default */}
+              <div className="rounded-card border border-border/80 bg-card shadow-soft">
+                <div className="flex items-center justify-between gap-2 p-3">
+                  <button
+                    onClick={() => setShowAttendance(v => !v)}
+                    className="flex items-center gap-2 min-w-0 text-left"
+                    style={{ minHeight: 40 }}
+                  >
+                    <HardHat className="w-4 h-4 text-primary shrink-0" />
+                    <span className="ds-body font-medium text-foreground">İşçi Devam Takibi</span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showAttendance ? "rotate-180" : ""}`} />
+                  </button>
                   <button
                     onClick={() => setShowQrModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="h-9 px-3 rounded-control ds-caption font-medium bg-primary/10 text-primary flex items-center gap-1.5 shrink-0"
                   >
                     <QrCode className="w-3.5 h-3.5" /> QR Kod
                   </button>
                 </div>
-                <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
+                {showAttendance && (
+                  <div className="px-3 pb-3">
+                    <AttendancePanel projectId={selectedProjectId} projectName={selectedProject?.name || ""} />
+                  </div>
+                )}
               </div>
 
               {showQrModal && selectedProject && (
@@ -367,9 +425,21 @@ const SiteDiaryPage = () => {
                 />
               )}
 
-              {/* Calendar */}
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <div className="flex items-center justify-between mb-4">
+              {/* Calendar — on demand, not a permanent scroll cost */}
+              <div className="rounded-card border border-border/80 bg-card shadow-soft p-3">
+                <button
+                  onClick={() => setShowCalendar(v => !v)}
+                  className="w-full flex items-center gap-2 text-left"
+                  style={{ minHeight: 40 }}
+                >
+                  <Calendar className="w-4 h-4 text-primary shrink-0" />
+                  <span className="ds-body font-medium text-foreground">Aylık Takvim</span>
+                  <span className="ds-caption text-muted-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</span>
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground ml-auto transition-transform ${showCalendar ? "rotate-180" : ""}`} />
+                </button>
+                {showCalendar && (
+                <>
+                <div className="flex items-center justify-between mb-4 mt-3">
                   <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">← Önceki</button>
                   <h3 className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
                   <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">Sonraki →</button>
@@ -402,6 +472,8 @@ const SiteDiaryPage = () => {
                     );
                   })}
                 </div>
+                </>
+                )}
               </div>
 
               {/* Past entries with filters */}
@@ -614,7 +686,7 @@ const SiteDiaryPage = () => {
                   </div>
                 );
               })()}
-            </>
+            </div>
           </PullToRefresh>
         )}
       </div>
