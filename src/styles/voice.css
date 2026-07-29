@@ -208,3 +208,20 @@
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------------------
+   Sprint 32.3 — premium thinking state (breathing glow + ring).
+   No spinners anywhere in the voice surface.
+---------------------------------------------------------------- */
+@keyframes orb-thinking-halo {
+  0%, 100% { transform: scale(0.96); opacity: 0.25; }
+  50%      { transform: scale(1.12); opacity: 0.6; }
+}
+.orb-thinking-halo {
+  background: radial-gradient(circle, rgba(255,107,43,0.35) 0%, rgba(255,107,43,0) 70%);
+  animation: orb-thinking-halo 2.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-thinking-halo { animation: none; }
+}
