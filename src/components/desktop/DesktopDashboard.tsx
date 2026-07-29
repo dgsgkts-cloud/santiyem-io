@@ -1,12 +1,15 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
-import { TodayOperationsRibbon } from "@/components/dashboard/TodayOperationsRibbon";
 import { TodayTimeline } from "@/components/dashboard/TodayTimeline";
-import { AIQuickAskHero } from "@/components/dashboard/AIQuickAskHero";
-import { AIOperationsBrief } from "@/components/dashboard/AIOperationsBrief";
 import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
+// SPRINT 38B — premium dashboard surfaces
+import { DailyBriefHero, type BriefLine } from "@/components/dashboard/DailyBriefHero";
+import { CriticalAlertsCard, type AlertItem } from "@/components/dashboard/CriticalAlertsCard";
+import { CompactKpiStrip, type CompactKpi } from "@/components/dashboard/CompactKpiStrip";
+import { TodayActionsCard, type TodayAction } from "@/components/dashboard/TodayActionsCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
+import { useActionExecutor } from "@/hooks/useActionExecutor";
 import { useDisplayName } from "@/hooks/useDisplayName";
+
 
 
 import {
