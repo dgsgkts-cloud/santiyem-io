@@ -47,7 +47,7 @@ const EmptyState = ({
     {(firstStep || aiHint) && (
       <div className="mt-5 w-full max-w-sm space-y-2 text-left">
         {firstStep && (
-          <div className="flex items-start gap-3 rounded-[14px] border border-border/70 bg-muted/25 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-control border border-border/70 bg-muted/25 px-4 py-3">
             <span
               className="mt-[1px] flex items-center justify-center shrink-0 rounded-full ds-caption font-semibold"
               style={{
@@ -64,7 +64,7 @@ const EmptyState = ({
         )}
         {aiHint && (
           <div
-            className="flex items-start gap-3 rounded-[14px] px-4 py-3 border"
+            className="flex items-start gap-3 rounded-control px-4 py-3 border"
             style={{
               background: "hsl(var(--primary) / 0.06)",
               borderColor: "hsl(var(--primary) / 0.18)",
