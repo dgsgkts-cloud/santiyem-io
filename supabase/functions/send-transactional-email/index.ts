@@ -31,8 +31,16 @@ function generateToken(): string {
 }
 
 // Auth note: verify_jwt = true in config.toml so the gateway rejects calls
-// without a Bearer token. We additionally require an authenticated user
-// (or service-role) here — anonymous JWTs are not allowed to send branded mail.
+// without a Bearer token. Service-role callers (other edge functions, cron
+// flows) may send any template. A plain authenticated end user may only
+// trigger the templates listed below, and only for a resource they own — the
+// recipient address is then derived server-side from that record, so users
+// can never choose an arbitrary destination.
+const USER_TRIGGERABLE: Record<string, 'signature_request' | 'hakedis'> = {
+  'signature-request': 'signature_request',
+  'signature-reminder': 'signature_request',
+  'hakedis-approval-request': 'hakedis',
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -40,31 +48,29 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const unauthorized = () =>
+    new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+
   // Require an authenticated (non-anonymous) caller. Service-role calls
   // from other edge functions pass this check (role = 'service_role').
   const authHeader = req.headers.get('Authorization') || ''
-  if (!authHeader.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+  if (!authHeader.startsWith('Bearer ')) return unauthorized()
+
+  const jwt = authHeader.slice('Bearer '.length)
+  let isServiceRole = false
   try {
-    const jwt = authHeader.slice('Bearer '.length)
     const payloadPart = jwt.split('.')[1]
     const claims = JSON.parse(
       atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'))
     )
     const role = claims?.role
     // Reject anon — only authenticated users or service role may send mail.
-    if (role !== 'authenticated' && role !== 'service_role') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    if (role !== 'authenticated' && role !== 'service_role') return unauthorized()
+    isServiceRole = role === 'service_role'
   } catch {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return unauthorized()
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
