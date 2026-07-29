@@ -79,6 +79,9 @@ const PaymentsKasaPage = () => {
   const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
+  const [txQuery, setTxQuery] = useState("");
+  const [txKind, setTxKind] = useState<string>("all");
+
   const [reportDateFrom, setReportDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 3);
     return d.toISOString().slice(0, 10);
