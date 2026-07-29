@@ -155,16 +155,20 @@ const Login = () => {
     );
   }
 
-  // Mobile layout (unchanged)
+  // Mobile / tablet: form first, hero stacked underneath.
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative login-dark" style={{ backgroundColor: "#0F1419" }}>
+    <div className="min-h-screen relative login-dark" style={{ backgroundColor: "#0F1419" }}>
       <button onClick={() => navigate("/")}
-        className="absolute top-4 left-4 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
+        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
         <ArrowLeft className="w-4 h-4" /> Ana Sayfa
       </button>
-      {formContent}
+      <div className="flex min-h-screen items-center justify-center px-4">
+        {formContent}
+      </div>
+      <LoginHero />
     </div>
   );
+
 };
 
 export default Login;
