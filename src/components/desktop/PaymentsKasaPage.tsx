@@ -660,12 +660,17 @@ const PaymentsKasaPage = () => {
 
         {/* ═══ TAB 3: KASA & ÖDEMELER ═══ */}
         <TabsContent value="kasa">
-          <div className="space-y-6">
-            {/* Total Balance */}
-            <div className="rounded-xl p-6 text-center bg-card border border-border">
-              <p className="text-xs mb-1 text-muted-foreground">Toplam Kasa Bakiyesi</p>
-              <p className="text-3xl font-bold text-foreground">{fmtFull(kasaBalance)}</p>
-            </div>
+          <div className="space-y-4">
+            {/* SPRINT 38E — balance summary compressed into one strip */}
+            <FinanceStatStrip
+              columns={3}
+              stats={[
+                { label: "Toplam Bakiye", value: fmtShort(kasaBalance), hint: `${accounts.length} hesap`, icon: Wallet, tone: kasaBalance >= 0 ? "positive" : "overdue" },
+                { label: "Nakit Kasa", value: fmtShort(nakitKasaBalance), icon: Banknote, tone: "neutral" },
+                { label: "Banka", value: fmtShort(bankaBalance), icon: Building2, tone: "info" },
+              ]}
+            />
+
 
             {/* Account Cards */}
             <div className="flex items-center justify-between">
