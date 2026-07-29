@@ -787,60 +787,50 @@ const PaymentsKasaPage = () => {
             <SubcontractorDebtSection />
 
 
-            {/* Cash flow forecast */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Beklenen Tahsilat (30 gün)</p>
-                <p className="text-xl font-bold" style={{ color: "#22C55E" }}>{fmtFull(expectedIncome)}</p>
-                <p className="text-[11px] text-muted-foreground">{bekleyenTahsilatlar.length} onaylı hakediş</p>
-              </div>
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Planlanan Ödemeler</p>
-                <p className="text-xl font-bold" style={{ color: "#EF4444" }}>{fmtFull(enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0))}</p>
-                <p className="text-[11px] text-muted-foreground">Taşeron kalan borçlar</p>
-              </div>
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Tahmini Net Bakiye</p>
-                {(() => {
-                  const net = kasaBalance + expectedIncome - enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0);
-                  return (
-                    <>
-                      <p className="text-xl font-bold" style={{ color: net >= 0 ? "#22C55E" : "#EF4444" }}>{fmtFull(net)}</p>
-                      {net < 0 && <p className="text-[11px]" style={{ color: "#EF4444" }}>⚠️ Nakit sıkışıklığı riski!</p>}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+            {/* Cash flow forecast — in/out/net read left to right */}
+            {(() => {
+              const outstanding = enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0);
+              const net = kasaBalance + expectedIncome - outstanding;
+              return (
+                <section className="space-y-2">
+                  <h3 className="ds-label px-0.5">Nakit Akış Projeksiyonu</h3>
+                  <FinanceStatStrip
+                    columns={3}
+                    stats={[
+                      { label: "Girecek (30 gün)", value: fmtShort(expectedIncome), hint: `${bekleyenTahsilatlar.length} onaylı hakediş`, icon: ArrowDownLeft, tone: "positive" },
+                      { label: "Çıkacak", value: fmtShort(outstanding), hint: "Taşeron kalan borçlar", icon: ArrowUpRight, tone: "attention" },
+                      { label: "Tahmini Net", value: fmtShort(net), hint: net < 0 ? "Nakit sıkışıklığı riski" : "Pozisyon dengeli", icon: DollarSign, tone: net >= 0 ? "positive" : "overdue" },
+                    ]}
+                  />
+                </section>
+              );
+            })()}
 
-            {/* Upcoming checks */}
+            {/* Upcoming checks — dense rows with a calm due-date rail */}
             {upcomingChecks.length > 0 && (
-              <div className="rounded-xl bg-card border border-border p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" style={{ color: "#F59E0B" }} />
-                  Vadesi Yaklaşan Çekler (7 gün)
+              <section className="space-y-2">
+                <h3 className="ds-label px-0.5 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-300/90" /> Vadesi Yaklaşan Çekler (7 gün)
                 </h3>
-                <div className="space-y-2">
+                <FinanceListShell>
                   {upcomingChecks.map(chk => {
                     const days = differenceInDays(parseISO(chk.due_date), now);
                     return (
-                      <div key={chk.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
-                        <div>
-                          <p className="text-[13px] font-medium text-foreground">{chk.counterparty}</p>
-                          <p className="text-[11px] text-muted-foreground">{chk.bank_name} • Çek No: {chk.check_no}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold" style={{ color: "#F59E0B" }}>₺{fmt(chk.amount)}</p>
-                          <span className="text-[10px]" style={{ color: days <= 3 ? "#EF4444" : "#F59E0B" }}>
-                            {days === 0 ? "Bugün!" : `${days} gün`}
-                          </span>
-                        </div>
-                      </div>
+                      <FinanceRow
+                        key={chk.id}
+                        rail={days <= 3 ? "overdue" : "attention"}
+                        title={chk.counterparty}
+                        subtitle={`${chk.bank_name || "—"} · Çek No: ${chk.check_no}`}
+                        amount={`₺${fmt(chk.amount)}`}
+                        amountTone={days <= 3 ? "overdue" : "attention"}
+                        meta={days === 0 ? "Bugün" : `${days} gün`}
+                      />
                     );
                   })}
-                </div>
-              </div>
+                </FinanceListShell>
+              </section>
             )}
+
           </div>
         </TabsContent>
 
