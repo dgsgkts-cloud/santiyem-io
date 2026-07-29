@@ -331,8 +331,10 @@ export default function CommunicationCenterPage() {
                   onSend={() => handleSend(m)}
                   onCancel={() => handleCancel(m)}
                   onRetry={() => handleRetry(m)}
+                  onAttempts={() => handleAttempts(m)}
                 />
               ))
+
             )}
           </TabsContent>
         ))}
