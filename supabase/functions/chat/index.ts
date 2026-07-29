@@ -15,7 +15,7 @@ import {
   type CacheEntry,
 } from "./utils/parsing.ts";
 import { SYSTEM_PROMPT } from "./prompt/systemPrompt.ts";
-import { VOICE_SYSTEM_PROMPT } from "./prompt/voicePrompt.ts";
+import { VOICE_SYSTEM_PROMPT } from "../_shared/voicePrompt.ts";
 import {
   classifyIntentHeuristic,
   extractPriorProject,
