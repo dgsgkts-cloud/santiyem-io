@@ -20,9 +20,23 @@ import { useUser } from "@/contexts/UserContext";
 import { formatNumber0 } from "@/lib/formatCurrency";
 import { getPinned, togglePin, getRecent, type PinnedItem, type RecentItem } from "@/lib/workspaceStore";
 import { toast } from "sonner";
+import { OpsSectionHeader, OpsEmpty, OpsSkeletonRows } from "@/components/operations/opsUi";
 
 type TabKey = "notifications" | "approvals" | "activity" | "mywork" | "pinned" | "reminders";
 type NotifFilter = "all" | "unread" | "finance" | "projects" | "personnel" | "ai";
+type PriorityKey = "critical" | "today" | "earlier" | "completed";
+
+/** Priority is communicated with a calm dot + label, never with loud fills. */
+const PRIORITY_GROUPS: { key: PriorityKey; label: string; tone: "overdue" | "attention" | "info" | "positive" }[] = [
+  { key: "critical",  label: "Kritik",       tone: "overdue" },
+  { key: "today",     label: "Bugün",        tone: "attention" },
+  { key: "earlier",   label: "Yaklaşan",     tone: "info" },
+  { key: "completed", label: "Tamamlanan",   tone: "positive" },
+];
+
+const DOT_TONE: Record<string, string> = {
+  overdue: "bg-rose-400", attention: "bg-amber-400", info: "bg-sky-400", positive: "bg-emerald-400",
+};
 
 interface Props {
   open: boolean;
@@ -45,7 +59,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const [filter, setFilter] = useState<NotifFilter>("all");
   const [query, setQuery] = useState("");
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds, loading: notifLoading } = useNotifications();
   const { projects } = useProjects();
   const { payments = [] } = useCashPayments();
   const { collections = [] } = useCashCollections();
@@ -101,13 +115,25 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
       if (filter === "finance" && n.cat !== "finance") return false;
       if (filter === "projects" && n.cat !== "projects") return false;
       if (filter === "personnel" && n.cat !== "personnel") return false;
-      if (filter === "ai") return false; // AI category reserved
+      if (filter === "ai") return false; // AI items are rendered from smartReminders below
       if (query && !(`${n.title} ${n.message}`).toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
   }, [categorized, filter, dismissedIds, query]);
 
-  const groupedNotifs = useMemo(() => groupByDate(filteredNotifs, n => new Date(n.sourceDate)), [filteredNotifs]);
+  /* SPRINT 38G — priority first: Kritik → Bugün → Daha Önce → Tamamlandı */
+  const priorityGroups = useMemo(() => {
+    const g: Record<PriorityKey, typeof filteredNotifs> = { critical: [], today: [], earlier: [], completed: [] };
+    filteredNotifs.forEach(n => {
+      if (n.completed) g.completed.push(n);
+      else if (n.daysLeft < 0) g.critical.push(n);
+      else if (n.daysLeft === 0) g.today.push(n);
+      else g.earlier.push(n);
+    });
+    g.critical.sort((a, b) => a.daysLeft - b.daysLeft);
+    g.earlier.sort((a, b) => a.daysLeft - b.daysLeft);
+    return g;
+  }, [filteredNotifs]);
 
   /* ================ APPROVALS ================ */
   const approvals = useMemo(() => {
@@ -165,6 +191,8 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
     return arr;
   }, [reminders, allHakedis, payments]);
 
+  const aiSuggestions = useMemo(() => (filter === "all" || filter === "ai" ? smartReminders.slice(0, 4) : []), [smartReminders, filter]);
+
   const handleNotifClick = (n: AppNotification) => {
     markAsRead([n.id]);
     if (n.targetTab === "projects" && n.targetProjectId) onNavigate?.("projects", n.targetProjectId);
@@ -200,57 +228,86 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
         <div className="flex-1 overflow-y-auto p-3 animate-fade-in">
           {tab === "notifications" && (
             <>
-              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1 mb-2">
-                <SearchIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Ara..." className="bg-transparent outline-none text-[12px] flex-1" />
+              {/* SPRINT 38G — search + a short chip row; everything else lives in the groups */}
+              <div className="flex items-center gap-1.5 rounded-control border border-border bg-background px-2.5 h-10 mb-2">
+                <SearchIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Bildirimlerde ara…" className="bg-transparent outline-none text-fs-sm flex-1 min-w-0" />
+                {query && <button onClick={() => setQuery("")} className="text-muted-foreground"><X className="w-3.5 h-3.5" /></button>}
               </div>
-              <div className="flex items-center gap-1 mb-3 flex-wrap">
-                {(["all", "unread", "finance", "projects", "personnel", "ai"] as NotifFilter[]).map(f => (
+              <div className="flex items-center gap-1.5 mb-3 overflow-x-auto no-scrollbar">
+                {(["all", "unread", "finance", "projects", "personnel"] as NotifFilter[]).map(f => (
                   <button key={f} onClick={() => setFilter(f)}
-                    className={`px-2 py-0.5 rounded-full text-[10.5px] font-medium border ${filter === f ? "bg-[#FF6B2B]/15 text-[#FF6B2B] border-[#FF6B2B]/30" : "border-border text-muted-foreground"}`}>
-                    {f === "all" ? "Tümü" : f === "unread" ? "Okunmamış" : f === "finance" ? "Finans" : f === "projects" ? "Projeler" : f === "personnel" ? "Personel" : "AI"}
+                    className={`px-2.5 h-7 rounded-pill ds-caption whitespace-nowrap border shrink-0 transition-colors ${filter === f ? "bg-primary/[0.08] text-foreground border-primary/40" : "border-border/70 text-muted-foreground hover:text-foreground"}`}>
+                    {f === "all" ? "Tümü" : f === "unread" ? "Okunmamış" : f === "finance" ? "Finans" : f === "projects" ? "Projeler" : "Personel"}
                   </button>
                 ))}
                 {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="ml-auto text-[10.5px] font-medium text-[#FF6B2B] flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Tümünü okundu
+                  <button onClick={markAllAsRead} className="ml-auto shrink-0 ds-caption font-medium text-primary flex items-center gap-1 h-7 px-2">
+                    <Check className="w-3.5 h-3.5" /> Tümünü okundu
                   </button>
                 )}
               </div>
-              {filteredNotifs.length === 0 ? <EmptyState Icon={Bell} text="Bildirim yok" /> : (
-                <div className="space-y-3">
-                  {(["Bugün", "Dün", "Daha Önce"] as const).map(section => (
-                    groupedNotifs[section].length > 0 && (
-                      <div key={section}>
-                        <SectionLabel>{section}</SectionLabel>
-                        <div className="space-y-1.5">
-                          {groupedNotifs[section].map(n => {
-                            const isRead = dismissedIds.includes(n.id);
-                            return (
-                              <button key={n.id} onClick={() => handleNotifClick(n)}
-                                className={`w-full text-left rounded-lg border p-2.5 flex items-start gap-2 transition-colors animate-fade-in ${isRead ? "border-border bg-transparent" : "border-[#FF6B2B]/20 bg-[#FF6B2B]/5"}`}>
-                                <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: isRead ? "#1E273215" : "#FF6B2B15" }}>
-                                  {n.type === "reminder" ? <Calendar className="w-3.5 h-3.5 text-[#FF6B2B]" /> : <FolderOpen className="w-3.5 h-3.5 text-[#FF6B2B]" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-[12px] font-medium truncate ${isRead ? "text-muted-foreground" : "text-foreground"}`}>{n.title}</p>
-                                  <p className="text-[11px] text-muted-foreground truncate">{n.message}</p>
-                                </div>
-                                {!isRead && <div className="w-1.5 h-1.5 rounded-full mt-1.5 bg-[#FF6B2B]" />}
-                              </button>
-                            );
-                          })}
+
+              {notifLoading ? (
+                <OpsSkeletonRows rows={5} />
+              ) : filteredNotifs.length === 0 ? (
+                <OpsEmpty
+                  icon="🔔"
+                  title={notifications.length === 0 ? "Şu an dikkat isteyen bir şey yok" : "Bu filtrede bildirim yok"}
+                  description={
+                    notifications.length === 0
+                      ? "Yaklaşan hatırlatıcılar, kilometre taşları ve gecikmeler burada otomatik toplanır. Bir hatırlatıcı ekleyin ya da projeye kilometre taşı tanımlayın."
+                      : "Filtreyi veya aramayı temizleyip tekrar deneyin."
+                  }
+                />
+              ) : (
+                <div className="space-y-4">
+                  {PRIORITY_GROUPS.map(g => {
+                    const list = priorityGroups[g.key];
+                    if (!list.length) return null;
+                    return (
+                      <section key={g.key} className="space-y-1.5">
+                        <OpsSectionHeader title={g.label} count={list.length} />
+                        <div className="rounded-card border border-border/80 bg-card overflow-hidden divide-y divide-border/60">
+                          {list.map(n => (
+                            <NotifRow
+                              key={n.id}
+                              n={n}
+                              read={dismissedIds.includes(n.id)}
+                              tone={g.tone}
+                              onOpen={() => handleNotifClick(n)}
+                              onRead={() => markAsRead([n.id])}
+                            />
+                          ))}
                         </div>
+                      </section>
+                    );
+                  })}
+
+                  {aiSuggestions.length > 0 && (
+                    <section className="space-y-1.5">
+                      <OpsSectionHeader title="AI Önerileri" count={aiSuggestions.length} icon={Sparkles} />
+                      <div className="rounded-card border border-border/80 bg-card overflow-hidden divide-y divide-border/60">
+                        {aiSuggestions.map(r => (
+                          <div key={r.id} className="flex items-center gap-2.5 px-3" style={{ minHeight: 56 }}>
+                            <PriorityDot tone={r.tone === "danger" ? "overdue" : r.tone === "warn" ? "attention" : "info"} />
+                            <div className="flex-1 min-w-0">
+                              <p className="ds-body font-medium text-foreground truncate">{r.text}</p>
+                              <p className="ds-caption text-muted-foreground truncate">{r.when}</p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </div>
+                        ))}
                       </div>
-                    )
-                  ))}
+                    </section>
+                  )}
                 </div>
               )}
             </>
           )}
 
           {tab === "approvals" && (
-            approvals.length === 0 ? <EmptyState Icon={ClipboardCheck} text="Onay bekleyen kayıt yok" /> : (
+            approvals.length === 0 ? <OpsEmpty icon="✅" title="Onay kuyruğu temiz" description="Hakediş, ödeme ve yüksek öncelikli görevler onay beklediğinde burada listelenir." /> : (
               <div className="space-y-2">
                 <div className="rounded-lg border border-[#FF6B2B]/20 p-2.5 flex items-center gap-2"
                      style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.07), transparent)" }}>
@@ -277,7 +334,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "activity" && (
-            activity.length === 0 ? <EmptyState Icon={History} text="Aktivite yok" /> : (
+            activity.length === 0 ? <OpsEmpty icon="🧭" title="Bugün kayda değer bir hareket yok" description="Dosya, not, hakediş ve görev hareketleri işlendikçe bu akış otomatik dolar." /> : (
               <div className="space-y-3">
                 {(["Bugün", "Dün", "Bu Hafta", "Daha Önce"] as const).map(section => {
                   const list = (activityGroups as any)[section] || [];
@@ -315,7 +372,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "pinned" && (
-            pinned.length === 0 ? <EmptyState Icon={Pin} text="Henüz sabitlenmiş öğe yok. Kartlardaki iğne ikonundan sabitleyebilirsiniz." /> : (
+            pinned.length === 0 ? <OpsEmpty icon="📌" title="Sabitlenmiş öğe yok" description="Sık kullandığınız proje ve kayıtları kartlardaki iğne ikonuyla sabitleyin; buradan tek dokunuşla açılır." /> : (
               <div className="space-y-1.5">
                 {pinned.map(p => (
                   <div key={`${p.kind}-${p.id}`} className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5 animate-fade-in">
@@ -334,7 +391,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "reminders" && (
-            smartReminders.length === 0 ? <EmptyState Icon={Sparkles} text="Aktif hatırlatıcı yok" /> : (
+            smartReminders.length === 0 ? <OpsEmpty icon="✨" title="AI şu an bir risk görmüyor" description="Yaklaşan hatırlatıcılar, onay bekleyen hakedişler ve planlı ödemeler oluştukça AI burada uyarır." /> : (
               <div className="space-y-1.5">
                 <div className="rounded-lg border border-[#FF6B2B]/20 p-2.5 flex items-center gap-2 mb-2"
                      style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.07), transparent)" }}>
@@ -366,14 +423,53 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
 };
 
 /* ---------- Helpers ---------- */
+const PriorityDot = ({ tone }: { tone: string }) => (
+  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${DOT_TONE[tone] || "bg-muted-foreground/50"}`} aria-hidden />
+);
+
+/** Compact notification row: title → description → time → quick action. */
+const NotifRow = ({ n, read, tone, onOpen, onRead }: {
+  n: AppNotification & { cat?: string };
+  read: boolean;
+  tone: string;
+  onOpen: () => void;
+  onRead: () => void;
+}) => {
+  const when = n.completed
+    ? "Tamamlandı"
+    : n.daysLeft < 0 ? `${Math.abs(n.daysLeft)} gün gecikti`
+    : n.daysLeft === 0 ? "Bugün"
+    : n.daysLeft === 1 ? "Yarın" : `${n.daysLeft} gün`;
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
+      className="group relative flex items-center gap-2.5 px-3 cursor-pointer hover:bg-muted/30 transition-colors"
+      style={{ minHeight: 56 }}
+    >
+      <PriorityDot tone={tone} />
+      <div className="flex-1 min-w-0">
+        <p className={`ds-body truncate ${read ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>{n.title}</p>
+        <p className="ds-caption text-muted-foreground truncate">{n.message}</p>
+      </div>
+      <span className={`ds-caption shrink-0 tabular-nums ${tone === "overdue" ? "text-rose-400" : "text-muted-foreground"}`}>{when}</span>
+      {!read && (
+        <button
+          aria-label="Okundu işaretle"
+          title="Okundu işaretle"
+          onClick={(e) => { e.stopPropagation(); onRead(); }}
+          className="w-9 h-9 rounded-control flex items-center justify-center shrink-0 text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 hover:text-emerald-400 hover:bg-muted transition-all"
+        >
+          <Check className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+};
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{children}</p>
-);
-const EmptyState = ({ Icon, text }: { Icon: any; text: string }) => (
-  <div className="text-center py-10 animate-fade-in">
-    <Icon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
-    <p className="text-[12px] text-muted-foreground">{text}</p>
-  </div>
 );
 const ApprovalBtn = ({ tone, onClick, children }: { tone: "approve" | "reject" | "ghost"; onClick: () => void; children: React.ReactNode }) => {
   const c = tone === "approve" ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25"

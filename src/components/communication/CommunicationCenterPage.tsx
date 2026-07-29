@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import EmailAccountsPanel from "./EmailAccountsPanel";
+import {
+  OpsStatStrip, OpsListShell, OpsRow, OpsRowAction, OpsFilterBar, OpsEmpty, OpsSkeletonRows, OpsSectionHeader,
+} from "@/components/operations/opsUi";
+import { ChevronDown } from "lucide-react";
 
 type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "processing" | "retrying" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled" | "manual_action_required";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
@@ -210,6 +214,8 @@ export default function CommunicationCenterPage() {
     finally { setBusy(null); }
   };
 
+  const [bucket, setBucket] = useState<Bucket>("pending");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [attemptsFor, setAttemptsFor] = useState<CommMessage | null>(null);
   const [attempts, setAttempts] = useState<DeliveryAttempt[]>([]);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
@@ -252,93 +258,123 @@ export default function CommunicationCenterPage() {
     if (b) buckets[b].push(m);
   });
 
+  const statusTone = (st: Status) =>
+    st === "failed" || st === "manual_action_required" ? "overdue"
+    : st === "sent" || st === "delivered" || st === "read" ? "positive"
+    : st === "scheduled" ? "info"
+    : "attention";
+
+  const BUCKET_META: { key: Bucket; label: string; tone: "attention" | "info" | "positive" | "overdue"; empty: { title: string; description: string } }[] = [
+    { key: "pending",   label: "Bekleyen",   tone: "attention", empty: { title: "Onay bekleyen mesaj yok", description: "AI bir mesaj taslağı ürettiğinde önce burada onayınıza düşer; onayladığınızda dağıtıcı gönderir." } },
+    { key: "scheduled", label: "Planlı",     tone: "info",      empty: { title: "Planlı gönderim yok", description: "İleri tarihli mesajlar burada bekler ve zamanı geldiğinde otomatik gönderilir." } },
+    { key: "sent",      label: "Gönderilen", tone: "positive",  empty: { title: "Henüz gönderilmiş mesaj yok", description: "Gönderilen, iletilen ve okunan tüm mesajların geçmişi burada listelenir." } },
+    { key: "failed",    label: "Başarısız",  tone: "overdue",   empty: { title: "Başarısız gönderim yok", description: "Bir gönderim başarısız olursa hatası ve deneme geçmişiyle birlikte burada görünür." } },
+  ];
+
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Send className="w-6 h-6 text-primary" />
-            İletişim Merkezi
+    <div className="px-5 pt-5 pb-6 space-y-4 max-w-7xl mx-auto">
+      {/* SPRINT 38G — calm header, one line of intent */}
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="ds-heading text-foreground flex items-center gap-2">
+            <Send className="w-5 h-5 text-primary shrink-0" /> İletişim Merkezi
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Tüm AI kaynaklı mesajlar (WhatsApp, E-posta, gelecekte SMS/Push/Teams/Slack) buradan geçer.
+          <p className="ds-caption text-muted-foreground mt-0.5">
+            WhatsApp ve e-posta gönderimleri; onay, planlama ve teslim durumu tek akışta.
           </p>
         </div>
-        <Button variant="outline" onClick={load} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Yenile
+        <Button variant="outline" size="sm" className="h-10 shrink-0" onClick={load} disabled={loading}>
+          <RefreshCw className={`w-4 h-4 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Yenile</span>
         </Button>
       </header>
 
-      <WhatsAppSetupCard />
-      <EmailAccountsPanel />
+      {/* What needs attention, at a glance */}
+      <OpsStatStrip
+        stats={BUCKET_META.map((b) => ({
+          label: b.label,
+          value: buckets[b.key].length,
+          tone: b.key === "failed" && buckets.failed.length === 0 ? "neutral" : b.tone,
+          onClick: () => setBucket(b.key),
+          active: bucket === b.key,
+        }))}
+      />
 
-      <div className="rounded-lg border bg-card p-3 flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[220px]">
-          <Label className="text-xs">Ara</Label>
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Konu, içerik, alıcı…" className="pl-8 h-9" />
+      <OpsFilterBar
+        query={search}
+        onQuery={setSearch}
+        placeholder="Konu, içerik veya alıcı ara…"
+        chips={[
+          { value: "all", label: "Tüm kanallar" },
+          { value: "whatsapp", label: "WhatsApp" },
+          { value: "email", label: "E-posta" },
+          { value: "sms", label: "SMS" },
+          { value: "push", label: "Push" },
+        ]}
+        active={channelFilter}
+        onChip={(v) => setChannelFilter(v as "all" | Channel)}
+        right={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-11 shrink-0 gap-1.5"
+            onClick={() => setShowAdvanced((v) => !v)}
+          >
+            <Settings2 className="w-4 h-4" />
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+          </Button>
+        }
+      />
+
+      {showAdvanced && (
+        <div className="rounded-card border border-border/80 bg-card p-3 grid gap-3 sm:grid-cols-2 animate-fade-in">
+          <div>
+            <Label className="ds-label">Proje ID</Label>
+            <Input value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} placeholder="proje…" className="h-10 mt-1" />
+          </div>
+          <div>
+            <Label className="ds-label">Alıcı</Label>
+            <Input value={recipientFilter} onChange={(e) => setRecipientFilter(e.target.value)} placeholder="e-posta / telefon" className="h-10 mt-1" />
+          </div>
+          <div className="sm:col-span-2 space-y-3">
+            <WhatsAppSetupCard />
+            <EmailAccountsPanel />
           </div>
         </div>
-        <div className="w-40">
-          <Label className="text-xs">Kanal</Label>
-          <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as "all" | Channel)}>
-            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="whatsapp">WhatsApp</SelectItem>
-              <SelectItem value="email">E-posta</SelectItem>
-              <SelectItem value="sms">SMS</SelectItem>
-              <SelectItem value="push">Push</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-44">
-          <Label className="text-xs">Proje ID</Label>
-          <Input value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}
-            placeholder="proje…" className="h-9" />
-        </div>
-        <div className="w-52">
-          <Label className="text-xs">Alıcı</Label>
-          <Input value={recipientFilter} onChange={(e) => setRecipientFilter(e.target.value)}
-            placeholder="e-posta / telefon" className="h-9" />
-        </div>
-      </div>
+      )}
 
-
-      <Tabs defaultValue="pending">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="pending">Bekleyen ({buckets.pending.length})</TabsTrigger>
-          <TabsTrigger value="scheduled">Planlı ({buckets.scheduled.length})</TabsTrigger>
-          <TabsTrigger value="sent">Gönderilen ({buckets.sent.length})</TabsTrigger>
-          <TabsTrigger value="failed">Başarısız ({buckets.failed.length})</TabsTrigger>
-        </TabsList>
-        {(["pending", "scheduled", "sent", "failed"] as Bucket[]).map((b) => (
-          <TabsContent key={b} value={b} className="space-y-2 mt-4">
-            {buckets[b].length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground text-sm border rounded-lg">
-                Bu kategoride mesaj yok.
-              </div>
-            ) : (
-              buckets[b].map((m) => (
-                <MessageRow
-                  key={m.id}
-                  m={m}
-                  busy={busy === m.id}
-                  onPreview={() => setPreview(m)}
-                  onSend={() => handleSend(m)}
-                  onCancel={() => handleCancel(m)}
-                  onRetry={() => handleRetry(m)}
-                  onAttempts={() => handleAttempts(m)}
-                />
-              ))
-
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+      {/* One conversation list at a time — no competing tab chrome */}
+      <section className="space-y-2">
+        <OpsSectionHeader
+          title={BUCKET_META.find((b) => b.key === bucket)!.label}
+          count={buckets[bucket].length}
+        />
+        {loading ? (
+          <OpsSkeletonRows rows={5} />
+        ) : buckets[bucket].length === 0 ? (
+          <OpsEmpty
+            icon="📨"
+            title={BUCKET_META.find((b) => b.key === bucket)!.empty.title}
+            description={BUCKET_META.find((b) => b.key === bucket)!.empty.description}
+          />
+        ) : (
+          <OpsListShell>
+            {buckets[bucket].map((m) => (
+              <MessageRow
+                key={m.id}
+                m={m}
+                busy={busy === m.id}
+                tone={statusTone(m.status)}
+                onPreview={() => setPreview(m)}
+                onSend={() => handleSend(m)}
+                onCancel={() => handleCancel(m)}
+                onRetry={() => handleRetry(m)}
+                onAttempts={() => handleAttempts(m)}
+              />
+            ))}
+          </OpsListShell>
+        )}
+      </section>
 
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="max-w-2xl">
@@ -426,100 +462,104 @@ export default function CommunicationCenterPage() {
 }
 
 function MessageRow({
-  m, busy, onPreview, onSend, onCancel, onRetry, onAttempts,
+  m, busy, tone, onPreview, onSend, onCancel, onRetry, onAttempts,
 }: {
   m: CommMessage;
   busy: boolean;
+  tone: "positive" | "neutral" | "info" | "attention" | "overdue";
   onPreview: () => void;
   onSend: () => void;
   onCancel: () => void;
   onRetry: () => void;
   onAttempts: () => void;
 }) {
-
-  const Icon = CHANNEL_ICON[m.channel];
   const meta = STATUS_META[m.status] ?? STATUS_META.draft;
-  const StIcon = meta.icon;
   const canSend = m.status === "pending_approval" || m.status === "queued";
   const canRetry = m.status === "failed" || m.status === "retrying" || m.status === "manual_action_required";
   const canCancel = ["pending_approval", "queued", "scheduled", "failed", "draft", "retrying", "manual_action_required"].includes(m.status);
   const manualUrl = (m.metadata as Record<string, unknown> | null)?.manual_action_url as string | undefined;
+  const needsAction = canSend || canRetry;
+
+  const when = m.sent_at || m.scheduled_at || m.created_at;
+  const preview = (m.subject ? `${m.subject} — ` : "") + (m.body || "").replace(/\s+/g, " ").trim();
 
   return (
-    <div className="rounded-lg border bg-card p-3 flex items-start gap-3">
-      <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium truncate">
-            {m.recipient_name || m.recipient}
+    <div className="relative">
+      <OpsRow
+        onClick={onPreview}
+        rail={needsAction ? tone : undefined}
+        title={
+          <span className="flex items-center gap-1.5 min-w-0">
+            {needsAction && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${tone === "overdue" ? "bg-rose-400" : "bg-amber-400"}`} aria-hidden />}
+            <span className={needsAction ? "font-semibold" : undefined}>{m.recipient_name || m.recipient}</span>
           </span>
-          <Badge variant="outline" className={`${meta.cls} text-[10px] gap-1`}>
-            <StIcon className={`w-3 h-3 ${m.status === "sending" || m.status === "processing" ? "animate-spin" : ""}`} />
-            {meta.label}
-          </Badge>
-          {m.retry_count > 0 && (
-            <Badge variant="outline" className="text-[10px]">
-              {m.retry_count}/{m.max_retries ?? 5} deneme
-            </Badge>
-          )}
-          {m.created_from && (
-            <Badge variant="outline" className="text-[10px]">{m.created_from}</Badge>
-          )}
-        </div>
-        {m.subject && <div className="text-xs text-muted-foreground mt-0.5 truncate">{m.subject}</div>}
-        <div className="text-xs text-foreground/80 mt-1 line-clamp-2">{m.body}</div>
-        <div className="text-[10px] text-muted-foreground mt-1.5 flex gap-2 flex-wrap">
-          <span>{format(new Date(m.created_at), "d MMM HH:mm", { locale: tr })}</span>
-          {m.scheduled_at && <span>· Planlı: {format(new Date(m.scheduled_at), "d MMM HH:mm", { locale: tr })}</span>}
-          {m.next_retry_at && m.status === "retrying" && (
-            <span className="text-amber-600">
-              · Sonraki deneme: {format(new Date(m.next_retry_at), "d MMM HH:mm", { locale: tr })}
-            </span>
-          )}
-          {m.sent_at && <span>· Gönderim: {format(new Date(m.sent_at), "d MMM HH:mm", { locale: tr })}</span>}
+        }
+        status={
+          <span className="inline-flex items-center gap-1">
+            {CHANNEL_LABEL[m.channel]} · {meta.label}
+          </span>
+        }
+        statusTone={tone}
+        subtitle={preview || "İçerik yok"}
+        amount={
+          <span className="text-muted-foreground">
+            {format(new Date(when), "d MMM", { locale: tr })}
+          </span>
+        }
+        meta={format(new Date(when), "HH:mm", { locale: tr })}
+        actions={
+          <>
+            {canSend && (
+              <OpsRowAction
+                label="Onayla ve gönder"
+                icon={busy ? Loader2 : Send}
+                onClick={onSend}
+                tone="text-primary hover:text-primary"
+              />
+            )}
+            {canRetry && (
+              <OpsRowAction label="Tekrar dene" icon={RefreshCw} onClick={onRetry} tone="hover:text-primary" />
+            )}
+            <OpsRowAction
+              label="Denemeleri gör"
+              icon={History}
+              onClick={onAttempts}
+              tone="hidden sm:flex sm:opacity-0 sm:group-hover:opacity-100"
+            />
+            {canCancel && (
+              <OpsRowAction
+                label="İptal et"
+                icon={Ban}
+                onClick={onCancel}
+                tone="sm:opacity-0 sm:group-hover:opacity-100 hover:text-destructive"
+              />
+            )}
+          </>
+        }
+      />
+      {(m.error || (m.status === "manual_action_required" && manualUrl) || (m.status === "retrying" && m.next_retry_at)) && (
+        <div className="px-3 pb-2.5 -mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
           {m.error && (
-            <span className="text-red-600">
-              · {m.error_code ? `[${m.error_code}] ` : ""}{m.error}
+            <span className="ds-caption text-rose-400 truncate max-w-full">
+              {m.error_code ? `[${m.error_code}] ` : ""}{m.error}
             </span>
           )}
+          {m.status === "retrying" && m.next_retry_at && (
+            <span className="ds-caption text-amber-400">
+              Sonraki deneme: {format(new Date(m.next_retry_at), "d MMM HH:mm", { locale: tr })}
+            </span>
+          )}
+          {m.retry_count > 0 && (
+            <span className="ds-caption text-muted-foreground">{m.retry_count}/{m.max_retries ?? 5} deneme</span>
+          )}
+          {manualUrl && (
+            <a href={manualUrl} target="_blank" rel="noopener noreferrer"
+               className="ds-caption text-primary inline-flex items-center gap-1 hover:underline">
+              <ExternalLink className="w-3 h-3" /> WhatsApp'ta aç
+            </a>
+          )}
         </div>
-        {m.status === "manual_action_required" && manualUrl && (
-          <a
-            href={manualUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[11px] text-orange-600 mt-1.5 hover:underline"
-          >
-            <ExternalLink className="w-3 h-3" /> WhatsApp'ta aç ve göndermeyi tamamla
-          </a>
-        )}
-      </div>
-      <div className="flex gap-1 shrink-0">
-        <Button size="sm" variant="ghost" onClick={onPreview}>
-          <Eye className="w-3.5 h-3.5" />
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onAttempts} title="Denemeleri gör">
-          <History className="w-3.5 h-3.5" />
-        </Button>
-        {canSend && (
-          <Button size="sm" onClick={onSend} disabled={busy}>
-            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-          </Button>
-        )}
-        {canRetry && (
-          <Button size="sm" variant="outline" onClick={onRetry} disabled={busy} title="Şimdi tekrar dene">
-            <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} />
-          </Button>
-        )}
-        {canCancel && (
-          <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
-            <Ban className="w-3.5 h-3.5" />
-          </Button>
-        )}
-      </div>
-
+      )}
     </div>
   );
 }

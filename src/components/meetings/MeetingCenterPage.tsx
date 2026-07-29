@@ -16,6 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  OpsStatStrip, OpsListShell, OpsRow, OpsRowAction, OpsSectionHeader, OpsEmpty, OpsSkeletonRows, OpsFilterBar,
+} from "@/components/operations/opsUi";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
@@ -131,25 +134,22 @@ export default function MeetingCenterPage() {
   const projectName = (pid: string | null) => projects.find((p) => p.id === pid)?.name || null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <div className="bg-background">
+      {/* Header — SPRINT 38G: one compact bar, thumb-reachable primary action */}
       <div className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Mic className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold">Toplantı Merkezi</h1>
-              <p className="text-xs text-muted-foreground">AI destekli toplantı asistanı</p>
-            </div>
+        <div className="max-w-6xl mx-auto px-5 pt-4 pb-2.5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="ds-heading text-foreground flex items-center gap-2">
+              <Mic className="w-4 h-4 text-primary shrink-0" /> Toplantı Merkezi
+            </h1>
+            <p className="ds-caption text-muted-foreground mt-0.5 truncate">Kaydedin, AI özetlesin, aksiyonlar göreve dönüşsün</p>
           </div>
-          <Button size="sm" onClick={() => setActiveSection("new")} className="gap-2">
-            <Plus className="w-4 h-4" /> Yeni Toplantı
+          <Button size="sm" onClick={() => setActiveSection("new")} className="gap-1.5 shrink-0 h-10">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Yeni Toplantı</span>
           </Button>
         </div>
         {/* Tabs */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto">
+        <div className="max-w-6xl mx-auto px-5 flex gap-1 overflow-x-auto no-scrollbar">
           {([
             ["dashboard", "Dashboard"],
             ["new", "Canlı Toplantı"],
@@ -171,13 +171,17 @@ export default function MeetingCenterPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-6xl mx-auto px-5 pt-5 pb-6">
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Yükleniyor...
-          </div>
+          <div className="space-y-4"><OpsSkeletonRows rows={6} /></div>
         ) : activeSection === "dashboard" ? (
-          <Dashboard stats={stats} recent={meetings.slice(0, 5)} onOpen={setSelectedMeeting} projectName={projectName} />
+          <Dashboard
+            stats={stats}
+            meetings={meetings}
+            onOpen={setSelectedMeeting}
+            onNew={() => setActiveSection("new")}
+            projectName={projectName}
+          />
         ) : activeSection === "new" ? (
           <NewMeeting projects={projects} onDone={(id) => { void load(); const m = meetings.find((x) => x.id === id); if (m) setSelectedMeeting(m); }} />
         ) : activeSection === "history" ? (
@@ -218,71 +222,102 @@ export default function MeetingCenterPage() {
 // Dashboard
 // ─────────────────────────────────────────────────────────
 function Dashboard({
-  stats, recent, onOpen, projectName,
+  stats, meetings, onOpen, onNew, projectName,
 }: {
   stats: { todaysMeetings: number; pending: number; overdue: number; rate: number };
-  recent: Meeting[];
+  meetings: Meeting[];
   onOpen: (m: Meeting) => void;
+  onNew: () => void;
   projectName: (id: string | null) => string | null;
 }) {
-  const cards = [
-    { label: "Bugünkü Toplantılar", value: stats.todaysMeetings, icon: Calendar, tone: "primary" },
-    { label: "Bekleyen Aksiyonlar", value: stats.pending, icon: ListChecks, tone: "yellow" },
-    { label: "Geciken", value: stats.overdue, icon: AlertTriangle, tone: "red" },
-    { label: "Tamamlanma Oranı", value: `%${stats.rate}`, icon: CheckCircle2, tone: "emerald" },
-  ];
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {cards.map((c) => (
-          <Card key={c.label} className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">{c.label}</p>
-                <p className="text-2xl font-semibold mt-1">{c.value}</p>
-              </div>
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <c.icon className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const today = meetings.filter((m) => (m.started_at || "").slice(0, 10) === todayKey);
+  const live = meetings.filter((m) => m.status === "live");
+  const recent = meetings.filter((m) => !today.includes(m)).slice(0, 6);
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm">Son Toplantılar</h3>
-        </div>
-        {recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">Henüz toplantı yok.</p>
+  const time = (m: Meeting) =>
+    m.started_at ? new Date(m.started_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "—";
+
+  const meetingRow = (m: Meeting, isToday: boolean) => (
+    <OpsRow
+      key={m.id}
+      onClick={() => onOpen(m)}
+      rail={m.status === "live" ? "overdue" : isToday ? "attention" : undefined}
+      title={m.title}
+      status={<StatusText status={m.status} />}
+      statusTone={m.status === "live" ? "overdue" : m.status === "completed" ? "positive" : "neutral"}
+      subtitle={
+        [
+          projectName(m.project_id),
+          m.location,
+          m.duration_seconds ? fmtTime(m.duration_seconds) : null,
+        ].filter(Boolean).join(" · ") || "Detay yok"
+      }
+      amount={<span className="text-muted-foreground">{time(m)}</span>}
+      meta={m.started_at ? new Date(m.started_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : undefined}
+      actions={<OpsRowAction label="Toplantıyı aç" icon={ChevronRight} onClick={() => onOpen(m)} />}
+    />
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* Today's schedule always sits at the top — the calendar view of this module */}
+      <section className="space-y-2">
+        <OpsSectionHeader
+          title={`Bugünün Programı · ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}`}
+          count={today.length}
+          icon={Calendar}
+        />
+        {today.length === 0 ? (
+          <OpsEmpty
+            icon="🗓️"
+            title="Bugün planlı toplantı yok"
+            description="Bir toplantı başlattığınızda konuşma canlı olarak yazıya döner; AI özet, karar ve aksiyonları çıkarır."
+            action={<Button size="sm" className="gap-1.5 h-10" onClick={onNew}><Mic className="w-4 h-4" /> Toplantı Başlat</Button>}
+          />
         ) : (
-          <div className="divide-y divide-border">
-            {recent.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => onOpen(m)}
-                className="w-full flex items-center justify-between py-3 hover:bg-accent/50 rounded px-2 transition"
-              >
-                <div className="text-left">
-                  <p className="font-medium text-sm">{m.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {m.started_at ? new Date(m.started_at).toLocaleString("tr-TR") : "—"}
-                    {projectName(m.project_id) ? ` · ${projectName(m.project_id)}` : ""}
-                    {m.duration_seconds ? ` · ${fmtTime(m.duration_seconds)}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={m.status} />
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </button>
-            ))}
-          </div>
+          <OpsListShell>{today.map((m) => meetingRow(m, true))}</OpsListShell>
         )}
-      </Card>
+      </section>
+
+      {live.length > 0 && (
+        <div className="rounded-card border border-rose-500/25 bg-rose-500/[0.06] px-3.5 py-3 flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+          <p className="ds-body text-foreground flex-1 min-w-0 truncate">{live[0].title} · şu an canlı</p>
+          <Button size="sm" variant="secondary" className="h-9" onClick={() => onOpen(live[0])}>Katıl</Button>
+        </div>
+      )}
+
+      <OpsStatStrip
+        stats={[
+          { label: "Bugünkü Toplantı", value: stats.todaysMeetings, icon: Calendar, tone: "info" },
+          { label: "Bekleyen Aksiyon", value: stats.pending, icon: ListChecks, tone: "attention" },
+          { label: "Geciken", value: stats.overdue, icon: AlertTriangle, tone: stats.overdue > 0 ? "overdue" : "neutral" },
+          { label: "Tamamlanma", value: `%${stats.rate}`, icon: CheckCircle2, tone: "positive" },
+        ]}
+      />
+
+      <section className="space-y-2">
+        <OpsSectionHeader title="Son Toplantılar" count={recent.length} />
+        {recent.length === 0 ? (
+          <OpsEmpty
+            icon="🎙️"
+            title="Henüz kayıtlı toplantı yok"
+            description="İlk toplantınızı kaydedin; özet, kararlar ve sorumlu bazlı aksiyonlar otomatik üretilir."
+            action={<Button size="sm" className="gap-1.5 h-10" onClick={onNew}><Plus className="w-4 h-4" /> Yeni Toplantı</Button>}
+          />
+        ) : (
+          <OpsListShell>{recent.map((m) => meetingRow(m, false))}</OpsListShell>
+        )}
+      </section>
     </div>
   );
 }
+
+const STATUS_TEXT: Record<string, string> = {
+  live: "Canlı", processing: "İşleniyor", completed: "Tamamlandı", failed: "Hata", scheduled: "Planlandı",
+};
+const StatusText = ({ status }: { status: string }) => <>{STATUS_TEXT[status] || status}</>;
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
@@ -543,45 +578,48 @@ function History({
   onDelete: (id: string) => Promise<void>;
 }) {
   return (
-    <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Toplantı, etiket veya konum ara..."
-          className="pl-9"
-        />
-      </div>
+    <div className="space-y-3">
+      <OpsFilterBar query={search} onQuery={setSearch} placeholder="Toplantı, etiket veya konum ara…" />
       {meetings.length === 0 ? (
-        <Card className="p-12 text-center text-muted-foreground text-sm">
-          <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          Toplantı bulunamadı.
-        </Card>
+        <OpsEmpty
+          icon="🔍"
+          title={search ? "Aramanızla eşleşen toplantı yok" : "Geçmiş toplantı yok"}
+          description={search ? "Farklı bir başlık, etiket veya konum deneyin." : "Kaydedilen her toplantı özeti, kararları ve aksiyonlarıyla birlikte burada arşivlenir."}
+        />
       ) : (
-        <div className="space-y-2">
+        <OpsListShell>
           {meetings.map((m) => (
-            <Card key={m.id} className="p-4 flex items-center justify-between hover:border-primary/40 transition cursor-pointer group">
-              <button onClick={() => onOpen(m)} className="flex-1 text-left">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm">{m.title}</p>
-                  <StatusBadge status={m.status} />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
-                  {m.started_at && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(m.started_at).toLocaleString("tr-TR")}</span>}
-                  {m.duration_seconds > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{fmtTime(m.duration_seconds)}</span>}
-                  {projectName(m.project_id) && <span className="flex items-center gap-1"><HardHat className="w-3 h-3" />{projectName(m.project_id)}</span>}
-                </p>
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); void onDelete(m.id); }}
-                className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:text-red-500 transition"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </Card>
+            <OpsRow
+              key={m.id}
+              onClick={() => onOpen(m)}
+              rail={m.status === "live" ? "overdue" : undefined}
+              title={m.title}
+              status={<StatusText status={m.status} />}
+              statusTone={m.status === "live" ? "overdue" : m.status === "completed" ? "positive" : "neutral"}
+              subtitle={
+                [
+                  projectName(m.project_id),
+                  m.location,
+                  m.duration_seconds ? fmtTime(m.duration_seconds) : null,
+                ].filter(Boolean).join(" · ") || "Detay yok"
+              }
+              amount={
+                <span className="text-muted-foreground">
+                  {m.started_at ? new Date(m.started_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "—"}
+                </span>
+              }
+              meta={m.started_at ? new Date(m.started_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : undefined}
+              actions={
+                <OpsRowAction
+                  label="Sil"
+                  icon={Trash2}
+                  onClick={() => void onDelete(m.id)}
+                  tone="sm:opacity-0 sm:group-hover:opacity-100 hover:text-destructive"
+                />
+              }
+            />
           ))}
-        </div>
+        </OpsListShell>
       )}
     </div>
   );
@@ -655,9 +693,9 @@ function Actions({
 
   return (
     <div className="space-y-6">
-      <Section title={`Onay Bekleyen (${groups.pending.length})`}>
+      <Section title="Onay Bekleyen" count={groups.pending.length}>
         {groups.pending.length === 0 ? (
-          <EmptyRow text="Bekleyen aksiyon yok." />
+          <OpsEmpty icon="🧾" title="Bekleyen aksiyon yok" description="AI, toplantı kaydından aksiyon çıkardığında burada onayınıza sunar; onaylanan aksiyon otomatik göreve dönüşür." />
         ) : (
           groups.pending.map((a) => (
             <Card key={a.id} className="p-4 space-y-2">
@@ -684,8 +722,8 @@ function Actions({
         )}
       </Section>
 
-      <Section title={`Göreve Dönüştürüldü (${groups.converted.length})`}>
-        {groups.converted.length === 0 ? <EmptyRow text="Henüz göreve dönüştürülen aksiyon yok." /> : (
+      <Section title="Göreve Dönüştürüldü" count={groups.converted.length}>
+        {groups.converted.length === 0 ? <OpsEmpty icon="✅" title="Henüz göreve dönüşen aksiyon yok" description="Onayladığınız aksiyonlar ilgili projenin görev panosunda açılır." /> : (
           groups.converted.map((a) => (
             <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
               <div>
@@ -701,16 +739,13 @@ function Actions({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
   return (
-    <div>
-      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+    <div className="space-y-2">
+      <OpsSectionHeader title={title} count={count} />
       <div className="space-y-2">{children}</div>
     </div>
   );
-}
-function EmptyRow({ text }: { text: string }) {
-  return <Card className="p-6 text-center text-sm text-muted-foreground">{text}</Card>;
 }
 
 // ─────────────────────────────────────────────────────────
