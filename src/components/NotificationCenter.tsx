@@ -305,7 +305,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "approvals" && (
-            approvals.length === 0 ? <EmptyState Icon={ClipboardCheck} text="Onay bekleyen kayıt yok" /> : (
+            approvals.length === 0 ? <OpsEmpty icon="✅" title="Onay kuyruğu temiz" description="Hakediş, ödeme ve yüksek öncelikli görevler onay beklediğinde burada listelenir." /> : (
               <div className="space-y-2">
                 <div className="rounded-lg border border-[#FF6B2B]/20 p-2.5 flex items-center gap-2"
                      style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.07), transparent)" }}>
@@ -332,7 +332,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "activity" && (
-            activity.length === 0 ? <EmptyState Icon={History} text="Aktivite yok" /> : (
+            activity.length === 0 ? <OpsEmpty icon="🧭" title="Bugün kayda değer bir hareket yok" description="Dosya, not, hakediş ve görev hareketleri işlendikçe bu akış otomatik dolar." /> : (
               <div className="space-y-3">
                 {(["Bugün", "Dün", "Bu Hafta", "Daha Önce"] as const).map(section => {
                   const list = (activityGroups as any)[section] || [];
@@ -370,7 +370,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "pinned" && (
-            pinned.length === 0 ? <EmptyState Icon={Pin} text="Henüz sabitlenmiş öğe yok. Kartlardaki iğne ikonundan sabitleyebilirsiniz." /> : (
+            pinned.length === 0 ? <OpsEmpty icon="📌" title="Sabitlenmiş öğe yok" description="Sık kullandığınız proje ve kayıtları kartlardaki iğne ikonuyla sabitleyin; buradan tek dokunuşla açılır." /> : (
               <div className="space-y-1.5">
                 {pinned.map(p => (
                   <div key={`${p.kind}-${p.id}`} className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5 animate-fade-in">
@@ -389,7 +389,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
           )}
 
           {tab === "reminders" && (
-            smartReminders.length === 0 ? <EmptyState Icon={Sparkles} text="Aktif hatırlatıcı yok" /> : (
+            smartReminders.length === 0 ? <OpsEmpty icon="✨" title="AI şu an bir risk görmüyor" description="Yaklaşan hatırlatıcılar, onay bekleyen hakedişler ve planlı ödemeler oluştukça AI burada uyarır." /> : (
               <div className="space-y-1.5">
                 <div className="rounded-lg border border-[#FF6B2B]/20 p-2.5 flex items-center gap-2 mb-2"
                      style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.07), transparent)" }}>
@@ -468,12 +468,6 @@ const NotifRow = ({ n, read, tone, onOpen, onRead }: {
 };
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{children}</p>
-);
-const EmptyState = ({ Icon, text }: { Icon: any; text: string }) => (
-  <div className="text-center py-10 animate-fade-in">
-    <Icon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
-    <p className="text-[12px] text-muted-foreground">{text}</p>
-  </div>
 );
 const ApprovalBtn = ({ tone, onClick, children }: { tone: "approve" | "reject" | "ghost"; onClick: () => void; children: React.ReactNode }) => {
   const c = tone === "approve" ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25"
