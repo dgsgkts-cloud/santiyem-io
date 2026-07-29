@@ -367,28 +367,104 @@ const PaymentsKasaPage = () => {
 
         {/* ═══ TAB 1: GENEL BAKIŞ ═══ */}
         <TabsContent value="overview">
-          <div className="space-y-6">
-            {/* Sprint 21.1 — AI Finance Summary */}
+          {/* SPRINT 38E — Executive answer-first order:
+              cash position → what needs attention → AI read → trends */}
+          <div className="space-y-4">
             {(() => {
               const weekAhead = new Date(); weekAhead.setDate(weekAhead.getDate() + 7);
               const weekAheadStr = weekAhead.toISOString().slice(0, 10);
               const todayStr = now.toISOString().slice(0, 10);
               const plannedPayments = cashPayments.filter(p => p.status !== "odendi" && p.payment_date >= todayStr && p.payment_date <= weekAheadStr);
+              const overduePayments = cashPayments.filter(p => p.status !== "odendi" && p.payment_date < todayStr);
               const expectedCollections = cashCollections.filter(c => c.status === "bekleniyor" && c.collection_date >= todayStr && c.collection_date <= weekAheadStr);
+              const overdueCollections = cashCollections.filter(c => c.status === "bekleniyor" && c.collection_date < todayStr);
               const plannedTotal = plannedPayments.reduce((s, p) => s + Number(p.amount), 0);
+              const overdueTotal = overduePayments.reduce((s, p) => s + Number(p.amount), 0);
               const expectedTotal = expectedCollections.reduce((s, c) => s + Number(c.amount), 0);
               const availableCash = nakitKasaBalance + bankaBalance;
-              const netAvailable = availableCash + expectedTotal - plannedTotal;
+              const netAvailable = availableCash + expectedTotal - plannedTotal - overdueTotal;
 
               const insights: string[] = [];
               if (plannedPayments.length > 0) insights.push(`Bu hafta ${plannedPayments.length} ödeme planlanıyor.`);
               if (expectedCollections.length > 0) insights.push(`${expectedCollections.length} tahsilat nakit akışını dengeliyor.`);
               if (upcomingChecks.length > 0) insights.push(`${upcomingChecks.length} çek vadesi 7 gün içinde.`);
-              if (netAvailable < 0) insights.push("Uyarı: Net nakit pozisyonu negatif — tahsilat takibi öncelikli.");
+              if (netAvailable < 0) insights.push("Net nakit pozisyonu negatif — tahsilat takibi öncelikli.");
               else if (insights.length === 0) insights.push("Şu anda kritik finansal risk görünmüyor.");
+
+              const attention = [
+                ...overduePayments.slice(0, 3).map(p => ({
+                  id: `op-${p.id}`,
+                  title: p.payee || "Ödeme",
+                  detail: `Vadesi geçti · ${format(parseISO(p.payment_date), "d MMM")} · ${Math.abs(differenceInDays(parseISO(p.payment_date), now))} gün`,
+                  amount: fmtShort(Number(p.amount)),
+                  tone: "overdue" as const,
+                  onClick: () => setActiveTab("kasa"),
+                })),
+                ...overdueCollections.slice(0, 2).map(c => ({
+                  id: `oc-${c.id}`,
+                  title: c.payer || "Tahsilat",
+                  detail: `Gecikmiş tahsilat · ${format(parseISO(c.collection_date), "d MMM")}`,
+                  amount: fmtShort(Number(c.amount)),
+                  tone: "attention" as const,
+                  onClick: () => setActiveTab("kasa"),
+                })),
+                ...upcomingChecks.slice(0, 2).map(chk => {
+                  const d = differenceInDays(parseISO(chk.due_date), now);
+                  return {
+                    id: `chk-${chk.id}`,
+                    title: chk.counterparty,
+                    detail: `Çek vadesi ${d === 0 ? "bugün" : `${d} gün içinde`} · ${chk.bank_name || "—"}`,
+                    amount: fmtShort(Number(chk.amount)),
+                    tone: (d <= 3 ? "overdue" : "attention") as "overdue" | "attention",
+                    onClick: () => setActiveTab("kasa"),
+                  };
+                }),
+                ...(bekleyenTahsilatlar.length > 0 ? [{
+                  id: "hakedis-pending",
+                  title: "Bekleyen hakediş tahsilatı",
+                  detail: `${bekleyenTahsilatlar.length} hakediş onay/ödeme bekliyor`,
+                  amount: fmtShort(expectedIncome),
+                  tone: "info" as const,
+                }] : []),
+              ];
 
               return (
                 <>
+                  {/* 1 — Cash position at a glance */}
+                  <FinanceStatStrip
+                    stats={[
+                      { label: "Kullanılabilir Nakit", value: fmtShort(availableCash), hint: `Kasa ${fmtShort(nakitKasaBalance)} · Banka ${fmtShort(bankaBalance)}`, icon: Banknote, tone: "positive" },
+                      { label: "Beklenen (7 gün)", value: fmtShort(expectedTotal), hint: `${expectedCollections.length} tahsilat`, icon: ArrowDownLeft, tone: "info" },
+                      { label: "Ödenecek (7 gün)", value: fmtShort(plannedTotal), hint: `${plannedPayments.length} planlı ödeme`, icon: ArrowUpRight, tone: "attention" },
+                      {
+                        label: "Vadesi Geçen", value: fmtShort(overdueTotal),
+                        hint: overduePayments.length > 0 ? `${overduePayments.length} ödeme gecikti` : "Gecikme yok",
+                        icon: AlertTriangle, tone: overdueTotal > 0 ? "overdue" : "neutral",
+                      },
+                    ]}
+                  />
+
+                  <div className="rounded-card border border-border/80 bg-card shadow-soft p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="ds-label">Net Kullanılabilir Pozisyon</div>
+                      <div className="ds-caption text-muted-foreground truncate">Nakit + beklenen tahsilat − ödemeler</div>
+                    </div>
+                    <MetricTooltip full={fmtFull(netAvailable)}>
+                      <span className={`ds-numeric font-semibold cursor-help ${netAvailable >= 0 ? "text-emerald-300/90" : "text-rose-300/90"}`} style={{ fontSize: 24 }}>
+                        {fmtShort(netAvailable)}
+                      </span>
+                    </MetricTooltip>
+                  </div>
+
+                  {/* 2 — What needs attention today */}
+                  {attention.length > 0 && (
+                    <section className="space-y-2">
+                      <h3 className="ds-label px-0.5">Dikkat Gerektirenler</h3>
+                      <AttentionList items={attention} />
+                    </section>
+                  )}
+
+                  {/* 3 — AI read, compact */}
                   <AIInsightCard
                     title="AI Finans"
                     insights={insights}
@@ -396,67 +472,24 @@ const PaymentsKasaPage = () => {
                       { label: "Detaylı Analiz", onClick: () => setActiveTab("reports") },
                       { label: "Ödeme Planı", onClick: () => setActiveTab("kasa"), tone: "ghost" },
                     ]}
+                    compact
                   />
-
-
-                  {/* Executive Cash Position */}
-                  <SectionCard title="Nakit Pozisyonu" padded={false}>
-                    <div className="px-4 pb-4">
-                      <ResponsiveGrid variant="auto" minItemWidth={200}>
-                        {[
-                          { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
-                          { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
-                          { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
-                          { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
-                          { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
-                        ].map((c, i) => (
-                          <KpiCard
-                            key={i}
-                            label={c.label}
-                            icon={c.icon}
-                            accent={c.color}
-                            value={
-                              <MetricTooltip full={fmtFull(c.value)}>
-                                <span className="cursor-help tabular-nums" style={{ color: c.color }}>
-                                  {fmtShort(c.value)}
-                                </span>
-                              </MetricTooltip>
-                            }
-                          />
-                        ))}
-                      </ResponsiveGrid>
-                    </div>
-                  </SectionCard>
                 </>
               );
             })()}
 
-            <ResponsiveGrid variant="kpi">
-              {[
-                { label: "Toplam Gelir", value: totals.ciro, color: "#22C55E", icon: TrendingUp },
-                { label: "Toplam Gider", value: totals.gider, color: "#EF4444", icon: TrendingDown },
-                { label: "Net Bakiye", value: totals.kar, color: "#3B82F6", icon: DollarSign },
-                { label: "Bekleyen Hakediş", value: totals.bekleyenTahsilat, color: "#F59E0B", icon: Receipt },
-              ].map((c, i) => (
-                <KpiCard
-                  key={i}
-                  label={c.label}
-                  icon={c.icon}
-                  accent={c.color}
-                  value={
-                    <MetricTooltip full={fmtFull(c.value)}>
-                      <span className="cursor-help tabular-nums" style={{ color: c.color }}>
-                        {fmtShort(c.value)}
-                      </span>
-                    </MetricTooltip>
-                  }
-                />
-              ))}
-            </ResponsiveGrid>
-
+            {/* 4 — Period performance, secondary */}
+            <FinanceStatStrip
+              stats={[
+                { label: "Toplam Gelir", value: fmtShort(totals.ciro), icon: TrendingUp, tone: "positive" },
+                { label: "Toplam Gider", value: fmtShort(totals.gider), icon: TrendingDown, tone: "overdue" },
+                { label: "Net Bakiye", value: fmtShort(totals.kar), hint: `Marj %${totals.marj.toFixed(1)}`, icon: DollarSign, tone: totals.kar >= 0 ? "info" : "overdue" },
+                { label: "Bekleyen Hakediş", value: fmtShort(totals.bekleyenTahsilat), icon: Receipt, tone: "attention" },
+              ]}
+            />
 
             <SectionCard title="Aylık Gelir / Gider">
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={monthlyData}>
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} />
                   <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickFormatter={v => fmtShort(v)} />
@@ -467,40 +500,35 @@ const PaymentsKasaPage = () => {
               </ResponsiveContainer>
             </SectionCard>
 
-            <SectionCard title="Proje Bazlı Karlılık">
+            <SectionCard title="Proje Bazlı Karlılık" padded={false}>
               {projectStats.length === 0 ? (
-                <p className="text-fs-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
+                <p className="ds-caption text-muted-foreground py-8 text-center">Henüz proje yok</p>
               ) : (
-                <ResponsiveGrid variant="auto" minItemWidth={260}>
+                <div className="divide-y divide-border/60">
                   {projectStats.map(p => (
-                    <div key={p.id} className="rounded-xl p-4 bg-background/50 border border-border/50">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-fs-sm font-medium text-foreground truncate">{p.name}</span>
-                        <span className="px-2 py-0.5 rounded-full text-fs-xs font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
-                          {p.karMarji.toFixed(1)}%
+                    <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 min-w-0" style={{ minHeight: 60 }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="ds-body font-medium text-foreground truncate">{p.name}</div>
+                        <div className="ds-caption text-muted-foreground truncate">
+                          Gelir {fmtShort(p.hakedisTotal)} · Gider {fmtShort(p.expenseTotal)}
+                        </div>
+                      </div>
+                      <MetricTooltip full={fmtFull(p.netKar)}>
+                        <span className="ds-body ds-numeric font-semibold cursor-help shrink-0" style={{ color: karColor(p.karMarji) }}>
+                          {fmtShort(p.netKar)}
                         </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-fs-xs">
-                        <div>
-                          <span className="text-muted-foreground">Gelir</span>
-                          <MetricTooltip full={fmtFull(p.hakedisTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p></MetricTooltip>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Gider</span>
-                          <MetricTooltip full={fmtFull(p.expenseTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#EF4444" }}>{fmtShort(p.expenseTotal)}</p></MetricTooltip>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Net</span>
-                          <MetricTooltip full={fmtFull(p.netKar)}><p className="font-semibold truncate cursor-help" style={{ color: karColor(p.karMarji) }}>{fmtShort(p.netKar)}</p></MetricTooltip>
-                        </div>
-                      </div>
+                      </MetricTooltip>
+                      <span className="ds-caption px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "18", color: karColor(p.karMarji) }}>
+                        %{p.karMarji.toFixed(1)}
+                      </span>
                     </div>
                   ))}
-                </ResponsiveGrid>
+                </div>
               )}
             </SectionCard>
           </div>
         </TabsContent>
+
 
         {/* ═══ TAB 2: GELİR & GİDERLER ═══ */}
         <TabsContent value="transactions">
