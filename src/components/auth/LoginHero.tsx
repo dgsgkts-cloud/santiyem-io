@@ -157,7 +157,7 @@ export function LoginHero() {
             return (
               <div
                 key={f.title}
-                className="login-hero__card login-hero__reveal rounded-xl border p-3"
+                className="login-hero__card login-hero__reveal flex items-start gap-2.5 rounded-xl border p-3"
                 style={{
                   ...reveal(220 + i * 60),
                   borderColor: "rgba(255,255,255,0.08)",
@@ -165,17 +165,19 @@ export function LoginHero() {
                 }}
               >
                 <div
-                  className="login-hero__card-icon mb-2 flex h-8 w-8 items-center justify-center rounded-lg"
+                  className="login-hero__card-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
                   style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FF6B2B" }}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={2} />
+                  <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                 </div>
-                <p className="text-[13.5px] font-semibold" style={{ color: "#E2E8F0" }}>
-                  {f.title}
-                </p>
-                <p className="mt-1 text-[12px] leading-snug" style={{ color: "#7C8A9C" }}>
-                  {f.line}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>
+                    {f.title}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "#7C8A9C" }}>
+                    {f.line}
+                  </p>
+                </div>
               </div>
             );
           })}
