@@ -1,8 +1,5 @@
-import { useState, type ReactNode } from "react";
-import {
-  FolderOpen, Clock, CheckCircle2, AlertTriangle,
-  LayoutGrid, List, Trash2, Plus, Sparkles, X,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Search, X, Sparkles } from "lucide-react";
 import { Project } from "@/lib/projectsData";
 import ProjectDetailPage from "./ProjectDetailPage";
 import AddProjectModal from "./AddProjectModal";
@@ -12,40 +9,19 @@ import EmptyState from "./EmptyState";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import { useLiveFilter } from "@/hooks/useLiveFilter";
-import { useWorkspaceHighlight } from "@/hooks/useWorkspaceHighlight";
-import {
-  PageShell,
-  SectionCard,
-  ResponsiveGrid,
-  ResponsiveTable,
-  KpiCard,
-  type ResponsiveColumn,
-} from "@/components/ui/responsive";
+import ProjectStatStrip, { type ProjectStatKey } from "./projects/ProjectStatStrip";
+import ProjectListCard from "./projects/ProjectListCard";
 
 /**
- * SPRINT M1.3 — Projects list migrated to the Responsive Design System.
+ * SPRINT 38A — Projects module premium UX pass.
  *
- * • PageShell for layout / spacing / safe-area
- * • ResponsiveGrid + KpiCard for stats
- * • SectionCard as the container
- * • ResponsiveTable (desktop table ↔ mobile card list) for the list view
- * • Design tokens only (spacing scale + text-fs-* typography)
+ * • Compact stat strip that doubles as the status filter (tabs + chips merged)
+ * • Search is the only other control — no stacked filter rows
+ * • Project list starts high on the screen and is the visual focus
+ * • Compact cards: name → status → progress → metrics → quick actions
  *
- * Business logic, data flow, drawers and detail page behaviour are preserved.
+ * Business logic, data flow, and the detail page contract are unchanged.
  */
-
-const HCard = ({
-  id,
-  children,
-  ...rest
-}: { id: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) => {
-  const on = useWorkspaceHighlight("project", id);
-  return (
-    <div {...rest} className={`${rest.className ?? ""} ${on ? "ws-highlight" : ""}`}>
-      {children}
-    </div>
-  );
-};
 
 interface DesktopProjectsPageProps {
   initialProjectId?: string | null;
@@ -70,6 +46,10 @@ const dbToProject = (p: UserProject): Project => ({
   recentActivity: [],
 });
 
+const goToTab = (tab: string, projectId: string) => {
+  window.dispatchEvent(new CustomEvent("navigate-tab", { detail: { tab, projectId } }));
+};
+
 const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProjectsPageProps) => {
   const { user } = useUser();
   const {
@@ -80,10 +60,12 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     updateProjectStatus,
     refetch,
   } = useProjects();
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(initialProjectId || null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ProjectStatKey>("all");
 
   const handleBack = () => {
     setSelectedProjectId(null);
@@ -92,13 +74,34 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
 
   const handleDeleteProject = (id: string) => deleteProject(id);
 
-  const rawProjects: Project[] = dbProjects.map(dbToProject);
+  const rawProjects: Project[] = useMemo(() => dbProjects.map(dbToProject), [dbProjects]);
   const liveFilter = useLiveFilter("project");
   const allProjects: Project[] = liveFilter.active
     ? rawProjects.filter((p) => liveFilter.ids.has(p.id))
     : rawProjects;
 
   const selectedProject = selectedProjectId ? rawProjects.find((p) => p.id === selectedProjectId) : null;
+
+  const total = allProjects.length;
+  const active = allProjects.filter((p) => p.status === "Devam Ediyor").length;
+  const completed = allProjects.filter((p) => p.status === "Tamamlanıyor" || p.progress >= 100).length;
+  const delayed = allProjects.filter((p) => p.status === "Gecikmiş").length;
+
+  const visibleProjects = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase("tr");
+    return allProjects.filter((p) => {
+      const matchesStatus =
+        statusFilter === "all" ? true
+        : statusFilter === "active" ? p.status === "Devam Ediyor"
+        : statusFilter === "completed" ? (p.status === "Tamamlanıyor" || p.progress >= 100)
+        : p.status === "Gecikmiş";
+      if (!matchesStatus) return false;
+      if (!q) return true;
+      return [p.name, p.client, p.location, p.manager]
+        .filter(Boolean)
+        .some((v) => String(v).toLocaleLowerCase("tr").includes(q));
+    });
+  }, [allProjects, statusFilter, query]);
 
   if (selectedProject) {
     return (
@@ -113,146 +116,89 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     );
   }
 
-  const total = allProjects.length;
-  const active = allProjects.filter((p) => p.status === "Devam Ediyor").length;
-  const completed = allProjects.filter((p) => p.status === "Tamamlanıyor" || p.progress >= 100).length;
-  const delayed = allProjects.filter((p) => p.status === "Gecikmiş").length;
-
-  const columns: ResponsiveColumn<Project>[] = [
-    {
-      key: "name",
-      header: "Proje Adı",
-      primary: true,
-      cell: (p) => <span className="font-semibold text-foreground">{p.name}</span>,
-    },
-    {
-      key: "client",
-      header: "Müşteri",
-      cell: (p) => <span className="text-muted-foreground">{p.client}</span>,
-    },
-    {
-      key: "start",
-      header: "Başlangıç",
-      cell: (p) => <span className="font-mono text-fs-xs text-muted-foreground">{p.start}</span>,
-    },
-    {
-      key: "end",
-      header: "Bitiş",
-      cell: (p) => <span className="font-mono text-fs-xs text-muted-foreground">{p.end}</span>,
-    },
-    {
-      key: "progress",
-      header: "İlerleme",
-      cell: (p) => (
-        <div className="flex items-center gap-2 min-w-[120px]">
-          <div className="flex-1 h-1.5 rounded-full bg-muted">
-            <div
-              className="h-full rounded-full"
-              style={{ backgroundColor: "hsl(var(--primary))", width: `${p.progress}%` }}
-            />
-          </div>
-          <span className="text-fs-xs font-mono text-muted-foreground shrink-0">{p.progress}%</span>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Durum",
-      cell: (p) => (
-        <span
-          className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
-          style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
-        >
-          {p.status}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      align: "right",
-      cell: (p) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }}
-          className="min-h-[44px] min-w-[44px] rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-          aria-label="Projeyi sil"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      ),
-    },
-  ];
-
-  const kpiAccent = "hsl(var(--primary))";
-
-  const headerActions = (
-    <div className="flex items-center gap-3">
-      {user && (
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-lg text-fs-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Proje Ekle
-        </button>
-      )}
-      <div className="flex rounded-lg overflow-hidden border border-border">
-        <button
-          onClick={() => setViewMode("list")}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
-          style={{
-            backgroundColor: viewMode === "list" ? "hsl(var(--primary))" : "transparent",
-            color: viewMode === "list" ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
-          }}
-          aria-label="Liste görünümü"
-        >
-          <List className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => setViewMode("grid")}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
-          style={{
-            backgroundColor: viewMode === "grid" ? "hsl(var(--primary))" : "transparent",
-            color: viewMode === "grid" ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
-          }}
-          aria-label="Kart görünümü"
-        >
-          <LayoutGrid className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
+  const filtersDirty = statusFilter !== "all" || query.trim().length > 0;
 
   return (
-    <PageShell
-      title="Projeler"
-      subtitle={liveFilter.active ? liveFilter.label ?? "AI filtresi aktif" : undefined}
-      actions={headerActions}
-      maxWidth={1200}
+    <div
+      className="w-full no-overflow-x safe-area-bottom"
+      style={{
+        paddingLeft: "max(env(safe-area-inset-left, 0px), 20px)",
+        paddingRight: "max(env(safe-area-inset-right, 0px), 20px)",
+        paddingTop: "16px",
+        paddingBottom: "24px",
+      }}
     >
-      <DeleteConfirmModal
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (deleteTarget) handleDeleteProject(deleteTarget.id);
-        }}
-        title="Projeyi Sil"
-        itemName={deleteTarget?.name}
-        extraWarning="Projeye ait tüm iş kalemleri, hakedişler ve şantiye kayıtları da silinecektir."
-      />
+      <div className="mx-auto w-full" style={{ maxWidth: 1200 }}>
+        <DeleteConfirmModal
+          open={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={async () => {
+            if (deleteTarget) handleDeleteProject(deleteTarget.id);
+          }}
+          title="Projeyi Sil"
+          itemName={deleteTarget?.name}
+          extraWarning="Projeye ait tüm iş kalemleri, hakedişler ve şantiye kayıtları da silinecektir."
+        />
 
-      <div className="flex flex-col gap-4 lg:gap-6">
-        {/* KPI stats */}
-        <ResponsiveGrid variant="kpi">
-          <KpiCard label="Toplam Proje" value={total} icon={FolderOpen} accent={kpiAccent} />
-          <KpiCard label="Devam Eden" value={active} icon={Clock} accent="#3B82F6" />
-          <KpiCard label="Tamamlanan" value={completed} icon={CheckCircle2} accent="#22C55E" />
-          <KpiCard label="Geciken" value={delayed} icon={AlertTriangle} accent="#EF4444" />
-        </ResponsiveGrid>
+        {/* Header — title + single primary action */}
+        <header className="flex items-center justify-between gap-3 mb-3">
+          <div className="min-w-0">
+            <h1 className="ds-heading text-foreground truncate">Projeler</h1>
+            {liveFilter.active && (
+              <p className="ds-caption text-muted-foreground mt-0.5 truncate">
+                {liveFilter.label ?? "AI filtresi aktif"}
+              </p>
+            )}
+          </div>
+          {user && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 h-10 rounded-button ds-body font-semibold text-primary-foreground bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Proje Ekle</span>
+            </button>
+          )}
+        </header>
+
+        {/* Compact stats — also the status filter */}
+        <ProjectStatStrip
+          activeKey={statusFilter}
+          onSelect={setStatusFilter}
+          items={[
+            { key: "all", label: "Toplam", value: total, color: "hsl(var(--primary))" },
+            { key: "active", label: "Devam Eden", value: active, color: "#3B82F6" },
+            { key: "completed", label: "Tamamlanan", value: completed, color: "#22C55E" },
+            { key: "delayed", label: "Geciken", value: delayed, color: "#EF4444" },
+          ]}
+        />
+
+        {/* Search — the only additional control */}
+        <div className="relative mt-3">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Proje, müşteri veya lokasyon ara"
+            aria-label="Projelerde ara"
+            className="w-full h-11 pl-9 pr-9 rounded-button bg-card border border-border/70 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50 transition-colors"
+            style={{ fontSize: 16 }}
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Aramayı temizle"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         {liveFilter.active && (
           <button
             onClick={liveFilter.clear}
-            className="self-start inline-flex items-center gap-1 text-fs-xs px-3 min-h-[32px] rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
+            className="mt-3 inline-flex items-center gap-1 ds-caption px-3 h-8 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors animate-fade-in"
             aria-label="AI filtresini temizle"
           >
             <Sparkles className="w-3 h-3" />
@@ -261,92 +207,57 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
           </button>
         )}
 
-        <PullToRefresh onRefresh={refetch}>
-          {allProjects.length === 0 ? (
-            <EmptyState
-              icon="🏗️"
-              title="Henüz proje yok"
-              description="İlk projenizi ekleyerek şantiye takibine başlayın."
-              buttonText="+ Yeni Proje Ekle"
-              onButtonClick={() => setShowAddModal(true)}
-            />
-          ) : viewMode === "list" ? (
-            <SectionCard padded={false}>
-              <div className="p-3 lg:p-4">
-                <ResponsiveTable<Project>
-                  columns={columns}
-                  rows={allProjects}
-                  rowKey={(p) => p.id}
-                  onRowClick={(p) => setSelectedProjectId(p.id)}
-                />
+        {/* Project list — the primary focus */}
+        <div className="mt-4">
+          <PullToRefresh onRefresh={refetch}>
+            {allProjects.length === 0 ? (
+              <EmptyState
+                icon="🏗️"
+                title="Henüz proje yok"
+                description="İlk projenizi ekleyerek şantiye takibine başlayın."
+                buttonText="+ Yeni Proje Ekle"
+                onButtonClick={() => setShowAddModal(true)}
+              />
+            ) : visibleProjects.length === 0 ? (
+              <div className="rounded-card border border-border/70 bg-card px-5 py-10 text-center">
+                <p className="ds-title text-foreground">Eşleşen proje yok</p>
+                <p className="ds-caption text-muted-foreground mt-1">
+                  Arama veya durum filtresini değiştirmeyi deneyin.
+                </p>
+                {filtersDirty && (
+                  <button
+                    onClick={() => { setQuery(""); setStatusFilter("all"); }}
+                    className="mt-4 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-button ds-body font-medium border border-border text-foreground hover:border-primary/40 transition-colors"
+                  >
+                    Filtreleri temizle
+                  </button>
+                )}
               </div>
-            </SectionCard>
-          ) : (
-            <ResponsiveGrid variant="auto" minItemWidth={260}>
-              {allProjects.map((p) => (
-                <HCard
-                  key={p.id}
-                  id={p.id}
-                  onClick={() => setSelectedProjectId(p.id)}
-                  className="card-refined p-4 lg:p-5 cursor-pointer hover:border-primary/40 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className="text-fs-xs font-medium px-2 py-0.5 rounded-md"
-                      style={{ backgroundColor: `${p.statusColor}15`, color: p.statusColor }}
-                    >
-                      {p.status}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.id, name: p.name }); }}
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive"
-                      aria-label="Projeyi sil"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <h4 className="text-fs-md font-semibold mb-1 truncate text-foreground">{p.name}</h4>
-                  <p className="text-fs-xs mb-3 text-muted-foreground truncate">{p.client}</p>
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="relative w-14 h-14">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          fill="none"
-                          stroke="hsl(var(--muted))"
-                          strokeWidth="3"
-                        />
-                        <path
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          fill="none"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth="3"
-                          strokeDasharray={`${p.progress}, 100`}
-                        />
-                      </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-fs-xs font-bold font-mono text-foreground">
-                        {p.progress}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-fs-xs">
-                    <span style={{ color: "#22C55E" }}>✅ {p.done}</span>
-                    <span style={{ color: "#F59E0B" }}>🔄 {p.ongoing}</span>
-                    <span style={{ color: "#EF4444" }}>❌ {p.failed}</span>
-                  </div>
-                </HCard>
-              ))}
-            </ResponsiveGrid>
-          )}
-        </PullToRefresh>
-      </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {visibleProjects.map((p) => (
+                  <ProjectListCard
+                    key={p.id}
+                    project={p}
+                    canManage={!!user}
+                    onOpen={() => setSelectedProjectId(p.id)}
+                    onDelete={() => setDeleteTarget({ id: p.id, name: p.name })}
+                    onHakedis={() => goToTab("hakedis", p.id)}
+                    onPayment={() => goToTab("payments-kasa", p.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </PullToRefresh>
+        </div>
 
-      <AddProjectModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={(data) => addProject(data)}
-      />
-    </PageShell>
+        <AddProjectModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onAdd={(data) => addProject(data)}
+        />
+      </div>
+    </div>
   );
 };
 
