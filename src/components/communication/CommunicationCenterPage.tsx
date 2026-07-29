@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import EmailAccountsPanel from "./EmailAccountsPanel";
 
-type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled";
+type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "processing" | "retrying" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled" | "manual_action_required";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
 
 interface CommMessage {
@@ -31,13 +31,30 @@ interface CommMessage {
   failed_at: string | null;
   provider: string | null;
   error: string | null;
+  error_code?: string | null;
+  next_retry_at?: string | null;
   retry_count: number;
+  max_retries?: number | null;
+  metadata?: Record<string, unknown> | null;
   created_from: string | null;
   created_at: string;
   message_type: string | null;
   template_name: string | null;
   project_id: string | null;
   related_action: string | null;
+}
+
+interface DeliveryAttempt {
+  id: string;
+  attempted_at: string;
+  attempt_number: number | null;
+  provider: string | null;
+  status: string;
+  error: string | null;
+  error_code: string | null;
+  retryable: boolean | null;
+  next_retry_at: string | null;
+  completed_at: string | null;
 }
 
 const CHANNEL_ICON: Record<Channel, React.ElementType> = {
@@ -52,23 +69,27 @@ const STATUS_META: Record<Status, { label: string; cls: string; icon: React.Elem
   pending_approval: { label: "Onay bekliyor", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: Eye },
   scheduled: { label: "Planlandı", cls: "bg-sky-500/15 text-sky-600 border-sky-500/30", icon: Clock },
   queued: { label: "Kuyrukta", cls: "bg-sky-500/15 text-sky-600 border-sky-500/30", icon: Clock },
+  processing: { label: "İşleniyor", cls: "bg-primary/15 text-primary border-primary/30", icon: Loader2 },
+  retrying: { label: "Yeniden denenecek", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: RefreshCw },
   sending: { label: "Gönderiliyor", cls: "bg-primary/15 text-primary border-primary/30", icon: Loader2 },
   sent: { label: "Gönderildi", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", icon: CheckCircle2 },
   delivered: { label: "İletildi", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: CheckCheck },
   read: { label: "Okundu", cls: "bg-blue-500/15 text-blue-600 border-blue-500/30", icon: CheckCheck },
   failed: { label: "Başarısız", cls: "bg-red-500/15 text-red-600 border-red-500/30", icon: XCircle },
   cancelled: { label: "İptal", cls: "bg-muted text-muted-foreground", icon: Ban },
+  manual_action_required: { label: "Manuel işlem gerekli", cls: "bg-orange-500/15 text-orange-600 border-orange-500/30", icon: ExternalLink },
 };
 
 type Bucket = "pending" | "sent" | "failed" | "scheduled";
 
 const bucketOf = (s: Status): Bucket | null => {
-  if (s === "pending_approval" || s === "queued" || s === "sending" || s === "draft") return "pending";
+  if (s === "pending_approval" || s === "queued" || s === "sending" || s === "draft" || s === "processing") return "pending";
   if (s === "sent" || s === "delivered" || s === "read") return "sent";
-  if (s === "failed") return "failed";
-  if (s === "scheduled") return "scheduled";
+  if (s === "failed" || s === "manual_action_required") return "failed";
+  if (s === "scheduled" || s === "retrying") return "scheduled";
   return null;
 };
+
 
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 const WHATSAPP_WEBHOOK_URL = SUPABASE_PROJECT_ID
