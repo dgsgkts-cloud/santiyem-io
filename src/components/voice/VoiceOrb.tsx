@@ -3,7 +3,7 @@ import { Mic, Lock } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
-import { VoiceCopilot } from "./VoiceCopilot";
+import { VoiceExperience } from "./VoiceExperience";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import "@/styles/voice.css";
@@ -144,7 +144,7 @@ export function VoiceOrb() {
     // Keyboard-open guard on mobile — render only the overlay portal if open.
     return open ? (
       <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
-        <VoiceCopilot
+        <VoiceExperience
           onClose={() => { setOpen(false); setPending({}); }}
           access={access}
           initialContext={pending.initialContext}
@@ -211,7 +211,7 @@ export function VoiceOrb() {
       )}
       {open && (
         <VoiceErrorBoundary onClose={() => { setOpen(false); setPending({}); }}>
-          <VoiceCopilot
+          <VoiceExperience
             onClose={() => { setOpen(false); setPending({}); }}
             access={access}
             initialContext={pending.initialContext}

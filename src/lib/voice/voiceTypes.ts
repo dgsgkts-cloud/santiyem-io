@@ -99,6 +99,18 @@ export interface VoiceEngine {
   setVolume(v: number): void;
   destroy(): void;
 
+  /** 0..1 microphone input level — dev panel only (optional). */
+  getMicLevel?(): number;
+  /** Internal latency instrumentation — dev panel only (optional). */
+  getMetrics?(): {
+    connectionMs: number | null;
+    firstTranscriptMs: number | null;
+    firstTokenMs: number | null;
+    firstAudioMs: number | null;
+    lastTurnMs: number | null;
+    reconnects: number;
+  };
+
   onTranscript(cb: (t: TranscriptChunk) => void): () => void;
   onResponse(cb: (r: { text: string; ts: number }) => void): () => void;
   onStateChange(cb: (s: VoiceState) => void): () => void;

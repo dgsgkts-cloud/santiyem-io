@@ -4,7 +4,7 @@
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
-import { VOICE_SYSTEM_PROMPT } from "../chat/prompt/voicePrompt.ts";
+import { VOICE_SYSTEM_PROMPT } from "../_shared/voicePrompt.ts";
 
 const DEFAULT_MODEL = "gpt-realtime";
 const DEFAULT_VOICE = "cedar";

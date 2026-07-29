@@ -8,8 +8,25 @@ import type { VoiceProviderId } from "./voiceTypes";
 
 const STORAGE_KEY = "voice_provider";
 
-/** Default provider for the product. Change here to flip the whole app. */
-export const DEFAULT_PROVIDER: VoiceProviderId = "elevenlabs";
+/**
+ * Sprint 32.1 — OpenAI Realtime is the primary engine.
+ * ElevenLabs stays reachable purely as a silent automatic fallback.
+ */
+export const DEFAULT_PROVIDER: VoiceProviderId = "openai-realtime";
+
+/** Provider used when the primary engine cannot be established. */
+export const FALLBACK_PROVIDER: VoiceProviderId = "elevenlabs";
+
+/** User-facing copy for ANY transport problem. Never leak technical detail. */
+export const VOICE_RECONNECT_MESSAGE = "Ses bağlantısı yeniden kuruluyor...";
+
+/** Temporary developer panel (Sprint 32.1 — remove before production). */
+export function isVoiceDebugEnabled(): boolean {
+  try {
+    if (localStorage.getItem("voice_debug") === "1") return true;
+  } catch { /* noop */ }
+  return import.meta.env.DEV === true;
+}
 
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
@@ -19,6 +36,7 @@ export const OPENAI_REALTIME = {
   model: "gpt-realtime",
   voice: "cedar",
 };
+
 
 export function getVoiceProvider(): VoiceProviderId {
   try {

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { VoiceCopilot } from "@/components/voice/VoiceCopilot";
+import { VoiceExperience } from "@/components/voice/VoiceExperience";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 
 /**
@@ -26,7 +26,7 @@ export default function ConstructionMode() {
   }
 
   return (
-    <VoiceCopilot
+    <VoiceExperience
       onClose={() => navigate(-1)}
       access={access}
       compact

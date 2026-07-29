@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { BaseVoiceEngine } from "./BaseVoiceEngine";
 import { OPENAI_REALTIME } from "./voiceConfig";
+import { VoiceMetricsTracker } from "./voiceMetrics";
 import type { VoiceEngineConfig, VoiceProviderId, VoiceToolCall } from "./voiceTypes";
 
 type SessionInfo = {
@@ -30,6 +31,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private reconnects = 0;
   private closing = false;
   private assistantBuffer = "";
+  private metrics = new VoiceMetricsTracker();
+  private analyser: AnalyserNode | null = null;
+  private audioCtx: AudioContext | null = null;
+  private levelBuf: Uint8Array<ArrayBuffer> | null = null;
+  private speaking = false;
+
+  getMetrics() { return this.metrics.snapshot(); }
+
+  getMicLevel(): number {
+    if (!this.analyser || !this.levelBuf) return 0;
+    this.analyser.getByteTimeDomainData(this.levelBuf);
+    let peak = 0;
+    for (let i = 0; i < this.levelBuf.length; i++) {
+      const v = Math.abs(this.levelBuf[i] - 128) / 128;
+      if (v > peak) peak = v;
+    }
+    return Math.min(1, peak * 1.8);
+  }
 
   // ---------- lifecycle ----------------------------------------------------
 
@@ -37,6 +56,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.config = { maxReconnects: 2, ...this.config, ...config };
     this.closing = false;
     this.setState("connecting");
+    this.metrics.startSession();
 
     try {
       const session = await this.mintSession();
@@ -79,10 +99,16 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     pc.ontrack = (e) => { audio.srcObject = e.streams[0]; };
 
     // Uplink: microphone.
-    const mic = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-    });
+    let mic: MediaStream;
+    try {
+      mic = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+    } catch (err) {
+      throw new Error(`audio_device_unavailable: ${err instanceof Error ? err.message : String(err)}`);
+    }
     this.micStream = mic;
+    this.attachLevelMeter(mic);
     for (const track of mic.getTracks()) pc.addTrack(track, mic);
 
     // Control channel.
@@ -91,7 +117,19 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     dc.onopen = () => {
       logger.debug("[voice:openai] data channel open");
       this.setState("listening");
-      this.sendEvent({ type: "session.update", session: { turn_detection: { type: "server_vad" } } });
+      this.metrics.markConnected();
+      this.sendEvent({
+        type: "session.update",
+        session: {
+          type: "realtime",
+          audio: {
+            input: {
+              transcription: { model: "gpt-4o-mini-transcribe", language: this.config.language ?? "tr" },
+              turn_detection: { type: "semantic_vad", interrupt_response: true },
+            },
+          },
+        },
+      });
     };
     dc.onmessage = (e) => this.handleServerEvent(e.data);
     dc.onclose = () => { if (!this.closing) void this.retryOrFallback("data_channel_closed"); };
@@ -126,6 +164,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     const max = this.config.maxReconnects ?? 2;
     if (this.reconnects < max) {
       this.reconnects += 1;
+      this.metrics.markReconnect();
+      this.setState("connecting");
       logger.debug(`[voice:openai] reconnect ${this.reconnects}/${max} (${reason})`);
       await this.teardown();
       await new Promise((r) => setTimeout(r, 600 * this.reconnects));
@@ -146,9 +186,22 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
 
     switch (type) {
       case "input_audio_buffer.speech_started":
+        // Barge-in: kill assistant audio instantly and resume listening.
+        if (this.speaking || this.state === "speaking") this.stopPlayback();
+        this.metrics.markTurnStart();
         this.setState("listening");
         break;
+      case "output_audio_buffer.started":
+        this.speaking = true;
+        this.metrics.markFirstAudio();
+        this.setState("speaking");
+        break;
+      case "output_audio_buffer.stopped":
+      case "output_audio_buffer.cleared":
+        this.speaking = false;
+        break;
       case "conversation.item.input_audio_transcription.delta":
+        this.metrics.markFirstTranscript();
         this.emitTranscript({
           id: String(evt.item_id ?? "u"), role: "user",
           text: String(evt.delta ?? ""), final: false, ts: Date.now(),
@@ -164,6 +217,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       case "response.output_audio_transcript.delta":
       case "response.audio_transcript.delta":
         this.assistantBuffer += String(evt.delta ?? "");
+        this.metrics.markFirstToken();
         this.setState("speaking");
         this.emitTranscript({
           id: String(evt.response_id ?? "a"), role: "assistant",
@@ -188,6 +242,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         });
         break;
       case "response.done":
+        this.speaking = false;
+        this.metrics.resetTurn();
         if (this.state !== "listening") this.setState("listening");
         break;
       case "error":
@@ -253,11 +309,31 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   }
 
   interrupt() {
+    this.stopPlayback();
+  }
+
+  /** Cancel in-flight response, flush queued audio, resume listening. */
+  private stopPlayback() {
     this.sendEvent({ type: "response.cancel" });
+    this.sendEvent({ type: "output_audio_buffer.clear" });
     this.assistantBuffer = "";
+    this.speaking = false;
     this.setState("interrupted");
-    if (this.audioEl) { try { this.audioEl.pause(); this.audioEl.currentTime = 0; } catch { /* noop */ } }
     this.setState("listening");
+  }
+
+  private attachLevelMeter(stream: MediaStream) {
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      src.connect(analyser);
+      this.audioCtx = ctx;
+      this.analyser = analyser;
+      this.levelBuf = new Uint8Array(new ArrayBuffer(analyser.fftSize));
+    } catch { /* level meter is best-effort */ }
   }
 
   setVolume(v: number) {
@@ -277,6 +353,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     try { this.pc?.close(); } catch { /* noop */ }
     try { this.micStream?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
     try { this.audioEl?.pause(); } catch { /* noop */ }
+    try { void this.audioCtx?.close(); } catch { /* noop */ }
+    this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
   }
 }
