@@ -1,101 +1,80 @@
+# Communication Architecture Audit (no code changed)
 
-## 1. Current scroll architecture map
+## 1. What already exists
 
-Desktop shell (`src/pages/Index.tsx`, line 529–609):
+**A Communication Hub already exists.** It is a real, working abstraction — not a stub — covering create → approve → send → retry → log, with a dedicated UI tab.
 
-```text
-<div class="flex h-screen">                        ← app viewport lock
-  <DesktopSidebar />                                ← own scroll (nav has overflow-y:auto)
-  <div class="flex-1 flex flex-col overflow-hidden">← disables body-level scroll
-    <DesktopTopBar />
-    <div ref=scrollRef                              ← THE canonical scroll container
-         class="flex-1 min-h-0 overflow-y-auto">
-      <div class="flex min-h-full flex-col">
-        <div class="flex-1 pb-12">
-          <ActiveModulePage />                      ← must NOT re-declare height/scroll
-        </div>
-      </div>
-      <Footer minimal />
-    </div>
-  </div>
-</div>
-```
+### Providers
+| Channel | Status |
+|---|---|
+| WhatsApp | Meta Cloud API (Graph v20) with text/template/media support; automatic fallback to `wa.me` deep link when credentials are absent. Inbound + status webhook deployed. |
+| Email | Modular driver registry: SMTP (live), Lovable built-in (live), Microsoft Graph / Gmail / SendGrid / SES / Mailgun (explicit "not implemented" stubs). |
+| SMS, Push, Teams, Slack | Declared in the channel type, **not registered** — `getProvider()` returns null, send fails with "channel not supported". |
 
-There is already exactly one intended vertical scroll container per pane: sidebar `<nav>` and `scrollRef` div. All module pages must render as passive content inside `scrollRef`.
+### Abstractions
+- `supabase/functions/_shared/communication/types.ts` — `CommunicationProvider` interface (`sendMessage`, `previewMessage`), status machine (draft → pending_approval → scheduled → queued → sending → sent → delivered → read → failed → cancelled), priority, message types.
+- `providers.ts` — channel registry.
+- `email/index.ts` + `email/types.ts` — second-level `EmailDriver` abstraction with per-account config and `verify()`.
+- `src/lib/communicationHub.ts` — single typed client; nothing in the app talks to a provider directly.
 
-## 2. Modules that violate the contract
+### Data model
+`communication_messages`, `communication_delivery_attempts` (per-attempt audit), `email_accounts` (multi-account, default flag, signature, status/last_error).
 
-Grouped by the actual root wrapper each module emits:
+### Event bus
+Two informal buses, no unified one:
+- `workspaceBus` (typed pub/sub: highlight / filter / navigate / preview) — AI Canvas ↔ ERP surfaces only.
+- `window` CustomEvents: `navigate-tab`, `open-project`, `canvas-followup`, `voice-*`, `refresh-profile`.
+Neither emits or consumes communication events.
 
-**A. Passive wrapper — works correctly (control group)**
-- `EInvoicesPage` — `<div class="p-4 lg:p-6 space-y-4">`
-- `MaterialsPage` — `<div class="p-4 lg:p-6 ... max-w-7xl mx-auto">`
-- `SiteDiaryPage` — `<div class="max-w-6xl mx-auto p-4 lg:p-6">`
-- `DesktopHakedisPage` — `<div class="p-3 sm:p-4 md:p-6 max-w-[1200px] mx-auto">`
-- `PersonnelPage` — `<div class="p-4 md:p-6 max-w-7xl mx-auto">`
-- `ReportsPage` — `<div class="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">`
-- `DesktopSettingsPage` — `<div class="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">`
+### Notifications
+- In-app: `useNotifications` (reminders + milestones, localStorage daily dismiss), `useAutoReminders` (derived check/hakediş/contract alerts), `RemindersPanel`.
+- Push: FCM v1 via `send-push-notification` (`send` + daily `scan` mode), `push_subscriptions`, `notification_history`, `notification_preferences`, cron `push-daily-scan` 06:00.
 
-**B. PageShell wrapper — broken (adds `min-h-full smooth-scroll`)**
-- `DesktopDashboard` — `<PageShell maxWidth={1120}>`
-- `PaymentsKasaPage` — `<PageShell maxWidth={1400}>`
-- `ProcurementPage` — `<PageShell ...>`
-- `ProjectDetailPage` — `<PageShell maxWidth={1200}>`
+### Email integrations (two separate systems)
+1. Lovable Emails infra: `send-transactional-email`, `auth-email-hook`, `process-email-queue`, pgmq queues, suppression + unsubscribe, 8 React Email app templates + 6 auth templates.
+2. Communication Hub email (user's own SMTP/accounts, approval-gated, logged in the hub).
 
-**C. Extra height-claiming wrapper on top of PageShell / body**
-- `WarehousePage` — `<div class="min-h-screen bg-background"><PageShell>…</PageShell></div>`
-- `FleetPage` — `<div class="min-h-screen bg-[#0B0F14]">` (also has inner `overflow-y-auto` panels with `max-h-[420px]` / `max-h-[600px]` that create nested vertical scroll)
+### Template system
+- Rich for Lovable transactional email (React Email registry).
+- WhatsApp: Meta-side template names + variables passed through — no local catalogue or editor.
+- Hub: **no** reusable template/snippet table for ad-hoc messages.
 
-## 3. Root cause
+### Scheduling
+Status `scheduled` + `scheduled_at` + index exist, and the UI has a "Planlı" tab — but there is **no cron job** that dispatches due messages. Only `process-subscriptions-daily` and `push-daily-scan` exist. Scheduled hub messages currently never send by themselves.
 
-Two structural problems, not a browser/event bug:
+### Action Executor
+`useActionExecutor` supports `send_whatsapp` and `send_email`, but they open `wa.me` / `mailto:` directly — they **bypass the hub**, so no approval, no logging, no retry. `actionRegistry.ts` has the same shortcut.
 
-1. **`PageShell` claims height and scroll semantics** it doesn't own.
-   `src/components/ui/responsive/PageShell.tsx` line 34:
-   `"w-full min-h-full smooth-scroll no-overflow-x"`.
-   `.smooth-scroll` (src/index.css:509) sets `scroll-behavior: smooth`, `-webkit-overflow-scrolling: touch`, `overscroll-behavior: contain`. Those properties belong on the actual scroll container (`scrollRef` in Index.tsx), not on a passive content wrapper. `min-h-full` combined with the flex column parent forces the page body to exactly fill the viewport, and the smooth-scroll/overscroll rules on that same node interfere with wheel delta propagation to the real scroll container above it. Every PageShell-using module (Dashboard, Payments, Procurement, ProjectDetail) inherits the same defect — this matches the reported "Dashboard + some migrated modules" symptom exactly.
+### AI integrations
+`chat` function has a tool loop with 8 mutation tools (payment, task, hakediş, site diary, material, personnel, contract) plus `resolve_lookups`. Voice (OpenAI Realtime + tool bus), morning briefing, AI Operations Brain. **No AI tool can draft or queue a communication message.**
 
-2. **`min-h-screen` on module roots** (Warehouse, Fleet) creates a 100vh box inside a scroll container that is itself smaller than 100vh (viewport minus TopBar). This pushes content off the parent's scroll range and, together with the nested `max-h-[420/600px] overflow-y-auto` panels in `FleetPage`, creates two vertical scroll layers over the same region — the wheel is captured by whichever child is under the cursor.
+## 2. What is missing
+- Scheduler/dispatcher cron for `status='scheduled'` and automatic retry of `failed` (retryable) messages.
+- SMS, Push, Teams, Slack providers (types promise them, registry does not deliver).
+- Message template catalogue for the hub (reusable Turkish bodies with variables, per channel).
+- Communication event bus: no domain event (hakediş approved, payment overdue, check due) automatically produces a message draft.
+- AI tools: `draft_message` / `send_message` in chat and voice tool sets.
+- Delivery status ingestion into the hub UI beyond the WhatsApp webhook (no unified read/delivered timeline surface, no email bounce feedback into `communication_messages`).
+- Recipient/contact directory — recipients are free-text phone/email, not linked to personnel/subcontractors.
+- Quota/rate protection is only counted (`comm_messages_month`), never enforced.
 
-The reason Sidebar / E-Fatura / Hakediş / Şantiye Günlüğü / Malzeme / Personel work: their roots are pure padded `<div>`s with no height or scroll declarations, so `scrollRef` is the only scroller in the chain.
+## 3. What should be improved
+- **One send path.** Route `useActionExecutor` and `actionRegistry` WhatsApp/email through `communicationHub`, keeping deep-link/mailto only as the provider-level fallback.
+- **Two email systems** — document the boundary: system/auth emails → Lovable infra; user-authored/AI-drafted → hub. Optionally register a hub driver that delegates to `send-transactional-email` for branded templates.
+- Hub function is a single 290-line switch; split actions into modules as channels grow.
+- Retry has no backoff and `max_retries` is not enforced server-side.
+- Add project/entity context to every message (`project_id`, `related_action` exist but are rarely populated) so communications show up on project timelines.
 
-## 4. Unified architecture (single strategy)
+## 4. Verdict
+A Communication Hub exists and is architecturally sound (provider abstraction, status machine, audit trail, approval gate, UI). It is roughly a solid v1 covering WhatsApp + email. What is missing is the **automation layer**: scheduler, event-driven triggers, AI drafting, templates, and additional channels.
 
-Contract for every module page:
+## 5. Recommended roadmap
+1. **Dispatcher (highest value, smallest change).** Cron every minute → send due `scheduled` messages and retry retryable `failed` with backoff, enforcing `max_retries`.
+2. **Unify send paths.** Action Executor + action registry go through the hub; add an approval sheet for AI-originated messages.
+3. **Template catalogue.** `communication_templates` table (channel, name, subject, body, variables) + picker in the Communication Center and in AI drafts.
+4. **AI drafting tools.** `draft_message` tool in `chat` and the voice tool bus, always landing in `pending_approval`.
+5. **Event-driven triggers.** Map existing derived alerts (`useAutoReminders`, subcontractor check alerts, overdue payments) to rule-based draft creation, with per-user opt-in in notification preferences.
+6. **Channel expansion.** SMS provider first (a real gap for site personnel), then Slack/Teams for office workflows; push already has its own path and can register as a hub provider for unified logging.
+7. **Contacts + reporting.** Link recipients to personnel/subcontractors, then a communications timeline per project and a delivery-rate report.
 
-- Root element is a plain `<div>` with padding + `max-w-*` only.
-- Never use: `h-screen`, `min-h-screen`, `100vh`, `100dvh`, `min-h-full`, `overflow-y-auto`, `overflow-scroll`, `overscroll-*`, `-webkit-overflow-scrolling`, `scroll-behavior` on the page root.
-- Nested vertical scroll (`max-h-[…] overflow-y-auto`) is only allowed inside modal/sheet/dialog surfaces, never in the main content flow.
-- `PageShell` becomes a pure layout primitive: max-width, header, padding, safe-area. No height, no scroll semantics.
-- The only vertical scroll containers in the app remain:
-  - `DesktopSidebar` `<nav>` (independent sidebar scroll)
-  - `Index.tsx` `scrollRef` div (single content scroll on desktop)
-  - `Index.tsx` mobile `scrollRef` div (single content scroll on mobile)
-  - Modal/sheet bodies
-
-## 5. Files to change (frontend only)
-
-1. `src/components/ui/responsive/PageShell.tsx`
-   - Replace root className `"w-full min-h-full smooth-scroll no-overflow-x"` with `"w-full no-overflow-x"`. Remove `min-h-full` and `smooth-scroll`. Keep padding / safe-area / max-width behavior identical.
-
-2. `src/components/desktop/WarehousePage.tsx`
-   - Remove the outer `<div className="min-h-screen bg-background">` wrapper. Render `<PageShell>` (and sibling `StockSheet` / `QuickActionFAB`) as a fragment. Background is already provided by `scrollRef`'s `bg-background`.
-
-3. `src/components/desktop/FleetPage.tsx`
-   - Remove the `min-h-screen` on the page root (line 281). Convert page root to a padded passive wrapper (`p-4 lg:p-6 space-y-4 max-w-7xl mx-auto`) matching working modules; keep the dark palette via existing tokens.
-   - Convert the two nested vertical scrollers (`max-h-[420px] overflow-y-auto` at line 717, `max-h-[600px] overflow-y-auto` at line 760) to natural flow (drop `max-h-*` and `overflow-y-auto`), so the outer `scrollRef` handles all wheel scrolling. The right-side detail panel (`overflow-y-auto` inside its own fixed sheet at line 949) stays — it is a sheet surface, allowed by the contract.
-
-4. `src/pages/Index.tsx` — no structural change required. Optionally move `.smooth-scroll` class onto the desktop `scrollRef` div (line 554) and mobile `scrollRef` div (line 857) so smooth wheel behavior is applied on the actual scroller. This is a small, safe additive edit.
-
-No changes to: `EInvoicesPage`, `MaterialsPage`, `SiteDiaryPage`, `DesktopHakedisPage`, `PersonnelPage`, `ReportsPage`, `DesktopSettingsPage`, `DesktopDashboard`, `PaymentsKasaPage`, `ProcurementPage`, `ProjectDetailPage` — after PageShell is fixed they inherit correct behavior automatically.
-
-No backend, schema, hook, business logic, licensing, or permission changes.
-
-## Verification plan
-
-After the edits, drive Playwright over `/dashboard`, `/odemeler-kasa`, `/satin-alma`, `/depo`, `/makine-ekipman`, `/raporlar`, `/settings` at 1280×1800 and:
-
-- Assert exactly one element in the main pane has `scrollHeight > clientHeight` and `overflow-y` in (`auto`, `scroll`) — should be the `scrollRef` div.
-- Dispatch `wheel` events over the content area and assert `scrollRef.scrollTop` increases.
-- Confirm sidebar `<nav>` still scrolls independently.
-- Re-check working modules (E-Fatura, Hakediş, Malzeme, Personel, Şantiye Günlüğü) show no regression.
+*Audit only — no files were modified.*
