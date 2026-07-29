@@ -34,7 +34,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private metrics = new VoiceMetricsTracker();
   private analyser: AnalyserNode | null = null;
   private audioCtx: AudioContext | null = null;
-  private levelBuf: Uint8Array | null = null;
+  private levelBuf: Uint8Array<ArrayBuffer> | null = null;
   private speaking = false;
 
   getMetrics() { return this.metrics.snapshot(); }
@@ -332,7 +332,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       src.connect(analyser);
       this.audioCtx = ctx;
       this.analyser = analyser;
-      this.levelBuf = new Uint8Array(analyser.fftSize);
+      this.levelBuf = new Uint8Array(new ArrayBuffer(analyser.fftSize));
     } catch { /* level meter is best-effort */ }
   }
 
