@@ -693,9 +693,9 @@ function Actions({
 
   return (
     <div className="space-y-6">
-      <Section title={`Onay Bekleyen (${groups.pending.length})`}>
+      <Section title="Onay Bekleyen" count={groups.pending.length}>
         {groups.pending.length === 0 ? (
-          <EmptyRow text="Bekleyen aksiyon yok." />
+          <OpsEmpty icon="🧾" title="Bekleyen aksiyon yok" description="AI, toplantı kaydından aksiyon çıkardığında burada onayınıza sunar; onaylanan aksiyon otomatik göreve dönüşür." />
         ) : (
           groups.pending.map((a) => (
             <Card key={a.id} className="p-4 space-y-2">
@@ -722,8 +722,8 @@ function Actions({
         )}
       </Section>
 
-      <Section title={`Göreve Dönüştürüldü (${groups.converted.length})`}>
-        {groups.converted.length === 0 ? <EmptyRow text="Henüz göreve dönüştürülen aksiyon yok." /> : (
+      <Section title="Göreve Dönüştürüldü" count={groups.converted.length}>
+        {groups.converted.length === 0 ? <OpsEmpty icon="✅" title="Henüz göreve dönüşen aksiyon yok" description="Onayladığınız aksiyonlar ilgili projenin görev panosunda açılır." /> : (
           groups.converted.map((a) => (
             <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
               <div>
@@ -739,16 +739,13 @@ function Actions({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
   return (
-    <div>
-      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+    <div className="space-y-2">
+      <OpsSectionHeader title={title} count={count} />
       <div className="space-y-2">{children}</div>
     </div>
   );
-}
-function EmptyRow({ text }: { text: string }) {
-  return <Card className="p-6 text-center text-sm text-muted-foreground">{text}</Card>;
 }
 
 // ─────────────────────────────────────────────────────────
