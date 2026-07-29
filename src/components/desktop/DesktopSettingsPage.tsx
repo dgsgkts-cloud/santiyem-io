@@ -6,13 +6,14 @@ import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
 import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
 import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
 import FirstRunWizard from "./FirstRunWizard";
 import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
 import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
+import { VoiceSettingsTab } from "@/components/voice/VoiceSettingsTab";
 
 const TABS = [
   { id: "profile", label: "Profil", icon: User },
@@ -20,6 +21,7 @@ const TABS = [
   { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
+  { id: "voice", label: "AI Sesi", icon: Mic },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "plan", label: "Plan ve Kullanım", icon: Gauge },
   { id: "org", label: "Kuruluş", icon: Building },
@@ -99,6 +101,7 @@ const DesktopSettingsPage = () => {
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "company" && <CompanyProfileTab />}
           {activeTab === "notifications" && <NotificationsTab />}
+          {activeTab === "voice" && <VoiceSettingsTab />}
           {activeTab === "subscription" && (
             <div className="space-y-6">
               <SubscriptionCenter />
