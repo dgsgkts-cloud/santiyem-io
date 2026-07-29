@@ -1,0 +1,300 @@
+/* ══════════════════════════════════════════════════════════════
+   SPRINT 35 — PRODUCT POLISH · Unified Design System
+   Tokens: color · typography · spacing (8pt) · radius · shadow
+   Motion: spring / fade / scale / slide · skeleton · micro-interaction
+   Pure presentation. No logic, no component behaviour.
+   ══════════════════════════════════════════════════════════════ */
+
+  :root {
+    /* ── Status palette (Apple / Linear soft tones, never neon) ── */
+    --success: 152 44% 42%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 40% 16%;
+    --success-muted: 152 38% 62%;
+
+    --warning: 38 70% 52%;
+    --warning-foreground: 30 40% 8%;
+    --warning-soft: 38 46% 15%;
+    --warning-muted: 38 62% 68%;
+
+    --danger: 358 58% 54%;
+    --danger-foreground: 0 0% 100%;
+    --danger-soft: 358 44% 16%;
+    --danger-muted: 358 60% 70%;
+
+    --info: 212 52% 55%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 212 42% 16%;
+    --info-muted: 212 56% 72%;
+
+    /* ── 8pt spacing scale — only these values in layouts ── */
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    /* ── Radius scale ── */
+    --radius-card: 16px;
+    --radius-dialog: 20px;
+    --radius-control: 14px;
+    --radius-pill: 999px;
+
+    /* ── Control heights ── */
+    --control-sm: 32px;
+    --control-md: 40px;
+    --control-lg: 48px;
+
+    /* ── Elevation & glass ── */
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.16);
+    --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.18), 0 8px 24px -16px hsl(0 0% 0% / 0.5);
+    --shadow-raised: 0 2px 6px hsl(0 0% 0% / 0.2), 0 18px 44px -22px hsl(0 0% 0% / 0.6);
+    --glass-blur: 18px;
+    --glass-bg: hsl(var(--card) / 0.72);
+
+    /* ── Motion ── */
+    --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+    --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-1: 120ms;
+    --dur-2: 200ms;
+    --dur-3: 320ms;
+    --dur-4: 520ms;
+  }
+
+  :root.light {
+    --success-soft: 152 44% 92%;
+    --warning-soft: 38 78% 92%;
+    --danger-soft: 358 70% 94%;
+    --info-soft: 212 72% 94%;
+    --success-muted: 152 44% 32%;
+    --warning-muted: 38 66% 38%;
+    --danger-muted: 358 54% 46%;
+    --info-muted: 212 52% 42%;
+    --shadow-soft: 0 1px 2px hsl(215 20% 40% / 0.08);
+    --shadow-card: 0 1px 2px hsl(215 20% 40% / 0.06), 0 8px 24px -18px hsl(215 25% 30% / 0.28);
+    --shadow-raised: 0 2px 6px hsl(215 20% 40% / 0.08), 0 18px 44px -24px hsl(215 25% 30% / 0.32);
+    --glass-bg: hsl(0 0% 100% / 0.78);
+  }
+
+  /* ─────────── Typography scale ─────────── */
+  .ds-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    line-height: 38px;
+    font-weight: 700;
+    letter-spacing: -0.024em;
+  }
+  .ds-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .ds-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+  .ds-subtitle {
+    font-size: 15px;
+    line-height: 22px;
+    font-weight: 600;
+    letter-spacing: -0.008em;
+  }
+  .ds-body {
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 400;
+  }
+  .ds-body-strong {
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 500;
+  }
+  .ds-caption {
+    font-size: 12px;
+    line-height: 17px;
+    font-weight: 400;
+    color: hsl(var(--muted-foreground));
+  }
+  .ds-label {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .ds-numeric {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 640px) {
+    .ds-display { font-size: 26px; line-height: 32px; }
+    .ds-heading { font-size: 20px; line-height: 26px; }
+  }
+
+  /* ─────────── Surfaces ─────────── */
+  .ds-card {
+    border-radius: var(--radius-card);
+    padding: var(--space-5);
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.8);
+    box-shadow: var(--shadow-card);
+  }
+  .ds-card-lg { padding: var(--space-6); }
+
+  .ds-glass {
+    border-radius: var(--radius-card);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.7);
+    box-shadow: var(--shadow-card);
+  }
+
+  .ds-card-interactive {
+    transition: transform var(--dur-2) var(--ease-spring),
+      box-shadow var(--dur-2) var(--ease-out-soft),
+      border-color var(--dur-2) var(--ease-out-soft);
+  }
+  @media (hover: hover) {
+    .ds-card-interactive:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-raised);
+      border-color: hsl(var(--primary) / 0.32);
+    }
+  }
+  .ds-card-interactive:active { transform: translateY(0) scale(0.995); }
+
+  /* ─────────── Status chips ─────────── */
+  .ds-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    border: 1px solid transparent;
+  }
+  .ds-chip-success { background: hsl(var(--success-soft)); color: hsl(var(--success-muted)); border-color: hsl(var(--success) / 0.24); }
+  .ds-chip-warning { background: hsl(var(--warning-soft)); color: hsl(var(--warning-muted)); border-color: hsl(var(--warning) / 0.24); }
+  .ds-chip-danger  { background: hsl(var(--danger-soft));  color: hsl(var(--danger-muted));  border-color: hsl(var(--danger) / 0.24); }
+  .ds-chip-info    { background: hsl(var(--info-soft));    color: hsl(var(--info-muted));    border-color: hsl(var(--info) / 0.24); }
+  .ds-chip-neutral { background: hsl(var(--muted) / 0.7);  color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
+
+  /* ─────────── Skeleton / shimmer (never a spinner) ─────────── */
+  .ds-skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: hsl(var(--muted) / 0.55);
+  }
+  .ds-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--foreground) / 0.06),
+      transparent
+    );
+    animation: ds-shimmer 1.5s var(--ease-out-soft) infinite;
+  }
+  .ds-shimmer-text {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted-foreground) / 0.7),
+      hsl(var(--foreground)),
+      hsl(var(--muted-foreground) / 0.7)
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ds-shimmer-move 2s linear infinite;
+  }
+
+  /* ─────────── Motion system ─────────── */
+  .ds-enter { animation: ds-fade-up var(--dur-3) var(--ease-out-soft) both; }
+  .ds-enter-scale { animation: ds-scale-in var(--dur-3) var(--ease-spring) both; }
+  .ds-enter-slide { animation: ds-slide-in var(--dur-3) var(--ease-out-soft) both; }
+  .ds-enter-spring { animation: ds-spring-in var(--dur-4) var(--ease-spring) both; }
+  .ds-page-enter { animation: ds-page-in var(--dur-3) var(--ease-out-soft) both; }
+  .ds-success-pop { animation: ds-success var(--dur-4) var(--ease-spring) both; }
+
+  .ds-stagger > * { animation: ds-fade-up var(--dur-3) var(--ease-out-soft) both; }
+  .ds-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .ds-stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .ds-stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .ds-stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .ds-stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .ds-stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .ds-stagger > *:nth-child(n + 7) { animation-delay: 240ms; }
+
+  /* Micro-interactions — every pressable surface feels alive */
+  .ds-press {
+    transition: transform var(--dur-1) var(--ease-spring),
+      background-color var(--dur-2) var(--ease-out-soft),
+      color var(--dur-2) var(--ease-out-soft),
+      opacity var(--dur-2) var(--ease-out-soft);
+    will-change: transform;
+  }
+  .ds-press:active { transform: scale(0.965); }
+  .ds-press-soft:active { transform: scale(0.985); }
+
+  .ds-focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.5);
+  }
+
+  /* GPU-friendly compositing for the 60fps feel */
+  .ds-gpu { transform: translateZ(0); backface-visibility: hidden; }
+
+@keyframes ds-shimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes ds-shimmer-move {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes ds-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ds-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes ds-slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ds-spring-in {
+  0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ds-page-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.996); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ds-success {
+  0% { transform: scale(0.6); opacity: 0; }
+  55% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes ds-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.045); opacity: 1; }
+}

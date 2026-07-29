@@ -4,14 +4,15 @@ import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
-  BookOpen, Wallet, HardHat, BarChart3,
-  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart, Warehouse, Truck,
+  BookOpen, Wallet, HardHat, BarChart3, Activity,
+  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Package, FileSpreadsheet,
+  ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio, ChevronRight as Arrow,
 } from "lucide-react";
 import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
-import { getCompanyProfile } from "@/lib/companyProfile";
 import { useDisplayName } from "@/hooks/useDisplayName";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Localized role labels — extend as new roles are added
 const ROLE_LABELS: Record<string, string> = {
@@ -36,35 +37,20 @@ interface DesktopSidebarProps {
   onTabChange: (tab: Tab) => void;
 }
 
-// Sadeleştirilmiş navigasyon — Sprint 15.2 Production Polish.
-// Company Brain (Memory / AI Decisions / Decision History / Docs) menüden kaldırıldı;
-// ilgili tab id'leri Index.tsx tarafından dashboard'a yönlendiriliyor.
+// Sprint 35 — Premium sidebar. Modules grouped by mental model, not by feature age.
 const NAV_SECTIONS = [
-  {
-    label: "ANA",
-    items: [
-      { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
-      { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
-    ],
-  },
-  {
-    label: "FİNANS",
-    items: [
-      { id: "payments-kasa" as Tab, label: "Ödemeler & Kasa", icon: Wallet },
-      { id: "e-invoices" as Tab, label: "E-Fatura", icon: FileSpreadsheet },
-    ],
-  },
   {
     label: "OPERASYON",
     items: [
-      { id: "hakedis" as Tab, label: "Hakediş", icon: Receipt },
+      { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
+      { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
       { id: "materials" as Tab, label: "Malzeme", icon: Package },
       { id: "personnel" as Tab, label: "Personel", icon: HardHat },
     ],
   },
   {
-    label: "SATIN ALMA",
+    label: "TEDARİK",
     items: [
       { id: "procurement" as Tab, label: "Satın Alma", icon: ShoppingCart },
       { id: "warehouse" as Tab, label: "Depo & Envanter", icon: Warehouse },
@@ -72,27 +58,128 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: "ZEKA",
+    label: "FİNANS",
     items: [
-      { id: "chat" as Tab, label: "Şantiyem AI", icon: MessageSquare },
-      { id: "reports" as Tab, label: "Raporlar", icon: BarChart3 },
+      { id: "payments-kasa" as Tab, label: "Kasa", icon: Wallet },
+      { id: "hakedis" as Tab, label: "Hakediş", icon: Receipt },
+      { id: "e-invoices" as Tab, label: "Faturalar", icon: FileSpreadsheet },
+      { id: "contracts" as Tab, label: "Sözleşmeler", icon: FileSignature },
     ],
   },
   {
-    label: "AYARLAR",
+    label: "YAPAY ZEKA",
+    items: [
+      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
+      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "İLETİŞİM",
+    items: [
+      { id: "meetings" as Tab, label: "Toplantılar", icon: Users },
+      { id: "communication" as Tab, label: "İletişim", icon: Radio },
+    ],
+  },
+  {
+    label: "",
     items: [
       { id: "settings" as Tab, label: "Ayarlar", icon: Settings },
     ],
   },
 ] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean }> }>;
-// Not: isNativeApp / Planlar linki, Ayarlar > Abonelik altından erişilebilir.
+
 void isNativeApp;
+
+/** Live operational health, derived from the user's real reminders & milestones. */
+const AIHealthCard = ({ onOpen }: { onOpen: () => void }) => {
+  const { notifications, loading } = useNotifications();
+
+  const { score, critical, today, overdue } = useMemo(() => {
+    const open = notifications.filter((n) => !n.completed);
+    const overdue = open.filter((n) => n.daysLeft < 0).length;
+    const today = open.filter((n) => n.daysLeft === 0).length;
+    const soon = open.filter((n) => n.daysLeft > 0 && n.daysLeft <= 3).length;
+    const raw = 100 - overdue * 8 - today * 4 - soon * 2;
+    return {
+      score: Math.max(0, Math.min(100, raw)),
+      critical: overdue + today,
+      today,
+      overdue,
+    };
+  }, [notifications]);
+
+  const tone =
+    score >= 80 ? "success" : score >= 55 ? "warning" : "danger";
+  const toneColor = `hsl(var(--${tone}))`;
+
+  if (loading) {
+    return (
+      <div className="ds-card" style={{ padding: 16, borderRadius: 16 }}>
+        <div className="ds-skeleton h-2.5 w-20 mb-3" />
+        <div className="ds-skeleton h-6 w-24 mb-3" />
+        <div className="ds-skeleton h-2 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onOpen}
+      className="ds-press ds-focus-ring w-full text-left ds-card ds-card-interactive ds-enter"
+      style={{ padding: 16, borderRadius: 16 }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="ds-label" style={{ fontSize: 10 }}>Bugünkü Sağlık</span>
+        <Activity className="w-3.5 h-3.5" style={{ color: toneColor }} />
+      </div>
+
+      <div className="flex items-baseline gap-1.5 mb-3">
+        <span className="ds-heading ds-numeric" style={{ color: toneColor, fontSize: 26, lineHeight: "28px" }}>
+          {score}
+        </span>
+        <span className="ds-caption">/100</span>
+      </div>
+
+      <div className="h-1.5 w-full rounded-full overflow-hidden bg-muted/60 mb-3">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${score}%`,
+            background: toneColor,
+            transition: "width 640ms var(--ease-spring)",
+          }}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between ds-caption">
+          <span>Kritik</span>
+          <span className="ds-numeric font-semibold" style={{ color: critical ? "hsl(var(--danger-muted))" : undefined }}>
+            {critical}
+          </span>
+        </div>
+        <div className="flex items-center justify-between ds-caption">
+          <span>Gecikme</span>
+          <span className="ds-numeric font-semibold" style={{ color: overdue ? "hsl(var(--warning-muted))" : undefined }}>
+            {overdue}
+          </span>
+        </div>
+        <div className="flex items-center justify-between ds-caption">
+          <span>Bugün</span>
+          <span className="ds-numeric font-semibold">{today}</span>
+        </div>
+      </div>
+
+      <span className="mt-3 inline-flex items-center gap-1 ds-caption text-primary font-semibold">
+        Detay <Arrow className="w-3 h-3" />
+      </span>
+    </button>
+  );
+};
 
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const { user, profile, plan, role, usage, signOut, isAdmin, profileLoaded } = useUser();
   const guard = useAccessGuard();
-  // Feature locks are evaluated by the central access guard (Sprint 28.6).
-  // Loading window kept so we don't flash "locked" while auth/plan settle.
   const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
@@ -103,109 +190,200 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
 
-  const { firstName: cachedFirst, fullName: cachedFull, hasName: nameHasName, ready: nameReady } = useDisplayName();
+  const { fullName: cachedFull, hasName: nameHasName, ready: nameReady } = useDisplayName();
   const displayName = cachedFull;
   const initials = (cachedFull || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
-  const title = profile?.title || "İnşaat Mühendisi";
-  const companyShort = useMemo(() => {
-    try {
-      const cp = getCompanyProfile();
-      return cp.companyName.split(" ").slice(0, 2).join(" ");
-    } catch { return ""; }
-  }, []);
   const roleLabel = ROLE_LABELS[String(role || "").toLowerCase()] || (isAdmin ? "Yönetici" : "");
+  const title = profile?.title || "İnşaat Mühendisi";
+
+  const planLabel =
+    plan === "pro" ? "Profesyonel" : plan === "team" ? "Ekip" : plan === "enterprise" ? "Kurumsal"
+    : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal"
+    : plan === "office_custom" ? "Özel" : "Ücretsiz";
+  const planTone =
+    plan === "pro" || plan === "plus" || plan === "team" ? "ds-chip-warning"
+    : plan === "enterprise" || isOfficePlan(plan) ? "ds-chip-info" : "ds-chip-neutral";
 
   return (
     <aside
-      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative bg-sidebar border-r border-sidebar-border"
+      className="hidden lg:flex flex-col h-screen sticky top-0 shrink-0 relative border-r border-sidebar-border ds-gpu"
       style={{
-        width: collapsed ? 48 : 240,
-        transition: "width 250ms ease-in-out",
+        width: collapsed ? 72 : 264,
+        transition: "width 280ms var(--ease-spring)",
+        background: "hsl(var(--sidebar-background) / 0.86)",
+        backdropFilter: "blur(var(--glass-blur)) saturate(140%)",
+        WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(140%)",
+        boxShadow: "var(--shadow-soft)",
       }}
     >
-      {/* Toggle button */}
+      {/* Collapse toggle */}
       <button
-        onClick={() => setCollapsed(c => !c)}
-        className="absolute z-10 flex items-center justify-center bg-muted border border-border border-l-0 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors duration-200"
+        onClick={() => setCollapsed((c) => !c)}
+        aria-label={collapsed ? "Menüyü genişlet" : "Menüyü daralt"}
+        className="ds-press ds-focus-ring absolute z-10 flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground"
         style={{
-          right: -10,
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: 20,
-          height: 48,
-          borderRadius: "0 6px 6px 0",
+          right: -11, top: "50%", transform: "translateY(-50%)",
+          width: 22, height: 48, borderRadius: "0 12px 12px 0",
         }}
       >
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      {/* Logo */}
+      {/* Brand */}
       <div
-        className="flex items-center cursor-pointer shrink-0 overflow-hidden border-b border-sidebar-border"
+        className="flex items-center cursor-pointer shrink-0 overflow-hidden"
         style={{
-          height: 56,
-          padding: collapsed ? "0 8px" : "0 16px",
+          height: 64,
+          padding: collapsed ? "0 16px" : "0 20px",
           justifyContent: collapsed ? "center" : "flex-start",
-          gap: collapsed ? 0 : 8,
+          gap: collapsed ? 0 : 10,
         }}
         onClick={() => onTabChange("dashboard")}
       >
         <SantiyemMark size="sm" />
-        {!collapsed && (
-          <span className="whitespace-nowrap text-[16px] font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Şantiyem
-          </span>
+        {!collapsed && <span className="ds-title whitespace-nowrap text-foreground">Şantiyem</span>}
+      </div>
+
+      {/* User card + AI health */}
+      <div className="shrink-0" style={{ padding: collapsed ? "0 12px 12px" : "0 16px 16px" }}>
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => onTabChange("settings")}
+                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-[14px] bg-muted/40 border border-border/60"
+                style={{ height: 44 }}
+              >
+                <span
+                  className="rounded-full flex items-center justify-center text-primary-foreground ds-caption font-bold"
+                  style={{ width: 28, height: 28, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+                >
+                  {initials}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {nameHasName ? `${displayName}${roleLabel ? ` · ${roleLabel}` : ""}` : "…"}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={() => onTabChange("settings")}
+              className="ds-press ds-focus-ring w-full ds-card ds-card-interactive flex items-center gap-3 text-left"
+              style={{ padding: 12, borderRadius: 16 }}
+            >
+              <span
+                className="rounded-full flex items-center justify-center shrink-0 ds-body-strong"
+                style={{ width: 34, height: 34, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+              >
+                {initials}
+              </span>
+              <span className="flex-1 min-w-0">
+                {nameHasName ? (
+                  <span className="block ds-subtitle truncate text-foreground">{displayName}</span>
+                ) : !nameReady ? (
+                  <span className="ds-skeleton block h-3 w-24" />
+                ) : (
+                  <span className="block ds-subtitle text-foreground">—</span>
+                )}
+                <span className="block ds-caption truncate">{roleLabel || title}</span>
+              </span>
+              <span className={`ds-chip ${planTone} shrink-0`} style={{ height: 20, fontSize: 10, padding: "0 8px" }}>
+                {planLabel}
+              </span>
+            </button>
+
+            <AIHealthCard onOpen={() => onTabChange("dashboard")} />
+
+            {plan === "free" && (
+              <div className="px-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="ds-caption">AI Soruları</span>
+                  <span className="ds-caption ds-numeric">{usage.aiQuestions.used}/{usage.aiQuestions.max}</span>
+                </div>
+                <div className="w-full h-1 rounded-full bg-muted/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      background: "hsl(var(--primary))",
+                      width: `${(usage.aiQuestions.used / usage.aiQuestions.max) * 100}%`,
+                      transition: "width 600ms var(--ease-spring)",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 space-y-4" style={{ padding: collapsed ? "12px 4px" : "12px 8px", overflow: "visible auto" }}>
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <p className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground/60">
+      {/* Navigation */}
+      <nav
+        className="flex-1 space-y-5"
+        style={{ padding: collapsed ? "0 12px 16px" : "0 12px 16px", overflow: "visible auto" }}
+      >
+        {NAV_SECTIONS.map((section, si) => (
+          <div key={section.label || `s-${si}`}>
+            {!collapsed && section.label && (
+              <p className="ds-label px-3 mb-2" style={{ fontSize: 10, opacity: 0.75 }}>
                 {section.label}
               </p>
             )}
-            <div className="space-y-0.5">
+            {collapsed && si > 0 && <div className="h-px bg-border/60 mx-2 mb-3" />}
+            <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
-
-                // Sprint 28.6 — Ask the central access guard whether this
-                // module is currently locked. Clicking still routes to the
-                // tab so LockedPage explains why (no more silent redirects).
                 const decision = guard.check(item.id as GuardTab);
                 const isLocked = gatesReady && !decision.ok;
-
-                const handleClick = () => {
-                  if (!gatesReady) return;
-                  onTabChange(item.id);
-                };
 
                 const btn = (
                   <button
                     key={item.id}
-                    onClick={handleClick}
-                    className="w-full flex items-center rounded-lg transition-all duration-150 relative"
+                    onClick={() => { if (gatesReady) onTabChange(item.id); }}
+                    className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
                     style={{
-                      height: 36,
-                      backgroundColor: isActive ? "rgba(255,107,43,0.12)" : "transparent",
-                      color: isLocked ? "hsl(var(--muted-foreground) / 0.5)" : isActive ? "#FF6B2B" : "hsl(var(--muted-foreground))",
+                      height: 40,
+                      borderRadius: 12,
+                      background: isActive ? "hsl(var(--primary) / 0.14)" : "transparent",
+                      color: isLocked
+                        ? "hsl(var(--muted-foreground) / 0.55)"
+                        : isActive
+                          ? "hsl(var(--primary))"
+                          : "hsl(var(--muted-foreground))",
                       justifyContent: collapsed ? "center" : "flex-start",
-                      padding: collapsed ? "0" : "0 10px",
-                      gap: collapsed ? 0 : 10,
-                      opacity: isLocked ? 0.7 : 1,
+                      padding: collapsed ? 0 : "0 12px",
+                      gap: collapsed ? 0 : 12,
+                      boxShadow: isActive ? "inset 0 0 0 1px hsl(var(--primary) / 0.22)" : "none",
+                      fontWeight: isActive ? 600 : 500,
                     }}
-                    onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "hsl(var(--muted))"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))"; }}}
-                    onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = isLocked ? "hsl(var(--muted-foreground) / 0.5)" : "hsl(var(--muted-foreground))"; }}}
+                    onMouseEnter={(e) => {
+                      if (isActive) return;
+                      e.currentTarget.style.background = "hsl(var(--muted) / 0.6)";
+                      e.currentTarget.style.color = isLocked
+                        ? "hsl(var(--muted-foreground))"
+                        : "hsl(var(--foreground))";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (isActive) return;
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = isLocked
+                        ? "hsl(var(--muted-foreground) / 0.55)"
+                        : "hsl(var(--muted-foreground))";
+                    }}
                   >
-                    {isActive && !isLocked && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r" style={{ backgroundColor: "#FF6B2B" }} />}
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {!collapsed && <span className="text-[13px] font-medium whitespace-nowrap">{item.label}</span>}
-                    {!collapsed && isLocked && <Lock className="w-3 h-3 ml-auto shrink-0" style={{ color: "#475569" }} />}
+                    {isActive && !isLocked && (
+                      <span
+                        className="absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full"
+                        style={{ width: 3, height: 18, background: "hsl(var(--primary))" }}
+                      />
+                    )}
+                    <Icon className="w-[18px] h-[18px] shrink-0" />
+                    {!collapsed && <span className="ds-body-strong whitespace-nowrap">{item.label}</span>}
+                    {!collapsed && isLocked && <Lock className="w-3.5 h-3.5 ml-auto shrink-0 opacity-70" />}
                     {!collapsed && (item as any).soon && !isLocked && (
-                      <span className="ml-auto text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                      <span className="ds-chip ds-chip-neutral ml-auto shrink-0" style={{ height: 18, fontSize: 9 }}>
                         Yakında
                       </span>
                     )}
@@ -216,9 +394,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                   return (
                     <Tooltip key={item.id} delayDuration={0}>
                       <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                      <TooltipContent side="right" className="text-xs" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                        {item.label}
-                      </TooltipContent>
+                      <TooltipContent side="right">{item.label}</TooltipContent>
                     </Tooltip>
                   );
                 }
@@ -229,135 +405,40 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         ))}
       </nav>
 
-      {/* Bottom section */}
-      <div className="mt-auto shrink-0 overflow-hidden border-t border-sidebar-border">
-        {/* Plan badge — expanded only */}
-        {!collapsed && !isAdmin && (
-          <div className="px-3 pt-3 pb-2">
-            <div className="flex items-center justify-between mb-2">
-              <span
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
-                style={{
-                  backgroundColor: plan === "pro" || plan === "plus" || plan === "team" ? "rgba(255,107,43,0.15)" : plan === "enterprise" || isOfficePlan(plan) ? "rgba(59,130,246,0.15)" : "rgba(100,116,139,0.15)",
-                  color: plan === "pro" || plan === "plus" || plan === "team" ? "#FF6B2B" : plan === "enterprise" || isOfficePlan(plan) ? "#60A5FA" : "#64748B",
-                }}
-              >
-                {plan === "pro" ? "Profesyonel ⭐" : plan === "team" ? "Ekip 👥" : plan === "enterprise" ? "Kurumsal 🏢" : plan === "plus" ? "Plus ✨" : plan === "office_pro" ? "Kurumsal Pro 🏢" : plan === "office_free" ? "Kurumsal 🏢" : plan === "office_custom" ? "Özel 🏢" : "Ücretsiz"}
-              </span>
-              {plan === "free" && !isNativeApp() && (
-                <button
-                  onClick={() => onTabChange("pricing")}
-                  className="text-[11px] font-medium hover-upgrade-link"
-                >
-                  Yükselt →
-                </button>
-              )}
-            </div>
-
-            {plan === "free" && (
-              <div className="mb-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-muted-foreground">AI Soruları</span>
-                  <span className="text-[11px] font-mono text-muted-foreground">{usage.aiQuestions.used}/3</span>
-                </div>
-                <div className="w-full h-1 rounded-full" style={{ backgroundColor: "#1E2732" }}>
-                  <div className="h-full rounded-full transition-all duration-600" style={{ backgroundColor: "#FF6B2B", width: `${(usage.aiQuestions.used / usage.aiQuestions.max) * 100}%` }} />
-                </div>
-              </div>
-            )}
-          </div>
+      {/* Footer */}
+      <div className="mt-auto shrink-0 border-t border-sidebar-border" style={{ padding: collapsed ? 12 : 12 }}>
+        {plan === "free" && !collapsed && !isNativeApp() && (
+          <button
+            onClick={() => onTabChange("pricing")}
+            className="ds-press ds-focus-ring w-full mb-2 ds-body-strong text-primary-foreground"
+            style={{ height: 36, borderRadius: 12, background: "hsl(var(--primary))" }}
+          >
+            Planı Yükselt
+          </button>
         )}
-
-        {/* User row — premium, minimal (Linear / Notion / Slack feel) */}
-        <div className="px-2 pt-2 pb-3">
-          {collapsed ? (
+        {collapsed ? (
           <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onTabChange("settings")}
-                  className="w-full flex items-center justify-center rounded-lg hover-icon-btn"
-                  style={{ height: 40 }}
-                >
-                  <div className="rounded-full flex items-center justify-center shrink-0" style={{ width: 26, height: 26, backgroundColor: "#FF6B2B" }}>
-                    <span className="text-white text-[10px] font-bold">{initials}</span>
-                  </div>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {nameHasName ? `${displayName}${roleLabel ? ` · ${roleLabel}` : ""}` : "…"}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <div
-              className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg transition-colors"
-              style={{ backgroundColor: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.02)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-            >
-              <div className="shrink-0">
-                <div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, backgroundColor: "#FF6B2B" }}>
-                  <span className="text-white text-[10px] font-bold">{initials}</span>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  {nameHasName ? (
-                    <p className="text-[13px] font-semibold truncate text-foreground leading-tight">{displayName}</p>
-                  ) : !nameReady ? (
-                    <span aria-hidden className="inline-block h-3 w-24 rounded bg-muted/40 animate-pulse" />
-                  ) : (
-                    <p className="text-[13px] font-semibold truncate text-foreground leading-tight">—</p>
-                  )}
-                  {roleLabel && (
-                    <span
-                      className="text-[9px] font-medium px-1.5 py-[1px] rounded shrink-0"
-                      style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FFB088" }}
-                    >
-                      {roleLabel}
-                    </span>
-                  )}
-                </div>
-              </div>
-
+            <TooltipTrigger asChild>
               <button
-                onClick={() => onTabChange("settings")}
-                className="shrink-0 p-1.5 rounded-md hover-icon-btn"
-                aria-label="Ayarlar"
+                onClick={user ? signOut : () => navigate("/login")}
+                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-[12px] hover-logout"
+                style={{ height: 36 }}
               >
-                <Settings className="w-3.5 h-3.5" />
+                <LogOut className="w-4 h-4" />
               </button>
-            </div>
-          )}
-        </div>
-
-        {/* Logout */}
-        <div className="px-1 pb-3">
-          {collapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={user ? signOut : () => navigate("/login")}
-                  className="w-full flex items-center justify-center rounded-lg hover-logout"
-                  style={{ height: 32 }}
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" style={{ backgroundColor: "#1E2732", border: "1px solid #2A3441" }}>
-                {user ? "Çıkış Yap" : "Giriş Yap"}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={user ? signOut : () => navigate("/login")}
-              className="w-full flex items-center gap-2.5 px-2 rounded-lg hover-logout"
-              style={{ height: 28 }}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="text-[12px]">{user ? "Çıkış Yap" : "Giriş Yap"}</span>
-            </button>
-          )}
-        </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">{user ? "Çıkış Yap" : "Giriş Yap"}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={user ? signOut : () => navigate("/login")}
+            className="ds-press ds-focus-ring w-full flex items-center gap-3 rounded-[12px] hover-logout ds-body-strong"
+            style={{ height: 36, padding: "0 12px" }}
+          >
+            <LogOut className="w-4 h-4" />
+            <span>{user ? "Çıkış Yap" : "Giriş Yap"}</span>
+          </button>
+        )}
       </div>
     </aside>
   );
