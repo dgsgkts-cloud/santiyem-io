@@ -394,6 +394,18 @@ const Index = () => {
     scrollToBottom();
   }, [activeTab, messages, isTyping, scrollToBottom]);
 
+  // SPRINT 36 — every page opens from the top. Chat is the only exception
+  // (it follows the conversation tail via scrollToBottom above).
+  useEffect(() => {
+    if (activeTab === "chat") return;
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: 0, behavior: "auto" });
+    // Also reset the window in case a module renders its own document flow.
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeTab]);
+
+
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
