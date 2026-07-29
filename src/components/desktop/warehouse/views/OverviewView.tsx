@@ -1,33 +1,67 @@
-// Sprint M1.5 — Overview view: KPIs, alerts, AI insights, trend + occupancy.
+// Sprint M1.5 — Overview view.
+// SPRINT 38D — First screen answers four questions only: stock value, low
+// stock, out of stock, and what moved recently. Everything else is demoted.
 import {
-  Package, Layers, AlertTriangle, ArrowDownToLine, ArrowUpFromLine,
-  ArrowLeftRight, Wrench, ClipboardCheck, ArrowUpRight,
+  Layers, Package, TrendingDown, PackageX, ArrowDownToLine, ArrowUpFromLine,
+  ArrowLeftRight, ArrowUpRight, RefreshCcw, PackageMinus,
 } from "lucide-react";
 import { KpiCard, ResponsiveGrid, SectionCard } from "@/components/ui/responsive";
-import { fmtTRY } from "../warehouseConstants";
+import { fmtTRY, fmtNum } from "../warehouseConstants";
 import type { WarehouseData } from "../useWarehouseData";
-import { SmartAlerts, AIInsightsCard } from "../warehouseUi";
+import { SmartAlerts, AIInsightsCard, MoveBadge } from "../warehouseUi";
+
+const MOVE_ICON = {
+  in: ArrowDownToLine, out: ArrowUpFromLine, transfer: ArrowLeftRight,
+  adjust: RefreshCcw, consume: PackageMinus, return: RefreshCcw,
+} as const;
 
 export const OverviewView = ({ data }: { data: WarehouseData }) => {
   const totalValue = data.warehouses.reduce((s, w) => s + w.value, 0);
   const totalItems = data.stocks.length;
-  const criticalCount = data.stocks.filter(s => s.state === "critical" || s.state === "out").length;
-  const todayIn = data.movements.filter(m => m.whenDays === 0 && m.kind === "in").length + 6;
-  const todayOut = data.movements.filter(m => m.whenDays === 0 && m.kind === "out").length + 4;
+  const lowCount = data.stocks.filter(s => s.state === "low" || s.state === "critical").length;
+  const outCount = data.stocks.filter(s => s.state === "out").length;
+  const recent = data.movements.slice(0, 6);
 
   return (
-    <div className="space-y-4 lg:space-y-5">
-      <ResponsiveGrid variant="auto" minItemWidth={170} className="gap-3">
-        <KpiCard icon={Package} label="Toplam Malzeme" value={totalItems} trend={{ value: "+3", positive: true }} />
-        <KpiCard icon={Layers} label="Stok Değeri" value={fmtTRY(totalValue)} trend={{ value: "+6%", positive: true }} />
-        <KpiCard icon={AlertTriangle} label="Kritik Stok" value={criticalCount} trend={{ value: "+2", positive: false }} />
-        <KpiCard icon={ArrowDownToLine} label="Bugün Giriş" value={todayIn} />
-        <KpiCard icon={ArrowUpFromLine} label="Bugün Çıkış" value={todayOut} />
-        <KpiCard icon={ArrowLeftRight} label="Transferler" value={data.transfers.length} />
-        <KpiCard icon={Wrench} label="Bekleyen Zimmet" value={data.assignments.filter(a => !a.returned).length} />
-        <KpiCard icon={ClipboardCheck} label="Sayım Farkı" value="₺32K" trend={{ value: "-5%", positive: true }} />
-      </ResponsiveGrid>
+    <div className="space-y-4">
+      {/* 1 — Inventory overview: four compact KPIs, no horizontal scroll */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <KpiCard icon={Layers} label="Stok Değeri" value={fmtTRY(totalValue)} />
+        <KpiCard icon={Package} label="Kalem" value={totalItems} />
+        <KpiCard icon={TrendingDown} label="Düşük Stok" value={lowCount} />
+        <KpiCard icon={PackageX} label="Stok Yok" value={outCount} />
+      </div>
 
+      {/* 2 — Recent movements, right on the first screen */}
+      <SectionCard title="Son Hareketler" subtitle="Giriş, çıkış ve transferler">
+        <div className="divide-y divide-border/60 -mx-1">
+          {recent.map(m => {
+            const Icon = MOVE_ICON[m.kind];
+            const negative = m.kind === "out" || m.kind === "consume";
+            return (
+              <div key={m.id} className="flex items-center justify-between gap-3 px-1 py-2.5 min-w-0" style={{ minHeight: 56 }}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className={`w-4 h-4 shrink-0 ${negative ? "text-rose-300/90" : "text-emerald-300/90"}`} />
+                  <div className="min-w-0">
+                    <div className="ds-body text-foreground truncate">{m.material}</div>
+                    <div className="ds-caption text-muted-foreground truncate">
+                      {m.warehouse} · {m.whenDays === 0 ? "Bugün" : `${-m.whenDays}g önce`}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="hidden sm:inline-flex"><MoveBadge kind={m.kind} /></span>
+                  <span className={`ds-body ds-numeric font-medium ${negative ? "text-rose-300/90" : "text-emerald-300/90"}`}>
+                    {negative ? "−" : "+"}{fmtNum(m.qty)} <span className="ds-caption text-muted-foreground">{m.unit}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* 3 — Secondary detail below the fold */}
       <SmartAlerts data={data} />
       <AIInsightsCard />
 
@@ -36,7 +70,7 @@ export const OverviewView = ({ data }: { data: WarehouseData }) => {
           title="Aylık Tüketim Trendi"
           subtitle="Son 6 ay · malzeme bazlı"
           action={
-            <span className="text-fs-xs text-emerald-400 flex items-center gap-1">
+            <span className="ds-caption text-emerald-300/90 flex items-center gap-1">
               <ArrowUpRight className="w-3 h-3" /> +12%
             </span>
           }
@@ -49,7 +83,7 @@ export const OverviewView = ({ data }: { data: WarehouseData }) => {
                   className="w-full rounded-t-lg bg-gradient-to-t from-[#FF6B2B]/50 to-[#FF6B2B]/10 border border-[#FF6B2B]/30 transition-all hover:from-[#FF6B2B]/70"
                   style={{ height: `${h}%` }}
                 />
-                <span className="text-fs-xs text-muted-foreground">
+                <span className="ds-caption text-muted-foreground">
                   {["Şub", "Mar", "Nis", "May", "Haz", "Tem"][i]}
                 </span>
               </div>
@@ -61,10 +95,10 @@ export const OverviewView = ({ data }: { data: WarehouseData }) => {
           <div className="space-y-3">
             {data.warehouses.map(w => {
               const pct = Math.round((w.occupied / w.capacity) * 100);
-              const color = pct > 85 ? "bg-red-400" : pct > 65 ? "bg-amber-400" : "bg-emerald-400";
+              const color = pct > 85 ? "bg-rose-400/80" : pct > 65 ? "bg-amber-400/80" : "bg-emerald-400/80";
               return (
                 <div key={w.id}>
-                  <div className="flex justify-between text-fs-xs mb-1 gap-2">
+                  <div className="flex justify-between ds-caption mb-1 gap-2">
                     <span className="text-foreground/80 truncate">{w.name}</span>
                     <span className="text-muted-foreground">%{pct}</span>
                   </div>
