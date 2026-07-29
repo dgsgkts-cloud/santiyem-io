@@ -438,11 +438,12 @@ function MessageRow({
 }) {
 
   const Icon = CHANNEL_ICON[m.channel];
-  const meta = STATUS_META[m.status];
+  const meta = STATUS_META[m.status] ?? STATUS_META.draft;
   const StIcon = meta.icon;
   const canSend = m.status === "pending_approval" || m.status === "queued";
-  const canRetry = m.status === "failed";
-  const canCancel = ["pending_approval", "queued", "scheduled", "failed", "draft"].includes(m.status);
+  const canRetry = m.status === "failed" || m.status === "retrying" || m.status === "manual_action_required";
+  const canCancel = ["pending_approval", "queued", "scheduled", "failed", "draft", "retrying", "manual_action_required"].includes(m.status);
+  const manualUrl = (m.metadata as Record<string, unknown> | null)?.manual_action_url as string | undefined;
 
   return (
     <div className="rounded-lg border bg-card p-3 flex items-start gap-3">
@@ -455,11 +456,13 @@ function MessageRow({
             {m.recipient_name || m.recipient}
           </span>
           <Badge variant="outline" className={`${meta.cls} text-[10px] gap-1`}>
-            <StIcon className={`w-3 h-3 ${m.status === "sending" ? "animate-spin" : ""}`} />
+            <StIcon className={`w-3 h-3 ${m.status === "sending" || m.status === "processing" ? "animate-spin" : ""}`} />
             {meta.label}
           </Badge>
           {m.retry_count > 0 && (
-            <Badge variant="outline" className="text-[10px]">×{m.retry_count} deneme</Badge>
+            <Badge variant="outline" className="text-[10px]">
+              {m.retry_count}/{m.max_retries ?? 5} deneme
+            </Badge>
           )}
           {m.created_from && (
             <Badge variant="outline" className="text-[10px]">{m.created_from}</Badge>
@@ -470,13 +473,35 @@ function MessageRow({
         <div className="text-[10px] text-muted-foreground mt-1.5 flex gap-2 flex-wrap">
           <span>{format(new Date(m.created_at), "d MMM HH:mm", { locale: tr })}</span>
           {m.scheduled_at && <span>· Planlı: {format(new Date(m.scheduled_at), "d MMM HH:mm", { locale: tr })}</span>}
+          {m.next_retry_at && m.status === "retrying" && (
+            <span className="text-amber-600">
+              · Sonraki deneme: {format(new Date(m.next_retry_at), "d MMM HH:mm", { locale: tr })}
+            </span>
+          )}
           {m.sent_at && <span>· Gönderim: {format(new Date(m.sent_at), "d MMM HH:mm", { locale: tr })}</span>}
-          {m.error && <span className="text-red-600">· {m.error}</span>}
+          {m.error && (
+            <span className="text-red-600">
+              · {m.error_code ? `[${m.error_code}] ` : ""}{m.error}
+            </span>
+          )}
         </div>
+        {m.status === "manual_action_required" && manualUrl && (
+          <a
+            href={manualUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] text-orange-600 mt-1.5 hover:underline"
+          >
+            <ExternalLink className="w-3 h-3" /> WhatsApp'ta aç ve göndermeyi tamamla
+          </a>
+        )}
       </div>
       <div className="flex gap-1 shrink-0">
         <Button size="sm" variant="ghost" onClick={onPreview}>
           <Eye className="w-3.5 h-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onAttempts} title="Denemeleri gör">
+          <History className="w-3.5 h-3.5" />
         </Button>
         {canSend && (
           <Button size="sm" onClick={onSend} disabled={busy}>
@@ -484,7 +509,7 @@ function MessageRow({
           </Button>
         )}
         {canRetry && (
-          <Button size="sm" variant="outline" onClick={onRetry} disabled={busy}>
+          <Button size="sm" variant="outline" onClick={onRetry} disabled={busy} title="Şimdi tekrar dene">
             <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} />
           </Button>
         )}
@@ -494,6 +519,7 @@ function MessageRow({
           </Button>
         )}
       </div>
+
     </div>
   );
 }
