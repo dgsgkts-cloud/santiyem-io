@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Trash2, MessageSquare, BookOpen } from "lucide-react";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
-import TypingIndicator from "@/components/TypingIndicator";
-import WelcomeScreen from "@/components/WelcomeScreen";
+import AIHome from "@/components/ai/AIHome";
+import AIThinkingStages from "@/components/ai/AIThinkingStages";
+import AIResponseActions from "@/components/ai/AIResponseActions";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useConversations, Conversation } from "@/hooks/useConversations";
@@ -284,15 +285,25 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
         )}
         <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="flex min-h-full items-center justify-center">
-              <WelcomeScreen onSuggestionClick={handleSend} />
-            </div>
+            <AIHome
+              onSend={handleSend}
+              recentTopics={conv.conversations.slice(0, 3).map((c) => c.title)}
+            />
           ) : (
             <div className="max-w-3xl mx-auto py-6 px-6 space-y-4">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))}
-              {isTyping && <TypingIndicator />}
+              {messages.map((msg, i) => {
+                const isLastAssistant =
+                  msg.role === "assistant" && i === messages.length - 1 && !isTyping;
+                return (
+                  <div key={msg.id}>
+                    <ChatMessage message={msg} />
+                    {isLastAssistant && msg.content && (
+                      <AIResponseActions content={msg.content} />
+                    )}
+                  </div>
+                );
+              })}
+              {isTyping && <AIThinkingStages />}
             </div>
           )}
         </div>

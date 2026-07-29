@@ -13,6 +13,7 @@ import { isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { VoiceLiveWaveform } from "./VoiceLiveWaveform";
+import AIThinkingStages from "@/components/ai/AIThinkingStages";
 import { MicPermissionScreen } from "./MicPermissionScreen";
 import { voiceHaptic } from "@/lib/voice/haptics";
 import { VOICE_UI_EVENT } from "@/lib/voice/voiceTools";
@@ -318,10 +319,31 @@ export function RealtimeVoicePanel({
           />
         )}
 
+        {voice.state === "thinking" && (
+          <div className="max-w-[85%]">
+            <AIThinkingStages />
+          </div>
+        )}
+
         {voice.transcripts.length === 0 && !busy && (
-          <p className="pt-10 text-center text-sm text-muted-foreground">
-            Konuşmaya başlayın — dinliyorum.
-          </p>
+          <div className="pt-8 text-center">
+            <p className="text-sm text-muted-foreground">Konuşmaya başlayın — dinliyorum.</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {[
+                "Bugünün risklerini özetle",
+                "Geciken ödemeleri söyle",
+                "Sahada kaç kişi var?",
+                "Kritik malzeme var mı?",
+              ].map((h) => (
+                <span
+                  key={h}
+                  className="rounded-control border border-border/60 bg-card/60 px-3 py-1.5 text-[12px] text-muted-foreground"
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

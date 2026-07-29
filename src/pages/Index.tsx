@@ -4,10 +4,11 @@ import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/com
 import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
 import { useProjects } from "@/hooks/useProjects";
 import ThemeSelectionModal, { shouldShowThemeModal, markThemeModalDone } from "@/components/desktop/ThemeSelectionModal";
-import WelcomeScreen from "@/components/WelcomeScreen";
+import AIHome from "@/components/ai/AIHome";
+import AIThinkingStages from "@/components/ai/AIThinkingStages";
+import AIResponseActions from "@/components/ai/AIResponseActions";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
-import TypingIndicator from "@/components/TypingIndicator";
 
 import RenderPanel from "@/components/RenderPanel";
 import RemindersPanel from "@/components/RemindersPanel";
@@ -874,13 +875,22 @@ const Index = () => {
             <DesktopDashboard onTabChange={(t) => setActiveTab(t as Tab)} onSend={(text) => { setActiveTab("chat"); setTimeout(() => handleSend(text), 100); }} onProjectSelect={(id) => { setSelectedProjectId(id); setActiveTab("projects"); }} />
           ) : activeTab === "chat" ? (
             messages.length === 0 ? (
-              <WelcomeScreen onSuggestionClick={handleSend} />
+              <AIHome onSend={handleSend} />
             ) : (
               <div className="max-w-3xl mx-auto py-4 sm:py-6 px-3 sm:px-4 space-y-3 sm:space-y-4">
-                {messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} />
-                ))}
-                {isTyping && <TypingIndicator />}
+                {messages.map((msg, i) => {
+                  const isLastAssistant =
+                    msg.role === "assistant" && i === messages.length - 1 && !isTyping;
+                  return (
+                    <div key={msg.id}>
+                      <ChatMessage message={msg} />
+                      {isLastAssistant && msg.content && (
+                        <AIResponseActions content={msg.content} />
+                      )}
+                    </div>
+                  );
+                })}
+                {isTyping && <AIThinkingStages />}
               </div>
             )
           ) : activeTab === "projects" ? (
