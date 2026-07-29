@@ -35,6 +35,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private analyser: AnalyserNode | null = null;
   private audioCtx: AudioContext | null = null;
   private levelBuf: Uint8Array<ArrayBuffer> | null = null;
+  private outAnalyser: AnalyserNode | null = null;
+  private outBuf: Uint8Array<ArrayBuffer> | null = null;
   private speaking = false;
 
   getMetrics() { return this.metrics.snapshot(); }
@@ -48,6 +50,18 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       if (v > peak) peak = v;
     }
     return Math.min(1, peak * 1.8);
+  }
+
+  /** 0..1 realtime energy of the assistant's outgoing audio. */
+  getOutputLevel(): number {
+    if (!this.outAnalyser || !this.outBuf) return 0;
+    this.outAnalyser.getByteTimeDomainData(this.outBuf);
+    let peak = 0;
+    for (let i = 0; i < this.outBuf.length; i++) {
+      const v = Math.abs(this.outBuf[i] - 128) / 128;
+      if (v > peak) peak = v;
+    }
+    return Math.min(1, peak * 2.2);
   }
 
   // ---------- lifecycle ----------------------------------------------------
@@ -96,7 +110,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     audio.autoplay = true;
     audio.volume = this.config.volume ?? 1;
     this.audioEl = audio;
-    pc.ontrack = (e) => { audio.srcObject = e.streams[0]; };
+    pc.ontrack = (e) => {
+      audio.srcObject = e.streams[0];
+      this.attachOutputMeter(e.streams[0]);
+    };
 
     // Uplink: microphone.
     let mic: MediaStream;
@@ -336,6 +353,21 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     } catch { /* level meter is best-effort */ }
   }
 
+  /** Analyses the assistant's audio so the orb can react to real energy. */
+  private attachOutputMeter(stream: MediaStream) {
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = this.audioCtx ?? new Ctx();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      src.connect(analyser);
+      this.audioCtx = ctx;
+      this.outAnalyser = analyser;
+      this.outBuf = new Uint8Array(new ArrayBuffer(analyser.fftSize));
+    } catch { /* best-effort */ }
+  }
+
   setVolume(v: number) {
     this.config.volume = v;
     if (this.audioEl) this.audioEl.volume = Math.max(0, Math.min(1, v));
@@ -355,6 +387,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     try { this.audioEl?.pause(); } catch { /* noop */ }
     try { void this.audioCtx?.close(); } catch { /* noop */ }
     this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
+    this.outAnalyser = null; this.outBuf = null;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
   }
 }

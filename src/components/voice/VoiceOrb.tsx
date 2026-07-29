@@ -6,6 +6,12 @@ import { useVoiceSettings } from "@/hooks/useVoiceSettings";
 import { useWakeWordEngine } from "@/hooks/useWakeWordEngine";
 import { wakePhrasesFor } from "@/lib/voice/voiceSettings";
 import { playSleepChime, playWakeChime } from "@/lib/voice/wakeChime";
+import { voiceHaptic } from "@/lib/voice/haptics";
+import { MicPermissionScreen } from "./MicPermissionScreen";
+import {
+  AlwaysListeningOnboarding,
+  alwaysListeningOnboardingSeen,
+} from "./AlwaysListeningOnboarding";
 import { VoiceExperience } from "./VoiceExperience";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
@@ -42,7 +48,9 @@ export function VoiceOrb() {
     autoSpeak?: boolean;
   }>({});
   const access = useVoiceAccess();
-  const { settings } = useVoiceSettings();
+  const { settings, update } = useVoiceSettings();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showPermission, setShowPermission] = useState(false);
   const sessionModeRef = useRef<"manual" | "wake">("manual");
   const [sessionMode, setSessionMode] = useState<"manual" | "wake">("manual");
 
@@ -141,8 +149,17 @@ export function VoiceOrb() {
   // access and is signed in. It is suspended while a conversation is
   // already open so the two never fight over the microphone.
   // ---------------------------------------------------------------
-  const alwaysListening =
+  const optedIntoAlwaysListening =
     signedIn && access.hasAccess && settings.mode === "always-listening";
+
+  // First run: explain wake word, privacy, battery and foreground-only
+  // before the microphone is ever armed. Shown exactly once.
+  const [onboarded, setOnboarded] = useState(() => alwaysListeningOnboardingSeen());
+  useEffect(() => {
+    if (optedIntoAlwaysListening && !onboarded) setShowOnboarding(true);
+  }, [optedIntoAlwaysListening, onboarded]);
+
+  const alwaysListening = optedIntoAlwaysListening && onboarded;
 
   const closeSession = useCallback((reason: "silence" | "turn-complete" | "user") => {
     setOpen(false);
@@ -152,13 +169,16 @@ export function VoiceOrb() {
     setSessionMode("manual");
     // Audible confirmation that we went back to standby.
     if (reason !== "user") playSleepChime();
+    voiceHaptic("end");
   }, []);
 
   const handleWake = useCallback(() => {
     if (sessionModeRef.current === "wake") return;
     sessionModeRef.current = "wake";
     setSessionMode("wake");
+    // Confirmation lands before the panel mounts, so wake feels instant.
     playWakeChime();
+    voiceHaptic("wake");
     setWokeUp(true);
     setPending({});
     setOpen(true);
@@ -226,6 +246,26 @@ export function VoiceOrb() {
 
   return (
     <>
+      {showOnboarding && (
+        <AlwaysListeningOnboarding
+          wakeWord={settings.wakeWord}
+          onDone={() => { setOnboarded(true); setShowOnboarding(false); }}
+          onCancel={() => { setShowOnboarding(false); update({ mode: "push-to-talk" }); }}
+        />
+      )}
+
+      {showPermission && (
+        <MicPermissionScreen
+          onRetry={() => {
+            setShowPermission(false);
+            navigator.mediaDevices?.getUserMedia({ audio: true })
+              .then((s) => s.getTracks().forEach((t) => t.stop()))
+              .catch(() => setShowPermission(true));
+          }}
+          onCancel={() => setShowPermission(false)}
+        />
+      )}
+
       <button
         onClick={() => { setPending({}); sessionModeRef.current = "manual"; setSessionMode("manual"); setOpen(true); }}
         aria-label="Şantiyem AI · Sesli Mod"
@@ -242,10 +282,17 @@ export function VoiceOrb() {
       {/* Always Listening status — hidden entirely in Push-to-Talk mode. */}
       {alwaysListening && !open && (
         <div
-          className="pointer-events-none fixed right-4 z-40 sm:right-6"
+          className={`fixed right-4 z-40 sm:right-6 ${
+            wake.state === "denied" ? "" : "pointer-events-none"
+          }`}
           style={{ bottom: `calc(${bottomOffset} + ${isDesktop ? 56 : 64}px)` }}
         >
-          <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-[#0F1419]/90 px-2.5 py-1 backdrop-blur-md">
+          <button
+            type="button"
+            disabled={wake.state !== "denied"}
+            onClick={() => setShowPermission(true)}
+            className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-[#0F1419]/90 px-2.5 py-1 backdrop-blur-md"
+          >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 wake.active ? "bg-emerald-400 voice-status-dot" : "bg-white/25"
@@ -260,7 +307,7 @@ export function VoiceOrb() {
                     ? "Bu tarayıcıda desteklenmiyor"
                     : "Duraklatıldı"}
             </span>
-          </div>
+          </button>
         </div>
       )}
 

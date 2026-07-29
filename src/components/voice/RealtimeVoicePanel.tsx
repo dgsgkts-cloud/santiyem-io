@@ -12,6 +12,9 @@ import { useVoiceEngine } from "@/hooks/useVoiceEngine";
 import { isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
+import { VoiceLiveWaveform } from "./VoiceLiveWaveform";
+import { MicPermissionScreen } from "./MicPermissionScreen";
+import { voiceHaptic } from "@/lib/voice/haptics";
 import { VOICE_UI_EVENT } from "@/lib/voice/voiceTools";
 import { VoiceDebugPanel } from "./VoiceDebugPanel";
 import "@/styles/voice.css";
@@ -45,6 +48,8 @@ interface Props {
   onSessionEnd?: (reason: "silence" | "turn-complete" | "user") => void;
 }
 
+// Friendly, human states only — no WebRTC/token/datachannel wording ever
+// reaches the user. Technical detail stays in the console for developers.
 const STATE_LABEL: Record<string, string> = {
   idle: "Hazır",
   connecting: "Bağlanıyor…",
@@ -52,8 +57,8 @@ const STATE_LABEL: Record<string, string> = {
   thinking: "Düşünüyorum…",
   speaking: "Konuşuyorum",
   interrupted: "Dinliyorum",
-  disconnected: "Bağlantı kapandı",
-  error: "Hazır",
+  disconnected: "Ses kapandı",
+  error: "Ses şu an kullanılamıyor",
 };
 
 const TONE_CLASS: Record<string, string> = {
@@ -84,6 +89,8 @@ export function RealtimeVoicePanel({
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
   const [muted, setMuted] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);
+  const [closingIn, setClosingIn] = useState<number | null>(null);
   const startedRef = useRef(false);
   const spokeRef = useRef(false);
   // Wake-session bookkeeping.
@@ -120,6 +127,7 @@ export function RealtimeVoicePanel({
   useEffect(() => {
     if (!autoStart || startedRef.current) return;
     startedRef.current = true;
+    voiceHaptic("start");
     void voice.connect();
   }, [autoStart, voice]);
 
@@ -171,6 +179,7 @@ export function RealtimeVoicePanel({
     const endSession = (reason: "silence" | "turn-complete") => {
       if (endedRef.current) return;
       endedRef.current = true;
+      voiceHaptic("end");
       void voice.disconnect();
       onSessionEnd?.(reason);
       onClose();
@@ -179,11 +188,14 @@ export function RealtimeVoicePanel({
     const id = window.setInterval(() => {
       if (endedRef.current) return;
       // Never cut the assistant off mid-sentence.
-      if (voice.state === "speaking" || voice.state === "thinking") return;
-      if (voice.state === "connecting") return;
+      if (voice.state === "speaking" || voice.state === "thinking") { setClosingIn(null); return; }
+      if (voice.state === "connecting") { setClosingIn(null); return; }
 
       const now = Date.now();
-      if (now - activityRef.current >= CONVERSATION_SILENCE_MS) {
+      const remaining = CONVERSATION_SILENCE_MS - (now - activityRef.current);
+      // Visible, calm countdown instead of an abrupt close.
+      setClosingIn(remaining > 0 ? Math.ceil(remaining / 1000) : 0);
+      if (remaining <= 0) {
         endSession("silence");
         return;
       }
@@ -195,10 +207,22 @@ export function RealtimeVoicePanel({
       ) {
         endSession("turn-complete");
       }
-    }, 500);
+    }, 250);
 
-    return () => window.clearInterval(id);
+    return () => { window.clearInterval(id); setClosingIn(null); };
   }, [sessionMode, conversationMode, voice, onClose, onSessionEnd]);
+
+  // Permission problems become a premium explanation screen, not an error.
+  useEffect(() => {
+    if (voice.state !== "error" && voice.state !== "disconnected") return;
+    if (!navigator.permissions?.query) return;
+    let cancelled = false;
+    navigator.permissions
+      .query({ name: "microphone" as PermissionName })
+      .then((p) => { if (!cancelled && p.state === "denied") setMicBlocked(true); })
+      .catch(() => { /* permission API is optional */ });
+    return () => { cancelled = true; };
+  }, [voice.state]);
 
   const toggleMute = () => {
     if (muted) { voice.unmute(); setMuted(false); } else { voice.mute(); setMuted(true); }
@@ -221,16 +245,33 @@ export function RealtimeVoicePanel({
     : connected ? "listening"
     : "idle";
 
+  const level = voice.state === "speaking" ? voice.outputLevel : voice.micLevel;
+  const countdownRatio =
+    closingIn !== null && closingIn <= 5 && voice.state === "listening"
+      ? Math.max(0, closingIn / (CONVERSATION_SILENCE_MS / 1000))
+      : undefined;
+
+
+  if (micBlocked) {
+    return (
+      <MicPermissionScreen
+        onRetry={() => { setMicBlocked(false); void voice.connect(); }}
+        onCancel={handleClose}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl">
       <header className="flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-center gap-3">
-          <VoiceOrbVisual state={orbState} size="sm" />
+          <VoiceOrbVisual state={orbState} size="sm" level={level} countdown={countdownRatio} />
           <div>
             <p className="text-sm font-semibold text-foreground">Şantiyem AI · Sesli Mod</p>
             <p className="text-xs text-muted-foreground">
-              {voice.statusMessage ?? STATE_LABEL[voice.state] ?? "Hazır"}
+              {closingIn !== null && closingIn <= 5 && voice.state === "listening"
+                ? `Konuşma kapanıyor… ${closingIn}`
+                : voice.statusMessage ?? STATE_LABEL[voice.state] ?? "Hazır"}
               {sessionMode === "wake" && conversationMode && connected && (
                 <span className="ml-1 text-muted-foreground/70">· Sohbet modu</span>
               )}
@@ -268,6 +309,14 @@ export function RealtimeVoicePanel({
             {t.text}
           </div>
         ))}
+
+        {connected && (voice.state === "listening" || voice.state === "speaking") && (
+          <VoiceLiveWaveform
+            level={level}
+            tone={voice.state === "speaking" ? "sky" : "primary"}
+            className="pt-1"
+          />
+        )}
 
         {voice.transcripts.length === 0 && !busy && (
           <p className="pt-10 text-center text-sm text-muted-foreground">

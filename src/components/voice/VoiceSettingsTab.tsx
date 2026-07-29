@@ -4,24 +4,35 @@
 // Purely client-side preferences (localStorage), no schema impact.
 // ============================================================
 
-import { Mic, Radio, MessageSquare, ShieldCheck } from "lucide-react";
+import { Mic, Radio, MessageSquare, ShieldCheck, BatteryMedium } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useVoiceSettings } from "@/hooks/useVoiceSettings";
 import { DEFAULT_WAKE_WORD, type VoiceMode } from "@/lib/voice/voiceSettings";
 import { wakeWordSupported } from "@/lib/voice/wake";
 
-const MODES: { id: VoiceMode; label: string; desc: string; icon: typeof Mic }[] = [
+const MODES: {
+  id: VoiceMode;
+  label: string;
+  desc: string;
+  icon: typeof Mic;
+  battery: string;
+  batteryTone: string;
+}[] = [
   {
     id: "push-to-talk",
     label: "Bas Konuş",
     desc: "Mikrofon yalnızca butona dokunduğunuzda açılır. Varsayılan ve en gizli seçenek.",
     icon: Mic,
+    battery: "Çok düşük pil kullanımı",
+    batteryTone: "text-emerald-500",
   },
   {
     id: "always-listening",
     label: "Sürekli Dinleme",
     desc: "Uygulama açıkken uyandırma kelimesini bekler. Eller serbest çalışma için idealdir.",
     icon: Radio,
+    battery: "Daha yüksek pil kullanımı",
+    batteryTone: "text-amber-500",
   },
 ];
 
@@ -67,6 +78,9 @@ export function VoiceSettingsTab() {
                 )}
               </div>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{m.desc}</p>
+              <p className={`mt-2 flex items-center gap-1.5 text-[11px] font-medium ${m.batteryTone}`}>
+                <BatteryMedium className="h-3.5 w-3.5" /> {m.battery}
+              </p>
               {disabled && (
                 <p className="mt-2 text-[11px] text-amber-500">
                   Bu tarayıcı sürekli dinlemeyi desteklemiyor.
@@ -106,6 +120,9 @@ export function VoiceSettingsTab() {
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Açıkken uyandırma kelimesini bir kez söylemeniz yeterlidir; konuşma sessizlik
             oluşana kadar devam eder. Kapalıyken her istek için tekrar uyandırmanız gerekir.
+          </p>
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-500">
+            <BatteryMedium className="h-3.5 w-3.5" /> Oturum süresini uzatabilir
           </p>
         </div>
         <Switch

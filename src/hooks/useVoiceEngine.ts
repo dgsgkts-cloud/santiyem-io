@@ -36,6 +36,8 @@ export interface UseVoiceEngineResult {
   statusMessage: string | null;
   metrics: VoiceMetrics;
   micLevel: number;
+  /** 0..1 realtime energy of the assistant's voice. */
+  outputLevel: number;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   sendText: (t: string) => void;
@@ -60,6 +62,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<VoiceMetrics>(EMPTY_METRICS);
   const [micLevel, setMicLevel] = useState(0);
+  const [outputLevel, setOutputLevel] = useState(0);
 
   const configRef = useRef(config);
   configRef.current = config;
@@ -111,6 +114,27 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     };
   }, [provider, switchToFallback]);
 
+  // --- live audio levels (drive the orb animation) ---------------------
+  // Sampled while a session is live so the visuals react to real energy
+  // instead of looping a fake animation.
+  useEffect(() => {
+    const live = state === "listening" || state === "speaking" || state === "thinking";
+    if (!live) { setMicLevel(0); setOutputLevel(0); return; }
+    let raf = 0;
+    let last = 0;
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      if (t - last < 55) return; // ~18fps is plenty and stays cheap
+      last = t;
+      const e = engineRef.current;
+      if (!e) return;
+      setMicLevel(e.getMicLevel?.() ?? 0);
+      setOutputLevel(e.getOutputLevel?.() ?? 0);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [state, provider]);
+
   // --- dev instrumentation (internal only) -----------------------------
   useEffect(() => {
     if (!isVoiceDebugEnabled()) return;
@@ -118,7 +142,6 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
       const e = engineRef.current;
       if (!e) return;
       setMetrics(e.getMetrics?.() ?? EMPTY_METRICS);
-      setMicLevel(e.getMicLevel?.() ?? 0);
     }, 250);
     return () => window.clearInterval(id);
   }, [provider]);
@@ -142,6 +165,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     statusMessage,
     metrics,
     micLevel,
+    outputLevel,
     connect,
     disconnect,
     sendText: (t) => engineRef.current?.sendText(t),
