@@ -5,7 +5,7 @@ import { HardHat, Users, User, UserCheck, ChevronLeft, Clock } from "lucide-reac
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 
 const TITLES = ["Mühendis", "Tekniker", "Ustabaşı", "İşçi", "Diğer"];
 const OCCUPATIONS = ["Kalıpçı", "Demirci", "Betoncu", "Sıvacı", "Elektrikçi", "Tesisatçı", "Diğer"];
@@ -123,7 +123,7 @@ const SantiyeGiris = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center gap-4">
         <Sonner />
-        <img src={logo} alt="Şantiyem" className="h-12 w-auto" />
+        <SantiyemWordmark size="md" />
         <div className="w-10 h-10 border-3 border-t-orange-500 border-orange-200 rounded-full animate-spin" />
       </div>
     );
@@ -135,7 +135,7 @@ const SantiyeGiris = () => {
       <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center p-4">
         <Sonner />
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full text-center">
-          <img src={logo} alt="Şantiyem" className="h-10 w-auto mx-auto mb-4" />
+          <SantiyemMark size="md" className="mx-auto mb-4" />
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <HardHat className="w-8 h-8 text-red-500" />
           </div>
@@ -153,7 +153,7 @@ const SantiyeGiris = () => {
 
       {/* ===== HEADER ===== */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-5 text-center safe-area-top">
-        <img src={logo} alt="Şantiyem" className="h-9 w-auto mx-auto mb-1 brightness-0 invert" />
+        <SantiyemMark size="sm" className="mx-auto mb-1" />
         <p className="text-orange-100 text-xs">Şantiye Giriş / Çıkış Sistemi</p>
 
         {projectInfo.project_name && (

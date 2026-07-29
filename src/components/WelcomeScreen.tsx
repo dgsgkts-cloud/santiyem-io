@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Wallet, FolderOpen, HardHat, TrendingUp, FileSearch, BarChart3, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { EXAMPLE_QUESTION_GROUPS } from "@/lib/exampleQuestions";
 
 interface WelcomeScreenProps {
@@ -18,7 +18,7 @@ const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
   const [showLibrary, setShowLibrary] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 animate-fade-in pt-8 sm:pt-0">
-      <img src={logo} alt="Şantiyem Logo" width={80} height={80} className="mb-4 mt-4 sm:mt-0" />
+      <SantiyemMark size="lg" className="mb-4 mt-4 sm:mt-0 brand-logo-enter" />
       <h1 className="text-2xl font-bold text-foreground mb-1">Şantiyem</h1>
       <p className="text-muted-foreground text-sm mb-8 text-center max-w-md">
         Türk mimar, mühendis ve müteahhitler için yapay zeka asistanı

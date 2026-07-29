@@ -7,7 +7,7 @@ import {
   BookOpen, Wallet, HardHat, BarChart3,
   Settings, LogOut, ChevronLeft, ChevronRight, Lock, Zap, Package, FileSpreadsheet, ShoppingCart, Warehouse, Truck,
 } from "lucide-react";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { getCompanyProfile } from "@/lib/companyProfile";
@@ -150,7 +150,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         }}
         onClick={() => onTabChange("dashboard")}
       >
-        <img src={logo} alt="Şantiyem" className="w-8 h-8 shrink-0" />
+        <SantiyemMark size="sm" />
         {!collapsed && (
           <span className="whitespace-nowrap text-[16px] font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Şantiyem
