@@ -7,13 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2, Search } from "lucide-react";
+import { Mail, MessageCircle, Phone, Bell, Send, Clock, CheckCircle2, CheckCheck, XCircle, RefreshCw, Eye, Ban, Loader2, Copy, Settings2, Search, ExternalLink, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import EmailAccountsPanel from "./EmailAccountsPanel";
 
-type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled";
+type Status = "draft" | "pending_approval" | "scheduled" | "queued" | "processing" | "retrying" | "sending" | "sent" | "delivered" | "read" | "failed" | "cancelled" | "manual_action_required";
 type Channel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
 
 interface CommMessage {
@@ -31,13 +31,30 @@ interface CommMessage {
   failed_at: string | null;
   provider: string | null;
   error: string | null;
+  error_code?: string | null;
+  next_retry_at?: string | null;
   retry_count: number;
+  max_retries?: number | null;
+  metadata?: Record<string, unknown> | null;
   created_from: string | null;
   created_at: string;
   message_type: string | null;
   template_name: string | null;
   project_id: string | null;
   related_action: string | null;
+}
+
+interface DeliveryAttempt {
+  id: string;
+  attempted_at: string;
+  attempt_number: number | null;
+  provider: string | null;
+  status: string;
+  error: string | null;
+  error_code: string | null;
+  retryable: boolean | null;
+  next_retry_at: string | null;
+  completed_at: string | null;
 }
 
 const CHANNEL_ICON: Record<Channel, React.ElementType> = {
@@ -52,23 +69,27 @@ const STATUS_META: Record<Status, { label: string; cls: string; icon: React.Elem
   pending_approval: { label: "Onay bekliyor", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: Eye },
   scheduled: { label: "Planlandı", cls: "bg-sky-500/15 text-sky-600 border-sky-500/30", icon: Clock },
   queued: { label: "Kuyrukta", cls: "bg-sky-500/15 text-sky-600 border-sky-500/30", icon: Clock },
+  processing: { label: "İşleniyor", cls: "bg-primary/15 text-primary border-primary/30", icon: Loader2 },
+  retrying: { label: "Yeniden denenecek", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30", icon: RefreshCw },
   sending: { label: "Gönderiliyor", cls: "bg-primary/15 text-primary border-primary/30", icon: Loader2 },
   sent: { label: "Gönderildi", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30", icon: CheckCircle2 },
   delivered: { label: "İletildi", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: CheckCheck },
   read: { label: "Okundu", cls: "bg-blue-500/15 text-blue-600 border-blue-500/30", icon: CheckCheck },
   failed: { label: "Başarısız", cls: "bg-red-500/15 text-red-600 border-red-500/30", icon: XCircle },
   cancelled: { label: "İptal", cls: "bg-muted text-muted-foreground", icon: Ban },
+  manual_action_required: { label: "Manuel işlem gerekli", cls: "bg-orange-500/15 text-orange-600 border-orange-500/30", icon: ExternalLink },
 };
 
 type Bucket = "pending" | "sent" | "failed" | "scheduled";
 
 const bucketOf = (s: Status): Bucket | null => {
-  if (s === "pending_approval" || s === "queued" || s === "sending" || s === "draft") return "pending";
+  if (s === "pending_approval" || s === "queued" || s === "sending" || s === "draft" || s === "processing") return "pending";
   if (s === "sent" || s === "delivered" || s === "read") return "sent";
-  if (s === "failed") return "failed";
-  if (s === "scheduled") return "scheduled";
+  if (s === "failed" || s === "manual_action_required") return "failed";
+  if (s === "scheduled" || s === "retrying") return "scheduled";
   return null;
 };
+
 
 const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 const WHATSAPP_WEBHOOK_URL = SUPABASE_PROJECT_ID
@@ -178,16 +199,31 @@ export default function CommunicationCenterPage() {
     finally { setBusy(null); }
   };
 
+  // Sprint 34.1 — manual retry requeues the message; the dispatcher sends it.
   const handleRetry = async (m: CommMessage) => {
     setBusy(m.id);
     try {
-      const res: any = await invoke("retry", { id: m.id });
-      if (res?.result?.external_url) window.open(res.result.external_url, "_blank", "noopener");
-      toast.success("Tekrar denendi");
+      await invoke("requeue", { id: m.id });
+      toast.success("Mesaj tekrar kuyruğa alındı — dağıtıcı kısa süre içinde gönderecek");
       await load();
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(null); }
   };
+
+  const [attemptsFor, setAttemptsFor] = useState<CommMessage | null>(null);
+  const [attempts, setAttempts] = useState<DeliveryAttempt[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
+
+  const handleAttempts = async (m: CommMessage) => {
+    setAttemptsFor(m);
+    setAttemptsLoading(true);
+    try {
+      const res: any = await invoke("attempts", { id: m.id });
+      setAttempts((res?.attempts || []) as DeliveryAttempt[]);
+    } catch (e: any) { toast.error(e.message); setAttempts([]); }
+    finally { setAttemptsLoading(false); }
+  };
+
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -295,8 +331,10 @@ export default function CommunicationCenterPage() {
                   onSend={() => handleSend(m)}
                   onCancel={() => handleCancel(m)}
                   onRetry={() => handleRetry(m)}
+                  onAttempts={() => handleAttempts(m)}
                 />
               ))
+
             )}
           </TabsContent>
         ))}
@@ -341,12 +379,54 @@ export default function CommunicationCenterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!attemptsFor} onOpenChange={(o) => !o && setAttemptsFor(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gönderim Denemeleri</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {attemptsLoading ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> Yükleniyor…
+              </div>
+            ) : attempts.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Henüz deneme kaydı yok.</div>
+            ) : attempts.map((a) => (
+              <div key={a.id} className="rounded-md border p-3 text-xs space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-[10px]">Deneme #{a.attempt_number ?? "—"}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{a.status}</Badge>
+                  {a.provider && <Badge variant="outline" className="text-[10px]">{a.provider}</Badge>}
+                  {a.retryable === true && <Badge variant="outline" className="text-[10px]">Yeniden denenebilir</Badge>}
+                </div>
+                <div className="text-muted-foreground">
+                  {format(new Date(a.attempted_at), "d MMM yyyy HH:mm:ss", { locale: tr })}
+                  {a.completed_at && ` → ${format(new Date(a.completed_at), "HH:mm:ss", { locale: tr })}`}
+                </div>
+                {a.error && (
+                  <div className="text-red-600">
+                    {a.error_code ? `[${a.error_code}] ` : ""}{a.error}
+                  </div>
+                )}
+                {a.next_retry_at && (
+                  <div className="text-muted-foreground">
+                    Sonraki deneme: {format(new Date(a.next_retry_at), "d MMM HH:mm", { locale: tr })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAttemptsFor(null)}>Kapat</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function MessageRow({
-  m, busy, onPreview, onSend, onCancel, onRetry,
+  m, busy, onPreview, onSend, onCancel, onRetry, onAttempts,
 }: {
   m: CommMessage;
   busy: boolean;
@@ -354,13 +434,16 @@ function MessageRow({
   onSend: () => void;
   onCancel: () => void;
   onRetry: () => void;
+  onAttempts: () => void;
 }) {
+
   const Icon = CHANNEL_ICON[m.channel];
-  const meta = STATUS_META[m.status];
+  const meta = STATUS_META[m.status] ?? STATUS_META.draft;
   const StIcon = meta.icon;
   const canSend = m.status === "pending_approval" || m.status === "queued";
-  const canRetry = m.status === "failed";
-  const canCancel = ["pending_approval", "queued", "scheduled", "failed", "draft"].includes(m.status);
+  const canRetry = m.status === "failed" || m.status === "retrying" || m.status === "manual_action_required";
+  const canCancel = ["pending_approval", "queued", "scheduled", "failed", "draft", "retrying", "manual_action_required"].includes(m.status);
+  const manualUrl = (m.metadata as Record<string, unknown> | null)?.manual_action_url as string | undefined;
 
   return (
     <div className="rounded-lg border bg-card p-3 flex items-start gap-3">
@@ -373,11 +456,13 @@ function MessageRow({
             {m.recipient_name || m.recipient}
           </span>
           <Badge variant="outline" className={`${meta.cls} text-[10px] gap-1`}>
-            <StIcon className={`w-3 h-3 ${m.status === "sending" ? "animate-spin" : ""}`} />
+            <StIcon className={`w-3 h-3 ${m.status === "sending" || m.status === "processing" ? "animate-spin" : ""}`} />
             {meta.label}
           </Badge>
           {m.retry_count > 0 && (
-            <Badge variant="outline" className="text-[10px]">×{m.retry_count} deneme</Badge>
+            <Badge variant="outline" className="text-[10px]">
+              {m.retry_count}/{m.max_retries ?? 5} deneme
+            </Badge>
           )}
           {m.created_from && (
             <Badge variant="outline" className="text-[10px]">{m.created_from}</Badge>
@@ -388,13 +473,35 @@ function MessageRow({
         <div className="text-[10px] text-muted-foreground mt-1.5 flex gap-2 flex-wrap">
           <span>{format(new Date(m.created_at), "d MMM HH:mm", { locale: tr })}</span>
           {m.scheduled_at && <span>· Planlı: {format(new Date(m.scheduled_at), "d MMM HH:mm", { locale: tr })}</span>}
+          {m.next_retry_at && m.status === "retrying" && (
+            <span className="text-amber-600">
+              · Sonraki deneme: {format(new Date(m.next_retry_at), "d MMM HH:mm", { locale: tr })}
+            </span>
+          )}
           {m.sent_at && <span>· Gönderim: {format(new Date(m.sent_at), "d MMM HH:mm", { locale: tr })}</span>}
-          {m.error && <span className="text-red-600">· {m.error}</span>}
+          {m.error && (
+            <span className="text-red-600">
+              · {m.error_code ? `[${m.error_code}] ` : ""}{m.error}
+            </span>
+          )}
         </div>
+        {m.status === "manual_action_required" && manualUrl && (
+          <a
+            href={manualUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] text-orange-600 mt-1.5 hover:underline"
+          >
+            <ExternalLink className="w-3 h-3" /> WhatsApp'ta aç ve göndermeyi tamamla
+          </a>
+        )}
       </div>
       <div className="flex gap-1 shrink-0">
         <Button size="sm" variant="ghost" onClick={onPreview}>
           <Eye className="w-3.5 h-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onAttempts} title="Denemeleri gör">
+          <History className="w-3.5 h-3.5" />
         </Button>
         {canSend && (
           <Button size="sm" onClick={onSend} disabled={busy}>
@@ -402,7 +509,7 @@ function MessageRow({
           </Button>
         )}
         {canRetry && (
-          <Button size="sm" variant="outline" onClick={onRetry} disabled={busy}>
+          <Button size="sm" variant="outline" onClick={onRetry} disabled={busy} title="Şimdi tekrar dene">
             <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} />
           </Button>
         )}
@@ -412,6 +519,7 @@ function MessageRow({
           </Button>
         )}
       </div>
+
     </div>
   );
 }

@@ -1,0 +1,1 @@
+ALTER TYPE public.comm_status ADD VALUE IF NOT EXISTS 'manual_action_required';

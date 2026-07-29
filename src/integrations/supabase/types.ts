@@ -377,30 +377,54 @@ export type Database = {
       }
       communication_delivery_attempts: {
         Row: {
+          attempt_number: number | null
           attempted_at: string
+          channel: Database["public"]["Enums"]["comm_channel"] | null
+          completed_at: string | null
           error: string | null
+          error_code: string | null
           id: string
           message_id: string
+          next_retry_at: string | null
           provider: string | null
+          provider_message_id: string | null
           response: Json | null
+          retryable: boolean | null
+          started_at: string | null
           status: Database["public"]["Enums"]["comm_status"]
         }
         Insert: {
+          attempt_number?: number | null
           attempted_at?: string
+          channel?: Database["public"]["Enums"]["comm_channel"] | null
+          completed_at?: string | null
           error?: string | null
+          error_code?: string | null
           id?: string
           message_id: string
+          next_retry_at?: string | null
           provider?: string | null
+          provider_message_id?: string | null
           response?: Json | null
+          retryable?: boolean | null
+          started_at?: string | null
           status: Database["public"]["Enums"]["comm_status"]
         }
         Update: {
+          attempt_number?: number | null
           attempted_at?: string
+          channel?: Database["public"]["Enums"]["comm_channel"] | null
+          completed_at?: string | null
           error?: string | null
+          error_code?: string | null
           id?: string
           message_id?: string
+          next_retry_at?: string | null
           provider?: string | null
+          provider_message_id?: string | null
           response?: Json | null
+          retryable?: boolean | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["comm_status"]
         }
         Relationships: [
@@ -425,6 +449,7 @@ export type Database = {
           delivered_at: string | null
           email_account_id: string | null
           error: string | null
+          error_code: string | null
           failed_at: string | null
           id: string
           max_retries: number
@@ -432,8 +457,10 @@ export type Database = {
           media_url: string | null
           message_type: string
           metadata: Json
+          next_retry_at: string | null
           opened_at: string | null
           priority: Database["public"]["Enums"]["comm_priority"]
+          processing_started_at: string | null
           project_id: string | null
           provider: string | null
           provider_message_id: string | null
@@ -463,6 +490,7 @@ export type Database = {
           delivered_at?: string | null
           email_account_id?: string | null
           error?: string | null
+          error_code?: string | null
           failed_at?: string | null
           id?: string
           max_retries?: number
@@ -470,8 +498,10 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           metadata?: Json
+          next_retry_at?: string | null
           opened_at?: string | null
           priority?: Database["public"]["Enums"]["comm_priority"]
+          processing_started_at?: string | null
           project_id?: string | null
           provider?: string | null
           provider_message_id?: string | null
@@ -501,6 +531,7 @@ export type Database = {
           delivered_at?: string | null
           email_account_id?: string | null
           error?: string | null
+          error_code?: string | null
           failed_at?: string | null
           id?: string
           max_retries?: number
@@ -508,8 +539,10 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           metadata?: Json
+          next_retry_at?: string | null
           opened_at?: string | null
           priority?: Database["public"]["Enums"]["comm_priority"]
+          processing_started_at?: string | null
           project_id?: string | null
           provider?: string | null
           provider_message_id?: string | null
@@ -3907,6 +3940,56 @@ export type Database = {
         Returns: undefined
       }
       check_quota: { Args: { _key: string }; Returns: Json }
+      claim_due_communications: {
+        Args: { _limit?: number }
+        Returns: {
+          attachments: Json
+          bcc: Json
+          body: string
+          cc: Json
+          channel: Database["public"]["Enums"]["comm_channel"]
+          created_at: string
+          created_from: string | null
+          delivered_at: string | null
+          email_account_id: string | null
+          error: string | null
+          error_code: string | null
+          failed_at: string | null
+          id: string
+          max_retries: number
+          media_caption: string | null
+          media_url: string | null
+          message_type: string
+          metadata: Json
+          next_retry_at: string | null
+          opened_at: string | null
+          priority: Database["public"]["Enums"]["comm_priority"]
+          processing_started_at: string | null
+          project_id: string | null
+          provider: string | null
+          provider_message_id: string | null
+          read_at: string | null
+          recipient: string
+          recipient_name: string | null
+          related_action: string | null
+          retry_count: number
+          scheduled_at: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["comm_status"]
+          subject: string | null
+          template_language: string | null
+          template_name: string | null
+          template_variables: Json
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "communication_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       compute_project_labor_cost: {
         Args: { _month: string; _project: string }
         Returns: Json
@@ -4101,6 +4184,10 @@ export type Database = {
         }
         Returns: string
       }
+      recover_stale_communications: {
+        Args: { _older_than_minutes?: number }
+        Returns: number
+      }
       remove_project_member: {
         Args: { _project: string; _user: string }
         Returns: undefined
@@ -4219,6 +4306,9 @@ export type Database = {
         | "sent"
         | "failed"
         | "cancelled"
+        | "processing"
+        | "retrying"
+        | "manual_action_required"
       email_account_status: "active" | "disabled" | "error" | "unverified"
       email_provider:
         | "smtp"
@@ -4385,6 +4475,9 @@ export const Constants = {
         "sent",
         "failed",
         "cancelled",
+        "processing",
+        "retrying",
+        "manual_action_required",
       ],
       email_account_status: ["active", "disabled", "error", "unverified"],
       email_provider: [

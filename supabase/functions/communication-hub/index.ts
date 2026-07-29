@@ -160,12 +160,50 @@ serve(async (req) => {
         return json({ message: updated, result });
       }
 
+      // Sprint 34.1 — manual retry that goes through the dispatcher flow.
+      // Only eligible non-terminal-success messages can be requeued.
+      case "requeue": {
+        const { id } = payload;
+        const { data: msg } = await sb.from("communication_messages")
+          .select("*").eq("id", id).eq("user_id", userId).maybeSingle();
+        if (!msg) return json({ error: "Mesaj bulunamadı" }, 404);
+        if (["sent", "delivered", "read", "cancelled"].includes(msg.status)) {
+          return json({ error: "Bu mesaj yeniden kuyruğa alınamaz" }, 400);
+        }
+        const { data, error } = await sb.from("communication_messages").update({
+          status: "queued",
+          scheduled_at: new Date().toISOString(),
+          next_retry_at: null,
+          processing_started_at: null,
+          error: null,
+          error_code: null,
+          failed_at: null,
+          retry_count: 0,
+        }).eq("id", id).eq("user_id", userId)
+          .in("status", ["failed", "retrying", "manual_action_required", "processing", "scheduled", "queued", "pending_approval", "draft"])
+          .select("*").maybeSingle();
+        if (error) return json({ error: error.message }, 400);
+        return json({ message: data, requeued: true });
+      }
+
+      // Sprint 34.1 — attempt history for a message.
+      case "attempts": {
+        const { id } = payload;
+        const { data: msg } = await sb.from("communication_messages")
+          .select("id").eq("id", id).eq("user_id", userId).maybeSingle();
+        if (!msg) return json({ error: "Mesaj bulunamadı" }, 404);
+        const { data: attempts } = await sb.from("communication_delivery_attempts")
+          .select("*").eq("message_id", id).order("attempted_at", { ascending: false });
+        return json({ attempts: attempts || [] });
+      }
+
       case "cancel": {
+
         const { id } = payload;
         const { data, error } = await sb.from("communication_messages").update({
           status: "cancelled",
         }).eq("id", id).eq("user_id", userId)
-          .in("status", ["draft", "pending_approval", "scheduled", "queued", "failed"])
+          .in("status", ["draft", "pending_approval", "scheduled", "queued", "failed", "retrying", "manual_action_required"])
           .select("*").maybeSingle();
         if (error) return json({ error: error.message }, 400);
         return json({ message: data });

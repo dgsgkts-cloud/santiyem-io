@@ -63,9 +63,13 @@ export const communicationHub = {
   send: (id: string) => call("send", { id }),
   retry: (id: string) => call("retry", { id }),
   cancel: (id: string) => call("cancel", { id }),
+  /** Sprint 34.1 — safe manual retry: requeues through the dispatcher. */
+  requeue: (id: string) => call("requeue", { id }),
+  attempts: (id: string) => call("attempts", { id }),
   schedule: (id: string, scheduled_at: string) => call("schedule", { id, scheduled_at }),
   status: (id: string) => call("status", { id }),
   list: (filter: ListFilter = {}) => call("list", { ...filter }),
+
 
   // Email account management (Sprint 9.1)
   emailAccounts: {
