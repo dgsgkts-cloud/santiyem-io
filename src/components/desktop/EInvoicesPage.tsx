@@ -116,7 +116,7 @@ const EInvoicesPage = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-4">
+    <div className="px-5 pt-5 pb-6 space-y-5 mx-auto w-full max-w-[1400px]">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>

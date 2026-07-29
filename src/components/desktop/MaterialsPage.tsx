@@ -165,7 +165,7 @@ const MaterialsPage = () => {
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
   return (
-    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-7xl mx-auto">
+    <div className="px-5 pt-5 pb-6 space-y-5 mx-auto w-full max-w-[1400px]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
