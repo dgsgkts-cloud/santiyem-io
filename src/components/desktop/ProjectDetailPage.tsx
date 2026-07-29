@@ -29,7 +29,7 @@ import {
   QuickActionBar, ProjectAIDock, CEOExecutiveSummary,
 } from "./ProjectCockpit";
 
-import { PageShell, SectionCard } from "@/components/ui/responsive";
+import { PageShell } from "@/components/ui/responsive";
 
 import ProjectHeader from "./project-detail/ProjectHeader";
 import ProjectInfoCards from "./project-detail/ProjectInfoCards";
