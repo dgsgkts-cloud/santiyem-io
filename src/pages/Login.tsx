@@ -6,17 +6,10 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/muhendis-logo.png";
-
-const FEATURES = [
-  "TBDY, TS standartları, İmar mevzuatı — anında sorgula",
-  "Proje ve hakediş dosyalarını yükle, AI analiz etsin",
-  "Fotoğraftan şantiye sorunlarını tespit et",
-  "EKB ön hesaplama ve enerji sınıfı",
-  "Türk mühendisler için, Türkçe",
-];
+import { LoginHero } from "@/components/auth/LoginHero";
 
 const Login = () => {
   useSEO({ title: "Giriş Yap | Şantiyem" });
@@ -154,53 +147,28 @@ const Login = () => {
           {formContent}
         </div>
 
-        {/* Right - Feature showcase */}
-        <div className="w-[55%] flex flex-col items-center justify-center px-12"
-          style={{ background: "linear-gradient(135deg, rgba(255,107,43,0.08) 0%, #0F1419 100%)" }}>
-          <h2 className="text-[32px] font-bold mb-8" style={{ color: "#F1F5F9", fontFamily: "'Space Grotesk', sans-serif" }}>
-            Mühendislerin Aracı
-          </h2>
-          <div className="space-y-5 max-w-md">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ backgroundColor: "rgba(255,107,43,0.15)" }}>
-                  <Check className="w-3.5 h-3.5" style={{ color: "#FF6B2B" }} />
-                </div>
-                <span className="text-[15px] leading-relaxed" style={{ color: "#94A3B8" }}>{f}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Social proof */}
-          <div className="mt-12 flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {["MB", "AY", "SK"].map((initials, i) => (
-                <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                  style={{ backgroundColor: ["#FF6B2B", "#3B82F6", "#22C55E"][i], border: "2px solid #0F1419" }}>
-                  {initials}
-                </div>
-              ))}
-            </div>
-            <p className="text-[13px] italic" style={{ color: "#64748B" }}>
-              "Projelerimizi çok daha hızlı yönetiyoruz."
-            </p>
-          </div>
+        {/* Right - Hero showcase (Sprint 32.3) */}
+        <div className="w-[55%]" style={{ backgroundColor: "#0F1419" }}>
+          <LoginHero />
         </div>
       </div>
     );
   }
 
-  // Mobile layout (unchanged)
+  // Mobile / tablet: form first, hero stacked underneath.
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative login-dark" style={{ backgroundColor: "#0F1419" }}>
+    <div className="min-h-screen relative login-dark" style={{ backgroundColor: "#0F1419" }}>
       <button onClick={() => navigate("/")}
-        className="absolute top-4 left-4 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
+        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
         <ArrowLeft className="w-4 h-4" /> Ana Sayfa
       </button>
-      {formContent}
+      <div className="flex min-h-screen items-center justify-center px-4">
+        {formContent}
+      </div>
+      <LoginHero />
     </div>
   );
+
 };
 
 export default Login;
