@@ -281,7 +281,7 @@ export function LoginHero() {
                 animationDelay: `${i * 700}ms`,
                 borderColor: "rgba(255,255,255,0.08)",
                 backgroundColor: "rgba(255,255,255,0.03)",
-                color: "#8С98A8".replace("С", "C"),
+                color: "#8A98A8",
               }}
             >
               {b}
