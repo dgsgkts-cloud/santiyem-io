@@ -203,7 +203,7 @@ serve(async (req) => {
         const { data, error } = await sb.from("communication_messages").update({
           status: "cancelled",
         }).eq("id", id).eq("user_id", userId)
-          .in("status", ["draft", "pending_approval", "scheduled", "queued", "failed"])
+          .in("status", ["draft", "pending_approval", "scheduled", "queued", "failed", "retrying", "manual_action_required"])
           .select("*").maybeSingle();
         if (error) return json({ error: error.message }, 400);
         return json({ message: data });
