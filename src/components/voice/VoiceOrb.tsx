@@ -282,7 +282,7 @@ export function VoiceOrb() {
       {/* Always Listening status — hidden entirely in Push-to-Talk mode. */}
       {alwaysListening && !open && (
         <div
-          className={`fixed right-4 z-40 sm:right-6 ${
+          className={`fixed ${isDesktop ? "right-6" : "right-4"} z-40 ${
             wake.state === "denied" ? "" : "pointer-events-none"
           }`}
           style={{ bottom: `calc(${bottomOffset} + ${isDesktop ? 56 : 64}px)` }}
@@ -313,7 +313,7 @@ export function VoiceOrb() {
 
       {showFinanceTip && isDesktop && (
         <div
-          className="fixed right-6 z-40 animate-in fade-in slide-in-from-bottom-2"
+          className={`fixed ${isDesktop ? "right-6" : "right-4"} z-40 animate-in fade-in slide-in-from-bottom-2`}
           style={{ bottom: `calc(${bottomOffset} + 60px)` }}
         >
           <div className="relative max-w-[240px] rounded-xl bg-[#1E2732] border border-[#FF6B2B]/30 shadow-xl px-3 py-2.5">
