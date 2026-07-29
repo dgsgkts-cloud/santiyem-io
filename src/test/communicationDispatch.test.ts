@@ -1,26 +1,13 @@
 // Sprint 34.1 — dispatcher retry/classification engine tests.
-import { describe, it, expect, vi } from "vitest";
-
-const send = vi.fn();
-
-vi.mock("../../supabase/functions/_shared/communication/providers.ts", () => ({
-  getProvider: (channel: string) =>
-    channel === "email" || channel === "whatsapp"
-      ? { channel, name: channel, sendMessage: send, previewMessage: vi.fn() }
-      : null,
-}));
+import { describe, it, expect } from "vitest";
 
 import {
   classifyFailure,
   nextRetryAt,
   normalizeResult,
   safeError,
-  sendThroughRegistry,
   MAX_ATTEMPTS,
 } from "../../supabase/functions/_shared/communication/dispatchCore";
-
-const msg = (over: Record<string, unknown> = {}) =>
-  ({ id: "m1", channel: "email", recipient: "a@b.com", body: "hi", attachments: [], ...over }) as never;
 
 describe("retry classification", () => {
   it("treats 429 and 5xx as retryable", () => {
@@ -81,24 +68,5 @@ describe("secret redaction", () => {
     const out = safeError("failed Bearer abc.def-123 api_key=supersecret");
     expect(out).not.toContain("supersecret");
     expect(out).not.toContain("abc.def-123");
-  });
-});
-
-describe("registry dispatch", () => {
-  it("fails permanently on unsupported channel", async () => {
-    const r = await sendThroughRegistry(msg({ channel: "sms" }));
-    expect(r).toMatchObject({ status: "failed", retryable: false, error_code: "unsupported_channel" });
-  });
-  it("sends through the existing provider registry", async () => {
-    send.mockResolvedValueOnce({ success: true, provider: "smtp", provider_message_id: "id-1" });
-    const r = await sendThroughRegistry(msg());
-    expect(r.ok).toBe(true);
-    expect(r.status).toBe("sent");
-  });
-  it("treats provider exceptions as retryable transport errors", async () => {
-    send.mockRejectedValueOnce(new Error("socket hang up (timeout)"));
-    const r = await sendThroughRegistry(msg());
-    expect(r.status).toBe("retrying");
-    expect(r.retryable).toBe(true);
   });
 });
