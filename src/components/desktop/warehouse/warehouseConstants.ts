@@ -20,12 +20,14 @@ export const MATERIALS = [
 ];
 
 export type StockState = "healthy" | "low" | "critical" | "out";
+// SPRINT 38D — softened, premium status tones shared with the Materials module.
 export const STATE_META: Record<StockState, { label: string; color: string; dot: string }> = {
-  healthy: { label: "Sağlıklı", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", dot: "bg-emerald-400" },
-  low: { label: "Düşük", color: "bg-amber-500/10 text-amber-400 border-amber-500/20", dot: "bg-amber-400" },
-  critical: { label: "Kritik", color: "bg-red-500/10 text-red-400 border-red-500/20", dot: "bg-red-400" },
-  out: { label: "Stok Yok", color: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground" },
+  healthy: { label: "Sağlıklı", color: "bg-emerald-500/[0.08] text-emerald-300/90 border-emerald-500/20", dot: "bg-emerald-400/80" },
+  low: { label: "Düşük", color: "bg-amber-500/[0.08] text-amber-300/90 border-amber-500/20", dot: "bg-amber-400/80" },
+  critical: { label: "Kritik", color: "bg-rose-500/[0.08] text-rose-300/90 border-rose-500/20", dot: "bg-rose-400/80" },
+  out: { label: "Stok Yok", color: "bg-muted/60 text-muted-foreground border-border/70", dot: "bg-muted-foreground/50" },
 };
+
 
 export type Warehouse_ = {
   id: string; name: string; type: string; manager: string; location: string;
