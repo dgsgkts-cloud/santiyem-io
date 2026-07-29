@@ -13,6 +13,7 @@ import { isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { VoiceLiveWaveform } from "./VoiceLiveWaveform";
+import AIThinkingStages from "@/components/ai/AIThinkingStages";
 import { MicPermissionScreen } from "./MicPermissionScreen";
 import { voiceHaptic } from "@/lib/voice/haptics";
 import { VOICE_UI_EVENT } from "@/lib/voice/voiceTools";
