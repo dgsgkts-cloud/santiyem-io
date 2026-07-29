@@ -17,7 +17,7 @@ import {
   safeError,
   sendThroughRegistry,
   MAX_ATTEMPTS,
-} from "../../supabase/functions/_shared/communication/dispatch";
+} from "../../supabase/functions/_shared/communication/dispatchCore";
 
 const msg = (over: Record<string, unknown> = {}) =>
   ({ id: "m1", channel: "email", recipient: "a@b.com", body: "hi", attachments: [], ...over }) as never;
