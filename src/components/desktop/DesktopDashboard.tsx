@@ -45,6 +45,7 @@ import {
   Sun,
   Moon,
   Coffee,
+  Package,
 } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { useProjects } from "@/hooks/useProjects";
