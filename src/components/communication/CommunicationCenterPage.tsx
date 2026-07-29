@@ -379,12 +379,54 @@ export default function CommunicationCenterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!attemptsFor} onOpenChange={(o) => !o && setAttemptsFor(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gönderim Denemeleri</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {attemptsLoading ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> Yükleniyor…
+              </div>
+            ) : attempts.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Henüz deneme kaydı yok.</div>
+            ) : attempts.map((a) => (
+              <div key={a.id} className="rounded-md border p-3 text-xs space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-[10px]">Deneme #{a.attempt_number ?? "—"}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{a.status}</Badge>
+                  {a.provider && <Badge variant="outline" className="text-[10px]">{a.provider}</Badge>}
+                  {a.retryable === true && <Badge variant="outline" className="text-[10px]">Yeniden denenebilir</Badge>}
+                </div>
+                <div className="text-muted-foreground">
+                  {format(new Date(a.attempted_at), "d MMM yyyy HH:mm:ss", { locale: tr })}
+                  {a.completed_at && ` → ${format(new Date(a.completed_at), "HH:mm:ss", { locale: tr })}`}
+                </div>
+                {a.error && (
+                  <div className="text-red-600">
+                    {a.error_code ? `[${a.error_code}] ` : ""}{a.error}
+                  </div>
+                )}
+                {a.next_retry_at && (
+                  <div className="text-muted-foreground">
+                    Sonraki deneme: {format(new Date(a.next_retry_at), "d MMM HH:mm", { locale: tr })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAttemptsFor(null)}>Kapat</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function MessageRow({
-  m, busy, onPreview, onSend, onCancel, onRetry,
+  m, busy, onPreview, onSend, onCancel, onRetry, onAttempts,
 }: {
   m: CommMessage;
   busy: boolean;
@@ -392,7 +434,9 @@ function MessageRow({
   onSend: () => void;
   onCancel: () => void;
   onRetry: () => void;
+  onAttempts: () => void;
 }) {
+
   const Icon = CHANNEL_ICON[m.channel];
   const meta = STATUS_META[m.status];
   const StIcon = meta.icon;
