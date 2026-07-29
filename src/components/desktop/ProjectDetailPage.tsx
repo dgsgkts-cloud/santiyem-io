@@ -326,7 +326,6 @@ const ProjectDetailPage = ({
               <ProjectRecentActivity project={p} />
             </div>
 
-            <ProjectTimeline events={timelineEvents} />
             <RiskCenter risks={risks} />
 
             <ProjectHakedisSection
@@ -348,44 +347,58 @@ const ProjectDetailPage = ({
               onExportExcel={exportHakedisExcel}
             />
 
-            <ProjectFilesSection
-              canEdit={!!user}
-              loading={fLoading}
-              uploading={uploading}
-              files={files as any}
-              fileInputRef={fileInputRef}
-              onFileChange={handleFileUpload}
-              onRequestDelete={(id, name, fileUrl) => setDeleteTarget({ type: "file", id, name, fileUrl })}
-            />
+            {/* SPRINT 38A — secondary detail is grouped and collapsed by default
+                so the screen opens short and readable. */}
+            <CollapsibleSection title="Zaman Çizelgesi" hint={`${timelineEvents.length} olay`}>
+              <ProjectTimeline events={timelineEvents} />
+            </CollapsibleSection>
 
-            {user && (
-              <ProjectCashFlowSection
-                payments={projectPayments as any}
-                collections={projectCollections as any}
-                checks={projectChecks as any}
+            <CollapsibleSection title="Dosyalar" hint={`${files.length}`}>
+              <ProjectFilesSection
+                canEdit={!!user}
+                loading={fLoading}
+                uploading={uploading}
+                files={files as any}
+                fileInputRef={fileInputRef}
+                onFileChange={handleFileUpload}
+                onRequestDelete={(id, name, fileUrl) => setDeleteTarget({ type: "file", id, name, fileUrl })}
               />
-            )}
-
-            <ProjectNotesSection
-              canEdit={!!user}
-              loading={nLoading}
-              notes={notes as any}
-              newContent={newNoteContent}
-              onContentChange={setNewNoteContent}
-              onAdd={() => { addNote(newNoteContent); setNewNoteContent(""); }}
-              onRequestDelete={(id, preview) => setDeleteTarget({ type: "note", id, name: preview })}
-            />
-
-            <ProjectActivityFeed items={activityItems} />
+            </CollapsibleSection>
 
             {user && (
-              <SectionCard>
+              <CollapsibleSection title="Nakit Akışı">
+                <ProjectCashFlowSection
+                  payments={projectPayments as any}
+                  collections={projectCollections as any}
+                  checks={projectChecks as any}
+                />
+              </CollapsibleSection>
+            )}
+
+            <CollapsibleSection title="Notlar" hint={`${notes.length}`}>
+              <ProjectNotesSection
+                canEdit={!!user}
+                loading={nLoading}
+                notes={notes as any}
+                newContent={newNoteContent}
+                onContentChange={setNewNoteContent}
+                onAdd={() => { addNote(newNoteContent); setNewNoteContent(""); }}
+                onRequestDelete={(id, preview) => setDeleteTarget({ type: "note", id, name: preview })}
+              />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Aktivite Akışı">
+              <ProjectActivityFeed items={activityItems} />
+            </CollapsibleSection>
+
+            {user && (
+              <CollapsibleSection title="Görev Panosu">
                 <TaskBoard projectId={p.id} />
-              </SectionCard>
+              </CollapsibleSection>
             )}
 
             {user && (
-              <SectionCard
+              <CollapsibleSection
                 title={
                   <span className="flex items-center gap-2">
                     <Users className="w-4 h-4" style={{ color: "#7C3AED" }} />
@@ -394,16 +407,17 @@ const ProjectDetailPage = ({
                 }
               >
                 <AttendancePanel projectId={p.id} projectName={p.name} />
-              </SectionCard>
+              </CollapsibleSection>
             )}
 
             {user && (
-              <SectionCard>
+              <CollapsibleSection title="Proje Ekibi">
                 <ProjectMembersManagement projectId={p.id} />
-              </SectionCard>
+              </CollapsibleSection>
             )}
           </>
         )}
+
 
         <ProjectAIDock data={aiDock} onAsk={askProjectAI} />
         <QuickActionBar actions={quickActions} />
