@@ -33,19 +33,18 @@ export function KpiCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={cn(
-        "card-refined text-left w-full p-4 flex flex-col gap-2 min-w-0",
+        // SPRINT 36 — denser KPI: less height, more info per screen.
+        "rounded-card border border-border/80 bg-card shadow-soft text-left w-full p-3 flex flex-col gap-1 min-w-0",
         onClick && "cursor-pointer hover:border-primary/40 transition-colors",
         className
       )}
-      style={{ minHeight: 96 }}
+      style={{ minHeight: 72 }}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-fs-xs uppercase tracking-wide text-muted-foreground truncate">
-          {label}
-        </span>
+        <span className="ds-label truncate">{label}</span>
         {Icon && (
           <span
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
             style={{
               backgroundColor: accent
                 ? `${accent}20`
@@ -53,15 +52,16 @@ export function KpiCard({
               color: accent ?? "hsl(var(--foreground))",
             }}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5" />
           </span>
         )}
       </div>
-      <div className="text-fs-2xl font-semibold text-foreground leading-tight truncate">
+      <div className="ds-heading ds-numeric text-foreground truncate" style={{ fontSize: 20, lineHeight: "26px" }}>
         {value}
       </div>
       {(hint || trend) && (
-        <div className="flex items-center gap-2 text-fs-xs">
+        <div className="flex items-center gap-2 ds-caption">
+
           {trend && (
             <span
               className={cn(
