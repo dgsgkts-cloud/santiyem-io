@@ -36,6 +36,7 @@ import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSect
 import PullToRefresh from "@/components/PullToRefresh";
 import AIInsightCard from "@/components/finance/AIInsightCard";
 import { PaymentMethodBadge, StatusBadge } from "@/components/finance/PaymentBadges";
+import { FinanceStatStrip, AttentionList, FinanceRow, FinanceRowAction, FinanceFilterBar, FinanceListShell } from "@/components/finance/financeUi";
 import { Sparkles, Wallet as WalletIcon } from "lucide-react";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
@@ -394,7 +395,7 @@ const PaymentsKasaPage = () => {
               const attention = [
                 ...overduePayments.slice(0, 3).map(p => ({
                   id: `op-${p.id}`,
-                  title: p.payee || "Ödeme",
+                  title: p.recipient || "Ödeme",
                   detail: `Vadesi geçti · ${format(parseISO(p.payment_date), "d MMM")} · ${Math.abs(differenceInDays(parseISO(p.payment_date), now))} gün`,
                   amount: fmtShort(Number(p.amount)),
                   tone: "overdue" as const,
@@ -402,7 +403,7 @@ const PaymentsKasaPage = () => {
                 })),
                 ...overdueCollections.slice(0, 2).map(c => ({
                   id: `oc-${c.id}`,
-                  title: c.payer || "Tahsilat",
+                  title: c.sender || "Tahsilat",
                   detail: `Gecikmiş tahsilat · ${format(parseISO(c.collection_date), "d MMM")}`,
                   amount: fmtShort(Number(c.amount)),
                   tone: "attention" as const,
