@@ -57,7 +57,10 @@ export function VoiceExperience(props: Props) {
   if (useLegacy) {
     return (
       <>
-        <VoiceCopilot {...props} />
+        <VoiceCopilot
+          {...props}
+          initialCards={props.initialCards?.map((c) => ({ ...c, type: "info" as const }))}
+        />
         {reconnecting && (
           <div className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex justify-center">
             <div className="rounded-full bg-card/95 px-4 py-2 text-xs text-muted-foreground shadow-lg">

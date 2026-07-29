@@ -38,6 +38,11 @@ export abstract class BaseVoiceEngine implements VoiceEngine {
 
   protected emitFallback(reason: string) {
     this.emitter.emit("fallback", { reason });
+    // Global signal so the UI shell can swap providers even if the
+    // subscribing panel already unmounted.
+    try {
+      window.dispatchEvent(new CustomEvent("voice-engine-fallback", { detail: reason }));
+    } catch { /* noop */ }
   }
 
   abstract connect(config?: VoiceEngineConfig): Promise<void>;
