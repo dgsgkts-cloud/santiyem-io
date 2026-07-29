@@ -31,8 +31,16 @@ function generateToken(): string {
 }
 
 // Auth note: verify_jwt = true in config.toml so the gateway rejects calls
-// without a Bearer token. We additionally require an authenticated user
-// (or service-role) here — anonymous JWTs are not allowed to send branded mail.
+// without a Bearer token. Service-role callers (other edge functions, cron
+// flows) may send any template. A plain authenticated end user may only
+// trigger the templates listed below, and only for a resource they own — the
+// recipient address is then derived server-side from that record, so users
+// can never choose an arbitrary destination.
+const USER_TRIGGERABLE: Record<string, 'signature_request' | 'hakedis'> = {
+  'signature-request': 'signature_request',
+  'signature-reminder': 'signature_request',
+  'hakedis-approval-request': 'hakedis',
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -40,31 +48,29 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const unauthorized = () =>
+    new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+
   // Require an authenticated (non-anonymous) caller. Service-role calls
   // from other edge functions pass this check (role = 'service_role').
   const authHeader = req.headers.get('Authorization') || ''
-  if (!authHeader.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+  if (!authHeader.startsWith('Bearer ')) return unauthorized()
+
+  const jwt = authHeader.slice('Bearer '.length)
+  let isServiceRole = false
   try {
-    const jwt = authHeader.slice('Bearer '.length)
     const payloadPart = jwt.split('.')[1]
     const claims = JSON.parse(
       atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'))
     )
     const role = claims?.role
     // Reject anon — only authenticated users or service role may send mail.
-    if (role !== 'authenticated' && role !== 'service_role') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    if (role !== 'authenticated' && role !== 'service_role') return unauthorized()
+    isServiceRole = role === 'service_role'
   } catch {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return unauthorized()
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -86,11 +92,13 @@ Deno.serve(async (req) => {
   let recipientEmail: string
   let idempotencyKey: string
   let messageId: string
+  let resourceId: string
   let templateData: Record<string, any> = {}
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
+    resourceId = String(body.resourceId || body.resource_id || '')
     messageId = crypto.randomUUID()
     idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
     if (body.templateData && typeof body.templateData === 'object') {
@@ -132,10 +140,75 @@ Deno.serve(async (req) => {
     )
   }
 
+  // Create Supabase client with service role (bypasses RLS)
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  const forbidden = (msg: string) =>
+    new Response(JSON.stringify({ error: msg }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+
   // Resolve effective recipient: template-level `to` takes precedence over
   // the caller-provided recipientEmail. This allows notification templates
   // to always send to a fixed address (e.g., site owner from env var).
-  const effectiveRecipient = template.to || recipientEmail
+  let effectiveRecipient = template.to || recipientEmail
+
+  // 1b. Authorization for end-user callers: only a small set of templates may
+  // be triggered directly, only for a record the caller owns, and the
+  // destination address always comes from that record — never from the request.
+  if (!isServiceRole) {
+    const kind = USER_TRIGGERABLE[templateName]
+    if (!kind) return forbidden('This template can only be sent by the system')
+    if (!resourceId) return forbidden('resourceId is required for this template')
+
+    const { data: userRes } = await createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    ).auth.getUser(jwt)
+    const callerId = userRes?.user?.id
+    if (!callerId) return unauthorized()
+
+    let ownerId: string | null = null
+    let derivedRecipient: string | null = null
+
+    if (kind === 'signature_request') {
+      const { data: reqRow } = await supabase
+        .from('contract_signature_requests')
+        .select('recipient_email, contracts:contract_id (user_id)')
+        .eq('id', resourceId)
+        .maybeSingle()
+      if (!reqRow) return forbidden('Resource not found')
+      ownerId = (reqRow as any).contracts?.user_id ?? null
+      derivedRecipient = (reqRow as any).recipient_email ?? null
+    } else {
+      const { data: hakedis } = await supabase
+        .from('project_hakedis')
+        .select('user_id, client_email')
+        .eq('id', resourceId)
+        .maybeSingle()
+      if (!hakedis) return forbidden('Resource not found')
+      ownerId = (hakedis as any).user_id ?? null
+      derivedRecipient = (hakedis as any).client_email ?? null
+    }
+
+    if (!ownerId) return forbidden('Resource not found')
+
+    const { data: allowed } = await supabase.rpc('can_access_team_resource', {
+      _accessor_id: callerId,
+      _owner_id: ownerId,
+    })
+    if (!allowed) return forbidden('You do not have access to this resource')
+
+    if (!derivedRecipient) {
+      return new Response(
+        JSON.stringify({ error: 'No recipient address stored for this resource' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    // Server-derived recipient wins over anything the client supplied.
+    effectiveRecipient = template.to || derivedRecipient
+  }
 
   if (!effectiveRecipient) {
     return new Response(
@@ -149,8 +222,7 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Create Supabase client with service role (bypasses RLS)
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase

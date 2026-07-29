@@ -34,6 +34,23 @@ serve(async (req) => {
     if (!audio || !meetingId) return json({ error: "missing_fields" }, 400);
     if (audio.size < 2048) return json({ text: "", skipped: "too_small" });
 
+    // Ownership gate: only the meeting's owner (or a teammate) may append
+    // transcript segments to it.
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    const { data: meeting } = await admin
+      .from("meetings")
+      .select("id,user_id")
+      .eq("id", meetingId)
+      .maybeSingle();
+    if (!meeting) return json({ error: "meeting_not_found" }, 404);
+
+    const { data: allowed } = await admin.rpc("can_access_team_resource", {
+      _accessor_id: user.id,
+      _owner_id: meeting.user_id,
+    });
+    if (!allowed) return json({ error: "forbidden" }, 403);
+
+
     // Forward to Lovable AI Gateway transcription
     const upstream = new FormData();
     upstream.append("model", "openai/gpt-4o-mini-transcribe");
@@ -55,7 +72,6 @@ serve(async (req) => {
     if (!text) return json({ text: "" });
 
     // Persist as final segment
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     await admin.from("meeting_transcripts").insert({
       meeting_id: meetingId,
       user_id: user.id,

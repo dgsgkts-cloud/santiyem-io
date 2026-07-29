@@ -44,13 +44,27 @@ serve(async (req) => {
     if (!user) return json({ error: "unauthorized" }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Ownership gate: the caller must own the meeting (or share a team with the
+    // owner) before we read its transcript or write analyses/action items.
+    const { data: meeting } = await admin
+      .from("meetings")
+      .select("*")
+      .eq("id", meeting_id)
+      .maybeSingle();
+    if (!meeting) return json({ error: "meeting_not_found" }, 404);
+
+    const { data: allowed } = await admin.rpc("can_access_team_resource", {
+      _accessor_id: user.id,
+      _owner_id: meeting.user_id,
+    });
+    if (!allowed) return json({ error: "forbidden" }, 403);
+
     const { data: mt } = await admin
       .from("meeting_transcripts")
       .select("seq,speaker_label,text,started_at_ms")
       .eq("meeting_id", meeting_id)
       .order("seq");
-    const { data: meeting } = await admin.from("meetings").select("*").eq("id", meeting_id).maybeSingle();
-    if (!meeting) return json({ error: "meeting_not_found" }, 404);
 
     const transcript = (mt || [])
       .map((r) => `${r.speaker_label ? `[${r.speaker_label}] ` : ""}${r.text}`)

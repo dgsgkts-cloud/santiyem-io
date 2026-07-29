@@ -38,11 +38,28 @@ serve(async (req) => {
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
     const sb = createClient(supabaseUrl, serviceKey);
+    // User-scoped client: RLS on company_memories (own + same-team rows only)
+    // enforces tenant isolation for every read/mutation of existing records.
+    const asUser = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Ownership guard for actions that take a client-supplied memory id.
+    const assertOwned = async (id: string) => {
+      const { data, error } = await asUser
+        .from("company_memories")
+        .select("id")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    };
+
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "").toLowerCase();
 
     if (action === "list") {
-      const { data, error } = await sb
+      const { data, error } = await asUser
         .from("company_memories")
         .select("id,type,category,title,content,metadata,source,confidence,pinned,usage_count,last_used_at,created_from,user_confirmed,updated_at,created_at,user_id")
         .order("pinned", { ascending: false })
@@ -97,6 +114,7 @@ serve(async (req) => {
         embedding: embedding as unknown as number[],
       };
       if (id) {
+        if (!(await assertOwned(id))) return json({ error: "not_found" }, 404);
         const { data, error } = await sb.from("company_memories")
           .update(row).eq("id", id).select().single();
         if (error) throw error;
@@ -107,9 +125,6 @@ serve(async (req) => {
       if (error) throw error;
       // Sprint 11.1 — count Company Memory writes toward monthly quota (soft).
       try {
-        const asUser = createClient(supabaseUrl, anonKey, {
-          global: { headers: { Authorization: authHeader } },
-        });
         await asUser.rpc("increment_usage", {
           _metric: "company_memory_writes_month",
           _delta: 1,
@@ -123,6 +138,7 @@ serve(async (req) => {
     if (action === "update") {
       const id = String(body.id || "");
       if (!id) return json({ error: "id required" }, 400);
+      if (!(await assertOwned(id))) return json({ error: "not_found" }, 404);
       const patch: Record<string, unknown> = {};
       if (typeof body.title === "string") patch.title = body.title.slice(0, 200);
       if (typeof body.content === "string") patch.content = body.content;
@@ -143,6 +159,7 @@ serve(async (req) => {
       const id = String(body.id || "");
       const pinned = !!body.pinned;
       if (!id) return json({ error: "id required" }, 400);
+      if (!(await assertOwned(id))) return json({ error: "not_found" }, 404);
       const { data, error } = await sb.from("company_memories")
         .update({ pinned }).eq("id", id).select().single();
       if (error) throw error;
@@ -152,6 +169,7 @@ serve(async (req) => {
     if (action === "delete") {
       const id = String(body.id || "");
       if (!id) return json({ error: "id required" }, 400);
+      if (!(await assertOwned(id))) return json({ error: "not_found" }, 404);
       const { error } = await sb.from("company_memories").delete().eq("id", id);
       if (error) throw error;
       return json({ ok: true });
