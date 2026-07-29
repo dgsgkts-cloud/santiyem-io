@@ -174,6 +174,20 @@ const PaymentsKasaPage = () => {
     return list.sort((a, b) => b.expense_date.localeCompare(a.expense_date));
   }, [expenses, selectedProjectFilter]);
 
+  // SPRINT 38E — transaction list search + income/expense segment (view only)
+  const visibleExpenses = useMemo(() => {
+    const q = txQuery.trim().toLowerCase();
+    return filteredExpenses.filter(e => {
+      const isIncome = INCOME_CATEGORIES.includes(e.category);
+      if (txKind === "income" && !isIncome) return false;
+      if (txKind === "expense" && isIncome) return false;
+      if (!q) return true;
+      const proj = projects.find(p => p.id === e.project_id)?.name || "";
+      return `${e.description || ""} ${e.category} ${proj}`.toLowerCase().includes(q);
+    });
+  }, [filteredExpenses, txQuery, txKind, projects]);
+
+
   const now = new Date();
   const bekleyenTahsilatlar = allHakedis.filter(h => h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi");
   const expectedIncome = bekleyenTahsilatlar.reduce((s, h) => s + Number(h.net || 0), 0);
