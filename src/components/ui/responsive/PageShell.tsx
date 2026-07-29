@@ -30,16 +30,13 @@ export function PageShell({
   const mw = typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth;
   return (
     <div
-      className={cn(
-        "w-full no-overflow-x",
-        "py-5 lg:py-6",
-        "safe-area-bottom",
-        className
-      )}
+      className={cn("w-full no-overflow-x safe-area-bottom", className)}
       style={{
+        // SPRINT 35 — one page rhythm: 20px gutters, 24px vertical padding.
         paddingLeft: "max(env(safe-area-inset-left, 0px), 20px)",
         paddingRight: "max(env(safe-area-inset-right, 0px), 20px)",
-        paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)",
+        paddingTop: "max(env(safe-area-inset-top, 0px), 20px)",
+        paddingBottom: "24px",
       }}
     >
       <div
@@ -47,24 +44,13 @@ export function PageShell({
         style={bleed ? undefined : { maxWidth: mw }}
       >
         {(title || actions) && (
-          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 lg:mb-6">
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
             <div className="min-w-0">
-              {title && (
-                <h1
-                  className="text-fs-xl font-semibold text-foreground truncate"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  {title}
-                </h1>
-              )}
-              {subtitle && (
-                <p className="text-fs-sm text-muted-foreground mt-0.5">
-                  {subtitle}
-                </p>
-              )}
+              {title && <h1 className="ds-heading text-foreground truncate">{title}</h1>}
+              {subtitle && <p className="ds-body text-muted-foreground mt-1">{subtitle}</p>}
             </div>
             {actions && (
-              <div className="flex items-center gap-2 flex-wrap">{actions}</div>
+              <div className="flex items-center gap-2 flex-wrap shrink-0">{actions}</div>
             )}
           </header>
         )}
@@ -73,5 +59,6 @@ export function PageShell({
     </div>
   );
 }
+
 
 export default PageShell;
