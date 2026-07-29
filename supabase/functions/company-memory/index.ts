@@ -38,11 +38,28 @@ serve(async (req) => {
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
     const sb = createClient(supabaseUrl, serviceKey);
+    // User-scoped client: RLS on company_memories (own + same-team rows only)
+    // enforces tenant isolation for every read/mutation of existing records.
+    const asUser = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Ownership guard for actions that take a client-supplied memory id.
+    const assertOwned = async (id: string) => {
+      const { data, error } = await asUser
+        .from("company_memories")
+        .select("id")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    };
+
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "").toLowerCase();
 
     if (action === "list") {
-      const { data, error } = await sb
+      const { data, error } = await asUser
         .from("company_memories")
         .select("id,type,category,title,content,metadata,source,confidence,pinned,usage_count,last_used_at,created_from,user_confirmed,updated_at,created_at,user_id")
         .order("pinned", { ascending: false })
