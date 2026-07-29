@@ -7,7 +7,7 @@ import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
 import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
 import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw, Mic } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw, Mic, Info } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
