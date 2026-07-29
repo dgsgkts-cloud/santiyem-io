@@ -42,6 +42,8 @@ import ProjectCashFlowSection from "./project-detail/ProjectCashFlowSection";
 import ProjectNotesSection from "./project-detail/ProjectNotesSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
+import CollapsibleSection from "./projects/CollapsibleSection";
+
 
 
 interface ProjectDetailPageProps {
