@@ -21,6 +21,8 @@ import {
   AlertCircle, CheckCircle2, Clock, XCircle, RotateCcw, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import { FinanceStatStrip, FinanceFilterBar, FinanceListShell, FinanceRow, FinanceRowAction } from "@/components/finance/financeUi";
+import { SkeletonList } from "@/components/ui/Skeletons";
 
 const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
   beklemede: { label: "Bekliyor", color: "#F59E0B", icon: Clock },
@@ -120,71 +122,60 @@ const EInvoicesPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            E-Fatura / E-Arşiv
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gelen ve giden e-faturaları içe aktar, takip et ve kasaya bağla
+          <h1 className="ds-heading text-foreground">E-Fatura / E-Arşiv</h1>
+          <p className="ds-caption text-muted-foreground mt-0.5">
+            Gelen ve giden faturaları içe aktar, durumunu izle ve kasaya bağla
           </p>
         </div>
         <div className="flex gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xml"
-            multiple
-            onChange={handleUpload}
-            className="hidden"
-          />
+          <input ref={fileRef} type="file" accept=".xml" multiple onChange={handleUpload} className="hidden" />
           <Button variant="outline" onClick={() => fileRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" /> UBL XML Yükle
+            <Upload className="w-4 h-4 mr-1.5" /> <span className="hidden sm:inline">UBL XML</span>
           </Button>
           <Button onClick={() => setShowManual(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Yeni Fatura
+            <Plus className="w-4 h-4 mr-1.5" /> <span className="hidden sm:inline">Yeni Fatura</span>
           </Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Inbox} label="Gelen Toplam" value={stats.sumGelen} color="#EF4444" />
-        <StatCard icon={Send} label="Giden Toplam" value={stats.sumGiden} color="#22C55E" />
-        <StatCard icon={AlertCircle} label="Bekleyen Gelen" value={stats.bekleyenGelen} color="#F59E0B" raw />
-        <StatCard icon={AlertCircle} label="Bekleyen Giden" value={stats.bekleyenGiden} color="#F59E0B" raw />
-      </div>
+      {/* SPRINT 38E — compact money-first KPI strip */}
+      <FinanceStatStrip
+        stats={[
+          { label: "Gelen Toplam", value: formatCurrencyShort(stats.sumGelen), hint: "Gider faturaları", icon: Inbox, tone: "attention" },
+          { label: "Giden Toplam", value: formatCurrencyShort(stats.sumGiden), hint: "Gelir faturaları", icon: Send, tone: "positive" },
+          { label: "Bekleyen Gelen", value: stats.bekleyenGelen, icon: AlertCircle, tone: "info" },
+          { label: "Bekleyen Giden", value: stats.bekleyenGiden, icon: AlertCircle, tone: "info" },
+        ]}
+      />
 
-      {/* Filters */}
-      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
-        <Tabs value={direction} onValueChange={(v) => setDirection(v as any)}>
-          <TabsList>
-            <TabsTrigger value="all">Tümü</TabsTrigger>
-            <TabsTrigger value="gelen"><Inbox className="w-3 h-3 mr-1" /> Gelen</TabsTrigger>
-            <TabsTrigger value="giden"><Send className="w-3 h-3 mr-1" /> Giden</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="lg:w-[180px]"><SelectValue placeholder="Durum" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Durumlar</SelectItem>
-            {Object.entries(STATUS_META).map(([k, m]) => (
-              <SelectItem key={k} value={k}>{m.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Fatura no, karşı taraf veya VKN ile ara…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
+      {/* One filter line: search + direction chips, status stays in the select */}
+      <FinanceFilterBar
+        query={search}
+        onQuery={setSearch}
+        placeholder="Fatura no, karşı taraf veya VKN ile ara…"
+        chips={[
+          { value: "all", label: "Tümü", count: invoices.length },
+          { value: "gelen", label: "Gelen", count: invoices.filter(i => i.direction === "gelen").length },
+          { value: "giden", label: "Giden", count: invoices.filter(i => i.direction === "giden").length },
+        ]}
+        active={direction}
+        onChip={(v) => setDirection(v as any)}
+        right={
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-11 w-[150px] shrink-0"><SelectValue placeholder="Durum" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Durumlar</SelectItem>
+              {Object.entries(STATUS_META).map(([k, m]) => (
+                <SelectItem key={k} value={k}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      />
 
-      {/* List */}
+      {/* List — one dense register on every breakpoint */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">Yükleniyor…</div>
+        <SkeletonList rows={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="🧾"
@@ -196,141 +187,52 @@ const EInvoicesPage = () => {
           }
         />
       ) : (
-        <>
-          {/* Desktop table */}
-          <div className="hidden lg:block bg-card border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Yön</th>
-                  <th className="px-4 py-2.5 text-left">Tarih</th>
-                  <th className="px-4 py-2.5 text-left">Fatura No</th>
-                  <th className="px-4 py-2.5 text-left">Karşı Taraf</th>
-                  <th className="px-4 py-2.5 text-right">Tutar</th>
-                  <th className="px-4 py-2.5 text-left">Durum</th>
-                  <th className="px-4 py-2.5 text-left">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv) => {
-                  const eff = computeEffectiveStatus(inv);
-                  const meta = STATUS_META[eff] || STATUS_META.beklemede;
-                  const Icon = meta.icon;
-                  return (
-                    <tr
-                      key={inv.id}
-                      onClick={() => setDetailTarget(inv)}
-                      className="border-t border-border hover:bg-muted/20 group cursor-pointer"
-                    >
-                      <td className="px-4 py-3">
-                        {inv.direction === "gelen" ? (
-                          <Badge variant="outline" className="text-[10px]"><Inbox className="w-3 h-3 mr-1" /> Gelen</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]"><Send className="w-3 h-3 mr-1" /> Giden</Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{inv.invoice_date}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{inv.invoice_no || "—"}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-foreground">{inv.counterparty_name}</div>
-                        {inv.counterparty_tax_no && (
-                          <div className="text-[10px] text-muted-foreground font-mono">VKN {inv.counterparty_tax_no}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold">
-                        <MetricTooltip full={formatCurrencyFull(inv.grand_total)}>
-                          <span>{formatCurrencyShort(inv.grand_total)}</span>
-                        </MetricTooltip>
-                      </td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Select value={inv.status} onValueChange={(v) => updateInvoice(inv.id, { status: v as any })}>
-                          <SelectTrigger className="h-7 w-[140px] text-xs" style={{ color: meta.color }}>
-                            <span className="flex items-center gap-1.5"><Icon className="w-3 h-3" />{meta.label}</span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(STATUS_META).map(([k, m]) => (
-                              <SelectItem key={k} value={k}>{m.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          {!inv.linked_payment_id && !inv.linked_collection_id ? (
-                            <button
-                              onClick={() => setLinkTarget(inv)}
-                              className="p-1.5 rounded hover:bg-primary/10 text-primary"
-                              title="Kasaya bağla"
-                            >
-                              <Link2 className="w-3.5 h-3.5" />
-                            </button>
-                          ) : (
-                            <span className="text-[10px] text-success flex items-center gap-1">
-                              <Wallet className="w-3 h-3" /> Bağlı
-                            </span>
-                          )}
-                          <button
-                            onClick={() => setDeleteTarget({ id: inv.id, name: `${inv.invoice_no || "Fatura"} — ${inv.counterparty_name}` })}
-                            className="p-1.5 rounded text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Sil"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="lg:hidden space-y-2">
-            {filtered.map((inv) => {
-              const eff = computeEffectiveStatus(inv);
-              const meta = STATUS_META[eff] || STATUS_META.beklemede;
-              return (
-                <div
-                  key={inv.id}
-                  onClick={() => setDetailTarget(inv)}
-                  className="bg-card border border-border rounded-lg p-3 space-y-2 cursor-pointer active:bg-muted/30"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px]">
-                          {inv.direction === "gelen" ? "Gelen" : "Giden"}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{inv.invoice_date}</span>
-                      </div>
-                      <div className="font-medium text-foreground mt-1">{inv.counterparty_name}</div>
-                      <div className="text-[11px] font-mono text-muted-foreground">#{inv.invoice_no || "—"}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-foreground">{formatCurrencyShort(inv.grand_total)}</div>
-                      <div className="text-[10px]" style={{ color: meta.color }}>{meta.label}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t border-border" onClick={(e) => e.stopPropagation()}>
-                    {!inv.linked_payment_id && !inv.linked_collection_id ? (
-                      <Button size="sm" variant="outline" className="flex-1 h-8" onClick={() => setLinkTarget(inv)}>
-                        <Link2 className="w-3 h-3 mr-1" /> Kasaya Bağla
-                      </Button>
-                    ) : (
-                      <span className="flex-1 text-[11px] text-success flex items-center gap-1">
-                        <Wallet className="w-3 h-3" /> Kasaya bağlandı
-                      </span>
+        <FinanceListShell>
+          {filtered.map((inv) => {
+            const eff = computeEffectiveStatus(inv);
+            const meta = STATUS_META[eff] || STATUS_META.beklemede;
+            const overdue = eff === "gecikmis";
+            const linked = !!(inv.linked_payment_id || inv.linked_collection_id);
+            return (
+              <FinanceRow
+                key={inv.id}
+                onClick={() => setDetailTarget(inv)}
+                rail={overdue ? "overdue" : eff === "beklemede" ? "attention" : undefined}
+                title={inv.counterparty_name}
+                status={<span style={{ color: meta.color }}>{meta.label}</span>}
+                statusTone={overdue ? "overdue" : eff === "beklemede" ? "attention" : "positive"}
+                subtitle={
+                  <span className="flex items-center gap-2 flex-wrap">
+                    <span>{inv.direction === "gelen" ? "Gelen" : "Giden"}</span>
+                    <span>{inv.invoice_date}</span>
+                    <span className="font-mono">#{inv.invoice_no || "—"}</span>
+                    {inv.counterparty_tax_no && <span className="font-mono opacity-70">VKN {inv.counterparty_tax_no}</span>}
+                    {linked && <span className="text-emerald-300/90 inline-flex items-center gap-1"><Wallet className="w-3 h-3" /> Kasaya bağlı</span>}
+                  </span>
+                }
+                amount={
+                  <MetricTooltip full={formatCurrencyFull(inv.grand_total)}>
+                    <span>{formatCurrencyShort(inv.grand_total)}</span>
+                  </MetricTooltip>
+                }
+                amountTone={inv.direction === "gelen" ? "attention" : "positive"}
+                actions={
+                  <>
+                    {!linked && (
+                      <FinanceRowAction label="Kasaya bağla" icon={Link2} onClick={() => setLinkTarget(inv)} tone="text-primary" />
                     )}
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget({ id: inv.id, name: inv.counterparty_name })}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
+                    <FinanceRowAction
+                      label="Sil"
+                      icon={Trash2}
+                      onClick={() => setDeleteTarget({ id: inv.id, name: `${inv.invoice_no || "Fatura"} — ${inv.counterparty_name}` })}
+                      tone="opacity-0 group-hover:opacity-100 hover:text-destructive"
+                    />
+                  </>
+                }
+              />
+            );
+          })}
+        </FinanceListShell>
       )}
 
       <InvoiceWizard open={showManual} onClose={() => setShowManual(false)} />

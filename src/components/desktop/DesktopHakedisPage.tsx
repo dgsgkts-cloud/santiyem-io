@@ -8,6 +8,7 @@ import { useState, useMemo } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Capacitor } from "@capacitor/core";
 import EmptyState from "./EmptyState";
+import { FinanceStatStrip } from "@/components/finance/financeUi";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import {
   ArrowLeft, Plus, FileDown, FileSpreadsheet, Trash2, ChevronDown,
@@ -261,6 +262,8 @@ const ProjectDetailView = ({ projectId, projects, onBack }: {
   const [editKdvRate, setEditKdvRate] = useState("20");
   const [editExpectedDate, setEditExpectedDate] = useState("");
   const [statusMenuId, setStatusMenuId] = useState<string | null>(null);
+  // SPRINT 38E — status segmentation for the progress-payment list (view only)
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [chartRange, setChartRange] = useState<"6" | "12" | "all">("12");
@@ -503,16 +506,19 @@ const ProjectDetailView = ({ projectId, projects, onBack }: {
 
         <div className="space-y-4 lg:space-y-5">
           {/* KPI ribbon */}
-          <ResponsiveGrid variant="auto" minItemWidth={200} className="gap-3">
-            <KpiCard label="Sözleşme Tutarı" value={contract > 0 ? fmt(contract) : "—"} />
-            <KpiCard label="Toplam Hakediş" value={fmt(totalAmount)} />
-            <KpiCard label="Tahsil Edilen" value={fmt(collected)} accent="#22C55E" />
-            <KpiCard
-              label={pending > 0 ? "Bekleyen" : "Gecikmiş"}
-              value={fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0))}
-              accent={overdueItems.length > 0 ? "#EF4444" : "#F59E0B"}
-            />
-          </ResponsiveGrid>
+          <FinanceStatStrip
+            stats={[
+              { label: "Sözleşme Tutarı", value: contract > 0 ? fmt(contract) : "—", tone: "neutral" },
+              { label: "Toplam Hakediş", value: fmt(totalAmount), tone: "info" },
+              { label: "Tahsil Edilen", value: fmt(collected), tone: "positive" },
+              {
+                label: overdueItems.length > 0 ? "Gecikmiş" : "Bekleyen",
+                value: fmt(pending + overdueItems.reduce((s, h) => s + h.net, 0)),
+                hint: overdueItems.length > 0 ? `${overdueItems.length} hakediş gecikti` : undefined,
+                tone: overdueItems.length > 0 ? "overdue" : "attention",
+              },
+            ]}
+          />
 
           {/* Contract usage */}
           {contract > 0 && (
@@ -595,15 +601,47 @@ const ProjectDetailView = ({ projectId, projects, onBack }: {
             </SectionCard>
           )}
 
-          {/* Timeline */}
-          <SectionCard title="Hakediş Geçmişi">
+          {/* Timeline — status first, then the list */}
+          {(() => {
+            const counts = {
+              all: hakedisler.length,
+              pending: hakedisler.filter(h => ["Bekliyor", "Gönderildi"].includes(h.status)).length,
+              approved: hakedisler.filter(h => h.status === "Onaylandı").length,
+              rejected: hakedisler.filter(h => h.status === "Reddedildi").length,
+              paid: hakedisler.filter(h => h.status === "Ödendi").length,
+            };
+            return (
+              <FinanceStatStrip
+                columns={4}
+                stats={[
+                  { label: "Bekleyen", value: counts.pending, tone: "attention", onClick: () => setStatusFilter(statusFilter === "pending" ? "all" : "pending"), active: statusFilter === "pending" },
+                  { label: "Onaylanan", value: counts.approved, tone: "info", onClick: () => setStatusFilter(statusFilter === "approved" ? "all" : "approved"), active: statusFilter === "approved" },
+                  { label: "Reddedilen", value: counts.rejected, tone: "overdue", onClick: () => setStatusFilter(statusFilter === "rejected" ? "all" : "rejected"), active: statusFilter === "rejected" },
+                  { label: "Ödenen", value: counts.paid, tone: "positive", onClick: () => setStatusFilter(statusFilter === "paid" ? "all" : "paid"), active: statusFilter === "paid" },
+                ]}
+              />
+            );
+          })()}
+
+          <SectionCard
+            title="Hakediş Geçmişi"
+            action={statusFilter !== "all" ? (
+              <button onClick={() => setStatusFilter("all")} className="ds-caption text-primary">Filtreyi temizle</button>
+            ) : undefined}
+          >
             {loading ? (
               <div className="py-4 text-center text-fs-xs text-muted-foreground">Yükleniyor...</div>
             ) : hakedisler.length === 0 ? (
               <div className="py-4 text-center text-fs-xs text-muted-foreground">Bu projeye ait hakediş yok.</div>
             ) : (
               <div className="space-y-0">
-                {sortedHakedisler.map((h, i) => {
+                {sortedHakedisler.filter(h => {
+                  if (statusFilter === "pending") return ["Bekliyor", "Gönderildi"].includes(h.status);
+                  if (statusFilter === "approved") return h.status === "Onaylandı";
+                  if (statusFilter === "rejected") return h.status === "Reddedildi";
+                  if (statusFilter === "paid") return h.status === "Ödendi";
+                  return true;
+                }).map((h, i) => {
                   const enriched = getEnrichedStatus(h);
                   const createdDate = new Date(h.created_at);
                   const hakedisNum = hakedisler.indexOf(h) + 1;

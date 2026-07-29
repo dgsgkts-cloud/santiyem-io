@@ -36,6 +36,7 @@ import SubcontractorDebtSection from "@/components/desktop/SubcontractorDebtSect
 import PullToRefresh from "@/components/PullToRefresh";
 import AIInsightCard from "@/components/finance/AIInsightCard";
 import { PaymentMethodBadge, StatusBadge } from "@/components/finance/PaymentBadges";
+import { FinanceStatStrip, AttentionList, FinanceRow, FinanceRowAction, FinanceFilterBar, FinanceListShell } from "@/components/finance/financeUi";
 import { Sparkles, Wallet as WalletIcon } from "lucide-react";
 
 const INCOME_CATEGORIES = ["Hakediş Tahsilatı", "Avans", "Diğer Gelir"];
@@ -78,6 +79,9 @@ const PaymentsKasaPage = () => {
   const [editTarget, setEditTarget] = useState<ProjectExpense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>("all");
+  const [txQuery, setTxQuery] = useState("");
+  const [txKind, setTxKind] = useState<string>("all");
+
   const [reportDateFrom, setReportDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 3);
     return d.toISOString().slice(0, 10);
@@ -172,6 +176,20 @@ const PaymentsKasaPage = () => {
     }
     return list.sort((a, b) => b.expense_date.localeCompare(a.expense_date));
   }, [expenses, selectedProjectFilter]);
+
+  // SPRINT 38E — transaction list search + income/expense segment (view only)
+  const visibleExpenses = useMemo(() => {
+    const q = txQuery.trim().toLowerCase();
+    return filteredExpenses.filter(e => {
+      const isIncome = INCOME_CATEGORIES.includes(e.category);
+      if (txKind === "income" && !isIncome) return false;
+      if (txKind === "expense" && isIncome) return false;
+      if (!q) return true;
+      const proj = projects.find(p => p.id === e.project_id)?.name || "";
+      return `${e.description || ""} ${e.category} ${proj}`.toLowerCase().includes(q);
+    });
+  }, [filteredExpenses, txQuery, txKind, projects]);
+
 
   const now = new Date();
   const bekleyenTahsilatlar = allHakedis.filter(h => h.status !== "Ödendi" && h.status !== "Taslak" && h.status !== "Reddedildi");
@@ -367,28 +385,104 @@ const PaymentsKasaPage = () => {
 
         {/* ═══ TAB 1: GENEL BAKIŞ ═══ */}
         <TabsContent value="overview">
-          <div className="space-y-6">
-            {/* Sprint 21.1 — AI Finance Summary */}
+          {/* SPRINT 38E — Executive answer-first order:
+              cash position → what needs attention → AI read → trends */}
+          <div className="space-y-4">
             {(() => {
               const weekAhead = new Date(); weekAhead.setDate(weekAhead.getDate() + 7);
               const weekAheadStr = weekAhead.toISOString().slice(0, 10);
               const todayStr = now.toISOString().slice(0, 10);
               const plannedPayments = cashPayments.filter(p => p.status !== "odendi" && p.payment_date >= todayStr && p.payment_date <= weekAheadStr);
+              const overduePayments = cashPayments.filter(p => p.status !== "odendi" && p.payment_date < todayStr);
               const expectedCollections = cashCollections.filter(c => c.status === "bekleniyor" && c.collection_date >= todayStr && c.collection_date <= weekAheadStr);
+              const overdueCollections = cashCollections.filter(c => c.status === "bekleniyor" && c.collection_date < todayStr);
               const plannedTotal = plannedPayments.reduce((s, p) => s + Number(p.amount), 0);
+              const overdueTotal = overduePayments.reduce((s, p) => s + Number(p.amount), 0);
               const expectedTotal = expectedCollections.reduce((s, c) => s + Number(c.amount), 0);
               const availableCash = nakitKasaBalance + bankaBalance;
-              const netAvailable = availableCash + expectedTotal - plannedTotal;
+              const netAvailable = availableCash + expectedTotal - plannedTotal - overdueTotal;
 
               const insights: string[] = [];
               if (plannedPayments.length > 0) insights.push(`Bu hafta ${plannedPayments.length} ödeme planlanıyor.`);
               if (expectedCollections.length > 0) insights.push(`${expectedCollections.length} tahsilat nakit akışını dengeliyor.`);
               if (upcomingChecks.length > 0) insights.push(`${upcomingChecks.length} çek vadesi 7 gün içinde.`);
-              if (netAvailable < 0) insights.push("Uyarı: Net nakit pozisyonu negatif — tahsilat takibi öncelikli.");
+              if (netAvailable < 0) insights.push("Net nakit pozisyonu negatif — tahsilat takibi öncelikli.");
               else if (insights.length === 0) insights.push("Şu anda kritik finansal risk görünmüyor.");
+
+              const attention = [
+                ...overduePayments.slice(0, 3).map(p => ({
+                  id: `op-${p.id}`,
+                  title: p.recipient || "Ödeme",
+                  detail: `Vadesi geçti · ${format(parseISO(p.payment_date), "d MMM")} · ${Math.abs(differenceInDays(parseISO(p.payment_date), now))} gün`,
+                  amount: fmtShort(Number(p.amount)),
+                  tone: "overdue" as const,
+                  onClick: () => setActiveTab("kasa"),
+                })),
+                ...overdueCollections.slice(0, 2).map(c => ({
+                  id: `oc-${c.id}`,
+                  title: c.sender || "Tahsilat",
+                  detail: `Gecikmiş tahsilat · ${format(parseISO(c.collection_date), "d MMM")}`,
+                  amount: fmtShort(Number(c.amount)),
+                  tone: "attention" as const,
+                  onClick: () => setActiveTab("kasa"),
+                })),
+                ...upcomingChecks.slice(0, 2).map(chk => {
+                  const d = differenceInDays(parseISO(chk.due_date), now);
+                  return {
+                    id: `chk-${chk.id}`,
+                    title: chk.counterparty,
+                    detail: `Çek vadesi ${d === 0 ? "bugün" : `${d} gün içinde`} · ${chk.bank_name || "—"}`,
+                    amount: fmtShort(Number(chk.amount)),
+                    tone: (d <= 3 ? "overdue" : "attention") as "overdue" | "attention",
+                    onClick: () => setActiveTab("kasa"),
+                  };
+                }),
+                ...(bekleyenTahsilatlar.length > 0 ? [{
+                  id: "hakedis-pending",
+                  title: "Bekleyen hakediş tahsilatı",
+                  detail: `${bekleyenTahsilatlar.length} hakediş onay/ödeme bekliyor`,
+                  amount: fmtShort(expectedIncome),
+                  tone: "info" as const,
+                }] : []),
+              ];
 
               return (
                 <>
+                  {/* 1 — Cash position at a glance */}
+                  <FinanceStatStrip
+                    stats={[
+                      { label: "Kullanılabilir Nakit", value: fmtShort(availableCash), hint: `Kasa ${fmtShort(nakitKasaBalance)} · Banka ${fmtShort(bankaBalance)}`, icon: Banknote, tone: "positive" },
+                      { label: "Beklenen (7 gün)", value: fmtShort(expectedTotal), hint: `${expectedCollections.length} tahsilat`, icon: ArrowDownLeft, tone: "info" },
+                      { label: "Ödenecek (7 gün)", value: fmtShort(plannedTotal), hint: `${plannedPayments.length} planlı ödeme`, icon: ArrowUpRight, tone: "attention" },
+                      {
+                        label: "Vadesi Geçen", value: fmtShort(overdueTotal),
+                        hint: overduePayments.length > 0 ? `${overduePayments.length} ödeme gecikti` : "Gecikme yok",
+                        icon: AlertTriangle, tone: overdueTotal > 0 ? "overdue" : "neutral",
+                      },
+                    ]}
+                  />
+
+                  <div className="rounded-card border border-border/80 bg-card shadow-soft p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="ds-label">Net Kullanılabilir Pozisyon</div>
+                      <div className="ds-caption text-muted-foreground truncate">Nakit + beklenen tahsilat − ödemeler</div>
+                    </div>
+                    <MetricTooltip full={fmtFull(netAvailable)}>
+                      <span className={`ds-numeric font-semibold cursor-help ${netAvailable >= 0 ? "text-emerald-300/90" : "text-rose-300/90"}`} style={{ fontSize: 24 }}>
+                        {fmtShort(netAvailable)}
+                      </span>
+                    </MetricTooltip>
+                  </div>
+
+                  {/* 2 — What needs attention today */}
+                  {attention.length > 0 && (
+                    <section className="space-y-2">
+                      <h3 className="ds-label px-0.5">Dikkat Gerektirenler</h3>
+                      <AttentionList items={attention} />
+                    </section>
+                  )}
+
+                  {/* 3 — AI read, compact */}
                   <AIInsightCard
                     title="AI Finans"
                     insights={insights}
@@ -396,67 +490,24 @@ const PaymentsKasaPage = () => {
                       { label: "Detaylı Analiz", onClick: () => setActiveTab("reports") },
                       { label: "Ödeme Planı", onClick: () => setActiveTab("kasa"), tone: "ghost" },
                     ]}
+                    compact
                   />
-
-
-                  {/* Executive Cash Position */}
-                  <SectionCard title="Nakit Pozisyonu" padded={false}>
-                    <div className="px-4 pb-4">
-                      <ResponsiveGrid variant="auto" minItemWidth={200}>
-                        {[
-                          { label: "Kullanılabilir Nakit", value: nakitKasaBalance, color: "#22C55E", icon: Banknote },
-                          { label: "Banka Bakiyesi", value: bankaBalance, color: "#3B82F6", icon: Building2 },
-                          { label: "Beklenen Tahsilat (7 gün)", value: expectedTotal, color: "#A855F7", icon: ArrowDownLeft },
-                          { label: "Planlı Ödemeler (7 gün)", value: plannedTotal, color: "#F59E0B", icon: ArrowUpRight },
-                          { label: "Net Kullanılabilir", value: netAvailable, color: netAvailable >= 0 ? "#22C55E" : "#EF4444", icon: DollarSign },
-                        ].map((c, i) => (
-                          <KpiCard
-                            key={i}
-                            label={c.label}
-                            icon={c.icon}
-                            accent={c.color}
-                            value={
-                              <MetricTooltip full={fmtFull(c.value)}>
-                                <span className="cursor-help tabular-nums" style={{ color: c.color }}>
-                                  {fmtShort(c.value)}
-                                </span>
-                              </MetricTooltip>
-                            }
-                          />
-                        ))}
-                      </ResponsiveGrid>
-                    </div>
-                  </SectionCard>
                 </>
               );
             })()}
 
-            <ResponsiveGrid variant="kpi">
-              {[
-                { label: "Toplam Gelir", value: totals.ciro, color: "#22C55E", icon: TrendingUp },
-                { label: "Toplam Gider", value: totals.gider, color: "#EF4444", icon: TrendingDown },
-                { label: "Net Bakiye", value: totals.kar, color: "#3B82F6", icon: DollarSign },
-                { label: "Bekleyen Hakediş", value: totals.bekleyenTahsilat, color: "#F59E0B", icon: Receipt },
-              ].map((c, i) => (
-                <KpiCard
-                  key={i}
-                  label={c.label}
-                  icon={c.icon}
-                  accent={c.color}
-                  value={
-                    <MetricTooltip full={fmtFull(c.value)}>
-                      <span className="cursor-help tabular-nums" style={{ color: c.color }}>
-                        {fmtShort(c.value)}
-                      </span>
-                    </MetricTooltip>
-                  }
-                />
-              ))}
-            </ResponsiveGrid>
-
+            {/* 4 — Period performance, secondary */}
+            <FinanceStatStrip
+              stats={[
+                { label: "Toplam Gelir", value: fmtShort(totals.ciro), icon: TrendingUp, tone: "positive" },
+                { label: "Toplam Gider", value: fmtShort(totals.gider), icon: TrendingDown, tone: "overdue" },
+                { label: "Net Bakiye", value: fmtShort(totals.kar), hint: `Marj %${totals.marj.toFixed(1)}`, icon: DollarSign, tone: totals.kar >= 0 ? "info" : "overdue" },
+                { label: "Bekleyen Hakediş", value: fmtShort(totals.bekleyenTahsilat), icon: Receipt, tone: "attention" },
+              ]}
+            />
 
             <SectionCard title="Aylık Gelir / Gider">
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={monthlyData}>
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} />
                   <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickFormatter={v => fmtShort(v)} />
@@ -467,40 +518,35 @@ const PaymentsKasaPage = () => {
               </ResponsiveContainer>
             </SectionCard>
 
-            <SectionCard title="Proje Bazlı Karlılık">
+            <SectionCard title="Proje Bazlı Karlılık" padded={false}>
               {projectStats.length === 0 ? (
-                <p className="text-fs-xs text-muted-foreground py-8 text-center">Henüz proje yok</p>
+                <p className="ds-caption text-muted-foreground py-8 text-center">Henüz proje yok</p>
               ) : (
-                <ResponsiveGrid variant="auto" minItemWidth={260}>
+                <div className="divide-y divide-border/60">
                   {projectStats.map(p => (
-                    <div key={p.id} className="rounded-xl p-4 bg-background/50 border border-border/50">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-fs-sm font-medium text-foreground truncate">{p.name}</span>
-                        <span className="px-2 py-0.5 rounded-full text-fs-xs font-bold shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "20", color: karColor(p.karMarji) }}>
-                          {p.karMarji.toFixed(1)}%
+                    <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 min-w-0" style={{ minHeight: 60 }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="ds-body font-medium text-foreground truncate">{p.name}</div>
+                        <div className="ds-caption text-muted-foreground truncate">
+                          Gelir {fmtShort(p.hakedisTotal)} · Gider {fmtShort(p.expenseTotal)}
+                        </div>
+                      </div>
+                      <MetricTooltip full={fmtFull(p.netKar)}>
+                        <span className="ds-body ds-numeric font-semibold cursor-help shrink-0" style={{ color: karColor(p.karMarji) }}>
+                          {fmtShort(p.netKar)}
                         </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-fs-xs">
-                        <div>
-                          <span className="text-muted-foreground">Gelir</span>
-                          <MetricTooltip full={fmtFull(p.hakedisTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#22C55E" }}>{fmtShort(p.hakedisTotal)}</p></MetricTooltip>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Gider</span>
-                          <MetricTooltip full={fmtFull(p.expenseTotal)}><p className="font-semibold truncate cursor-help" style={{ color: "#EF4444" }}>{fmtShort(p.expenseTotal)}</p></MetricTooltip>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Net</span>
-                          <MetricTooltip full={fmtFull(p.netKar)}><p className="font-semibold truncate cursor-help" style={{ color: karColor(p.karMarji) }}>{fmtShort(p.netKar)}</p></MetricTooltip>
-                        </div>
-                      </div>
+                      </MetricTooltip>
+                      <span className="ds-caption px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: karColor(p.karMarji) + "18", color: karColor(p.karMarji) }}>
+                        %{p.karMarji.toFixed(1)}
+                      </span>
                     </div>
                   ))}
-                </ResponsiveGrid>
+                </div>
               )}
             </SectionCard>
           </div>
         </TabsContent>
+
 
         {/* ═══ TAB 2: GELİR & GİDERLER ═══ */}
         <TabsContent value="transactions">
@@ -541,68 +587,72 @@ const PaymentsKasaPage = () => {
                 );
               })()}
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <select
-                  value={selectedProjectFilter}
-                  onChange={e => setSelectedProjectFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-xs bg-card border border-border text-foreground"
-                >
-                  <option value="all">Tüm Projeler</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
-                  className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
-                  <Plus className="w-4 h-4" /> Kayıt Ekle
-                </button>
-              </div>
+              {/* SPRINT 38E — one filter line, search always reachable */}
+              <FinanceFilterBar
+                query={txQuery}
+                onQuery={setTxQuery}
+                placeholder="Açıklama, kategori veya proje ara…"
+                chips={[
+                  { value: "all", label: "Tümü" },
+                  { value: "income", label: "Gelir" },
+                  { value: "expense", label: "Gider" },
+                ]}
+                active={txKind}
+                onChip={setTxKind}
+                right={
+                  <>
+                    <select
+                      value={selectedProjectFilter}
+                      onChange={e => setSelectedProjectFilter(e.target.value)}
+                      className="h-11 px-2.5 rounded-control text-fs-sm bg-card border border-border text-foreground/80 shrink-0 max-w-[9rem] focus:outline-none"
+                    >
+                      <option value="all">Tüm Projeler</option>
+                      {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <button
+                      onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
+                      aria-label="Kayıt ekle"
+                      className="h-11 px-3 rounded-control text-fs-sm font-medium flex items-center gap-1.5 bg-primary text-primary-foreground shrink-0"
+                    >
+                      <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Kayıt Ekle</span>
+                    </button>
+                  </>
+                }
+              />
 
-              <div className="rounded-xl bg-card border border-border overflow-hidden">
-                {filteredExpenses.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-12 text-center">Henüz kayıt yok</p>
+              <FinanceListShell>
+                {visibleExpenses.length === 0 ? (
+                  <p className="ds-caption text-muted-foreground py-12 text-center">Bu filtreyle eşleşen kayıt yok</p>
                 ) : (
-                  <div className="divide-y divide-border">
-                    {filteredExpenses.map(e => {
-                      const proj = projects.find(p => p.id === e.project_id);
-                      const isIncome = INCOME_CATEGORIES.includes(e.category);
-                      const paymentType = (e as any).payment_type as string | undefined;
-                      return (
-                        <div key={e.id} className="flex items-center justify-between px-4 py-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: isIncome ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
-                              {isIncome
-                                ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} />
-                                : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />
-                              }
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
-                              <p className="text-[11px] text-muted-foreground truncate">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="hidden sm:flex items-center gap-1.5">
-                              <PaymentMethodBadge type={paymentType} />
-                              <StatusBadge status="odendi" />
-                            </div>
-                            <span className="text-sm font-semibold min-w-[80px] text-right" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
-                              {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
-                            </span>
-                            <button onClick={() => openEditModal(e)}
-                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
-                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  visibleExpenses.map(e => {
+                    const proj = projects.find(p => p.id === e.project_id);
+                    const isIncome = INCOME_CATEGORIES.includes(e.category);
+                    const paymentType = (e as any).payment_type as string | undefined;
+                    return (
+                      <FinanceRow
+                        key={e.id}
+                        title={e.description || e.category}
+                        subtitle={`${e.category} · ${proj?.name || "—"} · ${e.expense_date}`}
+                        status={<><PaymentMethodBadge type={paymentType} /></>}
+                        statusTone="neutral"
+                        amount={`${isIncome ? "+" : "−"}${fmtFull(Number(e.amount))}`}
+                        amountTone={isIncome ? "positive" : "overdue"}
+                        actions={
+                          <>
+                            <FinanceRowAction label="Düzenle" icon={Pencil} onClick={() => openEditModal(e)} />
+                            <FinanceRowAction
+                              label="Sil"
+                              icon={Trash2}
+                              onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
+                            />
+                          </>
+                        }
+                      />
+                    );
+                  })
                 )}
-              </div>
+              </FinanceListShell>
+
             </div>
           </PullToRefresh>
 
@@ -610,12 +660,17 @@ const PaymentsKasaPage = () => {
 
         {/* ═══ TAB 3: KASA & ÖDEMELER ═══ */}
         <TabsContent value="kasa">
-          <div className="space-y-6">
-            {/* Total Balance */}
-            <div className="rounded-xl p-6 text-center bg-card border border-border">
-              <p className="text-xs mb-1 text-muted-foreground">Toplam Kasa Bakiyesi</p>
-              <p className="text-3xl font-bold text-foreground">{fmtFull(kasaBalance)}</p>
-            </div>
+          <div className="space-y-4">
+            {/* SPRINT 38E — balance summary compressed into one strip */}
+            <FinanceStatStrip
+              columns={3}
+              stats={[
+                { label: "Toplam Bakiye", value: fmtShort(kasaBalance), hint: `${accounts.length} hesap`, icon: Wallet, tone: kasaBalance >= 0 ? "positive" : "overdue" },
+                { label: "Nakit Kasa", value: fmtShort(nakitKasaBalance), icon: Banknote, tone: "neutral" },
+                { label: "Banka", value: fmtShort(bankaBalance), icon: Building2, tone: "info" },
+              ]}
+            />
+
 
             {/* Account Cards */}
             <div className="flex items-center justify-between">
@@ -732,60 +787,50 @@ const PaymentsKasaPage = () => {
             <SubcontractorDebtSection />
 
 
-            {/* Cash flow forecast */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Beklenen Tahsilat (30 gün)</p>
-                <p className="text-xl font-bold" style={{ color: "#22C55E" }}>{fmtFull(expectedIncome)}</p>
-                <p className="text-[11px] text-muted-foreground">{bekleyenTahsilatlar.length} onaylı hakediş</p>
-              </div>
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Planlanan Ödemeler</p>
-                <p className="text-xl font-bold" style={{ color: "#EF4444" }}>{fmtFull(enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0))}</p>
-                <p className="text-[11px] text-muted-foreground">Taşeron kalan borçlar</p>
-              </div>
-              <div className="rounded-xl p-4 bg-card border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Tahmini Net Bakiye</p>
-                {(() => {
-                  const net = kasaBalance + expectedIncome - enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0);
-                  return (
-                    <>
-                      <p className="text-xl font-bold" style={{ color: net >= 0 ? "#22C55E" : "#EF4444" }}>{fmtFull(net)}</p>
-                      {net < 0 && <p className="text-[11px]" style={{ color: "#EF4444" }}>⚠️ Nakit sıkışıklığı riski!</p>}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+            {/* Cash flow forecast — in/out/net read left to right */}
+            {(() => {
+              const outstanding = enrichedSubs.reduce((s, sub) => s + Math.max(0, sub.remaining), 0);
+              const net = kasaBalance + expectedIncome - outstanding;
+              return (
+                <section className="space-y-2">
+                  <h3 className="ds-label px-0.5">Nakit Akış Projeksiyonu</h3>
+                  <FinanceStatStrip
+                    columns={3}
+                    stats={[
+                      { label: "Girecek (30 gün)", value: fmtShort(expectedIncome), hint: `${bekleyenTahsilatlar.length} onaylı hakediş`, icon: ArrowDownLeft, tone: "positive" },
+                      { label: "Çıkacak", value: fmtShort(outstanding), hint: "Taşeron kalan borçlar", icon: ArrowUpRight, tone: "attention" },
+                      { label: "Tahmini Net", value: fmtShort(net), hint: net < 0 ? "Nakit sıkışıklığı riski" : "Pozisyon dengeli", icon: DollarSign, tone: net >= 0 ? "positive" : "overdue" },
+                    ]}
+                  />
+                </section>
+              );
+            })()}
 
-            {/* Upcoming checks */}
+            {/* Upcoming checks — dense rows with a calm due-date rail */}
             {upcomingChecks.length > 0 && (
-              <div className="rounded-xl bg-card border border-border p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" style={{ color: "#F59E0B" }} />
-                  Vadesi Yaklaşan Çekler (7 gün)
+              <section className="space-y-2">
+                <h3 className="ds-label px-0.5 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-300/90" /> Vadesi Yaklaşan Çekler (7 gün)
                 </h3>
-                <div className="space-y-2">
+                <FinanceListShell>
                   {upcomingChecks.map(chk => {
                     const days = differenceInDays(parseISO(chk.due_date), now);
                     return (
-                      <div key={chk.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
-                        <div>
-                          <p className="text-[13px] font-medium text-foreground">{chk.counterparty}</p>
-                          <p className="text-[11px] text-muted-foreground">{chk.bank_name} • Çek No: {chk.check_no}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold" style={{ color: "#F59E0B" }}>₺{fmt(chk.amount)}</p>
-                          <span className="text-[10px]" style={{ color: days <= 3 ? "#EF4444" : "#F59E0B" }}>
-                            {days === 0 ? "Bugün!" : `${days} gün`}
-                          </span>
-                        </div>
-                      </div>
+                      <FinanceRow
+                        key={chk.id}
+                        rail={days <= 3 ? "overdue" : "attention"}
+                        title={chk.counterparty}
+                        subtitle={`${chk.bank_name || "—"} · Çek No: ${chk.check_no}`}
+                        amount={`₺${fmt(chk.amount)}`}
+                        amountTone={days <= 3 ? "overdue" : "attention"}
+                        meta={days === 0 ? "Bugün" : `${days} gün`}
+                      />
                     );
                   })}
-                </div>
-              </div>
+                </FinanceListShell>
+              </section>
             )}
+
           </div>
         </TabsContent>
 

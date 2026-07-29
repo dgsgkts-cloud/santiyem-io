@@ -1,7 +1,11 @@
+import { useMemo, useState } from "react";
 import { Contract } from "@/hooks/useContracts";
-import { FileText, Plus, AlertTriangle, CheckCircle2, XCircle, DollarSign, Calendar, Clock } from "lucide-react";
+import { FileText, Plus, AlertTriangle, CheckCircle2, XCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cardStyleClass, CONTRACT_TYPES, getDaysRemaining, getStatusInfo, formatCurrency, formatDate, getTimeProgress } from "./ContractTypes";
+import {
+  FinanceStatStrip, FinanceFilterBar, FinanceListShell, FinanceRow, FinanceStatusPill,
+} from "@/components/finance/financeUi";
+import { CONTRACT_TYPES, getDaysRemaining, getStatusInfo, formatCurrency, formatDate, getTimeProgress } from "./ContractTypes";
 
 interface Props {
   contracts: Contract[];
@@ -10,8 +14,12 @@ interface Props {
   onAdd: () => void;
 }
 
+// SPRINT 38E — contracts as a dense, date-first register instead of tall cards.
 export default function ContractList({ contracts, signatureMap = {}, onSelect, onAdd }: Props) {
   const now = new Date();
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+
   const stats = {
     total: contracts.length,
     active: contracts.filter(c => !c.end_date || new Date(c.end_date) >= now).length,
@@ -19,153 +27,126 @@ export default function ContractList({ contracts, signatureMap = {}, onSelect, o
     expired: contracts.filter(c => c.end_date && new Date(c.end_date) < now).length,
   };
 
-  const sorted = [...contracts].sort((a, b) => {
-    const da = getDaysRemaining(a.end_date);
-    const db = getDaysRemaining(b.end_date);
-    const sa = da !== null && da > 0 && da <= 30 ? 0 : da !== null && da < 0 ? 1 : 2;
-    const sb = db !== null && db > 0 && db <= 30 ? 0 : db !== null && db < 0 ? 1 : 2;
-    if (sa !== sb) return sa - sb;
-    return (da ?? 999) - (db ?? 999);
-  });
+  const sorted = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...contracts]
+      .filter(c => {
+        const d = getDaysRemaining(c.end_date);
+        if (filter === "expiring" && !(d !== null && d > 0 && d <= 30)) return false;
+        if (filter === "expired" && !(d !== null && d < 0)) return false;
+        if (filter === "active" && !(d === null || d >= 0)) return false;
+        if (!q) return true;
+        return `${c.name} ${c.counterparty}`.toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        const da = getDaysRemaining(a.end_date);
+        const db = getDaysRemaining(b.end_date);
+        const sa = da !== null && da > 0 && da <= 30 ? 0 : da !== null && da < 0 ? 1 : 2;
+        const sb = db !== null && db > 0 && db <= 30 ? 0 : db !== null && db < 0 ? 1 : 2;
+        if (sa !== sb) return sa - sb;
+        return (da ?? 999) - (db ?? 999);
+      });
+  }, [contracts, query, filter]);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto space-y-4 md:space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Sözleşme Takibi</h1>
-          <p className="text-xs mt-1 text-muted-foreground">Tüm sözleşmelerinizi tek ekrandan yönetin</p>
+    <div className="px-5 pt-5 pb-6 max-w-6xl mx-auto space-y-4">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="ds-heading text-foreground">Sözleşme Takibi</h1>
+          <p className="ds-caption text-muted-foreground mt-0.5">Vade, ödeme takvimi ve imza durumu tek ekranda</p>
         </div>
-        <Button onClick={onAdd} className="h-9 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-1.5" /> Yeni Sözleşme Ekle
+        <Button onClick={onAdd} className="shrink-0">
+          <Plus className="w-4 h-4 mr-1.5" /> <span className="hidden sm:inline">Yeni Sözleşme</span>
         </Button>
-      </div>
+      </header>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Toplam Sözleşme", value: stats.total, color: "#94A3B8", icon: FileText },
-          { label: "Aktif", value: stats.active, color: "#22C55E", icon: CheckCircle2 },
-          { label: "Süresi Yaklaşan", value: stats.expiring, color: "#F59E0B", icon: AlertTriangle },
-          { label: "Süresi Dolan", value: stats.expired, color: "#EF4444", icon: XCircle },
-        ].map((s) => (
-          <div key={s.label} className={`p-4 ${cardStyleClass}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <s.icon className="w-4 h-4" style={{ color: s.color }} />
-              <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
-            </div>
-            <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</p>
-          </div>
-        ))}
-      </div>
+      <FinanceStatStrip
+        stats={[
+          { label: "Toplam", value: stats.total, icon: FileText, tone: "neutral", onClick: () => setFilter("all"), active: filter === "all" },
+          { label: "Aktif", value: stats.active, icon: CheckCircle2, tone: "positive", onClick: () => setFilter("active"), active: filter === "active" },
+          { label: "Süresi Yaklaşan", value: stats.expiring, icon: AlertTriangle, tone: "attention", onClick: () => setFilter("expiring"), active: filter === "expiring" },
+          { label: "Süresi Dolan", value: stats.expired, icon: XCircle, tone: "overdue", onClick: () => setFilter("expired"), active: filter === "expired" },
+        ]}
+      />
 
-      {/* Contract Cards */}
       {contracts.length === 0 ? (
-        <div className={cardStyleClass}>
-          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <span className="text-5xl mb-4">📄</span>
-            <h3 className="text-base font-bold text-foreground mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Sözleşmelerinizi takip edin
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mb-5">
-              Sözleşme ekleyerek vade tarihleri, ödeme takvimleri ve cezai şartları otomatik takip edin.
-            </p>
-            <Button onClick={onAdd} className="text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90">
-              <Plus className="w-4 h-4 mr-1.5" /> Yeni Sözleşme Ekle
-            </Button>
-          </div>
+        <div className="rounded-card border border-border/80 bg-card shadow-soft flex flex-col items-center justify-center py-12 px-6 text-center">
+          <span className="text-4xl mb-3">📄</span>
+          <h3 className="ds-body font-semibold text-foreground mb-1.5">Sözleşmelerinizi takip edin</h3>
+          <p className="ds-caption text-muted-foreground max-w-sm mb-4">
+            Sözleşme ekleyerek vade tarihleri, ödeme takvimleri ve cezai şartları otomatik takip edin.
+          </p>
+          <Button onClick={onAdd}><Plus className="w-4 h-4 mr-1.5" /> Yeni Sözleşme Ekle</Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {sorted.map((c) => {
-            const status = getStatusInfo(c.end_date, c.status);
-            const daysLeft = getDaysRemaining(c.end_date);
-            const tp = getTimeProgress(c.start_date, c.end_date);
-            const isExpiring = daysLeft !== null && daysLeft > 0 && daysLeft <= 30;
+        <>
+          <FinanceFilterBar query={query} onQuery={setQuery} placeholder="Sözleşme veya karşı taraf ara…" />
 
-            const hakedisCount = c.ai_analysis?.odeme_takvimi?.length || c.payment_schedule?.length || 0;
-            const warningCount = c.ai_analysis?.kritik_maddeler?.filter((m: any) => m.onem === "kritik").length || 0;
+          <FinanceListShell>
+            {sorted.length === 0 ? (
+              <p className="ds-caption text-muted-foreground py-12 text-center">Bu filtreyle eşleşen sözleşme yok</p>
+            ) : (
+              sorted.map((c) => {
+                const status = getStatusInfo(c.end_date, c.status);
+                const daysLeft = getDaysRemaining(c.end_date);
+                const tp = getTimeProgress(c.start_date, c.end_date);
+                const isExpiring = daysLeft !== null && daysLeft > 0 && daysLeft <= 30;
+                const isExpired = daysLeft !== null && daysLeft < 0;
+                const hakedisCount = c.ai_analysis?.odeme_takvimi?.length || c.payment_schedule?.length || 0;
+                const warningCount = c.ai_analysis?.kritik_maddeler?.filter((m: any) => m.onem === "kritik").length || 0;
 
-            return (
-              <button
-                key={c.id}
-                onClick={() => onSelect(c)}
-                className={`w-full text-left p-5 transition-all hover:border-accent ${cardStyleClass}`}
-                style={{
-                  borderLeftWidth: isExpiring ? 3 : daysLeft !== null && daysLeft < 0 ? 3 : undefined,
-                  borderLeftColor: isExpiring ? "#F59E0B" : daysLeft !== null && daysLeft < 0 ? "#EF4444" : undefined,
-                }}
-              >
-                {/* Desktop layout */}
-                <div className="hidden sm:flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold truncate text-foreground">{c.name}</h3>
-                    <p className="text-xs mt-0.5 text-muted-foreground">{c.counterparty} • {formatCurrency(c.amount)}</p>
+                return (
+                  <div key={c.id} className="relative">
+                    <FinanceRow
+                      rail={isExpired ? "overdue" : isExpiring ? "attention" : undefined}
+                      onClick={() => onSelect(c)}
+                      title={c.name}
+                      status={<span style={{ color: status.color }}>{status.label}</span>}
+                      statusTone={isExpired ? "overdue" : isExpiring ? "attention" : "neutral"}
+                      subtitle={
+                        <span className="flex items-center gap-2 flex-wrap">
+                          <span className="truncate">{c.counterparty}</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />{formatDate(c.start_date)} — {formatDate(c.end_date)}
+                          </span>
+                          <span className="opacity-70">{CONTRACT_TYPES[c.contract_type] || c.contract_type}</span>
+                          {hakedisCount > 0 && <span className="opacity-70">{hakedisCount} hakediş</span>}
+                          {warningCount > 0 && <span className="text-amber-300/90">{warningCount} kritik madde</span>}
+                          {signatureMap[c.id] && <span style={{ color: signatureMap[c.id].color }}>{signatureMap[c.id].label}</span>}
+                        </span>
+                      }
+                      amount={formatCurrency(c.amount)}
+                      amountTone="neutral"
+                      meta={
+                        daysLeft === null ? undefined :
+                          isExpired ? <span className="text-rose-300/90">{Math.abs(daysLeft)}g gecikme</span> :
+                            <span className={isExpiring ? "text-amber-300/90" : undefined}>{daysLeft}g kaldı</span>
+                      }
+                    />
+                    {tp.total > 0 && (
+                      <div className="h-[3px] bg-muted/60 mx-3 mb-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${tp.pct}%`,
+                            backgroundColor: tp.pct >= 90 ? "hsl(var(--destructive))" : tp.pct >= 70 ? "#F59E0B" : "#22C55E",
+                            opacity: 0.65,
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 ml-2" style={{ color: status.color, backgroundColor: status.bg }}>
-                    {status.icon} {status.label}
-                  </span>
-                </div>
-
-                {/* Mobile layout */}
-                <div className="sm:hidden mb-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-[15px] font-semibold truncate text-foreground flex-1 min-w-0">{c.name}</h3>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ml-2" style={{ color: status.color, backgroundColor: status.bg }}>
-                      {status.icon} {status.label}
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-muted-foreground">{c.counterparty}</p>
-                  <p className="text-lg font-bold mt-1 text-foreground">{formatCurrency(c.amount)}</p>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-4 text-xs mb-3 text-muted-foreground">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(c.start_date)} — {formatDate(c.end_date)}</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
-                    {CONTRACT_TYPES[c.contract_type] || c.contract_type}
-                  </span>
-                </div>
-
-                <div className="sm:hidden flex items-center justify-between text-[12px] mb-3 text-muted-foreground">
-                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatDate(c.start_date)} — {formatDate(c.end_date)}</span>
-                  <span className="px-2 py-0.5 rounded text-[11px]" style={{ backgroundColor: "rgba(255,107,43,0.1)", color: "#FF6B2B" }}>
-                    {CONTRACT_TYPES[c.contract_type] || c.contract_type}
-                  </span>
-                </div>
-
-                {tp.total > 0 && (
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-[10px] mb-1 text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{tp.elapsed}g geçti</span>
-                      <span>{tp.remaining}g kaldı — %{Math.round(tp.pct)}</span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${tp.pct}%`,
-                          backgroundColor: tp.pct >= 90 ? "#EF4444" : tp.pct >= 70 ? "#F59E0B" : "#22C55E",
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                  {signatureMap[c.id] && (
-                    <span className="font-semibold px-1.5 py-0.5 rounded" style={{ color: signatureMap[c.id].color, backgroundColor: `${signatureMap[c.id].color}15` }}>
-                      {signatureMap[c.id].label}
-                    </span>
-                  )}
-                  {!signatureMap[c.id] && <span>📝 Taslak</span>}
-                  {hakedisCount > 0 && <span>📋 {hakedisCount} hakediş</span>}
-                  {warningCount > 0 && <span style={{ color: "#F59E0B" }}>⚠️ {warningCount} uyarı</span>}
-                  {c.ai_analysis && <span style={{ color: "#60A5FA" }}>🤖 AI Analiz</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                );
+              })
+            )}
+          </FinanceListShell>
+        </>
       )}
+
+      <p className="ds-caption text-muted-foreground text-center pt-1">
+        <FinanceStatusPill tone="attention">30 gün içinde bitenler</FinanceStatusPill>
+        <span className="ml-2">listenin en üstünde gösterilir.</span>
+      </p>
     </div>
   );
 }
