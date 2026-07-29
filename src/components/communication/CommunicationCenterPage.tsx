@@ -199,16 +199,31 @@ export default function CommunicationCenterPage() {
     finally { setBusy(null); }
   };
 
+  // Sprint 34.1 — manual retry requeues the message; the dispatcher sends it.
   const handleRetry = async (m: CommMessage) => {
     setBusy(m.id);
     try {
-      const res: any = await invoke("retry", { id: m.id });
-      if (res?.result?.external_url) window.open(res.result.external_url, "_blank", "noopener");
-      toast.success("Tekrar denendi");
+      await invoke("requeue", { id: m.id });
+      toast.success("Mesaj tekrar kuyruğa alındı — dağıtıcı kısa süre içinde gönderecek");
       await load();
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(null); }
   };
+
+  const [attemptsFor, setAttemptsFor] = useState<CommMessage | null>(null);
+  const [attempts, setAttempts] = useState<DeliveryAttempt[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
+
+  const handleAttempts = async (m: CommMessage) => {
+    setAttemptsFor(m);
+    setAttemptsLoading(true);
+    try {
+      const res: any = await invoke("attempts", { id: m.id });
+      setAttempts((res?.attempts || []) as DeliveryAttempt[]);
+    } catch (e: any) { toast.error(e.message); setAttempts([]); }
+    finally { setAttemptsLoading(false); }
+  };
+
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
