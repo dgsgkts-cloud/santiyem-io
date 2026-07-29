@@ -77,7 +77,7 @@ export const AIInsightCard = ({ insight }: { insight: AIInsight }) => {
               {insight.actions.slice(0, 3).map((a) => (
                 <button
                   key={a.id}
-                  disabled={isBusy}
+                  disabled={isBusy(a.id)}
                   onClick={() => execute(a)}
                   className="group inline-flex items-center gap-1.5 rounded-control border border-border bg-background/60 px-2.5 py-1.5 text-[11.5px] font-medium text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50"
                 >
