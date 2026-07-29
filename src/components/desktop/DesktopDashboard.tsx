@@ -590,260 +590,258 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
   /* ---------------------------------- Render ---------------------------------- */
 
+  // SPRINT 38B — the brief is the hero: short, calm sentences instead of stat walls.
+  const briefLines: BriefLine[] = useMemo(() => {
+    const out: BriefLine[] = [];
+
+    if (overdueCount > 0) {
+      out.push({
+        id: "overdue",
+        tone: "alert",
+        text: `${overdueCount} gecikmiş tahsilat dikkat bekliyor — toplam ${formatCurrency(overdueTotal)}.`,
+      });
+    }
+    if (briefKpis.criticalRisks > 0) {
+      out.push({
+        id: "risks",
+        tone: "alert",
+        text: `${briefKpis.criticalRisks} kritik konu bugün aksiyon gerektiriyor.`,
+      });
+    }
+    if (delayedReminders > 0) {
+      out.push({
+        id: "delayed",
+        tone: "warn",
+        text: `${delayedReminders} hatırlatıcı gecikmiş durumda; ${upcomingThisWeek} tanesi bu hafta içinde.`,
+      });
+    }
+    if (briefKpis.criticalStockItems > 0) {
+      out.push({
+        id: "stock",
+        tone: "warn",
+        text: `${briefKpis.criticalStockItems} malzeme kritik stok seviyesinde.`,
+      });
+    } else if (out.length < 4) {
+      out.push({ id: "stock-ok", tone: "good", text: "Malzeme stoğu sağlıklı seviyede." });
+    }
+    if (out.length < 4) {
+      out.push({
+        id: "cash",
+        tone: netProfit >= 0 ? "good" : "warn",
+        text: netProfit >= 0
+          ? `Bu ay nakit dengesi pozitif — ${formatCurrency(netProfit)} kâr görünüyor.`
+          : `Bu ay giderler geliri ${formatCurrency(Math.abs(netProfit))} aşıyor.`,
+      });
+    }
+    if (aiOps.headline && out.length < 4) {
+      out.push({ id: "headline", tone: "info", text: aiOps.headline });
+    }
+    if (out.length === 0) {
+      out.push({ id: "calm", tone: "good", text: "Bugün için kritik bir konu yok. Operasyon sakin görünüyor." });
+    }
+    return out.slice(0, 4);
+  }, [overdueCount, overdueTotal, briefKpis.criticalRisks, briefKpis.criticalStockItems, delayedReminders, upcomingThisWeek, netProfit, aiOps.headline]);
+
+  const topPriority = aiOps.topAction ?? aiOps.topInsight;
+  const heroAction = topPriority
+    ? {
+        label: topPriority.actions?.[0]?.label ?? "Önceliği incele",
+        onClick: () => {
+          if (topPriority.actions?.[0]) execute(topPriority.actions[0]);
+          else onTabChange("chat");
+        },
+      }
+    : null;
+
+  // Grouped + deduped alerts (critical findings first, then AI risks).
+  const alertItems: AlertItem[] = useMemo(() => {
+    const seen = new Set<string>();
+    const out: AlertItem[] = [];
+    const push = (item: AlertItem) => {
+      const key = item.title.trim().toLocaleLowerCase("tr");
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(item);
+    };
+
+    findings
+      .filter((f) => f.severity === "critical" || f.severity === "important")
+      .forEach((f) =>
+        push({
+          id: f.id,
+          severity: f.severity,
+          title: f.title,
+          detail: f.detail,
+          actionLabel: f.action ? f.action.label ?? "Aç" : undefined,
+          onAction: f.action
+            ? () => {
+                if (f.action?.projectId) onProjectSelect?.(f.action.projectId);
+                else if (f.action) onTabChange(f.action.tab);
+              }
+            : undefined,
+        })
+      );
+
+    aiOps.topRisks.forEach((r) =>
+      push({
+        id: r.id,
+        severity: r.priority === "critical" ? "critical" : "important",
+        title: r.title,
+        detail: r.detail ?? r.recommendation,
+        actionLabel: r.actions?.[0]?.label,
+        onAction: r.actions?.[0] ? () => execute(r.actions![0]) : undefined,
+      })
+    );
+
+    return out.slice(0, 8);
+  }, [findings, aiOps.topRisks, onTabChange, onProjectSelect, execute]);
+
+  const kpiItems: CompactKpi[] = [
+    {
+      key: "health",
+      label: "Şirket Sağlığı",
+      value: `${briefKpis.healthScore}`,
+      tone: briefKpis.healthScore >= 80 ? "good" : briefKpis.healthScore >= 60 ? "warn" : "alert",
+      icon: TrendingUp,
+    },
+    {
+      key: "cash",
+      label: "Kasa",
+      value: formatCurrency(cashTotal),
+      tone: "muted",
+      icon: Wallet,
+      onClick: () => onTabChange("payments-kasa"),
+    },
+    {
+      key: "projects",
+      label: "Aktif Proje",
+      value: activeProjects,
+      tone: "muted",
+      icon: FolderOpen,
+      onClick: () => onTabChange("projects"),
+    },
+    {
+      key: "today",
+      label: "Bugün Görev",
+      value: briefKpis.tasksDueToday,
+      tone: briefKpis.tasksDueToday > 0 ? "warn" : "good",
+      icon: CalendarClock,
+      onClick: () => onTabChange("tasks"),
+    },
+  ];
+
+  const financeItems: CompactKpi[] = [
+    { key: "rev", label: "Ciro", value: formatCurrency(monthRevenue), tone: "good", onClick: () => onTabChange("payments-kasa") },
+    { key: "exp", label: "Gider", value: formatCurrency(monthExpense), tone: "alert", onClick: () => onTabChange("payments-kasa") },
+    { key: "pending", label: "Bekleyen Hakediş", value: briefKpis.pendingHakedisCount, tone: "warn", onClick: () => onTabChange("hakedis") },
+    { key: "profit", label: "Aylık Kâr", value: formatCurrency(netProfit), tone: netProfit >= 0 ? "good" : "alert" },
+  ];
+
+  const todayActions: TodayAction[] = [
+    { key: "hakedis", label: "Hakediş oluştur", hint: `${briefKpis.pendingHakedisCount} bekleyen`, icon: Receipt, onClick: () => onTabChange("hakedis"), locked: hakedisLocked },
+    { key: "payment", label: "Ödeme onayla", hint: overdueCount > 0 ? `${overdueCount} gecikmiş` : "Kasa ve ödemeler", icon: Wallet, onClick: () => onTabChange("payments-kasa") },
+    { key: "diary", label: "Şantiye günlüğü", hint: "Günlük kaydı gir", icon: BookOpen, onClick: () => onTabChange("site-diary") },
+    { key: "stock", label: "Stok kontrolü", hint: briefKpis.criticalStockItems > 0 ? `${briefKpis.criticalStockItems} kritik` : "Depo sağlıklı", icon: Package, onClick: () => onTabChange("materials") },
+    { key: "delayed", label: "Geciken projeyi aç", hint: `${activeProjects} aktif proje`, icon: FolderOpen, onClick: () => onTabChange("projects"), locked: projectsLocked },
+    { key: "ai", label: "AI'ya sor", hint: "Şantiyem AI", icon: Sparkles, onClick: () => onTabChange("chat") },
+  ];
+
   return (
-    <PageShell maxWidth={1120} className="space-y-6 lg:space-y-8">
+    <PageShell maxWidth={1120} className="space-y-4">
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
       <TrialBanner />
       <PinnedInsights />
-      <div style={{ marginBottom: 40 }}>
-        <WorkspaceSetupCard />
-      </div>
+      <WorkspaceSetupCard />
 
-      {/* 1. Manager Greeting — warm executive header */}
-      <header className="flex flex-wrap items-end justify-between gap-4 !mt-0" style={{ marginBottom: 32 }}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-foreground/70" style={{ marginBottom: 8 }}>
-            <greeting.Icon className="w-3.5 h-3.5" />
-            <span className="text-fs-xs tracking-wide uppercase font-medium">{formatDate(new Date())}</span>
-          </div>
-          <h1
-            className="text-fs-2xl font-medium tracking-tight text-foreground leading-tight flex items-center gap-2"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-          >
-            <span>{greeting.text}{hasName ? "," : "."}</span>
-            {!nameReady ? (
-              <span
-                aria-hidden
-                className="inline-block h-[0.9em] w-[8ch] rounded-md bg-muted/40 animate-pulse align-middle"
-              />
-            ) : hasName ? (
-              <span className="text-muted-foreground/90 font-normal">{name}.</span>
-            ) : null}
-          </h1>
-          <p className="text-fs-sm text-muted-foreground" style={{ marginTop: 12 }}>
-            Bugün şirketinizde olup bitenler.
-          </p>
-        </div>
-      </header>
+      {/* 1 + 2 — Greeting and AI Daily Brief share the hero surface */}
+      <DailyBriefHero
+        greeting={greeting.text}
+        name={name}
+        nameReady={nameReady && hasName}
+        dateLabel={formatDate(new Date())}
+        lines={briefLines}
+        loading={!loaded}
+        topAction={heroAction}
+        onAsk={(text) => {
+          if (onSend) onSend(text);
+          else {
+            window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
+            onTabChange("chat");
+          }
+        }}
+      />
 
-      {/* 2. Şantiyem AI — primary interaction hero */}
-      <AIQuickAskHero onSend={onSend} onTabChange={onTabChange} topInsight={aiOps.headline} />
+      {/* 3 — Critical alerts, grouped and deduped */}
+      <CriticalAlertsCard items={alertItems} loading={!loaded} />
 
-      {/* Sprint 31 — AI Operations Brain: risks, opportunities, priorities */}
-      <AIOperationsBrief ops={aiOps} />
+      {/* 4 — Compact KPIs */}
+      <CompactKpiStrip items={kpiItems} loading={!loaded} />
 
-      {/* 3. Bugünün Operasyon Özeti — premium KPI ribbon */}
-      <TodayOperationsRibbon onTabChange={onTabChange} />
-
-
-      {/* 2. Yönetici Brifingi — Bugünün Kritik Konuları */}
-      <div className="!mt-0">
-        <ExecutiveMorningBrief
-          onTabChange={onTabChange}
-          onProjectSelect={onProjectSelect}
-          compact
-          maxPriorities={5}
-        />
-      </div>
-
-      {/* 3. Bugünün Planı — optional timeline (hidden if empty) */}
-      <TodayTimeline />
-
-      {/* 3. Quick Actions — 44px touch minimum */}
-      <div className="flex flex-wrap gap-2">
-        {quickActions.map((a) => {
-          const Icon = a.icon;
-          return (
-            <button
-              key={a.label}
-              onClick={a.onClick}
-              disabled={a.locked}
-              className={`inline-flex items-center gap-2 px-4 rounded-xl text-fs-sm font-medium border transition-all touch-target ${
-                a.primary
-                  ? "bg-[#FF6B2B] border-[#FF6B2B] text-white hover:brightness-110 shadow-sm shadow-[#FF6B2B]/20"
-                  : "bg-card/60 border-border/60 text-foreground hover:border-border hover:bg-card"
-              } ${a.locked ? "opacity-40 cursor-not-allowed" : ""}`}
-            >
-              <Icon className="w-4 h-4" />
-              {a.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 4. Company Health — 4 KPI tiles */}
-      <ResponsiveGrid variant="kpi">
-        {healthCards.map((c) => {
-          const Icon = c.icon;
-          const color = toneColor(c.tone);
-          return (
-            <Tooltip key={c.label} delayDuration={200}>
-              <TooltipTrigger asChild>
-                <div className="card-refined p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-fs-xs font-medium uppercase tracking-wider text-muted-foreground/80 truncate">
-                      {c.label}
-                    </span>
-                    <Icon className="w-4 h-4 shrink-0" style={{ color }} />
-                  </div>
-                  {!loaded ? (
-                    <Skeleton className="h-6 w-16" />
-                  ) : (
-                    <p
-                      className="text-fs-xl font-semibold tracking-tight tabular-nums"
-                      style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        letterSpacing: "-0.02em",
-                        color: c.tone === "good" ? "hsl(var(--foreground))" : color,
-                      }}
-                    >
-                      {c.value}
-                    </p>
-                  )}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">{c.hint}</TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </ResponsiveGrid>
-
-      {/* 5. Financial Snapshot — 4 merged metrics */}
+      {/* 5 — Finance in the same compact rhythm */}
       <div className="relative">
         {profitLocked && (
           <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
         )}
-        <SectionCard
-          title={
-            <span className="inline-flex items-center gap-2">
-              <Wallet className="w-3.5 h-3.5 text-muted-foreground/80" />
-              Finansal Özet — Bu Ay
-            </span>
-          }
-          action={
-            <button
-              onClick={() => onTabChange("payments-kasa")}
-              className="flex items-center gap-0.5 text-fs-xs font-medium text-muted-foreground hover:text-foreground transition-colors touch-target px-2"
-            >
-              Detay <ChevronRight className="w-3 h-3" />
-            </button>
-          }
-        >
-          <ResponsiveGrid variant="kpi">
-            {[
-              { label: "Ciro", value: monthRevenue, color: "#22C55E", change: revenueChange, inv: false },
-              { label: "Gider", value: monthExpense, color: "#EF4444", change: expenseChange, inv: true },
-              { label: "Kasa", value: cashTotal, color: "#3B82F6", change: null as number | null, inv: false },
-              { label: "Aylık Kâr", value: netProfit, color: "#FF6B2B", change: profitChange, inv: false },
-            ].map((item) => {
-              const isUp = (item.change ?? 0) >= 0;
-              const changeColor = item.change == null
-                ? "hsl(var(--muted-foreground))"
-                : item.inv
-                  ? (isUp ? "#EF4444" : "#22C55E")
-                  : (isUp ? "#22C55E" : "#EF4444");
-              return (
-                <div key={item.label} className="rounded-xl p-4 bg-background/50 border border-border/50 min-w-0">
-                  <p className="text-fs-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2">
-                    {item.label}
-                  </p>
-                  {!loaded ? (
-                    <Skeleton className="h-6 w-24" />
-                  ) : (
-                    <>
-                      <MetricTooltip full={formatCurrencyFull(item.value)}>
-                        <p
-                          className="text-fs-lg font-semibold truncate cursor-help tabular-nums"
-                          style={{ color: item.color, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}
-                        >
-                          {formatCurrency(item.value)}
-                        </p>
-                      </MetricTooltip>
-                      {item.change != null && (
-                        <p className="text-fs-xs mt-1 flex items-center gap-1 tabular-nums" style={{ color: changeColor }}>
-                          {isUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                          <span>{formatPercent(item.change)} vs geçen ay</span>
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </ResponsiveGrid>
-
-          {richInsight && (
-            <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border/50 bg-background/40 px-3 py-3">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF6B2B] mt-0.5 shrink-0" />
-              <p className="text-fs-sm leading-relaxed text-foreground/85">{richInsight}</p>
-            </div>
-          )}
-        </SectionCard>
+        <CompactKpiStrip items={financeItems} loading={!loaded} />
       </div>
 
-      {/* 6. Projects Overview */}
-      <div className="relative">
-        {projectsLocked && (
-          <LockedOverlay label="Kurumsal Paket" onClick={() => openUpgrade("Proje Yönetimi", true)} />
-        )}
-        <SectionCard
-          title="Aktif Projeler"
-          action={
-            <button
-              onClick={() => onTabChange("projects")}
-              className="flex items-center gap-0.5 text-fs-xs font-medium text-muted-foreground hover:text-foreground transition-colors touch-target px-2"
-            >
-              Tümü <ChevronRight className="w-3 h-3" />
-            </button>
-          }
-          padded={false}
-        >
-          {displayProjects.length === 0 ? (
-            <div className="px-4 pb-4">
-              <EmptyState
-                icon="🏗️"
-                title="Henüz proje yok"
-                description="İlk projenizi ekleyerek şantiye takibine başlayın."
-                buttonText="İlk Projeyi Oluştur"
-                onButtonClick={() => onTabChange("projects")}
-              />
-            </div>
+      {/* 6 — Today's actions */}
+      <TodayActionsCard actions={todayActions} />
+
+      {/* 7 — Recent activity */}
+      <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
+        <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2.5">
+          <h2 className="ds-title text-foreground">Son Aktiviteler</h2>
+          <button
+            onClick={() => onTabChange("projects")}
+            className="inline-flex items-center gap-0.5 ds-caption font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Tümü <ChevronRight className="w-3 h-3" />
+          </button>
+        </header>
+        <div className="px-4 pb-4">
+          {projects.length === 0 ? (
+            <EmptyState
+              icon="📋"
+              title="Aktivite yok"
+              description="Projeleriniz üzerinde işlem yaptıkça burada listelenir."
+            />
           ) : (
-            <div className="px-2 pb-3">
-              <ResponsiveTable
-                columns={projectColumns}
-                rows={displayProjects}
-                rowKey={(p) => p.id}
-                onRowClick={(p) => onProjectSelect?.(p.id)}
-              />
-            </div>
+            <ul className="divide-y divide-border/50">
+              {displayProjects.map((p) => {
+                const src = projects.find((x) => x.id === p.id);
+                const ago = src
+                  ? Math.max(1, Math.round((Date.now() - new Date(src.created_at).getTime()) / 86400000))
+                  : 1;
+                return (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => onProjectSelect?.(p.id)}
+                      className="w-full flex items-center gap-3 py-2.5 text-left transition-colors hover:opacity-80 active:scale-[0.995]"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: p.statusColor }}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block ds-body text-foreground truncate">{p.name}</span>
+                        <span className="block ds-caption text-muted-foreground truncate">
+                          {p.status} · %{p.progress}
+                        </span>
+                      </span>
+                      <span className="ds-caption text-muted-foreground/70 shrink-0 tabular-nums">{ago}g</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </SectionCard>
-      </div>
+        </div>
+      </section>
 
-      {/* 7. Latest Activities */}
-      <SectionCard title="Son Aktiviteler">
-        {projects.length === 0 ? (
-          <EmptyState icon="📋" title="Aktivite yok" description="Projeleriniz üzerinde işlem yaptıkça burada listelenir." />
-        ) : (
-          <div className="space-y-3">
-            {projects.slice(0, 5).map((p, i) => {
-              const colors = ["#22C55E", "#3B82F6", "#F59E0B", "#818CF8", "#FF6B2B"];
-              const ago = Math.max(1, Math.round((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)));
-              return (
-                <div key={p.id} className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-fs-sm flex-1 min-w-0 truncate text-foreground/90">
-                    {p.name} <span className="text-muted-foreground">— {p.status}</span>
-                  </span>
-                  <span className="text-fs-xs shrink-0 text-muted-foreground tabular-nums">{ago}g</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SectionCard>
+      {/* 8 — Everything else stays available but visually quiet */}
+      <TodayTimeline />
 
       <UpgradeModal
         open={upgradeModal.open}
@@ -854,6 +852,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     </PageShell>
   );
 };
+
 
 const LockedOverlay = ({ label, onClick }: { label: string; onClick?: () => void }) => (
   <div
