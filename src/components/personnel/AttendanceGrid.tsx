@@ -6,6 +6,7 @@ import { usePersonnel, EMPLOYMENT_TYPE_LABELS } from "@/hooks/usePersonnel";
 import { useAttendanceGrid, STATUS_COLORS, STATUS_SHORT, nextStatus, type AttendanceStatus } from "@/hooks/useAttendanceGrid";
 import { exportAttendancePDF, exportAttendanceExcel } from "@/lib/attendanceExport";
 import UnmatchedQRBanner from "./UnmatchedQRBanner";
+import EmptyState from "@/components/desktop/EmptyState";
 
 const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
@@ -40,9 +41,9 @@ export default function AttendanceGrid({ projectId, projectName }: Props) {
       <UnmatchedQRBanner unmatched={unmatched} onAdded={refetch} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button size="icon" variant="outline" onClick={prevMonth}><ChevronLeft className="w-4 h-4" /></Button>
-        <span className="font-semibold min-w-[160px] text-center">{MONTH_NAMES[month.getMonth()]} {month.getFullYear()}</span>
-        <Button size="icon" variant="outline" onClick={nextMonth}><ChevronRight className="w-4 h-4" /></Button>
+        <Button size="icon" variant="outline" onClick={prevMonth} aria-label="Önceki ay"><ChevronLeft className="w-4 h-4" /></Button>
+        <span className="ds-body font-semibold min-w-[150px] text-center">{MONTH_NAMES[month.getMonth()]} {month.getFullYear()}</span>
+        <Button size="icon" variant="outline" onClick={nextMonth} aria-label="Sonraki ay"><ChevronRight className="w-4 h-4" /></Button>
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={() => exportAttendancePDF(projectName, month, projectPersonnel, records, daysInMonth)}>
             <FileText className="w-4 h-4 mr-1" /> PDF
@@ -53,15 +54,22 @@ export default function AttendanceGrid({ projectId, projectName }: Props) {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="ds-caption text-muted-foreground">
         Hücreye tıklayarak durum değiştir: Tam Gün → Yarım Gün → Gelmedi → İzinli
       </p>
 
       {projectPersonnel.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Bu projeye atanmış personel yok. "Personel" sekmesinden ekleyin.</p>
-        </Card>
+        <div className="rounded-card border border-border/70 bg-card shadow-card">
+          <EmptyState
+            icon="📅"
+            title="Bu projede puantaj yok"
+            description="Aylık devam tablosu, projeye atanmış aktif personelden oluşur."
+            firstStep="'Personeller' sekmesinden kişileri bu projeye atayın."
+            aiHint="Tablo dolmaya başlayınca devamsızlık ve fazla mesai eğilimleri otomatik yorumlanır."
+          />
+        </div>
       ) : (
+
         <Card className="overflow-x-auto p-0">
           <table className="text-xs w-full border-collapse">
             <thead className="sticky top-0 bg-card z-10">

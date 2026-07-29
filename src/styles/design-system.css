@@ -309,3 +309,12 @@
   70% { opacity: 0; transform: scale(1.18); }
   100% { opacity: 0; transform: scale(1.18); }
 }
+
+/* SPRINT 38C — horizontal chip/tab rows scroll without a visible bar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
