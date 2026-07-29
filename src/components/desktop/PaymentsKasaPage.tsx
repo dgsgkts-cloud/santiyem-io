@@ -570,68 +570,72 @@ const PaymentsKasaPage = () => {
                 );
               })()}
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <select
-                  value={selectedProjectFilter}
-                  onChange={e => setSelectedProjectFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-xs bg-card border border-border text-foreground"
-                >
-                  <option value="all">Tüm Projeler</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <button onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
-                  className="ml-auto px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-primary text-primary-foreground">
-                  <Plus className="w-4 h-4" /> Kayıt Ekle
-                </button>
-              </div>
+              {/* SPRINT 38E — one filter line, search always reachable */}
+              <FinanceFilterBar
+                query={txQuery}
+                onQuery={setTxQuery}
+                placeholder="Açıklama, kategori veya proje ara…"
+                chips={[
+                  { value: "all", label: "Tümü" },
+                  { value: "income", label: "Gelir" },
+                  { value: "expense", label: "Gider" },
+                ]}
+                active={txKind}
+                onChip={setTxKind}
+                right={
+                  <>
+                    <select
+                      value={selectedProjectFilter}
+                      onChange={e => setSelectedProjectFilter(e.target.value)}
+                      className="h-11 px-2.5 rounded-control text-fs-sm bg-card border border-border text-foreground/80 shrink-0 max-w-[9rem] focus:outline-none"
+                    >
+                      <option value="all">Tüm Projeler</option>
+                      {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <button
+                      onClick={() => { setEditTarget(null); setExpForm(defaultForm); setAddModal(true); }}
+                      aria-label="Kayıt ekle"
+                      className="h-11 px-3 rounded-control text-fs-sm font-medium flex items-center gap-1.5 bg-primary text-primary-foreground shrink-0"
+                    >
+                      <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Kayıt Ekle</span>
+                    </button>
+                  </>
+                }
+              />
 
-              <div className="rounded-xl bg-card border border-border overflow-hidden">
-                {filteredExpenses.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-12 text-center">Henüz kayıt yok</p>
+              <FinanceListShell>
+                {visibleExpenses.length === 0 ? (
+                  <p className="ds-caption text-muted-foreground py-12 text-center">Bu filtreyle eşleşen kayıt yok</p>
                 ) : (
-                  <div className="divide-y divide-border">
-                    {filteredExpenses.map(e => {
-                      const proj = projects.find(p => p.id === e.project_id);
-                      const isIncome = INCOME_CATEGORIES.includes(e.category);
-                      const paymentType = (e as any).payment_type as string | undefined;
-                      return (
-                        <div key={e.id} className="flex items-center justify-between px-4 py-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: isIncome ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
-                              {isIncome
-                                ? <ArrowDownLeft className="w-4 h-4" style={{ color: "#22C55E" }} />
-                                : <ArrowUpRight className="w-4 h-4" style={{ color: "#EF4444" }} />
-                              }
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-medium text-foreground truncate">{e.description || e.category}</p>
-                              <p className="text-[11px] text-muted-foreground truncate">{e.category} • {proj?.name || "—"} • {e.expense_date}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="hidden sm:flex items-center gap-1.5">
-                              <PaymentMethodBadge type={paymentType} />
-                              <StatusBadge status="odendi" />
-                            </div>
-                            <span className="text-sm font-semibold min-w-[80px] text-right" style={{ color: isIncome ? "#22C55E" : "#EF4444" }}>
-                              {isIncome ? "+" : "-"}{fmtFull(Number(e.amount))}
-                            </span>
-                            <button onClick={() => openEditModal(e)}
-                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
-                              className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  visibleExpenses.map(e => {
+                    const proj = projects.find(p => p.id === e.project_id);
+                    const isIncome = INCOME_CATEGORIES.includes(e.category);
+                    const paymentType = (e as any).payment_type as string | undefined;
+                    return (
+                      <FinanceRow
+                        key={e.id}
+                        title={e.description || e.category}
+                        subtitle={`${e.category} · ${proj?.name || "—"} · ${e.expense_date}`}
+                        status={<><PaymentMethodBadge type={paymentType} /></>}
+                        statusTone="neutral"
+                        amount={`${isIncome ? "+" : "−"}${fmtFull(Number(e.amount))}`}
+                        amountTone={isIncome ? "positive" : "overdue"}
+                        actions={
+                          <>
+                            <FinanceRowAction label="Düzenle" icon={Pencil} onClick={() => openEditModal(e)} />
+                            <FinanceRowAction
+                              label="Sil"
+                              icon={Trash2}
+                              onClick={() => setDeleteTarget({ id: e.id, name: `${e.description || e.category} - ${fmtFull(Number(e.amount))}` })}
+                            />
+                          </>
+                        }
+                      />
+                    );
+                  })
                 )}
-              </div>
+              </FinanceListShell>
+
             </div>
           </PullToRefresh>
 
