@@ -4219,6 +4219,8 @@ export type Database = {
         | "sent"
         | "failed"
         | "cancelled"
+        | "processing"
+        | "retrying"
       email_account_status: "active" | "disabled" | "error" | "unverified"
       email_provider:
         | "smtp"
@@ -4385,6 +4387,8 @@ export const Constants = {
         "sent",
         "failed",
         "cancelled",
+        "processing",
+        "retrying",
       ],
       email_account_status: ["active", "disabled", "error", "unverified"],
       email_provider: [
