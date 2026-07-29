@@ -38,9 +38,11 @@ interface MarkProps {
   className?: string;
   /** Renders the glyph only, no orange plate (for use on orange surfaces). */
   bare?: boolean;
+  /** Glyph colour when `bare` is set. Defaults to brand orange. */
+  glyphColor?: string;
 }
 
-export function SantiyemMark({ size = "sm", px, className, bare = false }: MarkProps) {
+export function SantiyemMark({ size = "sm", px, className, bare = false, glyphColor }: MarkProps) {
   const dimension = px ?? MARK_PX[size];
   return (
     <svg
@@ -53,7 +55,7 @@ export function SantiyemMark({ size = "sm", px, className, bare = false }: MarkP
     >
       {!bare && <rect width="48" height="48" rx="13" fill="#FF6B2B" />}
       <g transform="translate(4 3.5)">
-        <GlyphS color={bare ? "#FF6B2B" : "#FFFFFF"} />
+        <GlyphS color={bare ? (glyphColor ?? "#FF6B2B") : "#FFFFFF"} />
       </g>
     </svg>
   );

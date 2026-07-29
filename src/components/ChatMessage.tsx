@@ -1,3 +1,4 @@
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useState } from "react";
 import {
   HardHat,
@@ -1158,7 +1159,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
         {isUser ? (
           <User className="w-4 h-4 text-primary-foreground" />
         ) : (
-          <HardHat className="w-4 h-4 text-accent-foreground" />
+          <SantiyemMark bare glyphColor="currentColor" px={18} className="text-accent-foreground" />
         )}
       </div>
 
