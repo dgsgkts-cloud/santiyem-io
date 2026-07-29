@@ -194,7 +194,7 @@ const SiteDiaryPage = () => {
     const startDayOfWeek = (startOfMonth(currentMonth).getDay() + 6) % 7; // Monday = 0
 
     return (
-      <div className="max-w-6xl mx-auto p-4 lg:p-6 space-y-6">
+      <div className="px-5 pt-5 pb-6 space-y-5 mx-auto w-full max-w-[1400px]">
         {deleteModal}
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

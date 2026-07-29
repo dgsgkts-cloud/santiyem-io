@@ -152,7 +152,7 @@ const ProfitabilityCashFlowPage = () => {
   // ─── OVERVIEW PAGE ───
   if (page === "overview") {
     return (
-      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+      <div className="px-5 pt-5 pb-6 space-y-5 mx-auto w-full max-w-[1400px]">
         {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -456,7 +456,7 @@ const ProfitabilityCashFlowPage = () => {
     const forecastNet = nakit + expectedIncome;
 
     return (
-      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+      <div className="px-5 pt-5 pb-6 space-y-5 mx-auto w-full max-w-[1400px]">
         {expDeleteModal}
         {/* Tabs */}
         <div className="flex items-center gap-2 flex-wrap">

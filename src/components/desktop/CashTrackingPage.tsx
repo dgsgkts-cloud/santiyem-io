@@ -30,7 +30,7 @@ const CashTrackingPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="px-5 pt-5 pb-6 mx-auto w-full max-w-[1400px]">
       <div className="flex items-center justify-between mb-4">
         <div />
         <div className="flex items-center gap-2">

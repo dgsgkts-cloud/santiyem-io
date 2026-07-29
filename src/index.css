@@ -515,13 +515,13 @@
   }
 
   /* Responsive KPI grid — 1 col mobile, 2 col tablet, 4 col desktop */
+  /* SPRINT 36 — 2 columns on mobile so KPI blocks stop eating the fold. */
   .grid-kpi {
     display: grid;
-    gap: var(--space-4);
-    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  @media (min-width: 640px)  { .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (min-width: 1024px) { .grid-kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .grid-kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); } }
 
   /* Responsive section grid — 1/1/2 */
   .grid-section {

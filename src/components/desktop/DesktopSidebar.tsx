@@ -320,13 +320,13 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
       {/* Navigation */}
       <nav
-        className="flex-1 space-y-5"
+        className="flex-1 space-y-6"
         style={{ padding: collapsed ? "0 12px 16px" : "0 12px 16px", overflow: "visible auto" }}
       >
         {NAV_SECTIONS.map((section, si) => (
           <div key={section.label || `s-${si}`}>
             {!collapsed && section.label && (
-              <p className="ds-label px-3 mb-2" style={{ fontSize: 10, opacity: 0.75 }}>
+              <p className="ds-label px-3 mb-2.5" style={{ fontSize: 10, opacity: 0.7 }}>
                 {section.label}
               </p>
             )}
@@ -344,9 +344,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     onClick={() => { if (gatesReady) onTabChange(item.id); }}
                     className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
                     style={{
-                      height: 40,
+                      height: 38,
                       borderRadius: 12,
-                      background: isActive ? "hsl(var(--primary) / 0.14)" : "transparent",
+                      background: isActive ? "hsl(var(--primary) / 0.18)" : "transparent",
                       color: isLocked
                         ? "hsl(var(--muted-foreground) / 0.55)"
                         : isActive
@@ -355,7 +355,9 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? 0 : "0 12px",
                       gap: collapsed ? 0 : 12,
-                      boxShadow: isActive ? "inset 0 0 0 1px hsl(var(--primary) / 0.22)" : "none",
+                      boxShadow: isActive
+                        ? "inset 0 0 0 1px hsl(var(--primary) / 0.32), 0 1px 2px hsl(var(--primary) / 0.12)"
+                        : "none",
                       fontWeight: isActive ? 600 : 500,
                     }}
                     onMouseEnter={(e) => {
@@ -376,7 +378,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     {isActive && !isLocked && (
                       <span
                         className="absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full"
-                        style={{ width: 3, height: 18, background: "hsl(var(--primary))" }}
+                        style={{ width: 3, height: 22, background: "hsl(var(--primary))" }}
                       />
                     )}
                     <Icon className="w-[18px] h-[18px] shrink-0" />
