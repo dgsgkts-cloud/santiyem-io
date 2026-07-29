@@ -298,3 +298,14 @@
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.045); opacity: 1; }
 }
+
+/* Sprint 37 — AI Core Orb motion */
+@keyframes ai-orb-breathe {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes ai-orb-wave {
+  0% { opacity: 0.55; transform: scale(0.92); }
+  70% { opacity: 0; transform: scale(1.18); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
