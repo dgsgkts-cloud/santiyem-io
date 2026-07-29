@@ -99,8 +99,10 @@ export interface VoiceEngine {
   setVolume(v: number): void;
   destroy(): void;
 
-  /** 0..1 microphone input level — dev panel only (optional). */
+  /** 0..1 microphone input level (optional). */
   getMicLevel?(): number;
+  /** 0..1 assistant output audio level (optional). */
+  getOutputLevel?(): number;
   /** Internal latency instrumentation — dev panel only (optional). */
   getMetrics?(): {
     connectionMs: number | null;
