@@ -95,7 +95,7 @@ function HeroBackdrop() {
 
 export function LoginHero() {
   return (
-    <div className="login-hero flex h-full w-full flex-col justify-center overflow-y-auto px-8 py-10 xl:px-14">
+    <div className="login-hero flex h-full w-full flex-col justify-center px-5 py-10 sm:px-8 lg:overflow-y-auto xl:px-14">
       <HeroBackdrop />
 
       <div className="relative z-10 mx-auto w-full max-w-[560px]">
