@@ -1,5 +1,5 @@
-import { Search } from "lucide-react";
 import { PRIORITY_LABELS } from "./useTaskBoardState";
+import { OpsFilterBar } from "@/components/operations/opsUi";
 
 interface Props {
   query: string;
@@ -23,81 +23,67 @@ interface Props {
 }
 
 const selCls =
-  "rounded-lg border border-border bg-background px-2 py-1 text-fs-xs text-muted-foreground";
+  "h-9 rounded-control border border-border bg-card px-2 text-fs-xs text-muted-foreground shrink-0";
 
-export const TaskBoardFilters = (p: Props) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1 flex-1 min-w-[180px]">
-      <Search className="w-3.5 h-3.5 text-muted-foreground" />
-      <input
-        value={p.query}
-        onChange={(e) => p.setQuery(e.target.value)}
-        placeholder="Ara görev..."
-        className="bg-transparent outline-none text-fs-xs flex-1"
+/**
+ * SPRINT 38F — one search field + one scrollable chip row.
+ * The three selects moved into a secondary line that only shows advanced narrowing,
+ * so the primary filter surface never stacks.
+ */
+export const TaskBoardFilters = (p: Props) => {
+  const chips = [
+    { value: "all", label: "Tümü" },
+    { value: "todo", label: "Yapılacak" },
+    { value: "in_progress", label: "Devam Eden" },
+    { value: "done", label: "Tamamlandı" },
+    { value: "mine", label: "Görevlerim" },
+    { value: "today", label: "Bugün" },
+    { value: "overdue", label: "Geciken" },
+  ];
+
+  const active = p.onlyOverdue ? "overdue" : p.onlyToday ? "today" : p.onlyMine ? "mine" : p.fStatus;
+
+  const onChip = (v: string) => {
+    if (v === "mine") { p.setOnlyMine(!p.onlyMine); p.setOnlyToday(false); p.setOnlyOverdue(false); return; }
+    if (v === "today") { p.setOnlyToday(!p.onlyToday); p.setOnlyMine(false); p.setOnlyOverdue(false); return; }
+    if (v === "overdue") { p.setOnlyOverdue(!p.onlyOverdue); p.setOnlyMine(false); p.setOnlyToday(false); return; }
+    if (v === "all") { p.clearFilters(); return; }
+    p.setFStatus(v);
+  };
+
+  return (
+    <div className="space-y-2">
+      <OpsFilterBar
+        query={p.query}
+        onQuery={p.setQuery}
+        placeholder="Görev ara…"
+        chips={chips}
+        active={active}
+        onChip={onChip}
+        right={p.rightSlot}
+        sticky={false}
       />
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <select value={p.fPriority} onChange={(e) => p.setFPriority(e.target.value)} className={selCls}>
+          <option value="all">Tüm Öncelikler</option>
+          {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v.label}</option>
+          ))}
+        </select>
+        <select value={p.fAssignee} onChange={(e) => p.setFAssignee(e.target.value)} className={selCls}>
+          <option value="all">Tüm Kişiler</option>
+          {p.members.map((m) => (
+            <option key={m.user_id} value={m.user_id}>{m.profile?.full_name || "Bilinmiyor"}</option>
+          ))}
+        </select>
+        {p.filtersActive && (
+          <button onClick={p.clearFilters} className="ds-caption text-muted-foreground hover:text-foreground underline shrink-0">
+            Temizle
+          </button>
+        )}
+      </div>
     </div>
-    <select value={p.fStatus} onChange={(e) => p.setFStatus(e.target.value)} className={selCls}>
-      <option value="all">Tüm Durumlar</option>
-      <option value="todo">Yapılacak</option>
-      <option value="in_progress">Devam Eden</option>
-      <option value="done">Tamamlandı</option>
-    </select>
-    <select value={p.fPriority} onChange={(e) => p.setFPriority(e.target.value)} className={selCls}>
-      <option value="all">Tüm Öncelikler</option>
-      {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
-        <option key={k} value={k}>
-          {v.label}
-        </option>
-      ))}
-    </select>
-    <select value={p.fAssignee} onChange={(e) => p.setFAssignee(e.target.value)} className={selCls}>
-      <option value="all">Tüm Kişiler</option>
-      {p.members.map((m) => (
-        <option key={m.user_id} value={m.user_id}>
-          {m.profile?.full_name || "Bilinmiyor"}
-        </option>
-      ))}
-    </select>
-    <button
-      onClick={() => p.setOnlyMine(!p.onlyMine)}
-      className={`px-2 py-1 rounded-lg text-fs-xs font-medium border ${
-        p.onlyMine
-          ? "bg-[#FF6B2B]/15 text-[#FF6B2B] border-[#FF6B2B]/30"
-          : "border-border text-muted-foreground"
-      }`}
-    >
-      Görevlerim
-    </button>
-    <button
-      onClick={() => p.setOnlyToday(!p.onlyToday)}
-      className={`px-2 py-1 rounded-lg text-fs-xs font-medium border ${
-        p.onlyToday
-          ? "bg-amber-500/15 text-amber-500 border-amber-500/30"
-          : "border-border text-muted-foreground"
-      }`}
-    >
-      Bugün
-    </button>
-    <button
-      onClick={() => p.setOnlyOverdue(!p.onlyOverdue)}
-      className={`px-2 py-1 rounded-lg text-fs-xs font-medium border ${
-        p.onlyOverdue
-          ? "bg-red-500/15 text-red-500 border-red-500/30"
-          : "border-border text-muted-foreground"
-      }`}
-    >
-      Geciken
-    </button>
-    {p.filtersActive && (
-      <button
-        onClick={p.clearFilters}
-        className="text-fs-xs text-muted-foreground hover:text-foreground underline"
-      >
-        Temizle
-      </button>
-    )}
-    {p.rightSlot && <div className="ml-auto">{p.rightSlot}</div>}
-  </div>
-);
+  );
+};
 
 export default TaskBoardFilters;

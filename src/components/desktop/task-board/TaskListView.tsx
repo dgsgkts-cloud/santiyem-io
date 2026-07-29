@@ -1,72 +1,51 @@
 import { Task } from "@/hooks/useTasks";
-import { ResponsiveTable, type ResponsiveColumn } from "@/components/ui/responsive";
-import { STATUS_COLS, PRIORITY_LABELS } from "./useTaskBoardState";
+import { STATUS_COLS, PRIORITY_LABELS, isOverdue } from "./useTaskBoardState";
+import { OpsListShell, OpsRow, OpsEmpty } from "@/components/operations/opsUi";
 
 interface Props {
   rows: Task[];
   onOpen: (t: Task) => void;
 }
 
+/**
+ * SPRINT 38F — dense list rows instead of a table.
+ * Same hierarchy as the card: name → priority → assignee → due date.
+ */
 export const TaskListView = ({ rows, onOpen }: Props) => {
-  const columns: ResponsiveColumn<Task>[] = [
-    {
-      key: "title",
-      header: "Görev",
-      primary: true,
-      cell: (t) => <span className="text-fs-sm text-foreground">{t.title}</span>,
-    },
-    {
-      key: "status",
-      header: "Durum",
-      cell: (t) => {
-        const col = STATUS_COLS.find((c) => c.key === t.status)!;
-        return (
-          <span style={{ color: col.color }} className="text-fs-xs">
-            {col.label}
-          </span>
-        );
-      },
-    },
-    {
-      key: "priority",
-      header: "Öncelik",
-      cell: (t) => {
-        const pri = PRIORITY_LABELS[t.priority];
-        return (
-          <span style={{ color: pri.color }} className="text-fs-xs">
-            {pri.label}
-          </span>
-        );
-      },
-    },
-    {
-      key: "assignee",
-      header: "Atanan",
-      cell: (t) => (
-        <span className="text-fs-xs text-muted-foreground">{t.assignee_name || "—"}</span>
-      ),
-    },
-    {
-      key: "due",
-      header: "Bitiş",
-      cell: (t) => (
-        <span className="text-fs-xs text-muted-foreground">
-          {t.due_date ? new Date(t.due_date).toLocaleDateString("tr-TR") : "—"}
-        </span>
-      ),
-    },
-  ];
+  if (rows.length === 0) {
+    return <OpsEmpty icon="🔍" title="Görev bulunamadı" description="Aramayı veya filtreleri değiştirip tekrar deneyin." />;
+  }
 
   return (
-    <ResponsiveTable<Task>
-      columns={columns}
-      rows={rows}
-      rowKey={(t) => t.id}
-      onRowClick={onOpen}
-      empty={
-        <p className="text-fs-sm text-muted-foreground text-center py-6">Görev bulunamadı</p>
-      }
-    />
+    <OpsListShell>
+      {rows.map((t) => {
+        const col = STATUS_COLS.find((c) => c.key === t.status)!;
+        const pri = PRIORITY_LABELS[t.priority];
+        const overdue = isOverdue(t);
+        return (
+          <OpsRow
+            key={t.id}
+            onClick={() => onOpen(t)}
+            rail={overdue ? "overdue" : t.status === "done" ? "positive" : t.status === "in_progress" ? "attention" : undefined}
+            title={t.title}
+            status={<span style={{ color: col.color }}>{col.label}</span>}
+            statusTone={t.status === "done" ? "positive" : t.status === "in_progress" ? "attention" : "neutral"}
+            subtitle={
+              <span className="flex items-center gap-2 flex-wrap">
+                <span style={{ color: pri.color }}>{pri.label}</span>
+                <span>{t.assignee_name || "Atanmamış"}</span>
+              </span>
+            }
+            amount={
+              <span className={overdue ? "text-rose-400" : "text-muted-foreground"}>
+                {t.due_date ? new Date(t.due_date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "—"}
+              </span>
+            }
+            meta={overdue ? <span className="text-rose-400">Gecikti</span> : undefined}
+          />
+        );
+      })}
+    </OpsListShell>
   );
 };
 

@@ -14,7 +14,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
-import { KpiCard, ResponsiveGrid } from "@/components/ui/responsive";
+import { OpsStatStrip, OpsEmpty } from "@/components/operations/opsUi";
 import { STATUS_COLS, useTaskBoardState, type ViewKey } from "./task-board/useTaskBoardState";
 import { TaskBoardFilters } from "./task-board/TaskBoardFilters";
 import { TaskKanbanView } from "./task-board/TaskKanbanView";
@@ -116,13 +116,17 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
 
       {!s.collapsed && (
         <>
-          <ResponsiveGrid variant="kpi">
-            <KpiCard label="Toplam Görev" value={s.summary.total} icon={LayoutGrid} accent="#3B82F6" />
-            <KpiCard label="Bugün Bitecek" value={s.summary.dueToday} icon={Clock} accent="#F59E0B" />
-            <KpiCard label="Geciken" value={s.summary.overdue} icon={AlertTriangle} accent="#EF4444" />
-            <KpiCard label="Yüksek Öncelik" value={s.summary.high} icon={Flag} accent="#F97316" />
-            <KpiCard label="Atanmamış" value={s.summary.unassigned} icon={Users} accent="#64748B" />
-          </ResponsiveGrid>
+          {/* SPRINT 38F — tappable summary; each tile is also a filter */}
+          <OpsStatStrip
+            columns={5}
+            stats={[
+              { label: "Toplam", value: s.summary.total, icon: LayoutGrid, tone: "neutral", onClick: s.clearFilters },
+              { label: "Bugün", value: s.summary.dueToday, icon: Clock, tone: "attention", onClick: () => { s.setOnlyToday(!s.onlyToday); s.setOnlyOverdue(false); s.setOnlyMine(false); }, active: s.onlyToday },
+              { label: "Geciken", value: s.summary.overdue, icon: AlertTriangle, tone: "overdue", onClick: () => { s.setOnlyOverdue(!s.onlyOverdue); s.setOnlyToday(false); s.setOnlyMine(false); }, active: s.onlyOverdue },
+              { label: "Yüksek Öncelik", value: s.summary.high, icon: Flag, tone: "info" },
+              { label: "Atanmamış", value: s.summary.unassigned, icon: Users, tone: "neutral" },
+            ]}
+          />
 
           {s.insights.length > 0 && (
             <div
@@ -211,11 +215,22 @@ const TaskBoard = ({ projectId }: TaskBoardProps) => {
           )}
 
           {s.tasks.length === 0 && !s.showAddForm && (
-            <div className="text-center py-6">
-              <p className="text-fs-xs text-muted-foreground">
-                Henüz görev eklenmemiş. "Yeni Görev" ile başlayın.
-              </p>
-            </div>
+            <OpsEmpty
+              icon="✅"
+              title="Bu projede henüz görev yok"
+              description="Görev ekleyerek sahadaki işleri kişiye ve tarihe bağlayın; AI geciken ve riskli görevleri sizin için öne çıkarır."
+              action={
+                s.user ? (
+                  <button
+                    onClick={() => s.setShowAddForm(true)}
+                    className="h-10 px-4 rounded-control text-fs-sm font-semibold text-white"
+                    style={{ backgroundColor: "#FF6B2B" }}
+                  >
+                    İlk görevi oluştur
+                  </button>
+                ) : undefined
+              }
+            />
           )}
         </>
       )}
