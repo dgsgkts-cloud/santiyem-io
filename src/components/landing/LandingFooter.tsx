@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { PaymentLogos } from "@/components/PaymentLogos";
 
 const LandingFooter = () => (
@@ -8,7 +8,7 @@ const LandingFooter = () => (
       {/* Brand */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <img src={logo} alt="Şantiyem" className="h-7 w-7" />
+          <SantiyemMark size="sm" px={28} />
           <span className="font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyem</span>
         </div>
         <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>

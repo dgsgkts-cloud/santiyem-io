@@ -13,7 +13,7 @@ import {
   LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import "@/styles/login-hero.css";
 
 type Feature = { icon: LucideIcon; title: string; line: string };
@@ -108,7 +108,7 @@ export function LoginHero() {
             backgroundColor: "rgba(255,107,43,0.08)",
           }}
         >
-          <img src={logo} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+          <SantiyemMark px={16} />
           <span
             className="text-[11px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: "#FF8F5A" }}

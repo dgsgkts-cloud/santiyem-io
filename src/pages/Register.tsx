@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { PaymentLogos } from "@/components/PaymentLogos";
 
 const TITLES = [
@@ -113,7 +113,7 @@ const Register = () => {
     <div className="w-full max-w-[400px]">
       <div className="rounded-2xl p-6 lg:p-8" style={{ backgroundColor: isLg ? "#161C23" : "#1A1F2E", border: "1px solid #1E2732" }}>
         <div className="flex flex-col items-center mb-5">
-          <img src={logo} alt="Şantiyem" className="w-12 h-12 mb-3" />
+          <SantiyemMark size="md" className="mb-3 brand-logo-enter" />
           <h1 className="text-lg font-bold" style={{ color: "#F1F5F9", fontFamily: isLg ? "'Space Grotesk', sans-serif" : undefined }}>
             Ücretsiz Hesap Oluştur
           </h1>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/muhendis-logo.png";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 
 const NAV_LINKS = [
   { label: "Özellikler", href: "#features" },
@@ -47,7 +47,7 @@ const LandingNavbar = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-12" style={{ height: 64 }}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Şantiyem" className="h-8 w-8" />
+            <SantiyemMark size="sm" />
             <span className="font-bold text-white text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyem</span>
           </Link>
 

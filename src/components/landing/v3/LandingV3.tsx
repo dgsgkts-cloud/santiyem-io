@@ -2,6 +2,7 @@
 // Noir & Ember palette · Space Grotesk + DM Sans · split-screen hero.
 // 12 sections, real product mockups (in-app UI language, not fake dashboards).
 
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -460,9 +461,7 @@ const VoiceSection = () => (
               </div>
               {/* AI bubble */}
               <div className="flex justify-start items-start gap-2">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `linear-gradient(135deg, ${T.ember}, ${T.emberGlow})` }}>
-                  <Sparkles className="w-3 h-3 text-white" />
-                </div>
+                <SantiyemMark px={24} className="mt-0.5" />
                 <div
                   className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
                   style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
@@ -558,7 +557,7 @@ const OneAI = () => (
             }}
           >
             <div className="text-center">
-              <Sparkles className="w-6 h-6 text-white mx-auto mb-1" />
+              <SantiyemMark bare glyphColor="#FFFFFF" px={30} className="mx-auto mb-1" />
               <p className="text-[9px] uppercase tracking-widest text-white font-bold" style={body}>Şantiyem AI</p>
             </div>
           </div>
@@ -1198,9 +1197,7 @@ const NavV3 = () => {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${T.ember}, ${T.emberGlow})` }}>
-            <Sparkles className="w-3.5 h-3.5 text-white" />
-          </div>
+          <SantiyemMark px={28} />
           <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
         </Link>
         <div className="hidden md:flex items-center gap-8">
@@ -1244,9 +1241,7 @@ const FooterV3 = () => (
       <div className="grid md:grid-cols-4 gap-10 mb-12">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${T.ember}, ${T.emberGlow})` }}>
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
+            <SantiyemMark px={28} />
             <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
           </div>
           <p className="text-[13px] max-w-sm" style={{ color: T.muted, ...body }}>

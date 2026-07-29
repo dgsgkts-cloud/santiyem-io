@@ -533,3 +533,65 @@
   /* Prevent horizontal overflow container */
   .no-overflow-x { max-width: 100%; overflow-x: hidden; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   BRAND IDENTITY SYSTEM (Sprint 33)
+   One spacing scale · one radius scale · one shadow scale ·
+   one motion language. Şantiyem = AI-powered Construction OS.
+   ══════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    /* Spacing — 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64 */
+    --space-5:  20px;
+    --space-10: 40px;
+    --space-16: 64px;
+
+    /* Radius — the only radii allowed */
+    --radius-card:   16px;
+    --radius-dialog: 20px;
+    --radius-button: 14px;
+    --radius-input:  14px;
+    --radius-badge:  999px;
+
+    /* Shadows — very subtle, never heavy, never neumorphic */
+    --shadow-brand-1: 0 1px 2px hsl(0 0% 0% / 0.06);
+    --shadow-brand-2: 0 2px 8px hsl(0 0% 0% / 0.08);
+    --shadow-brand-3: 0 8px 24px hsl(0 0% 0% / 0.12);
+    --shadow-brand-glow: 0 0 0 1px hsl(20 100% 58% / 0.22), 0 6px 24px hsl(20 100% 58% / 0.14);
+  }
+}
+
+@layer components {
+  .brand-card   { border-radius: var(--radius-card);   box-shadow: var(--shadow-brand-1); }
+  .brand-dialog { border-radius: var(--radius-dialog); box-shadow: var(--shadow-brand-3); }
+  .brand-button { border-radius: var(--radius-button); }
+  .brand-input  { border-radius: var(--radius-input);  }
+  .brand-badge  { border-radius: var(--radius-badge);  }
+
+  /* Motion — logo fade+scale, loading pulse, hover lift 2px, card fade-in */
+  .brand-logo-enter { animation: brand-logo-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .brand-logo-pulse { animation: brand-pulse 2s ease-in-out infinite; }
+  .brand-hover-lift { transition: transform 180ms ease, box-shadow 180ms ease; }
+  .brand-hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-brand-2); }
+  .brand-card-in { animation: brand-fade-in 320ms ease-out both; }
+}
+
+@keyframes brand-logo-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes brand-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%      { opacity: 0.72; transform: scale(0.95); }
+}
+@keyframes brand-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-enter,
+  .brand-logo-pulse,
+  .brand-card-in { animation: none; }
+  .brand-hover-lift:hover { transform: none; }
+}

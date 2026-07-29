@@ -1,3 +1,4 @@
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
 import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
@@ -634,9 +635,7 @@ const Index = () => {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 cursor-pointer pl-0.5" onClick={() => goToTab("dashboard")}>
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <HardHat className="w-5 h-5 text-primary" />
-            </div>
+            <SantiyemMark size="sm" />
             <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
           </div>
         </div>
