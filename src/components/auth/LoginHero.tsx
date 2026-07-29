@@ -95,13 +95,13 @@ function HeroBackdrop() {
 
 export function LoginHero() {
   return (
-    <div className="login-hero flex h-full w-full flex-col justify-center px-8 py-12 xl:px-14">
+    <div className="login-hero flex h-full w-full flex-col justify-center overflow-y-auto px-8 py-10 xl:px-14">
       <HeroBackdrop />
 
       <div className="relative z-10 mx-auto w-full max-w-[560px]">
         {/* Eyebrow */}
         <div
-          className="login-hero__reveal mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
+          className="login-hero__reveal mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
           style={{
             ...reveal(0),
             borderColor: "rgba(255,107,43,0.28)",
@@ -119,7 +119,7 @@ export function LoginHero() {
 
         {/* Headline */}
         <h2
-          className="login-hero__reveal text-[34px] font-bold leading-[1.12] tracking-[-0.02em] xl:text-[42px]"
+          className="login-hero__reveal text-[30px] font-bold leading-[1.12] tracking-[-0.02em] xl:text-[38px]"
           style={{
             ...reveal(80),
             color: "#F8FAFC",
@@ -142,7 +142,7 @@ export function LoginHero() {
 
         {/* Subtitle */}
         <p
-          className="login-hero__reveal mt-4 max-w-[520px] text-[14px] leading-relaxed xl:text-[15px]"
+          className="login-hero__reveal mt-3.5 max-w-[520px] text-[14px] leading-relaxed xl:text-[15px]"
           style={{ ...reveal(150), color: "#94A3B8" }}
         >
           Şantiyem AI; projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
@@ -151,13 +151,13 @@ export function LoginHero() {
         </p>
 
         {/* Feature grid */}
-        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.title}
-                className="login-hero__card login-hero__reveal rounded-xl border p-3.5"
+                className="login-hero__card login-hero__reveal rounded-xl border p-3"
                 style={{
                   ...reveal(220 + i * 60),
                   borderColor: "rgba(255,255,255,0.08)",
@@ -165,7 +165,7 @@ export function LoginHero() {
                 }}
               >
                 <div
-                  className="login-hero__card-icon mb-2.5 flex h-8 w-8 items-center justify-center rounded-lg"
+                  className="login-hero__card-icon mb-2 flex h-8 w-8 items-center justify-center rounded-lg"
                   style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FF6B2B" }}
                 >
                   <Icon className="h-4 w-4" strokeWidth={2} />
@@ -183,7 +183,7 @@ export function LoginHero() {
 
         {/* AI preview — static showcase, deliberately not interactive */}
         <div
-          className="login-hero__reveal mt-6 rounded-2xl border p-4 backdrop-blur-xl"
+          className="login-hero__reveal mt-5 rounded-2xl border p-4 backdrop-blur-xl"
           style={{
             ...reveal(620),
             borderColor: "rgba(255,255,255,0.08)",
@@ -251,7 +251,7 @@ export function LoginHero() {
 
         {/* Live status ribbon */}
         <div
-          className="login-hero__reveal mt-6 flex flex-wrap items-center gap-2"
+          className="login-hero__reveal mt-4 flex flex-wrap items-center gap-2"
           style={reveal(720)}
         >
           <div
