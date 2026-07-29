@@ -59,7 +59,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const [filter, setFilter] = useState<NotifFilter>("all");
   const [query, setQuery] = useState("");
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds, loading: notifLoading } = useNotifications();
   const { projects } = useProjects();
   const { payments = [] } = useCashPayments();
   const { collections = [] } = useCashCollections();
@@ -248,7 +248,9 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
                 )}
               </div>
 
-              {filteredNotifs.length === 0 ? (
+              {notifLoading ? (
+                <OpsSkeletonRows rows={5} />
+              ) : filteredNotifs.length === 0 ? (
                 <OpsEmpty
                   icon="🔔"
                   title={notifications.length === 0 ? "Şu an dikkat isteyen bir şey yok" : "Bu filtrede bildirim yok"}
