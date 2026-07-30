@@ -25,7 +25,7 @@ export type LogoTone = "auto" | "light" | "dark";
 
 /** Intrinsic aspect ratios (width / height) of the supplied artwork. */
 export const LOGO_ASPECT = {
-  horizontal: 2.339,
+  horizontal: 2.392,
   vertical: 1.253,
   symbol: 0.694,
 } as const;
