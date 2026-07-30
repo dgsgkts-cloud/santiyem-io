@@ -7,10 +7,10 @@ const LandingFooter = () => (
     <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
       {/* Brand */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <SantiyemMark size="sm" px={28} />
-          <span className="font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Şantiyem</span>
+        <div className="flex items-center mb-3">
+          <SantiyemWordmark px={28} tone="light" />
         </div>
+
         <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
           Türk mühendis, mimar ve müteahhitler için tasarlanmış yapay zeka destekli mesleki platform.
         </p>
