@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Cookie } from "lucide-react";
+
 import { Capacitor } from "@capacitor/core";
 import { useUser } from "@/contexts/UserContext";
 
