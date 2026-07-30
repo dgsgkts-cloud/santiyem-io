@@ -183,3 +183,26 @@ export function SantiyemLoadingMark({
 }
 
 export default SantiyemMark;
+
+/**
+ * Authentication lockup — vertical on mobile, horizontal from `lg` up.
+ * Auth surfaces are always dark, so the reverse ink is used by default.
+ */
+export function SantiyemAuthLockup({
+  tone = "light",
+  className,
+}: {
+  tone?: LogoTone;
+  className?: string;
+}) {
+  return (
+    <>
+      <span className={cn("inline-flex lg:hidden", className)}>
+        <BrandImage variant="vertical" height={104} tone={tone} alt="Şantiyem AI" />
+      </span>
+      <span className={cn("hidden lg:inline-flex", className)}>
+        <BrandImage variant="horizontal" height={52} tone={tone} alt="Şantiyem AI" />
+      </span>
+    </>
+  );
+}
