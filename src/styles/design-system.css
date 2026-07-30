@@ -430,3 +430,15 @@ td {
     transform: none;
   }
 }
+
+/* ── Brand ink switching ───────────────────────────────────────────────
+   The supplied logo files are never recolored. Two ink variants ship:
+   `*.svg` (navy ink, for light surfaces) and `*-light.svg` (reverse/white
+   ink, for dark surfaces). The app is dark by default; `.light` on <html>
+   switches the theme, so the ink swaps with it.                        */
+.brand-ink-light { display: inline-block; }
+.brand-ink-dark { display: none; }
+:root.light .brand-ink-light,
+.light .brand-ink-light { display: none; }
+:root.light .brand-ink-dark,
+.light .brand-ink-dark { display: inline-block; }

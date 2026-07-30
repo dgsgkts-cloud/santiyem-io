@@ -108,7 +108,7 @@ export function LoginHero() {
             backgroundColor: "rgba(255,107,43,0.08)",
           }}
         >
-          <SantiyemMark px={16} />
+          <SantiyemMark px={16} tone="light" />
           <span
             className="text-[11px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: "#FF8F5A" }}
