@@ -47,7 +47,7 @@ const LandingNavbar = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-12" style={{ height: 64 }}>
           {/* Logo */}
           <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-            <SantiyemWordmark px={30} tone="light" />
+            <SantiyemWordmark px={34} tone="light" />
           </Link>
 
 

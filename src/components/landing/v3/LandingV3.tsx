@@ -1197,7 +1197,7 @@ const NavV3 = () => {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-          <SantiyemWordmark px={28} tone="light" />
+          <SantiyemWordmark px={32} tone="light" />
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
@@ -1241,7 +1241,7 @@ const FooterV3 = () => (
       <div className="grid md:grid-cols-4 gap-10 mb-12">
         <div className="md:col-span-2">
           <div className="flex items-center mb-4">
-            <SantiyemWordmark px={28} tone="light" />
+            <SantiyemWordmark px={32} tone="light" />
           </div>
 
           <p className="text-[13px] max-w-sm" style={{ color: T.muted, ...body }}>

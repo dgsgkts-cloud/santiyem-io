@@ -8,7 +8,7 @@ const LandingFooter = () => (
       {/* Brand */}
       <div>
         <div className="flex items-center mb-3">
-          <SantiyemWordmark px={28} tone="light" />
+          <SantiyemWordmark px={32} tone="light" />
         </div>
 
         <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
