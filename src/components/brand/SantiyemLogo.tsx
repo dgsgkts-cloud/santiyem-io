@@ -42,10 +42,14 @@ interface MarkProps {
   glyphColor?: string;
 }
 
-export function SantiyemMark({ size = "sm", px, className, bare = false, glyphColor }: MarkProps) {
+export const SantiyemMark = forwardRef<SVGSVGElement, MarkProps>(function SantiyemMark(
+  { size = "sm", px, className, bare = false, glyphColor },
+  ref,
+) {
   const dimension = px ?? MARK_PX[size];
   return (
     <svg
+      ref={ref}
       width={dimension}
       height={dimension}
       viewBox="0 0 48 48"
@@ -59,7 +63,8 @@ export function SantiyemMark({ size = "sm", px, className, bare = false, glyphCo
       </g>
     </svg>
   );
-}
+});
+
 
 interface WordmarkProps extends MarkProps {
   /** Optional second line, e.g. "Construction Operating System". */
