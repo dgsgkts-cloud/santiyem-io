@@ -245,7 +245,7 @@ const UpgradeModal = ({ open, onClose, feature, requiresOffice }: UpgradeModalPr
                 <Button
                   onClick={() => handleDirectPurchase(planKey)}
                   disabled={loadingPlan !== null}
-                  className={`w-full h-11 font-semibold text-white focus-visible:ring-2 focus-visible:ring-white/40 ${trialUsed ? "" : "bg-transparent border border-white/20 hover:bg-white/5"}`}
+                  className={`w-full h-11 font-semibold text-white focus-visible:ring-2 focus-visible:ring-white/40 ${trialUsed ? "" : "bg-transparent border border-white/20 hover:bg-muted/60"}`}
                   style={trialUsed ? { backgroundColor: "#FF6B2B" } : undefined}
                 >
                   {loadingPlan === `direct-${planKey}` && <Loader2 size={16} className="animate-spin mr-1" />}

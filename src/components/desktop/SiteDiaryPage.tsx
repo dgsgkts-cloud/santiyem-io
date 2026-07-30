@@ -440,9 +440,9 @@ const SiteDiaryPage = () => {
                 {showCalendar && (
                 <>
                 <div className="flex items-center justify-between mb-4 mt-3">
-                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">← Önceki</button>
+                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-muted/60 text-muted-foreground">← Önceki</button>
                   <h3 className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy", { locale: tr })}</h3>
-                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-white/5 text-muted-foreground">Sonraki →</button>
+                  <button onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1))} className="text-sm px-3 py-1 rounded-lg hover:bg-muted/60 text-muted-foreground">Sonraki →</button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center">
                   {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map(d => (
@@ -456,7 +456,7 @@ const SiteDiaryPage = () => {
                       <button
                         key={day.toISOString()}
                         onClick={() => { if (entry) { setSelectedEntry(entry); setView("detail"); } }}
-                        className="relative p-1.5 rounded-lg text-center transition-colors hover:bg-white/5"
+                        className="relative p-1.5 rounded-lg text-center transition-colors hover:bg-muted/60"
                         style={{ minHeight: 44 }}
                       >
                         <span className="text-xs" style={{ color: isToday(day) ? "#FF6B2B" : isSameMonth(day, currentMonth) ? "#94A3B8" : "#334155", fontWeight: isToday(day) ? 700 : 400 }}>
@@ -517,7 +517,7 @@ const SiteDiaryPage = () => {
                   return (
                     <div
                       key={entry.id}
-                      className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-white/5"
+                      className="w-full rounded-xl p-3 flex items-center gap-3 transition-colors bg-card border border-border group hover:bg-muted/60"
                     >
                       <button
                         type="button"
@@ -572,7 +572,7 @@ const SiteDiaryPage = () => {
                             setFormGeneralNote(entry.general_note);
                             setView("form");
                           }}
-                          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-white/5"
+                          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted/60"
                           aria-label="Düzenle"
                           title="Düzenle"
                         >

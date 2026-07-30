@@ -542,7 +542,7 @@ const Index = () => {
   // Desktop layout
   if (isLg) {
     return (
-      <div className="flex h-screen bg-background">
+      <div className="flex h-dvh bg-background">
         <CommandPalette />
         <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
         <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
@@ -765,7 +765,7 @@ const Index = () => {
       >
         <button
           onClick={() => setDrawerOpen(false)}
-          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors"
+          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-muted/60 transition-colors"
           style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
           aria-label="Menüyü kapat"
         >

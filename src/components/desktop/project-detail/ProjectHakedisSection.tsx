@@ -65,7 +65,7 @@ export default function ProjectHakedisSection(p: Props) {
                 <button
                   key={opt.label}
                   onClick={(e) => { e.stopPropagation(); p.onUpdateStatus(h.id, opt.label, opt.color); p.onToggleStatusMenu(null); }}
-                  className="w-full text-left px-3 py-1.5 text-fs-xs hover:bg-white/5 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-fs-xs hover:bg-muted/60 flex items-center gap-2"
                   style={{ color: opt.color }}
                 >
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />

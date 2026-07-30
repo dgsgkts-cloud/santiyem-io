@@ -595,7 +595,7 @@ const NotificationsTab = () => {
           href="https://wa.me/905427818181"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-white/5"
+          className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-muted/60"
           style={{ border: "1px solid rgba(37,211,102,0.25)", backgroundColor: "rgba(37,211,102,0.08)" }}
         >
           <div className="flex items-center gap-3">
