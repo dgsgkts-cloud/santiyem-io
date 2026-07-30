@@ -22,17 +22,17 @@ export default function LaborCostSummary({ projectId, canViewCost }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button size="icon" variant="outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
+        <Button size="icon" variant="outline" aria-label="Önceki ay" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
           <ChevronLeft className="w-4 h-4" />
         </Button>
         <span className="font-semibold min-w-[160px] text-center text-fs-md">{MONTH_NAMES[month.getMonth()]} {month.getFullYear()}</span>
-        <Button size="icon" variant="outline" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
+        <Button size="icon" variant="outline" aria-label="Sonraki ay" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
 
       {loading || !data ? (
-        <SectionCard><p className="text-fs-sm text-muted-foreground">Yükleniyor...</p></SectionCard>
+        <SectionCard><div className="space-y-2">{[0, 1, 2].map((i) => (<div key={i} className="ds-skeleton h-10 rounded-lg" />))}</div></SectionCard>
       ) : (
         <ResponsiveGrid variant="kpi">
           {canViewCost && (

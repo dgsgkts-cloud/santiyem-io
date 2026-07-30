@@ -133,14 +133,14 @@ export function MorningBriefingCard() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowSettings((s) => !s)}
-            className="text-white/40 hover:text-white/80 p-1 rounded-md hover:bg-white/5"
+            className="text-white/40 hover:text-white/80 p-1 rounded-md hover:bg-muted/60"
             aria-label="Brifing ayarları"
           >
             <Settings2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => setDismissed(true)}
-            className="text-white/40 hover:text-white/80 p-1 rounded-md hover:bg-white/5"
+            className="text-white/40 hover:text-white/80 p-1 rounded-md hover:bg-muted/60"
             aria-label="Kapat"
           >
             <X className="w-4 h-4" />

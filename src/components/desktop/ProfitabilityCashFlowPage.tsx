@@ -235,7 +235,7 @@ const ProfitabilityCashFlowPage = () => {
               </thead>
               <tbody>
                 {projectStats.map(p => (
-                  <tr key={p.id} className="cursor-pointer hover:bg-white/5 transition-colors"
+                  <tr key={p.id} className="cursor-pointer hover:bg-muted/60 transition-colors"
                     onClick={() => { setSelectedProjectId(p.id); setPage("project-detail"); }}
                     style={{ borderBottom: "1px solid #1E2732" }}>
                     <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>

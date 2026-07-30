@@ -80,7 +80,7 @@ export default function ProjectHeader(props: Props) {
                       <button
                         key={opt.label}
                         onClick={() => onStatusPick(opt.label, opt.color)}
-                        className="w-full text-left px-3 py-2 text-fs-xs flex items-center gap-2 hover:bg-white/5 text-foreground"
+                        className="w-full text-left px-3 py-2 text-fs-xs flex items-center gap-2 hover:bg-muted/60 text-foreground"
                       >
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                         {opt.label}

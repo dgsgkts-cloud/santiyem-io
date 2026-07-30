@@ -826,8 +826,10 @@ function MeetingDetail({
         </div>
 
         {loading ? (
-          <div className="py-10 flex items-center justify-center text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin mr-2" /> Yükleniyor...
+          <div className="mt-6 space-y-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="ds-skeleton h-16 rounded-xl" />
+            ))}
           </div>
         ) : (
           <div className="mt-6 space-y-6">
