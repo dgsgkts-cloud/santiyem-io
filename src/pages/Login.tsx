@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
+import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 import { LoginHero } from "@/components/auth/LoginHero";
 
 const Login = () => {
@@ -52,7 +52,7 @@ const Login = () => {
     <div className="w-full max-w-[400px]" style={isLg ? {} : undefined}>
       <div className="rounded-2xl p-6 lg:p-8" style={{ backgroundColor: isLg ? "#161C23" : "#1A1F2E", border: "1px solid #1E2732" }}>
         <div className="flex flex-col items-center mb-6 lg:mb-8">
-          <SantiyemMark size="md" className="mb-3 brand-logo-enter" />
+          <SantiyemAuthLockup className="mb-3 brand-logo-enter" />
           <h1 className="text-lg lg:text-xl font-bold" style={{ color: "#F1F5F9", fontFamily: isLg ? "'Space Grotesk', sans-serif" : undefined }}>
             Şantiyem'ya Giriş Yap
           </h1>

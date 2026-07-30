@@ -35,7 +35,7 @@ const TABS = [
 /** About page — the single large brand lockup. */
 const AboutTab = () => (
   <div className="flex flex-col items-center text-center py-8">
-    <SantiyemWordmark size="lg" stacked tagline="Construction Operating System" className="brand-logo-enter" />
+    <SantiyemWordmark size="lg" stacked className="brand-logo-enter" />
     <p className="mt-6 max-w-md text-[13px] leading-relaxed text-muted-foreground">
       Şantiyem AI; projelerinizi, hakedişlerinizi, nakit akışınızı ve saha operasyonlarınızı tek
       merkezden yöneten yapay zekâ destekli inşaat işletim sistemidir.

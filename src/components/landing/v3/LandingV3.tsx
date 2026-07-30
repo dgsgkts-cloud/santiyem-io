@@ -2,7 +2,7 @@
 // Noir & Ember palette · Space Grotesk + DM Sans · split-screen hero.
 // 12 sections, real product mockups (in-app UI language, not fake dashboards).
 
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -461,7 +461,7 @@ const VoiceSection = () => (
               </div>
               {/* AI bubble */}
               <div className="flex justify-start items-start gap-2">
-                <SantiyemMark px={24} className="mt-0.5" />
+                <SantiyemMark px={24} tone="light" className="mt-0.5" />
                 <div
                   className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
                   style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
@@ -557,7 +557,7 @@ const OneAI = () => (
             }}
           >
             <div className="text-center">
-              <SantiyemMark bare glyphColor="#FFFFFF" px={30} className="mx-auto mb-1" />
+              <SantiyemMark tone="light" px={30} className="mx-auto mb-1" />
               <p className="text-[9px] uppercase tracking-widest text-white font-bold" style={body}>Şantiyem AI</p>
             </div>
           </div>
@@ -1196,10 +1196,10 @@ const NavV3 = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <SantiyemMark px={28} />
-          <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
+        <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
+          <SantiyemWordmark px={32} tone="light" />
         </Link>
+
         <div className="hidden md:flex items-center gap-8">
           {LINKS.map((l) => (
             <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
@@ -1240,10 +1240,10 @@ const FooterV3 = () => (
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <div className="grid md:grid-cols-4 gap-10 mb-12">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <SantiyemMark px={28} />
-            <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
+          <div className="flex items-center mb-4">
+            <SantiyemWordmark px={32} tone="light" />
           </div>
+
           <p className="text-[13px] max-w-sm" style={{ color: T.muted, ...body }}>
             İnşaat firmaları için AI işletim sistemi. Türkiye'de tasarlandı, küresel ölçeğe hazır.
           </p>
