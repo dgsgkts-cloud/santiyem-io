@@ -47,8 +47,12 @@ interface BrandImageProps {
 /**
  * Renders the supplied SVG untouched: aspect ratio preserved, `object-contain`,
  * explicit width/height so no layout shift occurs while the asset loads.
+ * `forwardRef` so Radix `asChild` / Tooltip triggers can measure the logo.
  */
-function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) {
+const BrandImage = forwardRef<HTMLImageElement, BrandImageProps>(function BrandImage(
+  { variant, height, tone, className, alt },
+  ref,
+) {
   const width = Math.round(height * LOGO_ASPECT[variant]);
   const base = `/brand/${variant}`;
   const style = { width, height } as const;
@@ -56,6 +60,7 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
   if (tone !== "auto") {
     return (
       <img
+        ref={ref}
         src={tone === "light" ? `${base}-light.svg` : `${base}.svg`}
         alt={alt}
         width={width}
@@ -70,6 +75,7 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
   return (
     <>
       <img
+        ref={ref}
         src={`${base}-light.svg`}
         alt={alt}
         width={width}
@@ -90,7 +96,8 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
       />
     </>
   );
-}
+});
+
 
 interface MarkProps {
   size?: LogoSize;
@@ -131,16 +138,13 @@ interface WordmarkProps extends MarkProps {
 }
 
 /** Primary lockup. Horizontal by default; vertical when `stacked`. */
-export function SantiyemWordmark({
-  size = "sm",
-  px,
-  className,
-  tone = "auto",
-  stacked = false,
-}: WordmarkProps) {
+export const SantiyemWordmark = forwardRef<HTMLSpanElement, WordmarkProps>(function SantiyemWordmark(
+  { size = "sm", px, className, tone = "auto", stacked = false },
+  ref,
+) {
   const height = px ?? LOCKUP_PX[size];
   return (
-    <span className={cn("inline-flex shrink-0 items-center", stacked && "justify-center")}>
+    <span ref={ref} className={cn("inline-flex shrink-0 items-center", stacked && "justify-center")}>
       <BrandImage
         variant={stacked ? "vertical" : "horizontal"}
         height={stacked ? Math.round(height * 1.9) : height}
@@ -150,37 +154,27 @@ export function SantiyemWordmark({
       />
     </span>
   );
-}
+});
 
 /** Vertical lockup — mobile auth, splash, centered brand introductions. */
-export function SantiyemVertical({
-  height = 120,
-  tone = "auto",
-  className,
-}: {
-  height?: number;
-  tone?: LogoTone;
-  className?: string;
-}) {
+export const SantiyemVertical = forwardRef<
+  HTMLSpanElement,
+  { height?: number; tone?: LogoTone; className?: string }
+>(function SantiyemVertical({ height = 120, tone = "auto", className }, ref) {
   return (
-    <span className="inline-flex shrink-0 items-center justify-center">
+    <span ref={ref} className="inline-flex shrink-0 items-center justify-center">
       <BrandImage variant="vertical" height={height} tone={tone} className={className} alt="Şantiyem AI" />
     </span>
   );
-}
+});
 
 /** Splash / loading state: centered symbol with a soft pulse. */
-export function SantiyemLoadingMark({
-  size = "lg",
-  tone = "auto",
-  className,
-}: {
-  size?: LogoSize;
-  tone?: LogoTone;
-  className?: string;
-}) {
-  return <SantiyemMark size={size} tone={tone} className={cn("brand-logo-pulse", className)} />;
-}
+export const SantiyemLoadingMark = forwardRef<
+  HTMLSpanElement,
+  { size?: LogoSize; tone?: LogoTone; className?: string }
+>(function SantiyemLoadingMark({ size = "lg", tone = "auto", className }, ref) {
+  return <SantiyemMark ref={ref} size={size} tone={tone} className={cn("brand-logo-pulse", className)} />;
+});
 
 export default SantiyemMark;
 
@@ -188,16 +182,13 @@ export default SantiyemMark;
  * Authentication lockup — vertical on mobile, horizontal from `lg` up.
  * Auth surfaces are always dark, so the reverse ink is used by default.
  */
-export function SantiyemAuthLockup({
-  tone = "light",
-  className,
-}: {
-  tone?: LogoTone;
-  className?: string;
-}) {
+export const SantiyemAuthLockup = forwardRef<
+  HTMLSpanElement,
+  { tone?: LogoTone; className?: string }
+>(function SantiyemAuthLockup({ tone = "light", className }, ref) {
   return (
     <>
-      <span className={cn("inline-flex lg:hidden", className)}>
+      <span ref={ref} className={cn("inline-flex lg:hidden", className)}>
         <BrandImage variant="vertical" height={104} tone={tone} alt="Şantiyem AI" />
       </span>
       <span className={cn("hidden lg:inline-flex", className)}>
@@ -205,4 +196,4 @@ export function SantiyemAuthLockup({
       </span>
     </>
   );
-}
+});
