@@ -1196,10 +1196,10 @@ const NavV3 = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <SantiyemMark px={28} />
-          <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
+        <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
+          <SantiyemWordmark px={28} tone="light" />
         </Link>
+
         <div className="hidden md:flex items-center gap-8">
           {LINKS.map((l) => (
             <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
