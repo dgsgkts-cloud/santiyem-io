@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { PaymentLogos } from "@/components/PaymentLogos";
 
 const LandingFooter = () => (

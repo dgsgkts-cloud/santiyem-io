@@ -2,7 +2,7 @@
 // Noir & Ember palette · Space Grotesk + DM Sans · split-screen hero.
 // 12 sections, real product mockups (in-app UI language, not fake dashboards).
 
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
