@@ -1,5 +1,5 @@
 {
-  "name": "Şantiyem",
+  "name": "Şantiyem AI",
   "short_name": "Şantiyem",
   "description": "Türk mühendis, mimar ve müteahhitler için yapay zeka platformu",
   "start_url": "/",
@@ -7,6 +7,8 @@
   "background_color": "#0F1419",
   "theme_color": "#FF6B2B",
   "icons": [
-    {"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
