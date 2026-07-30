@@ -1,120 +1,185 @@
 /**
  * Şantiyem Brand Identity — single source of truth for the logo.
  *
- * There is exactly ONE logo language in the product:
- *  - `SantiyemMark`      : geometric "Ş" monogram (rounded square, brand orange)
- *  - `SantiyemWordmark`  : mark + "Şantiyem" typography lockup
- *  - `SantiyemLoadingMark`: mark with a soft pulse (loading / splash)
+ * THREE supplied assets only. Never redraw, recolor or recreate them:
+ *  - /brand/horizontal.svg  : primary horizontal lockup (symbol + "SANTIYEM AI")
+ *  - /brand/vertical.svg    : primary vertical lockup (centered brand moments)
+ *  - /brand/symbol.svg      : symbol-only mark (favicon, collapsed nav, compact)
  *
- * Only three sizes exist: "sm" (navbar, sidebar, toolbar),
- * "md" (login, settings, dialogs), "lg" (splash, landing, empty states).
- * Do not create additional variants or redesign the mark per screen.
+ * Each has a reverse (`-light`) counterpart for dark surfaces. The reverse file
+ * is the identical artwork with the navy ink knocked out to white — no other
+ * change. `tone="auto"` picks the correct one from the active theme.
+ *
+ * Components:
+ *  - `SantiyemMark`       : symbol only
+ *  - `SantiyemWordmark`   : horizontal lockup (or vertical when `stacked`)
+ *  - `SantiyemVertical`   : vertical lockup
+ *  - `SantiyemLoadingMark`: symbol with a soft pulse (loading / splash)
  */
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-
 export type LogoSize = "sm" | "md" | "lg";
+/** Ink tone. "light" = white ink for dark surfaces, "dark" = navy ink. */
+export type LogoTone = "auto" | "light" | "dark";
+
+/** Intrinsic aspect ratios (width / height) of the supplied artwork. */
+export const LOGO_ASPECT = {
+  horizontal: 2.339,
+  vertical: 1.253,
+  symbol: 0.694,
+} as const;
 
 const MARK_PX: Record<LogoSize, number> = { sm: 32, md: 48, lg: 72 };
-const WORD_PX: Record<LogoSize, number> = { sm: 16, md: 22, lg: 32 };
-const GAP_PX: Record<LogoSize, number> = { sm: 8, md: 12, lg: 16 };
+const LOCKUP_PX: Record<LogoSize, number> = { sm: 34, md: 52, lg: 80 };
 
-/** The raw "Ş" glyph — geometric, flat, rounded caps, legible at 16px. */
-function GlyphS({ color = "#FFFFFF" }: { color?: string }) {
-  return (
-    <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round">
-      <path
-        d="M26.6 15.1c0-3.1-2.9-5.3-6.6-5.3-3.8 0-6.6 2.2-6.6 5.4 0 6.4 13.2 4.2 13.2 11.1 0 3.2-2.9 5.4-6.6 5.4-3.3 0-6.1-1.6-6.6-4.1"
-        strokeWidth="4.4"
+type Variant = keyof typeof LOGO_ASPECT;
+
+interface BrandImageProps {
+  variant: Variant;
+  /** Rendered height in px. Width is derived from the intrinsic aspect ratio. */
+  height: number;
+  tone: LogoTone;
+  className?: string;
+  alt: string;
+}
+
+/**
+ * Renders the supplied SVG untouched: aspect ratio preserved, `object-contain`,
+ * explicit width/height so no layout shift occurs while the asset loads.
+ */
+function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) {
+  const width = Math.round(height * LOGO_ASPECT[variant]);
+  const base = `/brand/${variant}`;
+  const style = { width, height } as const;
+
+  if (tone !== "auto") {
+    return (
+      <img
+        src={tone === "light" ? `${base}-light.svg` : `${base}.svg`}
+        alt={alt}
+        width={width}
+        height={height}
+        style={style}
+        className={cn("object-contain shrink-0 select-none", className)}
+        draggable={false}
       />
-      <path d="M20 31.7v2.9c0 2.4 1.9 3.2 3.7 2.5" strokeWidth="3.2" />
-    </g>
+    );
+  }
+
+  return (
+    <>
+      <img
+        src={`${base}-light.svg`}
+        alt={alt}
+        width={width}
+        height={height}
+        style={style}
+        className={cn("brand-ink-light object-contain shrink-0 select-none", className)}
+        draggable={false}
+      />
+      <img
+        src={`${base}.svg`}
+        alt=""
+        aria-hidden
+        width={width}
+        height={height}
+        style={style}
+        className={cn("brand-ink-dark object-contain shrink-0 select-none", className)}
+        draggable={false}
+      />
+    </>
   );
 }
 
 interface MarkProps {
   size?: LogoSize;
-  /** Pixel override for edge cases (favicons, inline chips). Prefer `size`. */
+  /** Pixel height override for edge cases. Prefer `size`. */
   px?: number;
   className?: string;
-  /** Renders the glyph only, no orange plate (for use on orange surfaces). */
+  tone?: LogoTone;
+  /** @deprecated kept for call-site compatibility — maps to `tone="light"`. */
   bare?: boolean;
-  /** Glyph colour when `bare` is set. Defaults to brand orange. */
+  /** @deprecated the supplied artwork is never recolored. */
   glyphColor?: string;
 }
 
-export const SantiyemMark = forwardRef<SVGSVGElement, MarkProps>(function SantiyemMark(
-  { size = "sm", px, className, bare = false, glyphColor },
+/** Symbol-only mark. Use in compact spaces: collapsed nav, favicons, chips. */
+export const SantiyemMark = forwardRef<HTMLSpanElement, MarkProps>(function SantiyemMark(
+  { size = "sm", px, className, tone = "auto", bare = false },
   ref,
 ) {
-  const dimension = px ?? MARK_PX[size];
+  const height = px ?? MARK_PX[size];
   return (
-    <svg
-      ref={ref}
-      width={dimension}
-      height={dimension}
-      viewBox="0 0 48 48"
-      role="img"
-      aria-label="Şantiyem"
-      className={cn("shrink-0", className)}
-    >
-      {!bare && <rect width="48" height="48" rx="13" fill="#FF6B2B" />}
-      <g transform="translate(4 3.5)">
-        <GlyphS color={bare ? (glyphColor ?? "#FF6B2B") : "#FFFFFF"} />
-      </g>
-    </svg>
+    <span ref={ref} className="inline-flex shrink-0 items-center justify-center">
+      <BrandImage
+        variant="symbol"
+        height={height}
+        tone={bare ? "light" : tone}
+        className={className}
+        alt="Şantiyem"
+      />
+    </span>
   );
 });
 
-
 interface WordmarkProps extends MarkProps {
-  /** Optional second line, e.g. "Construction Operating System". */
+  /** @deprecated the supplied lockup already carries the "AI" descriptor. */
   tagline?: string;
-  /** Stack mark above the wordmark (splash / landing hero). */
+  /** Use the vertical lockup instead of the horizontal one. */
   stacked?: boolean;
 }
 
+/** Primary lockup. Horizontal by default; vertical when `stacked`. */
 export function SantiyemWordmark({
   size = "sm",
   px,
   className,
-  tagline,
+  tone = "auto",
   stacked = false,
 }: WordmarkProps) {
+  const height = px ?? LOCKUP_PX[size];
   return (
-    <div
-      className={cn(
-        "flex select-none",
-        stacked ? "flex-col items-center text-center" : "flex-row items-center",
-        className,
-      )}
-      style={{ gap: GAP_PX[size] }}
-    >
-      <SantiyemMark size={size} px={px} />
-      <div className={cn("flex flex-col", stacked ? "items-center" : "items-start")}>
-        <span
-          className="font-bold leading-none tracking-[-0.02em] text-foreground whitespace-nowrap"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: WORD_PX[size] }}
-        >
-          Şantiyem
-        </span>
-        {tagline && (
-          <span
-            className="mt-1.5 font-medium leading-none text-muted-foreground whitespace-nowrap"
-            style={{ fontSize: Math.max(11, Math.round(WORD_PX[size] * 0.42)) }}
-          >
-            {tagline}
-          </span>
-        )}
-      </div>
-    </div>
+    <span className={cn("inline-flex shrink-0 items-center", stacked && "justify-center")}>
+      <BrandImage
+        variant={stacked ? "vertical" : "horizontal"}
+        height={stacked ? Math.round(height * 1.9) : height}
+        tone={tone}
+        className={className}
+        alt="Şantiyem AI"
+      />
+    </span>
   );
 }
 
-/** Splash / loading state: centered mark with a soft pulse. */
-export function SantiyemLoadingMark({ size = "lg", className }: { size?: LogoSize; className?: string }) {
-  return <SantiyemMark size={size} className={cn("brand-logo-pulse", className)} />;
+/** Vertical lockup — mobile auth, splash, centered brand introductions. */
+export function SantiyemVertical({
+  height = 120,
+  tone = "auto",
+  className,
+}: {
+  height?: number;
+  tone?: LogoTone;
+  className?: string;
+}) {
+  return (
+    <span className="inline-flex shrink-0 items-center justify-center">
+      <BrandImage variant="vertical" height={height} tone={tone} className={className} alt="Şantiyem AI" />
+    </span>
+  );
+}
+
+/** Splash / loading state: centered symbol with a soft pulse. */
+export function SantiyemLoadingMark({
+  size = "lg",
+  tone = "auto",
+  className,
+}: {
+  size?: LogoSize;
+  tone?: LogoTone;
+  className?: string;
+}) {
+  return <SantiyemMark size={size} tone={tone} className={cn("brand-logo-pulse", className)} />;
 }
 
 export default SantiyemMark;
