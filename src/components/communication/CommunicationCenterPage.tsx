@@ -422,8 +422,10 @@ export default function CommunicationCenterPage() {
           </DialogHeader>
           <div className="space-y-2 max-h-[60vh] overflow-y-auto">
             {attemptsLoading ? (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> Yükleniyor…
+              <div className="space-y-2 py-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="ds-skeleton h-16 rounded-xl" />
+                ))}
               </div>
             ) : attempts.length === 0 ? (
               <div className="py-10 text-center text-sm text-muted-foreground">Henüz deneme kaydı yok.</div>

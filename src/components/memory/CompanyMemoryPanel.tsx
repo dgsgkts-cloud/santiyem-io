@@ -162,10 +162,10 @@ export default function CompanyMemoryPanel() {
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{m.content}</p>
               </div>
               <div className="flex flex-col gap-1 shrink-0">
-                <Button size="icon" variant="ghost" onClick={() => pin(m.id, !m.pinned)} title={m.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}>
+                <Button size="icon" variant="ghost" onClick={() => pin(m.id, !m.pinned)} aria-label={m.pinned ? "Sabitlemeyi kaldır" : "Sabitle"} title={m.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}>
                   {m.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(m)} title="Unut">
+                <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(m)} aria-label="Bu hafızayı unut" title="Unut">
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>

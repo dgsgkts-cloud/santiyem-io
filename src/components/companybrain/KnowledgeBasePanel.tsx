@@ -186,8 +186,8 @@ export default function KnowledgeBasePanel() {
       >
         {uploading ? (
           <>
-            <Loader2 className="w-7 h-7 animate-spin text-primary" />
-            <p className="text-[13px] font-medium">Belge işleniyor…</p>
+            <div className="ds-skeleton w-7 h-7 rounded-full" />
+            <p className="text-[13px] font-medium ds-shimmer-text">Belge işleniyor…</p>
           </>
         ) : (
           <>
