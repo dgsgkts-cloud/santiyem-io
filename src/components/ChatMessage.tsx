@@ -1159,7 +1159,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
         {isUser ? (
           <User className="w-4 h-4 text-primary-foreground" />
         ) : (
-          <SantiyemMark bare glyphColor="currentColor" px={18} className="text-accent-foreground" />
+          <SantiyemMark tone="light" px={18} />
         )}
       </div>
 
