@@ -318,3 +318,115 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   SPRINT 38H — FINAL PRODUCT POLISH
+   Native-feel primitives applied globally. Presentation only.
+   ══════════════════════════════════════════════════════════════ */
+
+/* iOS: kill the blue tap flash and stop landscape font inflation */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Media never breaks the grid */
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* Brand-tinted selection instead of the browser default blue */
+::selection {
+  background: hsl(var(--primary) / 0.24);
+  color: hsl(var(--foreground));
+}
+
+/* Chrome (nav, chips, buttons, labels) should not look like selectable text */
+button,
+[role="button"],
+[role="tab"],
+label,
+.ds-chip,
+.ds-label {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Numeric surfaces stay column-aligned everywhere */
+.ds-numeric,
+th,
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Anchored scroll never lands under a sticky header */
+:target,
+[id] {
+  scroll-margin-top: 96px;
+}
+
+/* Touch devices: enforce the 44px accessibility floor on real controls */
+@media (pointer: coarse) {
+  button:not(.ds-target-exempt),
+  [role="button"]:not(.ds-target-exempt),
+  a[role="button"],
+  [role="tab"],
+  [role="switch"] {
+    min-height: 44px;
+  }
+
+  /* Icon-only controls also need horizontal reach */
+  button[aria-label]:not(.ds-target-exempt) {
+    min-width: 44px;
+  }
+}
+
+/* Every scroll surface behaves like a native pane */
+@media (pointer: coarse) {
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Sheets, dialogs and drawers respect the home indicator */
+.ds-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--space-4));
+}
+
+/* One shared page-content rhythm: title → description → content */
+.ds-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.ds-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Progressive list reveal without layout shift */
+.ds-reveal {
+  animation: ds-fade-up var(--dur-3) var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-enter,
+  .ds-enter-scale,
+  .ds-enter-slide,
+  .ds-enter-spring,
+  .ds-page-enter,
+  .ds-reveal,
+  .ds-stagger > *,
+  .ds-skeleton::after,
+  .ds-shimmer-text {
+    animation: none !important;
+  }
+  .ds-card-interactive:hover {
+    transform: none;
+  }
+}
