@@ -647,10 +647,10 @@ const Index = () => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2 cursor-pointer pl-0.5" onClick={() => goToTab("dashboard")}>
-            <SantiyemMark size="sm" />
-            <h1 className="text-sm font-bold text-foreground">Şantiyem</h1>
+          <div className="flex items-center cursor-pointer pl-0.5" onClick={() => goToTab("dashboard")}>
+            <SantiyemWordmark px={26} />
           </div>
+
         </div>
         <div className="flex items-center gap-1">
           {/* Mobile notification bell */}
