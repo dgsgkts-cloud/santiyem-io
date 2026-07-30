@@ -10,7 +10,9 @@
  * "md" (login, settings, dialogs), "lg" (splash, landing, empty states).
  * Do not create additional variants or redesign the mark per screen.
  */
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
+
 
 export type LogoSize = "sm" | "md" | "lg";
 
