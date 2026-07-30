@@ -461,7 +461,7 @@ const VoiceSection = () => (
               </div>
               {/* AI bubble */}
               <div className="flex justify-start items-start gap-2">
-                <SantiyemMark px={24} className="mt-0.5" />
+                <SantiyemMark px={24} tone="light" className="mt-0.5" />
                 <div
                   className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
                   style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
@@ -557,7 +557,7 @@ const OneAI = () => (
             }}
           >
             <div className="text-center">
-              <SantiyemMark bare glyphColor="#FFFFFF" px={30} className="mx-auto mb-1" />
+              <SantiyemMark tone="light" px={30} className="mx-auto mb-1" />
               <p className="text-[9px] uppercase tracking-widest text-white font-bold" style={body}>Şantiyem AI</p>
             </div>
           </div>
