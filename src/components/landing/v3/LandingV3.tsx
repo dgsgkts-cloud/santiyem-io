@@ -1240,10 +1240,10 @@ const FooterV3 = () => (
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <div className="grid md:grid-cols-4 gap-10 mb-12">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <SantiyemMark px={28} />
-            <span className="text-[15px] font-semibold text-white" style={heading}>Şantiyem AI</span>
+          <div className="flex items-center mb-4">
+            <SantiyemWordmark px={28} tone="light" />
           </div>
+
           <p className="text-[13px] max-w-sm" style={{ color: T.muted, ...body }}>
             İnşaat firmaları için AI işletim sistemi. Türkiye'de tasarlandı, küresel ölçeğe hazır.
           </p>
