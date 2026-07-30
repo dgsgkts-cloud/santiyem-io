@@ -240,8 +240,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         }}
         onClick={() => onTabChange("dashboard")}
       >
-        <SantiyemMark size="sm" />
-        {!collapsed && <span className="ds-title whitespace-nowrap text-foreground">Şantiyem</span>}
+        {collapsed ? <SantiyemMark px={32} /> : <SantiyemWordmark px={36} />}
+
       </div>
 
       {/* User card + AI health */}
