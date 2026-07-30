@@ -47,8 +47,12 @@ interface BrandImageProps {
 /**
  * Renders the supplied SVG untouched: aspect ratio preserved, `object-contain`,
  * explicit width/height so no layout shift occurs while the asset loads.
+ * `forwardRef` so Radix `asChild` / Tooltip triggers can measure the logo.
  */
-function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) {
+const BrandImage = forwardRef<HTMLImageElement, BrandImageProps>(function BrandImage(
+  { variant, height, tone, className, alt },
+  ref,
+) {
   const width = Math.round(height * LOGO_ASPECT[variant]);
   const base = `/brand/${variant}`;
   const style = { width, height } as const;
@@ -56,6 +60,7 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
   if (tone !== "auto") {
     return (
       <img
+        ref={ref}
         src={tone === "light" ? `${base}-light.svg` : `${base}.svg`}
         alt={alt}
         width={width}
@@ -70,6 +75,7 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
   return (
     <>
       <img
+        ref={ref}
         src={`${base}-light.svg`}
         alt={alt}
         width={width}
@@ -90,7 +96,8 @@ function BrandImage({ variant, height, tone, className, alt }: BrandImageProps) 
       />
     </>
   );
-}
+});
+
 
 interface MarkProps {
   size?: LogoSize;
