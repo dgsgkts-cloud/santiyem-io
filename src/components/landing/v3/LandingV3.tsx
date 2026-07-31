@@ -1229,9 +1229,40 @@ const NavV3 = () => {
 
 
         <div className="hidden md:flex items-center gap-8 ml-14">
-          {LINKS.map((l) => (
-            <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
-          ))}
+          {LINKS.map((l) =>
+            l.children ? (
+              <div key={l.l} className="relative group">
+                <button
+                  onClick={() => scrollTo(l.h)}
+                  aria-label="Çözümler"
+                  aria-haspopup="true"
+                  className="flex items-center gap-1 text-[13px] hover:text-white transition-colors"
+                  style={{ color: T.muted, ...body }}
+                >
+                  {l.l}
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+                <div
+                  className="invisible opacity-0 group-hover:visible group-hover:opacity-100 focus-within:visible focus-within:opacity-100 transition-opacity absolute left-0 top-full pt-3 w-[260px]"
+                >
+                  <div className="rounded-[16px] p-2" style={{ background: "#0A0A0A", border: `1px solid ${T.borderStrong}`, boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
+                    {l.children.map((c) => (
+                      <button
+                        key={c.l}
+                        onClick={() => scrollTo(c.h)}
+                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[13px] transition-colors hover:bg-white/[0.05]"
+                        style={{ color: T.text, ...body }}
+                      >
+                        {c.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
+            )
+          )}
         </div>
 
         <div className="hidden md:flex items-center gap-3">
