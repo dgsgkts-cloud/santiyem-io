@@ -32,11 +32,12 @@ export function PageShell({
     <div
       className={cn("w-full no-overflow-x safe-area-bottom", className)}
       style={{
-        // SPRINT 35 — one page rhythm: 20px gutters, 24px vertical padding.
-        paddingLeft: "max(env(safe-area-inset-left, 0px), 20px)",
-        paddingRight: "max(env(safe-area-inset-right, 0px), 20px)",
-        paddingTop: "max(env(safe-area-inset-top, 0px), 20px)",
-        paddingBottom: "24px",
+        // SPRINT 40 — mobile rhythm: 16px gutters, 16px top, generous bottom so
+        // the floating voice button never covers the last row.
+        paddingLeft: "max(env(safe-area-inset-left, 0px), 16px)",
+        paddingRight: "max(env(safe-area-inset-right, 0px), 16px)",
+        paddingTop: "16px",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
       <div
