@@ -9,6 +9,10 @@ import {
   Wallet,
   HardHat,
   Bot,
+  Mic,
+  Users,
+  Clock,
+  CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
 import "@/styles/login-hero.css";
