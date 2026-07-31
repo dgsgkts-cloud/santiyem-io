@@ -276,7 +276,7 @@ const HeroDashboardMock = () => {
 
 
 const Hero = () => (
-  <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
+  <section className="relative pt-[calc(env(safe-area-inset-top)+110px)] pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
     {/* Ember glow */}
     <div className="absolute inset-0 pointer-events-none opacity-60">
       <div className="absolute top-1/4 -left-40 w-[600px] h-[600px] rounded-full" style={{ background: `radial-gradient(circle, ${T.ember}22 0%, transparent 70%)`, filter: "blur(60px)" }} />
@@ -1188,16 +1188,16 @@ const NavV3 = () => {
   const scrollTo = (h: string) => { setOpen(false); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); };
   return (
     <nav
-      className="fixed top-0 inset-x-0 z-50 transition-all"
+      className="fixed inset-x-0 top-0 z-50 transition-all pt-[env(safe-area-inset-top)]"
       style={{
         background: scrolled ? "rgba(0,0,0,0.7)" : "transparent",
         backdropFilter: scrolled ? "blur(16px)" : "none",
         borderBottom: scrolled ? `1px solid ${T.border}` : "1px solid transparent",
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 md:h-[76px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-5 md:px-6 lg:px-12 h-[62px] md:h-[76px] flex items-center justify-between">
         <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-          <span className="md:hidden inline-flex"><SantiyemMark px={35} tone="light" /></span>
+          <span className="md:hidden inline-flex items-center"><SantiyemMark px={34} tone="light" /></span>
           <img
             src="/brand/horizontal-light.svg"
             alt="Şantiyem AI"
@@ -1205,6 +1205,7 @@ const NavV3 = () => {
             draggable={false}
           />
         </Link>
+
 
 
         <div className="hidden md:flex items-center gap-8 ml-14">
@@ -1217,13 +1218,14 @@ const NavV3 = () => {
           <Link to="/login" className="text-[13px]" style={{ color: T.muted, ...body }}>Giriş</Link>
           <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
         </div>
-        <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)} aria-label="menu">
+        <button className="md:hidden text-white -mr-2 w-11 h-11 flex items-center justify-center" onClick={() => setOpen(!open)} aria-label="menu">
           <div className="w-5 flex flex-col gap-1">
             <span className="h-0.5 bg-white transition-all" style={{ transform: open ? "rotate(45deg) translate(3px,3px)" : "none" }} />
             <span className="h-0.5 bg-white transition-all" style={{ opacity: open ? 0 : 1 }} />
             <span className="h-0.5 bg-white transition-all" style={{ transform: open ? "rotate(-45deg) translate(3px,-3px)" : "none" }} />
           </div>
         </button>
+
       </div>
       {open && (
         <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
@@ -1289,7 +1291,7 @@ const FooterV3 = () => (
    ═══════════════════════════════════════════════════════════════════ */
 export default function LandingV3() {
   return (
-    <div style={{ background: T.bg, color: T.text, minHeight: "100vh", ...body }}>
+    <div style={{ background: T.bg, color: T.text, minHeight: "100dvh", ...body }}>
       <NavV3 />
       <main>
         <Hero />
