@@ -21,6 +21,18 @@ type SessionInfo = {
   base_url?: string;
 };
 
+/** Always-on runtime trace for the realtime transport. */
+const RT = "[voice:rt]";
+function rtLog(msg: string, data?: unknown) {
+  if (data === undefined) console.log(`${RT} ${msg}`);
+  else console.log(`${RT} ${msg}`, data);
+}
+
+/** No OpenAI event at all within this window = the session never came up. */
+const NO_EVENT_TIMEOUT_MS = 5000;
+/** Fallback if `session.updated` never arrives after `session.created`. */
+const SESSION_READY_FALLBACK_MS = 800;
+
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   readonly provider: VoiceProviderId = "openai-realtime";
 
@@ -38,8 +50,17 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private outAnalyser: AnalyserNode | null = null;
   private outBuf: Uint8Array<ArrayBuffer> | null = null;
   private speaking = false;
+  /** true only after `session.created` — gates the "listening" state. */
+  private sessionReady = false;
+  private eventCount = 0;
+  private noEventTimer: number | null = null;
+  private readyFallbackTimer: number | null = null;
+  private statsTimer: number | null = null;
+  private lastBytesSent = 0;
+  private silentUplinkChecks = 0;
 
   getMetrics() { return this.metrics.snapshot(); }
+
 
   getMicLevel(): number {
     if (!this.analyser || !this.levelBuf) return 0;
