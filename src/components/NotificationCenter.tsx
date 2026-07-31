@@ -270,7 +270,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
               ) : filteredNotifs.length === 0 ? (
                 <OpsEmpty
                   icon="🔔"
-                  title={notifications.length === 0 ? "Şu an dikkat isteyen bir şey yok" : "Bu filtrede bildirim yok"}
+                  title={notifications.length === 0 ? "Henüz bildiriminiz yok" : "Bu filtrede bildirim yok"}
                   description={
                     notifications.length === 0
                       ? "Yaklaşan hatırlatıcılar, kilometre taşları ve gecikmeler burada otomatik toplanır. Bir hatırlatıcı ekleyin ya da projeye kilometre taşı tanımlayın."
