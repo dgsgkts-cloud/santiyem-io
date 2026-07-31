@@ -421,12 +421,13 @@ const VoiceSection = () => (
     </div>
     <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="text-center max-w-3xl mx-auto mb-16">
-        <div className="mb-4 flex justify-center"><SectionLabel>Voice</SectionLabel></div>
+        <div className="mb-4 flex justify-center"><SectionLabel>Sesli AI</SectionLabel></div>
         <H2>Firmanızla konuşun.</H2>
         <Sub className="mt-5">
-          "Bu ay hangi proje kârda?" diye sorun. Cevabı sesli alın, canvas'ta görün, dashboard'a
-          yansısın. Tek bir konuşma, tüm firmayı hareketlendirir.
+          "Bu ay en kârlı proje hangisi?" diye sorun. Yanıtı sesli alın, veriyi ekranda görün ve
+          ilgili projeyi tek dokunuşla açın.
         </Sub>
+
       </Reveal>
 
       <Reveal delay={150}>
@@ -467,10 +468,15 @@ const VoiceSection = () => (
                   className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
                   style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
                 >
-                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — ₺1.8M net kâr, %22 marj. Erken teslim primi belirleyici oldu.
+                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — 1,8 milyon TL net kâr, %22 marj.
                 </div>
               </div>
             </div>
+
+            {/* Demo content must never read as the visitor's own data. */}
+            <p className="mt-5 text-[10.5px] uppercase tracking-[0.2em]" style={{ color: T.faint, ...body }}>
+              Örnek senaryo
+            </p>
 
           </div>
 
@@ -481,15 +487,10 @@ const VoiceSection = () => (
                 <Activity className="w-4 h-4" style={{ color: T.ember }} />
                 <span className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: T.muted, ...body }}>Canlı Analiz</span>
               </div>
-              <span className="text-[10.5px]" style={{ color: "#4ade80", ...body }}>● online</span>
+              <span className="text-[10.5px]" style={{ color: "#4ade80", ...body }}>● Bağlı</span>
             </div>
 
-            <div className="rounded-xl p-4" style={{ background: "#0A0A0A", border: `1px solid ${T.border}` }}>
-              <p className="text-[13px] leading-relaxed" style={{ color: T.text, ...body }}>
-                <span style={{ color: T.emberGlow }}>Arsuz Konut Projesi</span> bu ay ₺1.8M net kâr üretti
-                (%22 marj). Ana neden: erken teslim primi + malzeme optimizasyonu.
-              </p>
-            </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               {[
