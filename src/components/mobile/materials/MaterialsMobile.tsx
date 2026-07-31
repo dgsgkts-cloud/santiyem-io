@@ -302,21 +302,10 @@ export default function MaterialsMobile() {
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)",
       }}
     >
-      {/* 1 — compact page header */}
-      <header
-        className="flex items-center gap-2 -mx-4 px-4 pb-3"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
-      >
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent("navigate-tab", { detail: { tab: "dashboard" } }))}
-          aria-label="Geri dön"
-          className="w-11 h-11 -ml-2 shrink-0 rounded-[13px] flex items-center justify-center text-foreground active:bg-muted"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
+      {/* 1 — compact page header (sits under the app shell header) */}
+      <header className="flex items-center gap-2 pt-3 pb-3">
         <div className="min-w-0 flex-1">
-          <h1 className="text-[25px] font-semibold text-foreground leading-tight truncate">Stok Takibi</h1>
+          <h1 className="text-[24px] font-semibold text-foreground leading-tight truncate">Stok Takibi</h1>
         </div>
         <button
           type="button"
