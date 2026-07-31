@@ -203,9 +203,6 @@ export function VoiceOrb() {
 
   const isNative = Capacitor.isNativePlatform();
   const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
-  // Sprint 41 — the floating microphone is desktop-only. On mobile, voice lives
-  // inside the AI tab; only the overlay session renders here.
-  if (!isDesktop) return open ? session : null;
   const bottomOffset = isNative
     ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
     : "calc(env(safe-area-inset-bottom, 0px) + 24px)";
@@ -240,10 +237,15 @@ export function VoiceOrb() {
     </VoiceErrorBoundary>
   );
 
-  if (inputActive && !isDesktop) {
-    // Keyboard-open guard on mobile — render only the overlay portal if open.
+  // Sprint 41 — the floating microphone is desktop-only. On mobile, voice lives
+  // inside the AI tab; only the overlay session renders here.
+  if (!isDesktop) return open ? session : null;
+
+  if (inputActive) {
+    // Keyboard-open guard — render only the overlay portal if open.
     return open ? session : null;
   }
+
 
   return (
     <>
