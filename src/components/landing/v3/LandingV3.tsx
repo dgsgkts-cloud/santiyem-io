@@ -1189,6 +1189,82 @@ const LINKS = [
   { l: "SSS", h: "#faq" },
 ];
 
+/* Active-section tracking for the desktop header (intersection based). */
+const useActiveSection = (hashes: string[]) => {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    const els = hashes
+      .map((h) => document.querySelector(h))
+      .filter((el): el is Element => Boolean(el));
+    if (!els.length || typeof IntersectionObserver === "undefined") return;
+    const seen = new Map<Element, number>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => seen.set(e.target, e.isIntersecting ? e.intersectionRatio : 0));
+        let best: Element | null = null;
+        let bestRatio = 0;
+        seen.forEach((ratio, el) => {
+          if (ratio > bestRatio) { bestRatio = ratio; best = el; }
+        });
+        if (!best || bestRatio <= 0) { setActive(null); return; }
+        const idx = els.indexOf(best);
+        setActive(idx >= 0 ? hashes[idx] : null);
+      },
+      { rootMargin: "-88px 0px -55% 0px", threshold: [0, 0.15, 0.35, 0.6, 1] },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [hashes.join("|")]);
+  return active;
+};
+
+/* Desktop nav text link — animated orange underline + focus ring. */
+const NavTextLink = ({
+  label,
+  active,
+  onActivate,
+  chevron,
+  ...rest
+}: {
+  label: string;
+  active?: boolean;
+  onActivate: () => void;
+  chevron?: boolean;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button
+    type="button"
+    onClick={onActivate}
+    aria-current={active ? "true" : undefined}
+    className="group/nav relative flex h-11 cursor-pointer items-center gap-1 px-1.5 text-[15px] font-medium outline-none transition-[color,opacity] duration-200 ease-out active:opacity-80 focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-offset-4"
+    style={{
+      color: active ? T.text : "#C4C4CC",
+      // Focus ring / offset colors kept inline so the noir header stays consistent.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ["--tw-ring-color" as any]: T.ember,
+      ["--tw-ring-offset-color" as any]: "#000000",
+      ...body,
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+    onMouseLeave={(e) => { e.currentTarget.style.color = active ? T.text : "#C4C4CC"; }}
+    {...rest}
+  >
+    {label}
+    {chevron && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 ease-out group-hover/nav:translate-y-[1px]" />}
+    <span
+      aria-hidden
+      className="pointer-events-none absolute left-1.5 right-1.5 origin-left transition-transform duration-200 ease-out motion-reduce:transition-none group-hover/nav:scale-x-100 group-focus-visible/nav:scale-x-100"
+      style={{
+        bottom: 4,
+        height: 2,
+        borderRadius: 2,
+        background: T.ember,
+        boxShadow: `0 0 10px ${T.ember}66`,
+        transform: active ? "scaleX(1)" : "scaleX(0)",
+      }}
+    />
+  </button>
+);
+
 const NavV3 = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
