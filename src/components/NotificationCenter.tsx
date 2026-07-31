@@ -428,12 +428,11 @@ const PriorityDot = ({ tone }: { tone: string }) => (
 );
 
 /** Compact notification row: title → description → time → quick action. */
-const NotifRow = ({ n, read, tone, onOpen, onRead }: {
+const NotifRow = ({ n, read, tone, onOpen }: {
   n: AppNotification & { cat?: string };
   read: boolean;
   tone: string;
   onOpen: () => void;
-  onRead: () => void;
 }) => {
   const when = n.completed
     ? "Tamamlandı"
@@ -444,30 +443,26 @@ const NotifRow = ({ n, read, tone, onOpen, onRead }: {
     <div
       role="button"
       tabIndex={0}
+      aria-label={`${read ? "Okunmuş bildirim" : "Okunmamış bildirim"}: ${n.title}. ${n.message}. ${when}`}
       onClick={onOpen}
-      onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="group relative flex items-center gap-2.5 px-3 cursor-pointer hover:bg-muted/30 transition-colors"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
+      className={`group relative flex items-center gap-2.5 px-3 cursor-pointer transition-colors ${read ? "bg-transparent hover:bg-muted/25" : "bg-primary/[0.05] hover:bg-primary/[0.09]"}`}
       style={{ minHeight: 56 }}
     >
       <PriorityDot tone={tone} />
       <div className="flex-1 min-w-0">
-        <p className={`ds-body truncate ${read ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>{n.title}</p>
+        <p className={`ds-body truncate ${read ? "font-normal text-foreground/80" : "font-semibold text-foreground"}`}>{n.title}</p>
         <p className="ds-caption text-muted-foreground truncate">{n.message}</p>
       </div>
       <span className={`ds-caption shrink-0 tabular-nums ${tone === "overdue" ? "text-rose-400" : "text-muted-foreground"}`}>{when}</span>
-      {!read && (
-        <button
-          aria-label="Okundu işaretle"
-          title="Okundu işaretle"
-          onClick={(e) => { e.stopPropagation(); onRead(); }}
-          className="w-9 h-9 rounded-control flex items-center justify-center shrink-0 text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 hover:text-emerald-400 hover:bg-muted transition-all"
-        >
-          <Check className="w-4 h-4" />
-        </button>
-      )}
+      <span
+        aria-hidden
+        className={`w-2 h-2 rounded-full shrink-0 ${read ? "opacity-0" : "bg-primary"}`}
+      />
     </div>
   );
 };
+
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{children}</p>
 );
