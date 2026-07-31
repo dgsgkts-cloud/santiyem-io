@@ -1313,30 +1313,38 @@ const NavV3 = () => {
 
 
 
-        <div className="hidden md:flex items-center gap-8 ml-14">
+        <div className="hidden md:flex items-center gap-7 lg:gap-8 xl:gap-9 ml-10 lg:ml-14">
           {LINKS.map((l) =>
             l.children ? (
-              <div key={l.l} className="relative group">
-                <button
-                  onClick={() => scrollTo(l.h)}
-                  aria-label="Çözümler"
-                  aria-haspopup="true"
-                  className="flex items-center gap-1 text-[13px] hover:text-white transition-colors"
-                  style={{ color: T.muted, ...body }}
-                >
-                  {l.l}
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
+              <div
+                key={l.l}
+                className="relative"
+                onMouseEnter={() => setSolutionsOpen(true)}
+                onMouseLeave={() => setSolutionsOpen(false)}
+                onFocus={() => setSolutionsOpen(true)}
+                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setSolutionsOpen(false); }}
+                onKeyDown={(e) => { if (e.key === "Escape") setSolutionsOpen(false); }}
+              >
+                <NavTextLink
+                  label={l.l}
+                  chevron
+                  active={active === l.h || solutionsOpen}
+                  onActivate={() => scrollTo(l.h)}
+                  aria-haspopup="menu"
+                  aria-expanded={solutionsOpen}
+                />
                 <div
-                  className="invisible opacity-0 group-hover:visible group-hover:opacity-100 focus-within:visible focus-within:opacity-100 transition-opacity absolute left-0 top-full pt-3 w-[260px]"
+                  className="absolute left-0 top-full pt-3 w-[264px] transition-opacity duration-200 ease-out"
+                  style={{ opacity: solutionsOpen ? 1 : 0, visibility: solutionsOpen ? "visible" : "hidden" }}
                 >
-                  <div className="rounded-[16px] p-2" style={{ background: "#0A0A0A", border: `1px solid ${T.borderStrong}`, boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
+                  <div className="rounded-[16px] p-2" role="menu" style={{ background: "#0A0A0A", border: `1px solid ${T.borderStrong}`, boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
                     {l.children.map((c) => (
                       <button
                         key={c.l}
+                        role="menuitem"
                         onClick={() => scrollTo(c.h)}
-                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[13px] transition-colors hover:bg-white/[0.05]"
-                        style={{ color: T.text, ...body }}
+                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[14px] outline-none transition-colors duration-200 ease-out hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:ring-2 active:opacity-80"
+                        style={{ color: T.text, ["--tw-ring-color" as string]: T.ember, ...body } as React.CSSProperties}
                       >
                         {c.l}
                       </button>
@@ -1345,14 +1353,40 @@ const NavV3 = () => {
                 </div>
               </div>
             ) : (
-              <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
+              <NavTextLink key={l.h} label={l.l} active={active === l.h} onActivate={() => scrollTo(l.h)} />
             )
           )}
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/login" className="text-[13px]" style={{ color: T.muted, ...body }}>Giriş</Link>
-          <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
+        <div className="hidden md:flex items-center gap-2.5 ml-8 lg:ml-10">
+          <Link
+            to="/login"
+            className="inline-flex h-[43px] items-center rounded-[13px] px-4 lg:px-5 text-[15px] font-medium outline-none transition-all duration-200 ease-out hover:border-white/25 hover:bg-[rgba(255,107,43,0.10)] hover:text-white active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-offset-4"
+            style={{
+              color: "#E4E4E7",
+              border: `1px solid ${T.borderStrong}`,
+              background: "transparent",
+              ["--tw-ring-color" as string]: T.ember,
+              ["--tw-ring-offset-color" as string]: "#000000",
+              ...body,
+            } as React.CSSProperties}
+          >
+            Giriş Yap
+          </Link>
+          <Link
+            to="/register"
+            className="group/cta inline-flex h-[45px] items-center gap-2 rounded-[15px] px-5 text-[15px] font-semibold text-white outline-none transition-all duration-200 ease-out hover:brightness-110 active:translate-y-[1px] active:shadow-none focus-visible:ring-2 focus-visible:ring-offset-4"
+            style={{
+              background: T.ember,
+              boxShadow: `0 8px 26px ${T.ember}44`,
+              ["--tw-ring-color" as string]: T.ember,
+              ["--tw-ring-offset-color" as string]: "#000000",
+              ...body,
+            } as React.CSSProperties}
+          >
+            Ücretsiz Başla
+            <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-[3px] motion-reduce:transition-none" />
+          </Link>
         </div>
         <button className="md:hidden text-white -mr-2 w-11 h-11 flex items-center justify-center" onClick={() => setOpen(!open)} aria-label="menu">
           <div className="w-5 flex flex-col gap-1">
