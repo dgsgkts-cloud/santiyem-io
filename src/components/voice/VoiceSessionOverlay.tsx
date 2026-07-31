@@ -68,10 +68,11 @@ export function VoiceSessionOverlay({
   greeting,
   onSessionEnd,
 }: Props) {
-  const engineConfig = useMemo(() => ({ instructionsSuffix: initialContext }), [initialContext]);
-  const voice = useVoiceEngine(engineConfig);
+  // Conversation that survived a previous drop (or a closed overlay).
+  const [resumeChunks, setResumeChunks] = useState<TranscriptChunk[]>(() => loadVoiceTranscript());
 
   const engineConfig = useMemo(
+
     () => ({
       instructionsSuffix: [initialContext, buildResumeContext(resumeChunks)]
         .filter(Boolean)
