@@ -12,7 +12,37 @@ import { logger } from "@/lib/logger";
 import { BaseVoiceEngine } from "./BaseVoiceEngine";
 import { OPENAI_REALTIME } from "./voiceConfig";
 import { VoiceMetricsTracker } from "./voiceMetrics";
-import type { VoiceEngineConfig, VoiceProviderId, VoiceToolCall } from "./voiceTypes";
+import { isVoiceErrorRetryable } from "./voiceTypes";
+import type { VoiceEngineConfig, VoiceErrorKind, VoiceProviderId, VoiceToolCall } from "./voiceTypes";
+
+/**
+ * A classified handshake failure. `retryable === false` means the problem is
+ * permanent (auth, quota, model/session configuration) and auto-reconnecting
+ * would only repeat the same failure.
+ */
+class VoiceFailure extends Error {
+  constructor(
+    readonly code: string,
+    readonly kind: VoiceErrorKind,
+    readonly retryable: boolean,
+    message?: string,
+  ) {
+    super(message ?? code);
+  }
+}
+
+/** Maps an HTTP status (+ optional provider error code) to a voice error kind. */
+function classifyHttp(status: number, providerCode?: string): { kind: VoiceErrorKind; retryable: boolean } {
+  if (providerCode && /insufficient_quota|billing/i.test(providerCode)) return { kind: "quota", retryable: false };
+  if (status === 401 || status === 403) return { kind: "auth", retryable: false };
+  if (status === 400 || status === 404 || status === 422) return { kind: "config", retryable: false };
+  if (status === 429) return { kind: "quota", retryable: false };
+  if (status === 408 || status === 504) return { kind: "timeout", retryable: true };
+  return { kind: "connection", retryable: true };
+}
+
+/** Hard ceiling for each network leg of the handshake. */
+const HANDSHAKE_TIMEOUT_MS = 12000;
 
 type SessionInfo = {
   client_secret: string;
@@ -52,6 +82,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private speaking = false;
   /** true only after `session.created` — gates the "listening" state. */
   private sessionReady = false;
+  /** True once `session.created` has ever been received in this engine's life. */
+  private everEstablished = false;
   private eventCount = 0;
   private noEventTimer: number | null = null;
   private readyFallbackTimer: number | null = null;
@@ -108,8 +140,17 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         this.emitError("audio_device_unavailable", msg, true, "mic_permission");
         return;
       }
-      this.emitError("connect_failed", msg, true);
-      await this.retryOrFail(msg);
+      // Permanent failures (auth, quota, model/session config) must never be
+      // auto-retried — retrying just reproduces the same rejection.
+      if (err instanceof VoiceFailure && !err.retryable) {
+        rtLog(`permanent failure — no auto-retry (${err.code})`);
+        await this.teardown();
+        this.emitError(err.code, err.message, true, err.kind);
+        return;
+      }
+      const kind: VoiceErrorKind = err instanceof VoiceFailure ? err.kind : "connection";
+      rtLog(`recoverable failure (${msg})`);
+      await this.retryOrFail(msg, kind);
     }
   }
 
@@ -117,8 +158,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     const { data: sess } = await supabase.auth.getSession();
     const jwt = sess?.session?.access_token ?? "";
     const t0 = performance.now();
+    rtLog("token/session request started", { url: OPENAI_REALTIME.tokenEndpoint });
     const res = await fetch(OPENAI_REALTIME.tokenEndpoint, {
       method: "POST",
+      signal: AbortSignal.timeout(HANDSHAKE_TIMEOUT_MS),
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
       body: JSON.stringify({
         instructions: this.config.instructionsSuffix ?? "",
@@ -129,10 +172,19 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     });
     const json = await res.json().catch(() => ({}));
     rtLog(`token endpoint → ${res.status} in ${Math.round(performance.now() - t0)}ms`, {
+      url: OPENAI_REALTIME.tokenEndpoint,
+      stage: json?.stage,
+      code: json?.code,
       hasSecret: Boolean(json?.client_secret), model: json?.model, voice: json?.voice,
     });
-    if (!res.ok) throw new Error(json?.error ? `${json.error}` : `token_${res.status}`);
-    if (!json?.client_secret) throw new Error("missing_client_secret");
+    if (!res.ok) {
+      const providerCode = String(json?.code ?? json?.error ?? "");
+      const { kind, retryable } = classifyHttp(res.status, providerCode);
+      throw new VoiceFailure(`session_${res.status}_${providerCode || "unknown"}`, kind, retryable);
+    }
+    if (!json?.client_secret) {
+      throw new VoiceFailure("missing_client_secret", "config", false);
+    }
     return json as SessionInfo;
   }
 
@@ -163,7 +215,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       throw new Error(`audio_device_unavailable: ${err instanceof Error ? err.message : String(err)}`);
     }
     this.micStream = mic;
-    rtLog("microphone acquired", mic.getAudioTracks().map((t) => ({
+    rtLog("mic acquired", mic.getAudioTracks().map((t) => ({
       label: t.label, enabled: t.enabled, muted: t.muted, state: t.readyState,
     })));
     this.attachLevelMeter(mic);
@@ -176,7 +228,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     const dc = pc.createDataChannel("oai-events");
     this.dc = dc;
     dc.onopen = () => {
-      rtLog(`data channel "oai-events" OPEN (readyState=${dc.readyState})`);
+      rtLog(`data channel OPEN (oai-events, readyState=${dc.readyState})`);
       logger.debug("[voice:openai] data channel open");
       this.metrics.markConnected();
       // NOT "listening" yet — we wait for session.created from OpenAI.
@@ -198,14 +250,14 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     dc.onerror = (e) => rtLog("data channel ERROR", e);
     dc.onclose = () => {
       rtLog("data channel CLOSED");
-      if (!this.closing) void this.retryOrFail("data_channel_closed");
+      if (!this.closing) void this.retryOrFail("data_channel_closed", "connection_lost");
     };
 
     pc.onconnectionstatechange = () => {
       rtLog(`pc.connectionState → ${pc.connectionState}`);
       if (this.closing) return;
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        void this.retryOrFail(`pc_${pc.connectionState}`);
+        void this.retryOrFail(`pc_${pc.connectionState}`, "connection_lost");
       }
     };
     pc.oniceconnectionstatechange = () => rtLog(`pc.iceConnectionState → ${pc.iceConnectionState}`);
@@ -214,20 +266,51 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
+    rtLog("offer created", { hasAudioSection: /m=audio/.test(offer.sdp ?? "") });
+    rtLog("local description set");
+
     const base = session.base_url ?? "https://api.openai.com/v1/realtime/calls";
+    const sdpUrl = `${base}?model=${encodeURIComponent(session.model)}`;
     const t0 = performance.now();
-    const sdpRes = await fetch(`${base}?model=${encodeURIComponent(session.model)}`, {
-      method: "POST",
-      body: offer.sdp ?? "",
-      headers: {
-        Authorization: `Bearer ${session.client_secret}`,
-        "Content-Type": "application/sdp",
-      },
-    });
-    rtLog(`SDP exchange → ${sdpRes.status} in ${Math.round(performance.now() - t0)}ms`);
-    if (!sdpRes.ok) throw new Error(`sdp_${sdpRes.status}: ${(await sdpRes.text()).slice(0, 200)}`);
+    let sdpRes: Response;
+    try {
+      sdpRes = await fetch(sdpUrl, {
+        method: "POST",
+        body: offer.sdp ?? "",
+        signal: AbortSignal.timeout(HANDSHAKE_TIMEOUT_MS),
+        headers: {
+          Authorization: `Bearer ${session.client_secret}`,
+          "Content-Type": "application/sdp",
+        },
+      });
+    } catch (err) {
+      const timedOut = err instanceof DOMException && err.name === "TimeoutError";
+      rtLog("SDP exchange FAILED (network)", { url: sdpUrl, timedOut });
+      throw new VoiceFailure(
+        timedOut ? "sdp_timeout" : "sdp_network_error",
+        timedOut ? "timeout" : "connection",
+        true,
+      );
+    }
     const answer = await sdpRes.text();
+    rtLog(`SDP exchange → ${sdpRes.status} in ${Math.round(performance.now() - t0)}ms`, {
+      url: sdpUrl, model: session.model, preview: answer.slice(0, 60),
+    });
+    if (!sdpRes.ok) {
+      // Surface the provider's machine-readable code (never the raw body to users).
+      let providerCode = "";
+      try { providerCode = String(JSON.parse(answer)?.error?.code ?? ""); } catch { /* non-JSON */ }
+      rtLog("SDP exchange rejected", { status: sdpRes.status, providerCode });
+      const { kind, retryable } = classifyHttp(sdpRes.status, providerCode);
+      throw new VoiceFailure(`sdp_${sdpRes.status}_${providerCode || "unknown"}`, kind, retryable);
+    }
+    // A 2xx is not proof of SDP — validate the payload before handing it to WebRTC.
+    if (!answer.trimStart().startsWith("v=0")) {
+      rtLog("SDP answer malformed", { preview: answer.slice(0, 60) });
+      throw new VoiceFailure("sdp_answer_malformed", "config", false);
+    }
     await pc.setRemoteDescription({ type: "answer", sdp: answer });
+    rtLog("remote description set");
     this.reconnects = 0;
     // Even if the data channel never opens, we must not hang forever.
     this.armNoEventWatchdog();
@@ -256,7 +339,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
 
   private async failNoEvents() {
     await this.teardown();
-    this.emitError("openai_no_events", "OpenAI bağlantısı kurulamadı", true, "connection");
+    this.emitError("openai_no_events", "session.created never arrived", true, "session_not_started");
   }
 
   private clearTimers() {
@@ -299,8 +382,13 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
    * Reconnects up to `maxReconnects` times, then ends the session in an
    * explicit error state. No other provider is ever initialized.
    */
-  private async retryOrFail(reason: string) {
+  private async retryOrFail(reason: string, kind: VoiceErrorKind = "connection_lost") {
     if (this.closing) return;
+    if (!isVoiceErrorRetryable(kind)) {
+      await this.teardown();
+      this.emitError(reason, reason, true, kind);
+      return;
+    }
     const max = this.config.maxReconnects ?? 2;
     if (this.reconnects < max) {
       this.reconnects += 1;
@@ -313,7 +401,13 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       return;
     }
     await this.teardown();
-    this.emitError("connection_lost", reason, true, "connection_lost");
+    // "Bağlantı kesildi" is only truthful once a session actually existed.
+    this.emitError(
+      "connection_lost",
+      reason,
+      true,
+      this.everEstablished ? "connection_lost" : kind,
+    );
   }
 
   // ---------- server events ------------------------------------------------
@@ -335,6 +429,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       case "session.created":
         // The realtime session exists — this is the real readiness signal.
         this.sessionReady = true;
+        this.everEstablished = true;
+        rtLog("state ready");
         this.setState("ready");
         if (this.readyFallbackTimer === null) {
           this.readyFallbackTimer = window.setTimeout(() => {
@@ -420,6 +516,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   /** "Dinliyorum" is only ever shown once the realtime session is ready. */
   private goListening() {
     if (this.closing) return;
+    // Listening is gated on the realtime session, never on RTCPeerConnection.
     if (!this.sessionReady) return;
     if (this.readyFallbackTimer !== null) {
       window.clearTimeout(this.readyFallbackTimer);
