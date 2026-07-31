@@ -447,16 +447,26 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   }
 
   private sendEvent(payload: Record<string, unknown>) {
-    if (this.dc?.readyState !== "open") return;
-    try { this.dc.send(JSON.stringify(payload)); } catch { /* noop */ }
+    const type = String(payload.type ?? "unknown");
+    if (this.dc?.readyState !== "open") {
+      rtLog(`➡ ${type} DROPPED (data channel ${this.dc?.readyState ?? "none"})`);
+      return;
+    }
+    try {
+      this.dc.send(JSON.stringify(payload));
+      rtLog(`➡ ${type} sent`);
+    } catch (err) {
+      rtLog(`➡ ${type} send FAILED`, String(err));
+    }
   }
 
   // ---------- controls -----------------------------------------------------
 
   startListening() {
     this.unmute();
-    if (this.isConnected()) this.setState("listening");
+    if (this.isConnected()) this.goListening();
   }
+
 
   stopListening() {
     this.mute();
