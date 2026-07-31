@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { TodayTimeline } from "@/components/dashboard/TodayTimeline";
 import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
