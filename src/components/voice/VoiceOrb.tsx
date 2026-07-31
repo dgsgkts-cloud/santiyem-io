@@ -204,6 +204,8 @@ export function VoiceOrb() {
   const isNative = Capacitor.isNativePlatform();
   // Sprint M2.0 — Mobile mic moves to bottom-right (WhatsApp-style FAB) above tab bar.
   const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
+  // Sprint 40 — dense settings screens on mobile: the FAB would sit on top of form rows.
+  if (!isDesktop && !open && pathname.startsWith("/settings")) return null;
   const bottomOffset = isDesktop
     ? (isNative
         ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
