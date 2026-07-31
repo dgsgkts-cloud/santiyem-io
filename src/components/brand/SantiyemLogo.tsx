@@ -25,7 +25,7 @@ export type LogoTone = "auto" | "light" | "dark";
 
 /** Intrinsic aspect ratios (width / height) of the supplied artwork. */
 export const LOGO_ASPECT = {
-  horizontal: 2.332,
+  horizontal: 2.7996,
   vertical: 1.253,
   symbol: 0.694,
 } as const;
@@ -192,7 +192,7 @@ export const SantiyemAuthLockup = forwardRef<
         <BrandImage variant="vertical" height={104} tone={tone} alt="Şantiyem AI" />
       </span>
       <span className={cn("hidden lg:inline-flex", className)}>
-        <BrandImage variant="horizontal" height={52} tone={tone} alt="Şantiyem AI" />
+        <BrandImage variant="horizontal" height={79} tone={tone} alt="Şantiyem AI" />
       </span>
     </>
   );
