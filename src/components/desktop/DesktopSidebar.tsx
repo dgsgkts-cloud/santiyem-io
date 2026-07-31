@@ -8,7 +8,7 @@ import {
   Settings, LogOut, ChevronLeft, ChevronRight, Lock, Package, FileSpreadsheet,
   ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio, ChevronRight as Arrow,
 } from "lucide-react";
-import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { useDisplayName } from "@/hooks/useDisplayName";
