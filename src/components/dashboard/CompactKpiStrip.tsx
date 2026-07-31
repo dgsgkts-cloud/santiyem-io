@@ -26,7 +26,7 @@ const toneColor = (t: CompactKpi["tone"]) =>
 
 export function CompactKpiStrip({ items, loading }: Props) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 items-stretch">
       {items.map((it) => {
         const Icon = it.icon;
         const color = toneColor(it.tone);
