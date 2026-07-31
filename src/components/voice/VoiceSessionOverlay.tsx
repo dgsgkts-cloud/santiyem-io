@@ -47,6 +47,9 @@ const PHASE_LABEL: Record<VoicePhase, string> = {
 /** Only surface "Hazırlanıyor" if initialization is actually slow. */
 const PREPARING_VISIBLE_AFTER_MS = 700;
 const CONNECT_TIMEOUT_MS = 8000;
+/** Short, visible grace period before an automatic reconnect attempt. */
+const RETRY_COUNTDOWN_SECONDS = 3;
+const MAX_AUTO_RETRIES = 2;
 
 export function VoiceSessionOverlay({
   onClose,
