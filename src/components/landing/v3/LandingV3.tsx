@@ -1306,16 +1306,32 @@ const NavV3 = () => {
               </button>
             </div>
 
-            <div className="mt-6 flex flex-col px-5">
+            <div className="mt-6 flex flex-col px-5 overflow-y-auto">
               {LINKS.map((l) => (
-                <button
-                  key={l.h}
-                  onClick={() => scrollTo(l.h)}
-                  className="flex min-h-[48px] items-center text-left text-[16px]"
-                  style={{ color: T.text, ...body }}
-                >
-                  {l.l}
-                </button>
+                <div key={l.l} className="flex flex-col">
+                  <button
+                    onClick={() => scrollTo(l.h)}
+                    aria-label={l.l}
+                    className="flex min-h-[48px] items-center text-left text-[16px]"
+                    style={{ color: T.text, ...body }}
+                  >
+                    {l.l}
+                  </button>
+                  {l.children && (
+                    <div className="flex flex-col pb-2">
+                      {l.children.map((c) => (
+                        <button
+                          key={c.l}
+                          onClick={() => scrollTo(c.h)}
+                          className="flex min-h-[44px] items-center pl-3 text-left text-[14.5px]"
+                          style={{ color: T.muted, ...body }}
+                        >
+                          {c.l}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
