@@ -178,7 +178,7 @@ export function VoiceSessionOverlay({
   useEffect(() => {
     if (!preparing && !showPreparing) return;
     const t = window.setTimeout(() => {
-      if (voice.state !== "listening" && voice.state !== "speaking" && voice.state !== "thinking") {
+      if (!isLive(voice.state)) {
         setPreparing(false);
         setFailed(true);
       }
@@ -197,7 +197,7 @@ export function VoiceSessionOverlay({
   }, [voice.errorKind]);
 
   useEffect(() => {
-    if (voice.state === "listening" || voice.state === "speaking" || voice.state === "thinking") {
+    if (isLive(voice.state)) {
       setFailed(false);
       setPreparing(false);
       stoppedRef.current = false;
@@ -205,6 +205,7 @@ export function VoiceSessionOverlay({
       setRetryIn(null);
     }
   }, [voice.state]);
+
 
 
 
