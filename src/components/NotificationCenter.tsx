@@ -195,7 +195,13 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const aiSuggestions = useMemo(() => (filter === "all" || filter === "ai" ? smartReminders.slice(0, 4) : []), [smartReminders, filter]);
 
   const handleNotifClick = (n: AppNotification) => {
-    markAsRead([n.id]);
+    // 1) read state first (optimistic + persisted), 2) then navigate
+    void markAsRead([n.id]);
+    const destinationOk = hasValidDestination(n);
+    if (!destinationOk) {
+      toast.info("İlgili kayıt artık mevcut değil.");
+      return;
+    }
     if (n.targetTab === "projects" && n.targetProjectId) onNavigate?.("projects", n.targetProjectId);
     else onNavigate?.(n.targetTab);
     onClose();
@@ -214,7 +220,11 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
               </span>
             )}
           </SheetTitle>
+          <span className="sr-only" role="status" aria-live="polite">
+            {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : "Okunmamış bildirim yok"}
+          </span>
         </SheetHeader>
+
 
         {/* Tabs */}
         <div className="flex items-center gap-1 px-2 pt-2 border-b border-border overflow-x-auto">
