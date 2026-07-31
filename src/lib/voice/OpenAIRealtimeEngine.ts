@@ -323,7 +323,30 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     try { evt = JSON.parse(raw); } catch { return; }
     const type = String(evt.type ?? "");
 
+    // Every OpenAI event is traced; the watchdog only cares that one arrived.
+    this.eventCount += 1;
+    rtLog(`⬅ ${type}`, type === "error" ? evt.error ?? evt : undefined);
+    if (this.noEventTimer !== null) {
+      window.clearTimeout(this.noEventTimer);
+      this.noEventTimer = null;
+    }
+
     switch (type) {
+      case "session.created":
+        // The realtime session exists — this is the real readiness signal.
+        this.sessionReady = true;
+        this.setState("ready");
+        if (this.readyFallbackTimer === null) {
+          this.readyFallbackTimer = window.setTimeout(() => {
+            this.readyFallbackTimer = null;
+            if (!this.closing && this.state === "ready") this.goListening();
+          }, SESSION_READY_FALLBACK_MS);
+        }
+        break;
+      case "session.updated":
+        this.goListening();
+        break;
+
       case "input_audio_buffer.speech_started":
         // Barge-in: kill assistant audio instantly and resume listening.
         if (this.speaking || this.state === "speaking") this.stopPlayback();
