@@ -351,8 +351,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         // Barge-in: kill assistant audio instantly and resume listening.
         if (this.speaking || this.state === "speaking") this.stopPlayback();
         this.metrics.markTurnStart();
-        this.setState("listening");
+        this.goListening();
         break;
+
       case "output_audio_buffer.started":
         this.speaking = true;
         this.metrics.markFirstAudio();
