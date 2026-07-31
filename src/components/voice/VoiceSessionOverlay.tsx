@@ -274,7 +274,7 @@ export function VoiceSessionOverlay({
       </div>
 
       {/* Center — orb + single state label. */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-5">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-5">
         <VoiceReactiveOrb phase={phase} level={level} fallbackMotion={noAnalyser} />
 
         {phase === "error" ? (
@@ -328,7 +328,7 @@ export function VoiceSessionOverlay({
 
       {/* Captions — own region, never behind the controls. */}
       {captionsOn && phase !== "error" && (
-        <div className="shrink-0 px-5" style={{ maxHeight: "32vh" }}>
+        <div className="shrink-0 px-5">
           <VoiceCaptions transcripts={voice.transcripts} />
         </div>
       )}
