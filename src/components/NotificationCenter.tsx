@@ -273,16 +273,16 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
                             <NotifRow
                               key={n.id}
                               n={n}
-                              read={dismissedIds.includes(n.id)}
+                              read={isRead(n.id)}
                               tone={g.tone}
                               onOpen={() => handleNotifClick(n)}
-                              onRead={() => markAsRead([n.id])}
                             />
                           ))}
                         </div>
                       </section>
                     );
                   })}
+
 
                   {aiSuggestions.length > 0 && (
                     <section className="space-y-1.5">
