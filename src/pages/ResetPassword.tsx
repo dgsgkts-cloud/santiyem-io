@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Check, X } from "lucide-react";
+import { Eye, EyeOff, Check, X, AlertTriangle, Mail, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 
 const MIN_LENGTH = 8;
+
+type TokenStatus = "checking" | "valid" | "expired" | "invalid" | "resent";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -16,12 +18,17 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [touched, setTouched] = useState({ password: false, confirm: false });
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus>("checking");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     const hash = window.location.hash;
-    if (!hash.includes("type=recovery")) {
-      // Not a valid recovery link; Supabase will reject the update anyway.
+    if (!hash.includes("type=recovery") || !hash.includes("access_token=")) {
+      setTokenStatus("invalid");
+    } else {
+      setTokenStatus("valid");
     }
   }, []);
 
@@ -38,6 +45,25 @@ const ResetPassword = () => {
   const confirmDirty = touched.confirm || confirm.length > 0;
   const canSubmit = allRulesMet && passwordsMatch && password.length > 0;
 
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      toast.error("Lütfen geçerli bir e-posta adresi girin.");
+      return;
+    }
+    setResendLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResendLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setTokenStatus("resent");
+      toast.success("Yeni şifre sıfırlama bağlantısı gönderildi.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allRulesMet) {
@@ -52,6 +78,10 @@ const ResetPassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("expired") || msg.includes("token") || msg.includes("invalid")) {
+        setTokenStatus("expired");
+      }
       toast.error(error.message);
     } else {
       toast.success("Şifreniz başarıyla güncellendi!");
