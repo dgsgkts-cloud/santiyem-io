@@ -1,47 +1,25 @@
 // ============================================================
 // src/components/auth/LoginHero.tsx
-// Login hero showcase panel — premium, calm, Turkish-only.
+// Login hero showcase panel — flagship premium AI experience.
 // Presentation only: no auth, no routing, no data access.
 // ============================================================
 
-import {
-  Building2,
-  Wallet,
-  HardHat,
-  Bot,
-  Mic,
-  Users,
-  Clock,
-  type LucideIcon,
-} from "lucide-react";
+import { Mic, Users, MessageCircle, CalendarCheck, type LucideIcon } from "lucide-react";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import "@/styles/login-hero.css";
 
-type Feature = { icon: LucideIcon; title: string; line: string };
+const COMMAND =
+  "Cuma günü A Şantiyesi’nde beton dökümü var. İlgili herkesi bilgilendir.";
 
-const FEATURES: Feature[] = [
-  {
-    icon: Building2,
-    title: "Proje ve Saha Yönetimi",
-    line: "Planları, ilerlemeyi ve gecikmeleri tek merkezden takip edin.",
-  },
-  {
-    icon: Wallet,
-    title: "Finans ve Hakediş",
-    line: "Nakit akışını, ödemeleri ve hakedişleri anlık izleyin.",
-  },
-  {
-    icon: HardHat,
-    title: "Personel ve Kaynaklar",
-    line: "Ekipleri, puantajı ve kaynak kullanımını yönetin.",
-  },
-  {
-    icon: Bot,
-    title: "Yapay Zekâ Destekli Kararlar",
-    line: "Riskleri erken görün ve önerilen aksiyonları uygulayın.",
-  },
+const RESPONSE_TITLE = "Şantiyem AI hazır.";
+const RESPONSE_BODY =
+  "Şantiye şefi, saha mühendisi, beton tedarikçisi ve pompa ekibi belirlendi.";
+
+const OUTCOMES: { icon: LucideIcon; label: string }[] = [
+  { icon: Users, label: "7 kişi eşleştirildi" },
+  { icon: MessageCircle, label: "WhatsApp mesajları hazırlandı" },
+  { icon: CalendarCheck, label: "Teyit akışı planlandı" },
 ];
-
-const STATUS_BADGES = ["Canlı AI", "Proje verileriyle çalışır"];
 
 /** Staggered entrance — keeps the reveal order readable top to bottom. */
 const reveal = (delay: number) => ({
@@ -90,214 +68,93 @@ export function LoginHero() {
       <HeroBackdrop />
 
       <div className="login-hero__content relative z-10 mx-auto flex w-full min-h-full flex-col justify-center px-5 py-12 sm:px-8 xl:px-14">
-        <div className="w-full max-w-[640px] mx-auto">
+        <div className="mx-auto w-full max-w-[640px]">
           {/* Headline */}
           <h2
-            className="login-hero__reveal text-[32px] font-bold leading-[1.12] tracking-[-0.02em] md:text-[40px] lg:text-[46px]"
-            style={{
-              ...reveal(0),
-              color: "#F8FAFC",
-              fontFamily: "'Space Grotesk', sans-serif",
-              marginBottom: "20px",
-            }}
+            className="login-hero__headline login-hero__reveal"
+            style={reveal(0)}
           >
-            Tüm inşaat operasyonunuzu{" "}
-            <span style={{ color: "#FF6B2B" }}>yapay zekâyla</span>{" "}
+            Şantiyenizi değil,
+            <br />
+            <span className="login-hero__headline-accent">
+              tüm operasyonunuzu
+            </span>{" "}
             yönetin.
           </h2>
 
-          {/* Description */}
+          {/* Value proposition */}
           <p
-            className="login-hero__reveal text-[15px] leading-[1.65] md:text-[16px]"
-            style={{
-              ...reveal(80),
-              color: "#CBD5E1",
-              maxWidth: "600px",
-              marginBottom: "28px",
-            }}
+            className="login-hero__value login-hero__reveal"
+            style={reveal(80)}
           >
-            Projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
-            satın alma süreçlerinizi tek merkezden yönetin. Şantiyem AI riskleri
-            erkenden fark eder, öncelikleri belirler ve uygulanabilir aksiyonlar
-            sunar.
+            Şantiyem AI; projeleri, ekipleri, finansı ve saha iletişimini tek
+            komutla harekete geçirir.
           </p>
 
-          {/* Feature grid — 2×2 on desktop, compact cards */}
+          {/* Flagship AI command card */}
           <div
-            className="login-hero__reveal grid grid-cols-1 gap-3.5 sm:grid-cols-2"
-            style={{
-              ...reveal(160),
-              marginBottom: "26px",
-            }}
+            className="login-hero__ai-card login-hero__reveal"
+            style={reveal(180)}
+            aria-label="AI komut örneği"
           >
-            {FEATURES.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <div
-                  key={f.title}
-                  className="login-hero__card login-hero__reveal flex items-start gap-3 rounded-[14px] border p-4"
-                  style={{
-                    ...reveal(240 + i * 60),
-                    minHeight: "96px",
-                    borderColor: "rgba(255,255,255,0.10)",
-                    backgroundColor: "rgba(255,255,255,0.035)",
-                  }}
-                >
+            {/* User voice command */}
+            <div
+              className="login-hero__command login-hero__reveal"
+              style={reveal(320)}
+            >
+              <div className="login-hero__command-label">
+                <Mic className="h-3.5 w-3.5" strokeWidth={2} />
+                <span>Sesli komut</span>
+              </div>
+              <p className="login-hero__command-text">“{COMMAND}”</p>
+            </div>
+
+            {/* AI system response */}
+            <div
+              className="login-hero__response login-hero__reveal"
+              style={reveal(520)}
+            >
+              <div className="login-hero__response-header">
+                <SantiyemMark px={28} tone="light" />
+                <span className="login-hero__response-title">Şantiyem AI</span>
+              </div>
+              <p className="login-hero__response-lead">{RESPONSE_TITLE}</p>
+              <p className="login-hero__response-body">{RESPONSE_BODY}</p>
+            </div>
+
+            {/* Operational outcomes */}
+            <div className="login-hero__outcomes">
+              {OUTCOMES.map((o, i) => {
+                const Icon = o.icon;
+                return (
                   <div
-                    className="login-hero__card-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FF6B2B" }}
+                    key={o.label}
+                    className="login-hero__outcome login-hero__reveal"
+                    style={reveal(720 + i * 120)}
                   >
-                    <Icon className="h-4 w-4" strokeWidth={2} />
+                    <div className="login-hero__outcome-icon">
+                      <Icon className="h-4 w-4" strokeWidth={2} />
+                    </div>
+                    <span className="login-hero__outcome-label">
+                      {o.label}
+                    </span>
+                    <span
+                      className="login-hero__outcome-status"
+                      aria-hidden="true"
+                    />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-semibold" style={{ color: "#E2E8F0" }}>
-                      {f.title}
-                    </p>
-                    <p className="mt-1 text-[13px] leading-[1.45]" style={{ color: "#A9B5C4" }}>
-                      {f.line}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* AI workflow example — static showcase, deliberately not interactive */}
-          <div
-            className="login-hero__reveal flex w-full flex-col rounded-[16px] border p-5"
-            style={{
-              ...reveal(520),
-              marginBottom: "20px",
-              borderColor: "rgba(255,255,255,0.10)",
-              backgroundColor: "rgba(15,20,25,0.65)",
-              gap: "10px",
-            }}
-            aria-label="Şantiyem AI ile bir iş akışı örneği"
-          >
-            <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4" style={{ color: "#FF6B2B" }} />
-              <span
-                className="text-[11px] font-semibold uppercase tracking-[0.12em]"
-                style={{ color: "#8A98A8" }}
-              >
-                Şantiyem AI ile Bir İş Akışı
-              </span>
+                );
+              })}
             </div>
 
-            {/* Voice command */}
+            {/* Closing result statement */}
             <div
-              className="w-fit rounded-[12px] rounded-bl-sm px-3.5 py-2 text-[13.5px] leading-[1.45]"
-              style={{ backgroundColor: "rgba(255,107,43,0.16)", color: "#FDBA8C" }}
+              className="login-hero__result login-hero__reveal"
+              style={reveal(1100)}
             >
-              <span className="flex items-center gap-2.5">
-                <Mic className="h-3.5 w-3.5 shrink-0" style={{ color: "#FF8F5A" }} />
-                <span>“Cuma günü A Şantiyesi’nde beton dökümü var. İlgili herkesi bilgilendir.”</span>
-              </span>
+              <span className="login-hero__result-accent">Tek cümleyle</span>{" "}
+              tüm operasyon hazır.
             </div>
-
-            {/* AI response */}
-            <div
-              className="rounded-[12px] border px-3.5 py-2 text-[14px] leading-[1.5]"
-              style={{
-                borderColor: "rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                color: "#E2E8F0",
-              }}
-            >
-              “Beton programıyla ilgili kişiler belirlendi. WhatsApp bilgilendirme mesajları ve teyit planı hazırlandı.”
-            </div>
-
-            {/* Operational checklist */}
-            <div
-              className="rounded-[12px] border px-3.5 py-2.5"
-              style={{
-                borderColor: "rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.03)",
-              }}
-            >
-              <div className="mb-1.5 flex items-center gap-2 text-[12px] font-medium" style={{ color: "#F8FAFC" }}>
-                <Users className="h-3.5 w-3.5" style={{ color: "#FF8F5A" }} />
-                <span>7 ilgili kişi bulundu</span>
-              </div>
-              <div className="space-y-0.5 pl-5 text-[11px]" style={{ color: "#A9B5C4" }}>
-                <div className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full" style={{ backgroundColor: "#A9B5C4" }} />
-                  Şantiye şefi ve saha mühendisi
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full" style={{ backgroundColor: "#A9B5C4" }} />
-                  Beton tedarikçisi ve pompa operatörü
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full" style={{ backgroundColor: "#A9B5C4" }} />
-                  Kalıp ve saha ekibi
-                </div>
-              </div>
-              <div className="mt-1.5 space-y-0.5 text-[11px]" style={{ color: "#A9B5C4" }}>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5" style={{ color: "#A9B5C4" }} />
-                  Bilgilendirme: Perşembe, 17.00
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5" style={{ color: "#A9B5C4" }} />
-                  Teyit hatırlatması: Cuma, 07.00
-                </div>
-              </div>
-            </div>
-
-            {/* Status */}
-            <div>
-              <span
-                className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12px] font-medium"
-                style={{
-                  borderColor: "rgba(255,255,255,0.10)",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "#A9B5C4",
-                }}
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#FF8F5A" }} />
-                Gönderim planı hazır
-              </span>
-            </div>
-
-            {/* Value statement */}
-            <p className="text-[12px] leading-[1.45]" style={{ color: "#8A98A8" }}>
-              Tek komutla ekip eşleştirme, mesaj hazırlama ve operasyon planlama.
-            </p>
-
-            {/* Optional secondary suggestion */}
-            <div
-              className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px]"
-              style={{
-                borderColor: "rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.03)",
-                color: "#8A98A8",
-              }}
-            >
-              <span className="h-1 w-1 rounded-full" style={{ backgroundColor: "#FF8F5A" }} />
-              Bu hafta geciken ödemeleri bul ve sorumlulara hatırlatma hazırla.
-            </div>
-          </div>
-
-          {/* Trust badges */}
-          <div
-            className="login-hero__reveal flex flex-wrap items-center gap-2"
-            style={reveal(620)}
-          >
-            {STATUS_BADGES.map((b, i) => (
-              <span
-                key={b}
-                className="login-hero__badge rounded-full border px-3 py-1.5 text-[12px]"
-                style={{
-                  animationDelay: `${i * 700}ms`,
-                  borderColor: "rgba(255,255,255,0.10)",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "#A9B5C4",
-                }}
-              >
-                {b}
-              </span>
-            ))}
           </div>
         </div>
       </div>
