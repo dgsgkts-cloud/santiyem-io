@@ -1291,7 +1291,7 @@ const FooterV3 = () => (
    ═══════════════════════════════════════════════════════════════════ */
 export default function LandingV3() {
   return (
-    <div style={{ background: T.bg, color: T.text, minHeight: "100vh", ...body }}>
+    <div style={{ background: T.bg, color: T.text, minHeight: "100dvh", ...body }}>
       <NavV3 />
       <main>
         <Hero />
