@@ -299,6 +299,11 @@ export function VoiceSessionOverlay({
     return () => window.clearTimeout(t);
   }, [retryIn, reconnect]);
 
+  // Last exchange, shown while disconnected so the context is visible.
+  const lastUserLine = [...transcripts].reverse().find((t) => t.role === "user" && t.text.trim())?.text.trim();
+  const lastAssistantLine = [...transcripts]
+    .reverse()
+    .find((t) => t.role !== "user" && t.text.trim())?.text.trim();
 
 
   const isSpeaking = phase === "speaking";
