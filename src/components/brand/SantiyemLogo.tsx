@@ -192,7 +192,7 @@ export const SantiyemAuthLockup = forwardRef<
         <BrandImage variant="vertical" height={104} tone={tone} alt="Şantiyem AI" />
       </span>
       <span className={cn("hidden lg:inline-flex", className)}>
-        <BrandImage variant="horizontal" height={52} tone={tone} alt="Şantiyem AI" />
+        <BrandImage variant="horizontal" height={79} tone={tone} alt="Şantiyem AI" />
       </span>
     </>
   );
