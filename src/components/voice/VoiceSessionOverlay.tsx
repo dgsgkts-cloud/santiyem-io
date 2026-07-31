@@ -71,8 +71,32 @@ export function VoiceSessionOverlay({
   const engineConfig = useMemo(() => ({ instructionsSuffix: initialContext }), [initialContext]);
   const voice = useVoiceEngine(engineConfig);
 
+  const engineConfig = useMemo(
+    () => ({
+      instructionsSuffix: [initialContext, buildResumeContext(resumeChunks)]
+        .filter(Boolean)
+        .join("\n\n") || undefined,
+    }),
+    [initialContext, resumeChunks],
+  );
+  const voice = useVoiceEngine(engineConfig);
+
+  // Full conversation = what survived the drop + what is live now.
+  const transcripts = useMemo<TranscriptChunk[]>(() => {
+    if (resumeChunks.length === 0) return voice.transcripts;
+    const seen = new Set(voice.transcripts.map((t) => `${t.role}:${t.id}`));
+    return [...resumeChunks.filter((c) => !seen.has(`${c.role}:${c.id}`)), ...voice.transcripts];
+  }, [resumeChunks, voice.transcripts]);
+
+  // Persist the tail continuously so nothing is lost if the overlay
+  // unmounts or the connection dies mid-sentence.
+  useEffect(() => {
+    if (transcripts.length > 0) saveVoiceTranscript(transcripts);
+  }, [transcripts]);
+
   const [muted, setMuted] = useState(false);
   const [captionsOn, setCaptionsOn] = useState(true);
+
   const [micBlocked, setMicBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [askingPermission, setAskingPermission] = useState(true);
