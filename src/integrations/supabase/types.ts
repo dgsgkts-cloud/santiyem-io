@@ -3555,12 +3555,34 @@ export type Database = {
           },
         ]
       }
+      trial_claims: {
+        Row: {
+          claimed_at: string
+          email_normalized: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          claimed_at?: string
+          email_normalized: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          claimed_at?: string
+          email_normalized?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       usage_audit_log: {
         Row: {
           created_at: string
           delta: number
           id: string
           metric_key: string
+          owner_id: string | null
           reason: string | null
           team_id: string | null
           user_id: string | null
@@ -3570,6 +3592,7 @@ export type Database = {
           delta?: number
           id?: string
           metric_key: string
+          owner_id?: string | null
           reason?: string | null
           team_id?: string | null
           user_id?: string | null
@@ -3579,6 +3602,7 @@ export type Database = {
           delta?: number
           id?: string
           metric_key?: string
+          owner_id?: string | null
           reason?: string | null
           team_id?: string | null
           user_id?: string | null
@@ -3604,24 +3628,27 @@ export type Database = {
         Row: {
           id: string
           metric_key: string
+          owner_id: string
           period_start: string
-          team_id: string
+          team_id: string | null
           updated_at: string
           value: number
         }
         Insert: {
           id?: string
           metric_key: string
+          owner_id: string
           period_start: string
-          team_id: string
+          team_id?: string | null
           updated_at?: string
           value?: number
         }
         Update: {
           id?: string
           metric_key?: string
+          owner_id?: string
           period_start?: string
-          team_id?: string
+          team_id?: string | null
           updated_at?: string
           value?: number
         }
@@ -3754,6 +3781,7 @@ export type Database = {
           card_token: string | null
           card_user_key: string | null
           created_at: string
+          downgraded_at: string | null
           id: string
           iyzico_payment_id: string | null
           last_payment_date: string | null
@@ -3762,7 +3790,9 @@ export type Database = {
           reminder_sent: boolean
           status: string
           subscription_type: string
+          trial_consumed: boolean
           trial_end: string
+          trial_plan: string
           trial_start: string
           updated_at: string
           user_id: string
@@ -3773,6 +3803,7 @@ export type Database = {
           card_token?: string | null
           card_user_key?: string | null
           created_at?: string
+          downgraded_at?: string | null
           id?: string
           iyzico_payment_id?: string | null
           last_payment_date?: string | null
@@ -3781,7 +3812,9 @@ export type Database = {
           reminder_sent?: boolean
           status?: string
           subscription_type?: string
+          trial_consumed?: boolean
           trial_end?: string
+          trial_plan?: string
           trial_start?: string
           updated_at?: string
           user_id: string
@@ -3792,6 +3825,7 @@ export type Database = {
           card_token?: string | null
           card_user_key?: string | null
           created_at?: string
+          downgraded_at?: string | null
           id?: string
           iyzico_payment_id?: string | null
           last_payment_date?: string | null
@@ -3800,7 +3834,9 @@ export type Database = {
           reminder_sent?: boolean
           status?: string
           subscription_type?: string
+          trial_consumed?: boolean
           trial_end?: string
+          trial_plan?: string
           trial_start?: string
           updated_at?: string
           user_id?: string
@@ -4040,6 +4076,8 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_trials: { Args: never; Returns: number }
+      get_account_usage: { Args: never; Returns: Json }
       get_hakedis_by_approval_token: { Args: { _token: string }; Returns: Json }
       get_org_plan_summary: { Args: never; Returns: Json }
       get_project_name_by_qr_token: {
@@ -4068,6 +4106,7 @@ export type Database = {
           status: string
         }[]
       }
+      get_trial_status: { Args: never; Returns: Json }
       get_user_team_id: { Args: { _user_id: string }; Returns: string }
       has_project_permission: {
         Args: { _key: string; _project: string; _user: string }
@@ -4226,6 +4265,7 @@ export type Database = {
         Args: { _project: string; _user: string }
         Returns: undefined
       }
+      resolve_billing_owner: { Args: { _user: string }; Returns: string }
       resolve_org_plan: {
         Args: { _user: string }
         Returns: {
