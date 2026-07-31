@@ -318,7 +318,7 @@ const Index = () => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showFirstRun, setShowFirstRun] = useState(false);
   const { projects, loading: projectsLoading } = useProjects();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning } = useNotifications();
   const guard = useAccessGuard();
   useAccessSnapshotSync();
 
