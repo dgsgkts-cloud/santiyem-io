@@ -164,16 +164,17 @@ export function LoginHero() {
 
           {/* AI workflow example — static showcase, deliberately not interactive */}
           <div
-            className="login-hero__reveal w-full rounded-[16px] border p-5"
+            className="login-hero__reveal flex w-full flex-col rounded-[16px] border p-5"
             style={{
               ...reveal(520),
               marginBottom: "20px",
               borderColor: "rgba(255,255,255,0.10)",
               backgroundColor: "rgba(15,20,25,0.65)",
+              gap: "10px",
             }}
             aria-label="Şantiyem AI ile bir iş akışı örneği"
           >
-            <div className="mb-3 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Bot className="h-4 w-4" style={{ color: "#FF6B2B" }} />
               <span
                 className="text-[11px] font-semibold uppercase tracking-[0.12em]"
@@ -185,7 +186,7 @@ export function LoginHero() {
 
             {/* Voice command */}
             <div
-              className="mb-3 w-fit rounded-[12px] rounded-bl-sm px-3.5 py-2.5 text-[13.5px]"
+              className="w-fit rounded-[12px] rounded-bl-sm px-3.5 py-2 text-[13.5px] leading-[1.45]"
               style={{ backgroundColor: "rgba(255,107,43,0.16)", color: "#FDBA8C" }}
             >
               <span className="flex items-center gap-2.5">
@@ -196,7 +197,7 @@ export function LoginHero() {
 
             {/* AI response */}
             <div
-              className="mb-3 rounded-[12px] border px-3.5 py-2.5 text-[14px] leading-[1.55]"
+              className="rounded-[12px] border px-3.5 py-2 text-[14px] leading-[1.5]"
               style={{
                 borderColor: "rgba(255,255,255,0.08)",
                 backgroundColor: "rgba(255,255,255,0.04)",
@@ -208,17 +209,17 @@ export function LoginHero() {
 
             {/* Operational checklist */}
             <div
-              className="mb-3 rounded-[12px] border px-3.5 py-3"
+              className="rounded-[12px] border px-3.5 py-2.5"
               style={{
                 borderColor: "rgba(255,255,255,0.08)",
                 backgroundColor: "rgba(255,255,255,0.03)",
               }}
             >
-              <div className="mb-2 flex items-center gap-2 text-[12px] font-medium" style={{ color: "#F8FAFC" }}>
+              <div className="mb-1.5 flex items-center gap-2 text-[12px] font-medium" style={{ color: "#F8FAFC" }}>
                 <Users className="h-3.5 w-3.5" style={{ color: "#FF8F5A" }} />
                 <span>7 ilgili kişi bulundu</span>
               </div>
-              <div className="space-y-1 pl-5 text-[12px]" style={{ color: "#A9B5C4" }}>
+              <div className="space-y-0.5 pl-5 text-[11px]" style={{ color: "#A9B5C4" }}>
                 <div className="flex items-center gap-2">
                   <span className="h-1 w-1 rounded-full" style={{ backgroundColor: "#A9B5C4" }} />
                   Şantiye şefi ve saha mühendisi
@@ -232,7 +233,7 @@ export function LoginHero() {
                   Kalıp ve saha ekibi
                 </div>
               </div>
-              <div className="mt-2.5 space-y-1 text-[12px]" style={{ color: "#A9B5C4" }}>
+              <div className="mt-1.5 space-y-0.5 text-[11px]" style={{ color: "#A9B5C4" }}>
                 <div className="flex items-center gap-2">
                   <Clock className="h-3.5 w-3.5" style={{ color: "#A9B5C4" }} />
                   Bilgilendirme: Perşembe, 17.00
@@ -245,7 +246,7 @@ export function LoginHero() {
             </div>
 
             {/* Status */}
-            <div className="mb-3">
+            <div>
               <span
                 className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12px] font-medium"
                 style={{
@@ -260,13 +261,13 @@ export function LoginHero() {
             </div>
 
             {/* Value statement */}
-            <p className="mb-3 text-[12px] leading-[1.5]" style={{ color: "#8A98A8" }}>
+            <p className="text-[12px] leading-[1.45]" style={{ color: "#8A98A8" }}>
               Tek komutla ekip eşleştirme, mesaj hazırlama ve operasyon planlama.
             </p>
 
             {/* Optional secondary suggestion */}
             <div
-              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px]"
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px]"
               style={{
                 borderColor: "rgba(255,255,255,0.08)",
                 backgroundColor: "rgba(255,255,255,0.03)",
