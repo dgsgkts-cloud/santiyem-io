@@ -231,19 +231,37 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
       {/* Brand */}
       <div
-        className="flex items-center cursor-pointer shrink-0 overflow-hidden"
+        className={`flex items-center cursor-pointer shrink-0 ${collapsed ? "overflow-hidden" : ""}`}
         style={{
-          height: collapsed ? 64 : 88,
+          height: collapsed ? 64 : 72,
           padding: collapsed ? "0 16px" : "0 20px",
           justifyContent: collapsed ? "center" : "flex-start",
-          gap: collapsed ? 0 : 10,
         }}
         onClick={() => onTabChange("dashboard")}
       >
-        {collapsed ? <SantiyemMark px={32} /> : <SantiyemWordmark px={72} />}
-
-
+        {collapsed ? (
+          <SantiyemMark px={32} />
+        ) : (
+          <>
+            <img
+              src="/brand/horizontal-light.svg"
+              alt="Şantiyem AI"
+              className="brand-ink-light object-contain select-none shrink-0"
+              style={{ width: 180, height: "auto", maxWidth: "100%" }}
+              draggable={false}
+            />
+            <img
+              src="/brand/horizontal.svg"
+              alt=""
+              aria-hidden
+              className="brand-ink-dark object-contain select-none shrink-0"
+              style={{ width: 180, height: "auto", maxWidth: "100%" }}
+              draggable={false}
+            />
+          </>
+        )}
       </div>
+
 
       {/* User card + AI health */}
       <div className="shrink-0" style={{ padding: collapsed ? "0 12px 12px" : "0 16px 16px" }}>
