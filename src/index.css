@@ -160,6 +160,13 @@
   #root {
     min-height: 100%;
   }
+
+  /* Global button radius baseline — no square/sharp buttons anywhere.
+     Any explicit rounded-* utility or inline style still wins. */
+  button,
+  [role="button"] {
+    border-radius: var(--radius-control-md, 12px);
+  }
 }
 
 @layer utilities {

@@ -38,8 +38,12 @@
     /* ── Radius scale ── */
     --radius-card: 16px;
     --radius-dialog: 20px;
-    --radius-control: 14px;
-    --radius-pill: 999px;
+    /* Shared control radius tokens — the only radii allowed on buttons */
+    --radius-control-sm: 10px;
+    --radius-control-md: 12px;
+    --radius-control-lg: 16px;
+    --radius-control: var(--radius-control-md);
+    --radius-pill: 9999px;
 
     /* ── Control heights ── */
     --control-sm: 32px;

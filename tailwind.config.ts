@@ -93,15 +93,20 @@ export default {
       // SPRINT 35 — one radius scale (control 14 / card 16 / dialog 20)
       borderRadius: {
         sm: "8px",
-        md: "10px",
-        lg: "var(--radius-control, 14px)",
+        md: "var(--radius-control-sm, 10px)",
+        lg: "var(--radius-control-md, 12px)",
         xl: "var(--radius-card, 16px)",
         "2xl": "var(--radius-dialog, 20px)",
         "3xl": "24px",
-        control: "var(--radius-control, 14px)",
+        control: "var(--radius-control-md, 12px)",
+        "control-sm": "var(--radius-control-sm, 10px)",
+        "control-lg": "var(--radius-control-lg, 16px)",
+        button: "var(--radius-control-md, 12px)",
+        cta: "var(--radius-control-lg, 16px)",
+        input: "var(--radius-control-md, 12px)",
         card: "var(--radius-card, 16px)",
         dialog: "var(--radius-dialog, 20px)",
-        pill: "999px",
+        pill: "var(--radius-pill, 9999px)",
       },
       // SPRINT 35 — one shadow system
       boxShadow: {
