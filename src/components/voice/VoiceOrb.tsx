@@ -202,20 +202,17 @@ export function VoiceOrb() {
 
 
   const isNative = Capacitor.isNativePlatform();
-  // Sprint M2.0 — Mobile mic moves to bottom-right (WhatsApp-style FAB) above tab bar.
   const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
-  // Sprint 40 — dense settings screens on mobile: the FAB would sit on top of form rows.
-  if (!isDesktop && !open && pathname.startsWith("/settings")) return null;
-  const bottomOffset = isDesktop
-    ? (isNative
-        ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
-        : "calc(env(safe-area-inset-bottom, 0px) + 24px)")
-    : "calc(env(safe-area-inset-bottom, 0px) + 80px)";
+  // Sprint 41 — the floating microphone is desktop-only. On mobile, voice lives
+  // inside the AI tab; only the overlay session renders here.
+  if (!isDesktop) return open ? session : null;
+  const bottomOffset = isNative
+    ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
+    : "calc(env(safe-area-inset-bottom, 0px) + 24px)";
 
-  const positionClass = isDesktop
-    ? "fixed right-6 z-40 group"
-    : "fixed right-4 z-40 group";
-  const orbVisualSize = isDesktop ? "sm" : "md";
+  const positionClass = "fixed right-6 z-40 group";
+  const orbVisualSize = "sm";
+
 
   // Idle orb state. Live conversation states are owned by the panel.
   const orbState: OrbState = !access.hasAccess
