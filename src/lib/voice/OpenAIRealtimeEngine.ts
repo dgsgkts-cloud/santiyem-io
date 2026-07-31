@@ -523,6 +523,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       window.clearTimeout(this.readyFallbackTimer);
       this.readyFallbackTimer = null;
     }
+    rtLog("state listening");
     this.setState("listening");
   }
 
