@@ -276,19 +276,21 @@ export function VoiceSessionOverlay({
   }, [sessionMode, conversationMode, end]);
 
   // ---- one derived phase ----------------------------------------------
+  // The label always reflects the real transport state: mic → OpenAI →
+  // hazır → dinliyorum. "Dinliyorum" can only come from the engine, which
+  // sets it after `session.created`.
   const phase: VoicePhase = micBlocked
     ? "error"
     : askingPermission
     ? "requesting_permission"
     : failed || voice.state === "error" || voice.state === "disconnected"
       ? "error"
-      : showPreparing
-        ? "connecting"
-        : voice.state === "interrupted"
-          ? "listening"
-          : voice.state === "idle"
-            ? (preparing ? "connecting" : "idle")
-            : (voice.state as VoicePhase);
+      : voice.state === "interrupted"
+        ? "listening"
+        : voice.state === "idle"
+          ? (preparing ? "mic_setup" : "idle")
+          : (voice.state as VoicePhase);
+
 
   // Connection lost → keep the transcript, immediately silence audio,
   // then run a short countdown and retry automatically (max 2 attempts)
