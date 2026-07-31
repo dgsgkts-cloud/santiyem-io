@@ -11,7 +11,9 @@ import { useEffect, useRef, useState } from "react";
 export type VoicePhase =
   | "idle"
   | "requesting_permission"
+  | "mic_setup"
   | "connecting"
+  | "ready"
   | "listening"
   | "user_finished"
   | "thinking"
@@ -19,6 +21,7 @@ export type VoicePhase =
   | "interrupted"
   | "ending"
   | "error";
+
 
 interface Props {
   phase: VoicePhase;
