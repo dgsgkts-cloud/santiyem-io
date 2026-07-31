@@ -1,6 +1,6 @@
 // LandingV3 — Şantiyem AI marketing surface.
 // Noir & Ember palette · Space Grotesk + DM Sans · split-screen hero.
-// 12 sections, real product mockups (in-app UI language, not fake dashboards).
+// 12 sections, real product mockups (in-app UI language, not fake screens).
 
 import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
@@ -141,7 +141,7 @@ const GhostBtn = ({ to, onClick, children, icon }: { to?: string; onClick?: () =
 };
 
 /* Reusable "browser chrome" for mockups */
-const AppFrame = ({ children, label = "santiyem.io/dashboard" }: { children: React.ReactNode; label?: string }) => (
+const AppFrame = ({ children, label = "santiyem.io/ana-panel" }: { children: React.ReactNode; label?: string }) => (
   <div
     className="rounded-2xl overflow-hidden"
     style={{
@@ -187,7 +187,7 @@ const HeroDashboardMock = () => {
     return () => cancelAnimationFrame(raf);
   }, [visible]);
   return (
-  <AppFrame label="santiyem.io/dashboard">
+  <AppFrame label="santiyem.io/ana-panel">
     <div ref={ref} className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
       {/* Sidebar */}
       <div className="col-span-1 space-y-1.5">
@@ -223,7 +223,7 @@ const HeroDashboardMock = () => {
         <div className="grid grid-cols-3 gap-2">
           {[
             { l: "Aktif Proje", v: "12" },
-            { l: "Bu Ay Hakediş", v: "₺4.2M" },
+            { l: "Bu Ay Hakediş", v: "4,2 Mn TL" },
             { l: "Personel", v: "148" },
           ].map((k, i) => (
             <div key={i} className="rounded-lg p-2.5" style={{ background: "#0F0F0F", border: `1px solid ${T.border}` }}>
@@ -360,12 +360,12 @@ const AIExecutive = () => (
                 </div>
               </div>
               <p className="text-[13px] leading-relaxed" style={{ color: T.muted, ...body }}>
-                Dün 3 hakediş onaylandı, ₺842K nakit girişi bekleniyor. Arsuz-2'de kritik risk:
+                Dün 3 hakediş onaylandı, 842 Bin TL nakit girişi bekleniyor. Arsuz-2'de kritik risk:
                 subcontractor sözleşme bitişi 4 gün içinde.
               </p>
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { l: "Nakit Pozisyonu", v: "₺12.4M", tone: "up" },
+                  { l: "Nakit Pozisyonu", v: "12,4 Mn TL", tone: "up" },
                   { l: "Açık Hakediş", v: "3", tone: "warn" },
                   { l: "Aktif Personel", v: "148", tone: "flat" },
                 ].map((k) => (
@@ -388,7 +388,7 @@ const AIExecutive = () => (
               </div>
               {[
                 { icon: AlertTriangle, tone: "#ef4444", t: "Arsuz-2 subcontractor", d: "Sözleşme 4 gün içinde bitiyor — yenile" },
-                { icon: TrendingUp, tone: T.ember, t: "Mersin Sitesi hakedişi", d: "₺1.2M onay bekliyor · imzala" },
+                { icon: TrendingUp, tone: T.ember, t: "Mersin Sitesi hakedişi", d: "1,2 Mn TL onay bekliyor · imzala" },
                 { icon: CheckCircle2, tone: "#4ade80", t: "3 fatura eşleştirildi", d: "Otomatik kabul edildi · onay bekliyor" },
                 { icon: Clock, tone: "#a1a1aa", t: "Bayilerle toplantı", d: "14:00 · hazırlık dosyası hazır" },
               ].map((r, i) => (
@@ -494,7 +494,7 @@ const VoiceSection = () => (
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { l: "Net Kâr", v: "₺1.8M", d: "%22 marj" },
+                { l: "Net Kâr", v: "1,8 Mn TL", d: "%22 marj" },
                 { l: "İlerleme", v: "%78", d: "3 hafta önde" },
               ].map((k, i) => (
                 <div key={i} className="rounded-xl p-3" style={{ background: "#0A0A0A", border: `1px solid ${T.border}` }}>
@@ -643,7 +643,7 @@ const CanvasSection = () => (
             {/* KPI strip */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { l: "Toplam", v: "₺8.4M" },
+                { l: "Toplam", v: "8,4 Mn TL" },
                 { l: "Ort. Marj", v: "%19" },
                 { l: "En Kârlı", v: "Arsuz-2" },
                 { l: "Zararlı", v: "0" },
@@ -680,9 +680,9 @@ const CanvasSection = () => (
                 <span>Proje</span><span>Gelir</span><span>Gider</span><span>Marj</span>
               </div>
               {[
-                ["Arsuz-2", "₺2.1M", "₺1.6M", "%23"],
-                ["Mersin", "₺1.4M", "₺1.1M", "%21"],
-                ["Adana-A", "₺1.8M", "₺1.5M", "%17"],
+                ["Arsuz-2", "2,1 Mn TL", "1,6 Mn TL", "%23"],
+                ["Mersin", "1,4 Mn TL", "1,1 Mn TL", "%21"],
+                ["Adana-A", "1,8 Mn TL", "1,5 Mn TL", "%17"],
               ].map((row) => (
                 <div key={row[0]} className="grid grid-cols-4 px-3 py-2 text-[12px]" style={{ color: T.text, ...body }}>
                   {row.map((c, j) => <span key={j} style={{ color: j === 0 ? T.text : T.muted }}>{c}</span>)}
