@@ -1,4 +1,4 @@
-import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
 import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
