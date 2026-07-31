@@ -9,21 +9,21 @@ import {
   AlertTriangle,
   ArrowRight,
   Clock,
+  FileCheck2,
   HardHat,
   History,
-  MessageSquare,
   Mic,
-
+  Package,
   Sparkles,
-  TrendingUp,
   Wallet,
 } from "lucide-react";
 import { AIOrb } from "@/components/ai/AIOrb";
 import AIInsightCard from "@/components/ai/AIInsightCard";
 import AISmartSuggestions from "@/components/ai/AISmartSuggestions";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
-import { useUser } from "@/contexts/UserContext";
+import { useDisplayName } from "@/hooks/useDisplayName";
 import { Skeleton } from "@/components/ui/Skeletons";
+
 
 const greeting = (d: Date) => {
   const h = d.getHours();
