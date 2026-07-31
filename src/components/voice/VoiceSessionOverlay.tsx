@@ -210,6 +210,23 @@ export function VoiceSessionOverlay({
             ? (preparing ? "connecting" : "idle")
             : (voice.state as VoicePhase);
 
+  // Connection lost → immediately silence audio and hold a single
+  // "Bağlantı kesildi" screen with one reconnect action.
+  useEffect(() => {
+    if (phase !== "error" || stoppedRef.current) return;
+    stoppedRef.current = true;
+    try { voice.interrupt(); } catch { /* noop */ }
+    try { voice.mute(); } catch { /* noop */ }
+    void voice.disconnect().catch(() => { /* noop */ });
+  }, [phase, voice]);
+
+  const reconnect = useCallback(() => {
+    stoppedRef.current = false;
+    setMuted(false);
+    void start();
+  }, [start]);
+
+
   const isSpeaking = phase === "speaking";
   const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
   const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
