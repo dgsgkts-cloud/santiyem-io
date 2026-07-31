@@ -1195,18 +1195,24 @@ const NavV3 = () => {
         borderBottom: scrolled ? `1px solid ${T.border}` : "1px solid transparent",
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 md:h-[76px] flex items-center justify-between">
         <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-          <span className="md:hidden inline-flex"><SantiyemMark px={34} tone="light" /></span>
-          <span className="hidden md:inline-flex"><SantiyemWordmark px={32} tone="light" /></span>
+          <span className="md:hidden inline-flex"><SantiyemMark px={35} tone="light" /></span>
+          <img
+            src="/brand/horizontal-light.svg"
+            alt="Şantiyem AI"
+            className="hidden md:block w-[145px] lg:w-[155px] xl:w-[165px] h-auto object-contain select-none"
+            draggable={false}
+          />
         </Link>
 
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-8 ml-14">
           {LINKS.map((l) => (
             <button key={l.h} onClick={() => scrollTo(l.h)} className="text-[13px] hover:text-white transition-colors" style={{ color: T.muted, ...body }}>{l.l}</button>
           ))}
         </div>
+
         <div className="hidden md:flex items-center gap-3">
           <Link to="/login" className="text-[13px]" style={{ color: T.muted, ...body }}>Giriş</Link>
           <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
@@ -1221,6 +1227,8 @@ const NavV3 = () => {
       </div>
       {open && (
         <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
+          <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[155px] h-auto object-contain mb-2" draggable={false} />
+
           {LINKS.map((l) => (
             <button key={l.h} onClick={() => scrollTo(l.h)} className="block text-[15px]" style={{ color: T.muted, ...body }}>{l.l}</button>
           ))}
