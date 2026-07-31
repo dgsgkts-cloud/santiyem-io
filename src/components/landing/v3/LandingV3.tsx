@@ -1188,16 +1188,16 @@ const NavV3 = () => {
   const scrollTo = (h: string) => { setOpen(false); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); };
   return (
     <nav
-      className="fixed top-0 inset-x-0 z-50 transition-all"
+      className="fixed inset-x-0 top-0 z-50 transition-all pt-[env(safe-area-inset-top)]"
       style={{
         background: scrolled ? "rgba(0,0,0,0.7)" : "transparent",
         backdropFilter: scrolled ? "blur(16px)" : "none",
         borderBottom: scrolled ? `1px solid ${T.border}` : "1px solid transparent",
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 md:h-[76px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-5 md:px-6 lg:px-12 h-[62px] md:h-[76px] flex items-center justify-between">
         <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-          <span className="md:hidden inline-flex"><SantiyemMark px={35} tone="light" /></span>
+          <span className="md:hidden inline-flex items-center"><SantiyemMark px={34} tone="light" /></span>
           <img
             src="/brand/horizontal-light.svg"
             alt="Şantiyem AI"
@@ -1205,6 +1205,7 @@ const NavV3 = () => {
             draggable={false}
           />
         </Link>
+
 
 
         <div className="hidden md:flex items-center gap-8 ml-14">
