@@ -157,6 +157,24 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: relative;
+}
+
+/* Subtle dark radial gradient behind the main AI card so the background
+   lines never compete with the foreground workflow. */
+.login-hero__ai-card::before {
+  content: "";
+  position: absolute;
+  inset: -48px;
+  border-radius: 32px;
+  background: radial-gradient(
+    ellipse 75% 65% at 50% 50%,
+    rgba(15, 20, 25, 0.74) 0%,
+    rgba(15, 20, 25, 0.40) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Command surface */
