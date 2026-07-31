@@ -1426,14 +1426,7 @@ const NavV3 = () => {
             </div>
 
             <div className="mt-auto flex flex-col gap-3 px-6 pt-6">
-              <Link
-                to="/login"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center rounded-[14px] text-[15px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B]"
-                style={{ height: 47, color: T.text, border: `1px solid ${T.borderStrong}`, ...body }}
-              >
-                Giriş Yap
-              </Link>
+              <LoginButton onClick={() => setOpen(false)} className="w-full">Giriş Yap</LoginButton>
               <Link
                 to="/register"
                 onClick={() => setOpen(false)}
