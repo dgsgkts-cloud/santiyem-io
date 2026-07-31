@@ -71,6 +71,8 @@ export function VoiceSessionOverlay({
   const greetedRef = useRef(false);
   const endedRef = useRef(false);
   const spokeOnceRef = useRef(false);
+  const stoppedRef = useRef(false);
+
   const activityRef = useRef(Date.now());
   const turnCompletedAtRef = useRef<number | null>(null);
 
@@ -129,8 +131,10 @@ export function VoiceSessionOverlay({
     if (voice.state === "listening" || voice.state === "speaking" || voice.state === "thinking") {
       setFailed(false);
       setPreparing(false);
+      stoppedRef.current = false;
     }
   }, [voice.state]);
+
 
   // Greeting for wake sessions — spoken once when the session goes live.
   useEffect(() => {
@@ -206,6 +210,23 @@ export function VoiceSessionOverlay({
             ? (preparing ? "connecting" : "idle")
             : (voice.state as VoicePhase);
 
+  // Connection lost → immediately silence audio and hold a single
+  // "Bağlantı kesildi" screen with one reconnect action.
+  useEffect(() => {
+    if (phase !== "error" || stoppedRef.current) return;
+    stoppedRef.current = true;
+    try { voice.interrupt(); } catch { /* noop */ }
+    try { voice.mute(); } catch { /* noop */ }
+    void voice.disconnect().catch(() => { /* noop */ });
+  }, [phase, voice]);
+
+  const reconnect = useCallback(() => {
+    stoppedRef.current = false;
+    setMuted(false);
+    void start();
+  }, [start]);
+
+
   const isSpeaking = phase === "speaking";
   const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
   const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
@@ -258,16 +279,18 @@ export function VoiceSessionOverlay({
 
         {phase === "error" ? (
           <div className="w-full max-w-xs text-center">
-            <p className="text-[15px] font-medium text-white/90">Sesli bağlantı kurulamadı.</p>
+            <p className="text-[15px] font-medium text-white/90">Bağlantı kesildi</p>
+            <p className="mt-1 text-[13px] text-white/55">Ses durduruldu. Yeniden bağlanabilirsiniz.</p>
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => { void start(); }}
+                onClick={reconnect}
                 className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
                 style={{ height: 48 }}
               >
-                Tekrar Dene
+                Yeniden Bağlan
               </button>
+
               <button
                 type="button"
                 onClick={() => end("user")}
