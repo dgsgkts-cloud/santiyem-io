@@ -46,7 +46,7 @@
 .login-hero__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(15, 20, 25, 0.80) 0%, rgba(15, 20, 25, 0.45) 55%, transparent 100%);
+  background: radial-gradient(ellipse 85% 75% at 50% 50%, rgba(15, 20, 25, 0.84) 0%, rgba(15, 20, 25, 0.50) 55%, transparent 100%);
   pointer-events: none;
 }
 
