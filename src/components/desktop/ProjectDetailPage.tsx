@@ -219,6 +219,11 @@ const ProjectDetailPage = ({
     import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name));
   };
 
+  // SPRINT 41A — mobile gets a dedicated native workspace; desktop unchanged.
+  if (isMobile) {
+    return <ProjectDetailMobile project={p} onBack={onBack} onUpdate={onUpdate} />;
+  }
+
   return (
     <PageShell maxWidth={1200}>
       {showQrModal && <QrCodeModal projectId={p.id} projectName={p.name} onClose={() => setShowQrModal(false)} />}
