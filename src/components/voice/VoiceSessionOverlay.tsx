@@ -279,16 +279,18 @@ export function VoiceSessionOverlay({
 
         {phase === "error" ? (
           <div className="w-full max-w-xs text-center">
-            <p className="text-[15px] font-medium text-white/90">Sesli bağlantı kurulamadı.</p>
+            <p className="text-[15px] font-medium text-white/90">Bağlantı kesildi</p>
+            <p className="mt-1 text-[13px] text-white/55">Ses durduruldu. Yeniden bağlanabilirsiniz.</p>
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => { void start(); }}
+                onClick={reconnect}
                 className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
                 style={{ height: 48 }}
               >
-                Tekrar Dene
+                Yeniden Bağlan
               </button>
+
               <button
                 type="button"
                 onClick={() => end("user")}
