@@ -1,6 +1,6 @@
 // LandingV3 — Şantiyem AI marketing surface.
 // Noir & Ember palette · Space Grotesk + DM Sans · split-screen hero.
-// 12 sections, real product mockups (in-app UI language, not fake dashboards).
+// 12 sections, real product mockups (in-app UI language, not fake screens).
 
 import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +9,7 @@ import {
   ArrowRight, Play, Mic, Sparkles, TrendingUp, AlertTriangle, CheckCircle2,
   Building2, Wallet, Users, Package, FileText, ClipboardList, Receipt, BookOpen,
   Brain, MessageSquare, Send, Zap, ShieldCheck, Clock, ArrowUpRight,
-  BarChart3, Activity, Waves, Database, Layers, ChevronDown, Check,
+  BarChart3, Activity, Waves, Database, Layers, ChevronDown, Check, X,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -141,7 +141,7 @@ const GhostBtn = ({ to, onClick, children, icon }: { to?: string; onClick?: () =
 };
 
 /* Reusable "browser chrome" for mockups */
-const AppFrame = ({ children, label = "santiyem.io/dashboard" }: { children: React.ReactNode; label?: string }) => (
+const AppFrame = ({ children, label = "santiyem.io/ana-panel" }: { children: React.ReactNode; label?: string }) => (
   <div
     className="rounded-2xl overflow-hidden"
     style={{
@@ -187,7 +187,7 @@ const HeroDashboardMock = () => {
     return () => cancelAnimationFrame(raf);
   }, [visible]);
   return (
-  <AppFrame label="santiyem.io/dashboard">
+  <AppFrame label="santiyem.io/ana-panel">
     <div ref={ref} className="p-4 md:p-5 grid grid-cols-6 gap-3" style={{ background: T.elev, minHeight: 380 }}>
       {/* Sidebar */}
       <div className="col-span-1 space-y-1.5">
@@ -223,7 +223,7 @@ const HeroDashboardMock = () => {
         <div className="grid grid-cols-3 gap-2">
           {[
             { l: "Aktif Proje", v: "12" },
-            { l: "Bu Ay Hakediş", v: "₺4.2M" },
+            { l: "Bu Ay Hakediş", v: "4,2 Mn TL" },
             { l: "Personel", v: "148" },
           ].map((k, i) => (
             <div key={i} className="rounded-lg p-2.5" style={{ background: "#0F0F0F", border: `1px solid ${T.border}` }}>
@@ -276,7 +276,7 @@ const HeroDashboardMock = () => {
 
 
 const Hero = () => (
-  <section className="relative pt-[calc(env(safe-area-inset-top)+110px)] pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
+  <section className="relative pt-[calc(env(safe-area-inset-top)+100px)] pb-20 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
     {/* Ember glow */}
     <div className="absolute inset-0 pointer-events-none opacity-60">
       <div className="absolute top-1/4 -left-40 w-[600px] h-[600px] rounded-full" style={{ background: `radial-gradient(circle, ${T.ember}22 0%, transparent 70%)`, filter: "blur(60px)" }} />
@@ -293,7 +293,7 @@ const Hero = () => (
 
     <div className="relative max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
       <Reveal className="lg:col-span-6">
-        <div className="mb-6"><EmberBadge>Şantiyem AI · v3</EmberBadge></div>
+        <div className="mb-5"><EmberBadge>Şantiyem AI</EmberBadge></div>
         <h1
           className="text-[40px] sm:text-5xl md:text-6xl lg:text-[64px] font-semibold leading-[1.04] mb-6"
           style={{ color: T.text, ...heading }}
@@ -307,19 +307,20 @@ const Hero = () => (
         <Sub className="max-w-xl mb-8">
           Projeler, finans, hakediş, personel, stok ve şantiye yönetimi tek bir yapay zekâda birleşiyor.
         </Sub>
-        <div className="flex flex-wrap gap-3 mb-10">
+        {/* Sprint 42B — exactly two hero actions; stacked on mobile. */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <PrimaryBtn to="/register">Ücretsiz Dene</PrimaryBtn>
           <GhostBtn icon={<Play className="w-4 h-4" style={{ color: T.ember }} />} onClick={() => {}}>
-            2 dk Demo İzle
+            Demoyu İzle
           </GhostBtn>
-          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
         </div>
 
-        <div className="flex flex-wrap gap-x-8 gap-y-2 text-[12.5px]" style={{ color: T.faint, ...body }}>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> Kart gerekmez</span>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 5 dakikada kurulum</span>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]" style={{ color: T.faint, ...body }}>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> Kart gerekmez</span>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> 5 dakikada kurulum</span>
         </div>
+
       </Reveal>
 
       <Reveal delay={200} className="lg:col-span-6">
@@ -359,12 +360,12 @@ const AIExecutive = () => (
                 </div>
               </div>
               <p className="text-[13px] leading-relaxed" style={{ color: T.muted, ...body }}>
-                Dün 3 hakediş onaylandı, ₺842K nakit girişi bekleniyor. Arsuz-2'de kritik risk:
+                Dün 3 hakediş onaylandı, 842 Bin TL nakit girişi bekleniyor. Arsuz-2'de kritik risk:
                 subcontractor sözleşme bitişi 4 gün içinde.
               </p>
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { l: "Nakit Pozisyonu", v: "₺12.4M", tone: "up" },
+                  { l: "Nakit Pozisyonu", v: "12,4 Mn TL", tone: "up" },
                   { l: "Açık Hakediş", v: "3", tone: "warn" },
                   { l: "Aktif Personel", v: "148", tone: "flat" },
                 ].map((k) => (
@@ -387,7 +388,7 @@ const AIExecutive = () => (
               </div>
               {[
                 { icon: AlertTriangle, tone: "#ef4444", t: "Arsuz-2 subcontractor", d: "Sözleşme 4 gün içinde bitiyor — yenile" },
-                { icon: TrendingUp, tone: T.ember, t: "Mersin Sitesi hakedişi", d: "₺1.2M onay bekliyor · imzala" },
+                { icon: TrendingUp, tone: T.ember, t: "Mersin Sitesi hakedişi", d: "1,2 Mn TL onay bekliyor · imzala" },
                 { icon: CheckCircle2, tone: "#4ade80", t: "3 fatura eşleştirildi", d: "Otomatik kabul edildi · onay bekliyor" },
                 { icon: Clock, tone: "#a1a1aa", t: "Bayilerle toplantı", d: "14:00 · hazırlık dosyası hazır" },
               ].map((r, i) => (
@@ -420,12 +421,13 @@ const VoiceSection = () => (
     </div>
     <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="text-center max-w-3xl mx-auto mb-16">
-        <div className="mb-4 flex justify-center"><SectionLabel>Voice</SectionLabel></div>
+        <div className="mb-4 flex justify-center"><SectionLabel>Sesli AI</SectionLabel></div>
         <H2>Firmanızla konuşun.</H2>
         <Sub className="mt-5">
-          "Bu ay hangi proje kârda?" diye sorun. Cevabı sesli alın, canvas'ta görün, dashboard'a
-          yansısın. Tek bir konuşma, tüm firmayı hareketlendirir.
+          "Bu ay en kârlı proje hangisi?" diye sorun. Yanıtı sesli alın, veriyi ekranda görün ve
+          ilgili projeyi tek dokunuşla açın.
         </Sub>
+
       </Reveal>
 
       <Reveal delay={150}>
@@ -466,10 +468,15 @@ const VoiceSection = () => (
                   className="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm text-[12.5px] leading-snug"
                   style={{ background: "#0A0A0A", color: T.text, border: `1px solid ${T.border}`, ...body }}
                 >
-                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — ₺1.8M net kâr, %22 marj. Erken teslim primi belirleyici oldu.
+                  <span style={{ color: T.emberGlow }}>Arsuz Konut</span> — 1,8 milyon TL net kâr, %22 marj.
                 </div>
               </div>
             </div>
+
+            {/* Demo content must never read as the visitor's own data. */}
+            <p className="mt-5 text-[10.5px] uppercase tracking-[0.2em]" style={{ color: T.faint, ...body }}>
+              Örnek senaryo
+            </p>
 
           </div>
 
@@ -480,19 +487,14 @@ const VoiceSection = () => (
                 <Activity className="w-4 h-4" style={{ color: T.ember }} />
                 <span className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: T.muted, ...body }}>Canlı Analiz</span>
               </div>
-              <span className="text-[10.5px]" style={{ color: "#4ade80", ...body }}>● online</span>
+              <span className="text-[10.5px]" style={{ color: "#4ade80", ...body }}>● Bağlı</span>
             </div>
 
-            <div className="rounded-xl p-4" style={{ background: "#0A0A0A", border: `1px solid ${T.border}` }}>
-              <p className="text-[13px] leading-relaxed" style={{ color: T.text, ...body }}>
-                <span style={{ color: T.emberGlow }}>Arsuz Konut Projesi</span> bu ay ₺1.8M net kâr üretti
-                (%22 marj). Ana neden: erken teslim primi + malzeme optimizasyonu.
-              </p>
-            </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { l: "Net Kâr", v: "₺1.8M", d: "%22 marj" },
+                { l: "Net Kâr", v: "1,8 Mn TL", d: "%22 marj" },
                 { l: "İlerleme", v: "%78", d: "3 hafta önde" },
               ].map((k, i) => (
                 <div key={i} className="rounded-xl p-3" style={{ background: "#0A0A0A", border: `1px solid ${T.border}` }}>
@@ -641,7 +643,7 @@ const CanvasSection = () => (
             {/* KPI strip */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { l: "Toplam", v: "₺8.4M" },
+                { l: "Toplam", v: "8,4 Mn TL" },
                 { l: "Ort. Marj", v: "%19" },
                 { l: "En Kârlı", v: "Arsuz-2" },
                 { l: "Zararlı", v: "0" },
@@ -678,9 +680,9 @@ const CanvasSection = () => (
                 <span>Proje</span><span>Gelir</span><span>Gider</span><span>Marj</span>
               </div>
               {[
-                ["Arsuz-2", "₺2.1M", "₺1.6M", "%23"],
-                ["Mersin", "₺1.4M", "₺1.1M", "%21"],
-                ["Adana-A", "₺1.8M", "₺1.5M", "%17"],
+                ["Arsuz-2", "2,1 Mn TL", "1,6 Mn TL", "%23"],
+                ["Mersin", "1,4 Mn TL", "1,1 Mn TL", "%21"],
+                ["Adana-A", "1,8 Mn TL", "1,5 Mn TL", "%17"],
               ].map((row) => (
                 <div key={row[0]} className="grid grid-cols-4 px-3 py-2 text-[12px]" style={{ color: T.text, ...body }}>
                   {row.map((c, j) => <span key={j} style={{ color: j === 0 ? T.text : T.muted }}>{c}</span>)}
@@ -1185,7 +1187,15 @@ const NavV3 = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  // Body scroll stays locked while the drawer owns the screen.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
   const scrollTo = (h: string) => { setOpen(false); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); };
+
   return (
     <nav
       className="fixed inset-x-0 top-0 z-50 transition-all pt-[env(safe-area-inset-top)]"
@@ -1227,19 +1237,69 @@ const NavV3 = () => {
         </button>
 
       </div>
+      {/* Sprint 42B — opaque, safe-area aware mobile drawer. */}
       {open && (
-        <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
-          <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[155px] h-auto object-contain mb-2" draggable={false} />
+        <div className="md:hidden fixed inset-0 z-[60]">
+          <button
+            aria-label="Menüyü kapat"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 w-full"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}
+          />
+          <div
+            className="absolute inset-0 flex flex-col"
+            style={{
+              background: "#050505",
+              paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+            }}
+          >
+            <div className="flex items-center justify-between px-5">
+              <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[142px] h-auto object-contain" draggable={false} />
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Menüyü kapat"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white/70"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          {LINKS.map((l) => (
-            <button key={l.h} onClick={() => scrollTo(l.h)} className="block text-[15px]" style={{ color: T.muted, ...body }}>{l.l}</button>
-          ))}
-          <div className="pt-4 flex flex-col gap-2 border-t" style={{ borderColor: T.border }}>
-            <Link to="/login" className="text-center py-2 text-[14px]" style={{ color: T.muted, ...body }}>Giriş</Link>
-            <Link to="/register" className="text-center py-3 rounded-full font-semibold text-white" style={{ background: T.ember, ...body }}>Ücretsiz Başla</Link>
+            <div className="mt-6 flex flex-col px-5">
+              {LINKS.map((l) => (
+                <button
+                  key={l.h}
+                  onClick={() => scrollTo(l.h)}
+                  className="flex min-h-[48px] items-center text-left text-[16px]"
+                  style={{ color: T.text, ...body }}
+                >
+                  {l.l}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-auto flex flex-col gap-3 px-5 pt-6">
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center rounded-[14px] text-[15px] font-medium"
+                style={{ height: 46, color: T.text, border: `1px solid ${T.borderStrong}`, ...body }}
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center rounded-[16px] text-[15px] font-semibold text-white"
+                style={{ height: 50, background: T.ember, ...body }}
+              >
+                Ücretsiz Başla
+              </Link>
+            </div>
           </div>
         </div>
       )}
+
     </nav>
   );
 };
