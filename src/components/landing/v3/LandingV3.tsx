@@ -141,6 +141,24 @@ const GhostBtn = ({ to, onClick, children, icon }: { to?: string; onClick?: () =
   return <button onClick={onClick} className={cls} style={style}>{icon}{children}</button>;
 };
 
+/* Public header "Giriş Yap" — secondary action, never competes with the primary CTA. */
+const LoginButton = ({ onClick, className = "", children = "Giriş Yap" }: { onClick?: () => void; className?: string; children?: React.ReactNode }) => (
+  <Link
+    to="/login"
+    onClick={onClick}
+    className={`inline-flex items-center justify-center h-[44px] px-4 lg:px-5 rounded-[13px] text-[15px] font-medium outline-none transition-all duration-[180ms] ease-out cursor-pointer hover:border-white/30 hover:bg-[#FF6B2B]/12 hover:text-white hover:shadow-[0_0_16px_rgba(255,107,43,0.18)] active:translate-y-[1px] active:bg-[#FF6B2B]/9 active:shadow-[0_0_10px_rgba(255,107,43,0.10)] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black motion-reduce:transition-none ${className}`}
+    style={{
+      color: "#E4E4E7",
+      border: `1px solid ${T.borderStrong}`,
+      background: "transparent",
+      ...body,
+    }}
+    aria-label="Giriş Yap"
+  >
+    {children}
+  </Link>
+);
+
 /* Reusable "browser chrome" for mockups */
 const AppFrame = ({ children, label = "santiyem.io/ana-panel" }: { children: React.ReactNode; label?: string }) => (
   <div
