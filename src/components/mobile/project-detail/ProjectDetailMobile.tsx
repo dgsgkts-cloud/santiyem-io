@@ -279,17 +279,43 @@ export default function ProjectDetailMobile({ project: p, onBack, onUpdate }: Pr
         onOpenChange={setQuickOverflowOpen}
         title="Diğer İşlemler"
         actions={[
-          { label: "Yeni not", icon: <FilePlus2 className="h-[18px] w-[18px]" />, onSelect: () => setNoteSheet(true) },
+          { label: "Yeni not", icon: <FilePlus2 className="h-[18px] w-[18px]" />, onSelect: () => setNoteSheetOpen(true) },
           { label: "Dosya yükle", icon: <Upload className="h-[18px] w-[18px]" />, onSelect: () => toast.info("Dosya yükleme proje dosyalarından yapılır") },
           { label: "Toplantı oluştur", icon: <Users className="h-[18px] w-[18px]" />, onSelect: () => go("dashboard") },
           { label: "Hatırlatıcı oluştur", icon: <Bell className="h-[18px] w-[18px]" />, onSelect: () => go("dashboard") },
         ]}
       />
 
-      <NoteSheet
-        onSave={async (text) => { await addNote(text); toast.success("Not eklendi"); }}
-        registerOpener={(fn) => (openNoteSheetRef.current = fn)}
-      />
+      {/* Note form sheet */}
+      <MobileActionSheet
+        open={noteSheetOpen}
+        onOpenChange={setNoteSheetOpen}
+        title="Yeni Not"
+        size="form"
+      >
+        <div className="pb-4">
+          <textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            rows={4}
+            placeholder="Notunuzu yazın…"
+            className="w-full rounded-[14px] border border-border bg-background p-3 text-[16px] text-foreground outline-none focus:border-primary"
+          />
+          <button
+            onClick={async () => {
+              if (!noteText.trim()) return;
+              await addNote(noteText);
+              setNoteText("");
+              setNoteSheetOpen(false);
+              toast.success("Not eklendi");
+            }}
+            className="mt-3 w-full min-h-[48px] rounded-[12px] bg-primary text-primary-foreground text-[15px] font-medium"
+          >
+            Kaydet
+          </button>
+        </div>
+      </MobileActionSheet>
+
 
       {/* Locked module sheet */}
       <MobileActionSheet
