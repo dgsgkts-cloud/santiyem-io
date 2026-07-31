@@ -33,7 +33,17 @@ const fmtMoney = (n: number) => formatCurrency(Math.round(n));
 
 const inputClass = "w-full px-3 h-11 rounded-control text-fs-sm bg-background border border-border text-foreground focus:outline-none focus:border-primary/50";
 
+// SPRINT 41B — mobile stock operations live in a dedicated native-feeling shell.
+import { useIsMobile } from "@/hooks/use-mobile";
+import MaterialsMobile from "@/components/mobile/materials/MaterialsMobile";
+
 const MaterialsPage = () => {
+  const isMobile = useIsMobile();
+  if (isMobile) return <MaterialsMobile />;
+  return <MaterialsPageDesktop />;
+};
+
+const MaterialsPageDesktop = () => {
   const { user } = useUser();
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
