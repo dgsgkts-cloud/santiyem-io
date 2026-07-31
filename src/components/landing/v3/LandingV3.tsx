@@ -537,7 +537,7 @@ const departments = [
 ];
 
 const OneAI = () => (
-  <section className="py-24 md:py-32" style={{ background: T.bg }}>
+  <section id="cozumler" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.bg }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="max-w-3xl mb-16">
         <div className="mb-4"><SectionLabel>Bir Zeka · Her Departman</SectionLabel></div>
