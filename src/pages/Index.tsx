@@ -728,7 +728,9 @@ const Index = () => {
             </button>
           )}
         </div>
+        </div>
       </header>
+
 
       {/* ── TABLET TAB BAR ── */}
       <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
