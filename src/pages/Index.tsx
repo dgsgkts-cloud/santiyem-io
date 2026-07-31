@@ -302,9 +302,10 @@ const Index = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { role: primaryRole } = usePrimaryProjectRole();
   const allowedDrawerIds = getAllowedDrawerIdsForRole(primaryRole);
-  const visibleDrawerItems = allowedDrawerIds
-    ? DRAWER_ITEMS.filter((it) => allowedDrawerIds.has(String(it.id)))
-    : DRAWER_ITEMS;
+  const visibleDrawerGroups = DRAWER_GROUPS.map((g) => ({
+    title: g.title,
+    items: allowedDrawerIds ? g.items.filter((it) => allowedDrawerIds.has(String(it.id))) : g.items,
+  })).filter((g) => g.items.length > 0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
