@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  ArrowDownLeft, ArrowUpRight, ChevronLeft, History, Package, PackagePlus,
+  ArrowDownLeft, ArrowUpRight, History, Package, PackagePlus,
   Plus, Search, Sparkles, Trash2, X,
 } from "lucide-react";
 
