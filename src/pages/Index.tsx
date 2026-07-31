@@ -635,13 +635,15 @@ const Index = () => {
       <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
       {/* ── MOBILE HEADER ── */}
       <header
-        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md flex items-center justify-between shrink-0 h-16"
+        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md shrink-0"
         style={{
           paddingTop: "env(safe-area-inset-top, 0px)",
+          minHeight: "calc(4rem + env(safe-area-inset-top, 0px))",
           paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
           paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
         }}
       >
+        <div className="h-16 flex items-center justify-between">
         <div className="flex items-center gap-[15px]">
           <button
             type="button"
@@ -726,7 +728,9 @@ const Index = () => {
             </button>
           )}
         </div>
+        </div>
       </header>
+
 
       {/* ── TABLET TAB BAR ── */}
       <div className="hidden md:block lg:hidden border-b border-border bg-card/80 backdrop-blur-sm shrink-0 overflow-x-auto">
@@ -771,7 +775,7 @@ const Index = () => {
         <button
           onClick={() => setDrawerOpen(false)}
           className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-muted/60 transition-colors"
-          style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
+          style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Menüyü kapat"
         >
           <X className="w-5 h-5" />
