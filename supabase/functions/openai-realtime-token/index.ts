@@ -7,26 +7,31 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
 import { VOICE_SYSTEM_PROMPT } from "../_shared/voicePrompt.ts";
 
 const DEFAULT_MODEL = "gpt-realtime";
+/** Structured failure envelope — no provider internals ever reach the client. */
+function fail(stage: string, status: number, code: string, httpStatus = status) {
+  console.error(`[openai-realtime-token] ${stage} failed: ${code} (${status})`);
+  return json({ ok: false, stage, status, code }, httpStatus);
+}
 const DEFAULT_VOICE = "cedar";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
-    return json({ error: "method_not_allowed" }, 405);
+    return fail("request", 405, "method_not_allowed");
   }
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
+  if (!authHeader?.startsWith("Bearer ")) return fail("authorize", 401, "unauthorized");
   try {
     const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { data, error } = await supa.auth.getClaims(authHeader.replace("Bearer ", ""));
     if (error || !data?.claims?.sub) throw new Error("bad_token");
   } catch {
-    return json({ error: "unauthorized" }, 401);
+    return fail("authorize", 401, "unauthorized");
   }
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) return json({ error: "openai_not_configured" }, 503);
+  if (!apiKey) return fail("session_create", 503, "openai_not_configured");
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -54,16 +59,30 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      console.error("[openai-realtime-token] error", res.status, JSON.stringify(data).slice(0, 400));
-      return json({ error: "openai_error", status: res.status, detail: data }, 502);
+      const providerCode = String(data?.error?.code ?? data?.error?.type ?? "openai_error");
+      console.error("[openai-realtime-token] openai error", res.status, JSON.stringify(data).slice(0, 400));
+      // Forward the real status so the client can tell permanent from temporary.
+      const code = res.status === 401 || res.status === 403
+        ? "openai_auth_failed"
+        : /insufficient_quota|billing/i.test(providerCode)
+          ? "openai_insufficient_quota"
+          : res.status === 400 || res.status === 404
+            ? "openai_invalid_session"
+            : providerCode;
+      return fail("session_create", res.status, code, res.status);
+    }
+    // Malformed JSON is never reported as success.
+    if (!data || typeof data !== "object") {
+      return fail("session_create", 502, "openai_malformed_response", 502);
     }
 
     const secret = data?.value ?? data?.client_secret?.value ?? null;
-    if (!secret) return json({ error: "missing_client_secret" }, 502);
+    if (!secret) return fail("session_create", 502, "missing_client_secret", 502);
 
     return json({
+      ok: true,
       client_secret: secret,
       model,
       voice,
@@ -72,7 +91,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[openai-realtime-token] failure", err);
-    return json({ error: String(err) }, 500);
+    return fail("session_create", 500, "session_create_exception", 500);
   }
 });
 

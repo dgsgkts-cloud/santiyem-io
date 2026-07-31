@@ -9,6 +9,7 @@ import { createVoiceEngine, defaultEngineConfig } from "@/lib/voice/VoiceEngineF
 import { getVoiceProvider, isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
 import { claimMic, releaseMic } from "@/lib/voice/micOwnership";
 import { EMPTY_METRICS, type VoiceMetrics } from "@/lib/voice/voiceMetrics";
+import { isVoiceErrorRetryable } from "@/lib/voice/voiceTypes";
 import type {
   TranscriptChunk,
   VoiceEngine,
@@ -26,6 +27,11 @@ export interface UseVoiceEngineResult {
   statusMessage: string | null;
   /** Last user-facing error category, if any. */
   errorKind: VoiceErrorKind | null;
+  /**
+   * False for permanent configuration/billing failures — the UI must not
+   * schedule an automatic reconnect in that case.
+   */
+  canAutoRetry: boolean;
   metrics: VoiceMetrics;
   micLevel: number;
   /** 0..1 realtime energy of the assistant's voice. */
@@ -168,6 +174,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     transcripts,
     statusMessage,
     errorKind,
+    canAutoRetry: isVoiceErrorRetryable(errorKind),
     metrics,
     micLevel,
     outputLevel,

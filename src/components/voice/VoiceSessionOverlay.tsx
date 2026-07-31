@@ -309,8 +309,12 @@ export function VoiceSessionOverlay({
     try { voice.interrupt(); } catch { /* noop */ }
     try { voice.mute(); } catch { /* noop */ }
     void voice.disconnect().catch(() => { /* noop */ });
-    if (autoRetriesRef.current < MAX_AUTO_RETRIES) {
+    // Auto-reconnect is for temporary network/WebRTC drops only. Permanent
+    // configuration, auth or quota failures must never be retried on a timer.
+    if (voice.canAutoRetry && autoRetriesRef.current < MAX_AUTO_RETRIES) {
       setRetryIn(RETRY_COUNTDOWN_SECONDS);
+    } else {
+      setRetryIn(null);
     }
   }, [phase, micBlocked, voice]);
 
@@ -341,13 +345,34 @@ export function VoiceSessionOverlay({
     .find((t) => t.role !== "user" && t.text.trim())?.text.trim();
 
 
-  // Five user-facing categories — never a raw code.
+  // User-facing categories — never a raw code, never a wrong cause.
   const errorCopy = (() => {
     switch (voice.errorKind) {
+      case "mic_permission":
+        return {
+          title: "Mikrofon izni gerekli",
+          body: "Sesli asistanı kullanmak için tarayıcı ayarlarından mikrofon iznini açmanız gerekiyor.",
+        };
       case "auth":
+      case "quota":
         return {
           title: "Sesli hizmet başlatılamadı",
-          body: "Şu anda sesli görüşme başlatılamıyor. Daha sonra tekrar deneyebilir veya yazarak devam edebilirsiniz.",
+          body: "Sesli asistan yapılandırmasında bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+        };
+      case "config":
+        return {
+          title: "Sesli asistan yapılandırılamadı",
+          body: "Sesli asistan yapılandırmasında bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+        };
+      case "timeout":
+        return {
+          title: "Bağlantı zaman aşımına uğradı",
+          body: "Ağ bağlantınızı kontrol edip tekrar deneyebilir veya yazarak devam edebilirsiniz.",
+        };
+      case "session_not_started":
+        return {
+          title: "OpenAI oturumu başlatılamadı",
+          body: "Sesli oturum başlatılamadı. Tekrar deneyebilir veya yazarak devam edebilirsiniz.",
         };
       case "audio_playback":
         return {
@@ -361,10 +386,9 @@ export function VoiceSessionOverlay({
         };
       default:
         return {
-          title: "OpenAI bağlantısı kurulamadı",
+          title: "Sesli bağlantı kurulamadı",
           body: "Bağlantıyı yeniden kurmayı deneyebilir veya yazarak devam edebilirsiniz.",
         };
-
     }
   })();
 

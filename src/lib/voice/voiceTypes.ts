@@ -13,10 +13,36 @@ export type VoiceProviderId = "openai-realtime";
  */
 export type VoiceErrorKind =
   | "mic_permission"
+  /** Token/session rejected (401/403) or the service is not configured. */
   | "auth"
+  /** Quota / billing exhausted on the voice provider account. */
+  | "quota"
+  /** Invalid model or invalid session configuration (400). */
+  | "config"
+  /** Network or handshake timeout. */
+  | "timeout"
+  /** Handshake never produced a usable session. */
   | "connection"
+  /** SDP succeeded but OpenAI never sent `session.created`. */
+  | "session_not_started"
+  /** An established session dropped afterwards. */
   | "connection_lost"
   | "audio_playback";
+
+/** Error kinds that are permanent configuration/billing failures. */
+export const PERMANENT_VOICE_ERRORS: readonly VoiceErrorKind[] = [
+  "mic_permission",
+  "auth",
+  "quota",
+  "config",
+  "session_not_started",
+];
+
+export function isVoiceErrorRetryable(kind: VoiceErrorKind | null): boolean {
+  if (!kind) return true;
+  return !PERMANENT_VOICE_ERRORS.includes(kind);
+}
+
 
 /** Compact card payload handed to a voice session as initial context. */
 export interface RealtimeCard {
