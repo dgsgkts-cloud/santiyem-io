@@ -14,7 +14,15 @@ import { voiceHaptic } from "@/lib/voice/haptics";
 import { MicPermissionScreen } from "./MicPermissionScreen";
 import { VoiceReactiveOrb, type VoicePhase } from "./VoiceReactiveOrb";
 import { VoiceCaptions } from "./VoiceCaptions";
+import {
+  buildResumeContext,
+  clearVoiceTranscript,
+  loadVoiceTranscript,
+  saveVoiceTranscript,
+} from "@/lib/voice/voiceTranscriptStore";
+import type { TranscriptChunk } from "@/lib/voice/voiceTypes";
 import "@/styles/voice.css";
+
 
 interface Props {
   onClose: () => void;
