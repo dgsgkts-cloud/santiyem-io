@@ -963,6 +963,18 @@ const Index = () => {
             <EInvoicesPage />
           ) : activeTab === "personnel" ? (
             <PersonnelPage />
+          ) : activeTab === "warehouse" ? (
+            <WarehousePage />
+          ) : activeTab === "procurement" ? (
+            <ProcurementPage />
+          ) : activeTab === "fleet" ? (
+            <FleetPage />
+          ) : activeTab === "reports" ? (
+            <ReportsPage />
+          ) : activeTab === "meetings" ? (
+            <MeetingCenterPage />
+          ) : activeTab === "communication" ? (
+            <CommunicationCenterPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (
@@ -978,7 +990,11 @@ const Index = () => {
         </div>
         </div>
 
-        {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer minimal />}
+        {activeTab !== "chat" && !Capacitor.isNativePlatform() && (
+          <div className="hidden md:block">
+            <Footer minimal />
+          </div>
+        )}
       </div>
 
       {activeTab === "chat" && (
