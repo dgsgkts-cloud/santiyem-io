@@ -14,7 +14,15 @@ import { voiceHaptic } from "@/lib/voice/haptics";
 import { MicPermissionScreen } from "./MicPermissionScreen";
 import { VoiceReactiveOrb, type VoicePhase } from "./VoiceReactiveOrb";
 import { VoiceCaptions } from "./VoiceCaptions";
+import {
+  buildResumeContext,
+  clearVoiceTranscript,
+  loadVoiceTranscript,
+  saveVoiceTranscript,
+} from "@/lib/voice/voiceTranscriptStore";
+import type { TranscriptChunk } from "@/lib/voice/voiceTypes";
 import "@/styles/voice.css";
+
 
 interface Props {
   onClose: () => void;
@@ -60,11 +68,36 @@ export function VoiceSessionOverlay({
   greeting,
   onSessionEnd,
 }: Props) {
-  const engineConfig = useMemo(() => ({ instructionsSuffix: initialContext }), [initialContext]);
+  // Conversation that survived a previous drop (or a closed overlay).
+  const [resumeChunks, setResumeChunks] = useState<TranscriptChunk[]>(() => loadVoiceTranscript());
+
+  const engineConfig = useMemo(
+
+    () => ({
+      instructionsSuffix: [initialContext, buildResumeContext(resumeChunks)]
+        .filter(Boolean)
+        .join("\n\n") || undefined,
+    }),
+    [initialContext, resumeChunks],
+  );
   const voice = useVoiceEngine(engineConfig);
+
+  // Full conversation = what survived the drop + what is live now.
+  const transcripts = useMemo<TranscriptChunk[]>(() => {
+    if (resumeChunks.length === 0) return voice.transcripts;
+    const seen = new Set(voice.transcripts.map((t) => `${t.role}:${t.id}`));
+    return [...resumeChunks.filter((c) => !seen.has(`${c.role}:${c.id}`)), ...voice.transcripts];
+  }, [resumeChunks, voice.transcripts]);
+
+  // Persist the tail continuously so nothing is lost if the overlay
+  // unmounts or the connection dies mid-sentence.
+  useEffect(() => {
+    if (transcripts.length > 0) saveVoiceTranscript(transcripts);
+  }, [transcripts]);
 
   const [muted, setMuted] = useState(false);
   const [captionsOn, setCaptionsOn] = useState(true);
+
   const [micBlocked, setMicBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [askingPermission, setAskingPermission] = useState(true);
@@ -145,13 +178,15 @@ export function VoiceSessionOverlay({
 
 
 
-  // Greeting for wake sessions — spoken once when the session goes live.
+  // Greeting for wake sessions — spoken once, and never repeated when we
+  // are resuming an interrupted conversation.
   useEffect(() => {
     if (!greeting || greetedRef.current) return;
     if (voice.state !== "listening") return;
     greetedRef.current = true;
+    if (resumeChunks.length > 0) return;
     voice.sendText(greeting);
-  }, [greeting, voice]);
+  }, [greeting, voice, resumeChunks.length]);
 
   // ---- end session ---------------------------------------------------
   const end = useCallback(
@@ -159,12 +194,15 @@ export function VoiceSessionOverlay({
       if (endedRef.current) return;
       endedRef.current = true;
       voiceHaptic("end");
+      // Deliberate end → the conversation is finished, drop the snapshot.
+      clearVoiceTranscript();
       void voice.disconnect().finally(() => {
         onSessionEnd?.(reason);
         onClose();
       });
     },
     [voice, onSessionEnd, onClose],
+
   );
 
   // Escape closes; body scroll is locked while the overlay owns the screen.
@@ -219,12 +257,20 @@ export function VoiceSessionOverlay({
             ? (preparing ? "connecting" : "idle")
             : (voice.state as VoicePhase);
 
-  // Connection lost → immediately silence audio, then run a short
-  // countdown and retry automatically (max 2 attempts) before the
-  // user has to act.
+  // Connection lost → keep the transcript, immediately silence audio,
+  // then run a short countdown and retry automatically (max 2 attempts)
+  // before the user has to act.
+  const transcriptsRef = useRef<TranscriptChunk[]>([]);
+  transcriptsRef.current = transcripts;
+
   useEffect(() => {
     if (phase !== "error" || stoppedRef.current) return;
     stoppedRef.current = true;
+    const snapshot = transcriptsRef.current;
+    if (snapshot.length > 0) {
+      saveVoiceTranscript(snapshot);
+      setResumeChunks(snapshot);
+    }
     try { voice.interrupt(); } catch { /* noop */ }
     try { voice.mute(); } catch { /* noop */ }
     void voice.disconnect().catch(() => { /* noop */ });
@@ -232,6 +278,7 @@ export function VoiceSessionOverlay({
       setRetryIn(RETRY_COUNTDOWN_SECONDS);
     }
   }, [phase, voice]);
+
 
   const reconnect = useCallback(() => {
     setRetryIn(null);
@@ -252,6 +299,11 @@ export function VoiceSessionOverlay({
     return () => window.clearTimeout(t);
   }, [retryIn, reconnect]);
 
+  // Last exchange, shown while disconnected so the context is visible.
+  const lastUserLine = [...transcripts].reverse().find((t) => t.role === "user" && t.text.trim())?.text.trim();
+  const lastAssistantLine = [...transcripts]
+    .reverse()
+    .find((t) => t.role !== "user" && t.text.trim())?.text.trim();
 
 
   const isSpeaking = phase === "speaking";
@@ -312,6 +364,29 @@ export function VoiceSessionOverlay({
                 ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
                 : "Ses durduruldu. Yeniden bağlanabilirsiniz."}
             </p>
+
+            {/* The conversation is kept — show where we left off. */}
+            {(lastUserLine || lastAssistantLine) && (
+              <div className="mt-4 rounded-[14px] border border-white/10 bg-white/[0.04] p-3 text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                  Konuşma korundu
+                </p>
+                {lastUserLine && (
+                  <p className="mt-2 line-clamp-2 text-[13px] text-white/75">
+                    <span className="text-white/45">Siz: </span>{lastUserLine}
+                  </p>
+                )}
+                {lastAssistantLine && (
+                  <p className="mt-1 line-clamp-2 text-[13px] text-white/75">
+                    <span className="text-white/45">Şantiyem AI: </span>{lastAssistantLine}
+                  </p>
+                )}
+                <p className="mt-2 text-[12px] text-white/45">
+                  Yeniden bağlanınca kaldığınız yerden devam edeceksiniz.
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
@@ -358,12 +433,14 @@ export function VoiceSessionOverlay({
         )}
       </div>
 
-      {/* Captions — own region, never behind the controls. */}
-      {captionsOn && phase !== "error" && (
+      {/* Captions — own region, never behind the controls. Kept visible
+          while disconnected so the transcript is not lost from view. */}
+      {captionsOn && transcripts.length > 0 && (
         <div className="shrink-0 px-5">
-          <VoiceCaptions transcripts={voice.transcripts} />
+          <VoiceCaptions transcripts={transcripts} />
         </div>
       )}
+
 
       {/* Controls — three essentials + optional text hand-off. */}
       {phase !== "error" && (
