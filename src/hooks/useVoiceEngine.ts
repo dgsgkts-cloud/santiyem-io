@@ -1,45 +1,39 @@
 // ============================================================
 // src/hooks/useVoiceEngine.ts
-// React binding for the provider-agnostic voice engine.
-// Sprint 32.1 — OpenAI Realtime primary, ElevenLabs silent fallback.
+// React binding for the voice engine. OpenAI Realtime is the only
+// provider — there is no fallback vendor and no provider switching.
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  createVoiceEngine,
-  defaultEngineConfig,
-  usesLegacyComponent,
-} from "@/lib/voice/VoiceEngineFactory";
-import {
-  FALLBACK_PROVIDER,
-  getVoiceProvider,
-  isVoiceDebugEnabled,
-} from "@/lib/voice/voiceConfig";
+import { createVoiceEngine, defaultEngineConfig } from "@/lib/voice/VoiceEngineFactory";
+import { getVoiceProvider, isVoiceDebugEnabled } from "@/lib/voice/voiceConfig";
+import { claimMic, releaseMic } from "@/lib/voice/micOwnership";
 import { EMPTY_METRICS, type VoiceMetrics } from "@/lib/voice/voiceMetrics";
 import type {
   TranscriptChunk,
   VoiceEngine,
   VoiceEngineConfig,
+  VoiceErrorKind,
   VoiceProviderId,
   VoiceState,
 } from "@/lib/voice/voiceTypes";
 
 export interface UseVoiceEngineResult {
   provider: VoiceProviderId;
-  /** true → mount the legacy ElevenLabs component instead of using this engine. */
-  legacy: boolean;
-  /** true once the primary engine failed and we silently switched providers. */
-  fellBack: boolean;
   state: VoiceState;
   transcripts: TranscriptChunk[];
   /** User-safe status line (never technical). */
   statusMessage: string | null;
+  /** Last user-facing error category, if any. */
+  errorKind: VoiceErrorKind | null;
   metrics: VoiceMetrics;
   micLevel: number;
   /** 0..1 realtime energy of the assistant's voice. */
   outputLevel: number;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  /** Full teardown so a retry can build a fresh session. */
+  reset: () => Promise<void>;
   sendText: (t: string) => void;
   interrupt: () => void;
   mute: () => void;
@@ -50,37 +44,23 @@ export interface UseVoiceEngineResult {
 const RECONNECT_MESSAGE = "Ses bağlantısı yeniden kuruluyor...";
 
 export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineResult {
-  const [provider, setProvider] = useState<VoiceProviderId>(() => getVoiceProvider());
-  const [fellBack, setFellBack] = useState(false);
+  const provider = getVoiceProvider();
   const engineRef = useRef<VoiceEngine | null>(null);
-  if (!engineRef.current) engineRef.current = createVoiceEngine(provider);
-  const engine = engineRef.current;
-  const legacy = usesLegacyComponent(engine);
+  if (!engineRef.current) engineRef.current = createVoiceEngine();
 
   const [state, setState] = useState<VoiceState>("idle");
   const [transcripts, setTranscripts] = useState<TranscriptChunk[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<VoiceErrorKind | null>(null);
   const [metrics, setMetrics] = useState<VoiceMetrics>(EMPTY_METRICS);
   const [micLevel, setMicLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
+  /** Bumped after a teardown so listeners rebind to the new engine. */
+  const [engineEpoch, setEngineEpoch] = useState(0);
 
   const configRef = useRef(config);
   configRef.current = config;
   const wasConnectedRef = useRef(false);
-
-  // --- silent fallback -------------------------------------------------
-  const switchToFallback = useCallback(
-    async (reason: string) => {
-      console.warn(`[voice] falling back to ${FALLBACK_PROVIDER} (${reason})`);
-      setStatusMessage(RECONNECT_MESSAGE);
-      try { await engineRef.current?.disconnect(); } catch { /* noop */ }
-      engineRef.current?.destroy();
-      engineRef.current = createVoiceEngine(FALLBACK_PROVIDER);
-      setProvider(FALLBACK_PROVIDER);
-      setFellBack(true);
-    },
-    [],
-  );
 
   useEffect(() => {
     const active = engineRef.current;
@@ -93,11 +73,14 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
         } else if (s === "listening" || s === "speaking" || s === "thinking") {
           wasConnectedRef.current = true;
           setStatusMessage(null);
+          setErrorKind(null);
         }
       }),
-      // Technical errors are logged only — users never see them.
-      active.onError((e) => console.error(`[voice] ${e.code}: ${e.message}`)),
-      active.onFallback((f) => { void switchToFallback(f.reason); }),
+      // Technical codes are logged only — users see the mapped category.
+      active.onError((e) => {
+        console.error(`[voice] ${e.code}: ${e.message}`);
+        if (e.fatal) setErrorKind(e.kind ?? "connection");
+      }),
       active.onTranscript((chunk) =>
         setTranscripts((prev) => {
           const idx = prev.findIndex((t) => t.id === chunk.id && t.role === chunk.role);
@@ -111,12 +94,11 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     return () => {
       offs.forEach((off) => off());
       active.destroy();
+      releaseMic("voice_session");
     };
-  }, [provider, switchToFallback]);
+  }, [engineEpoch]);
 
   // --- live audio levels (drive the orb animation) ---------------------
-  // Sampled while a session is live so the visuals react to real energy
-  // instead of looping a fake animation.
   useEffect(() => {
     const live = state === "listening" || state === "speaking" || state === "thinking";
     if (!live) { setMicLevel(0); setOutputLevel(0); return; }
@@ -133,7 +115,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [state, provider]);
+  }, [state]);
 
   // --- dev instrumentation (internal only) -----------------------------
   useEffect(() => {
@@ -144,30 +126,53 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
       setMetrics(e.getMetrics?.() ?? EMPTY_METRICS);
     }, 250);
     return () => window.clearInterval(id);
-  }, [provider]);
+  }, []);
 
   const connect = useCallback(async () => {
     setStatusMessage(null);
+    setErrorKind(null);
+    // The live session owns the microphone; wake-word listening yields.
+    claimMic("voice_session");
     await engineRef.current?.connect(defaultEngineConfig(configRef.current));
   }, []);
 
   const disconnect = useCallback(async () => {
     wasConnectedRef.current = false;
     await engineRef.current?.disconnect();
+    releaseMic("voice_session");
+  }, []);
+
+  /**
+   * Destroys the current engine (peer connection, mic tracks, data
+   * channel, listeners) and installs a fresh one. Guarantees a retry can
+   * never end up with two sessions.
+   */
+  const reset = useCallback(async () => {
+    wasConnectedRef.current = false;
+    const old = engineRef.current;
+    engineRef.current = createVoiceEngine();
+    try { await old?.disconnect(); } catch { /* noop */ }
+    old?.destroy();
+    releaseMic("voice_session");
+    setTranscripts([]);
+    setErrorKind(null);
+    setStatusMessage(null);
+    setState("idle");
+    setEngineEpoch((n) => n + 1);
   }, []);
 
   return {
     provider,
-    legacy: legacy || fellBack,
-    fellBack,
     state,
     transcripts,
     statusMessage,
+    errorKind,
     metrics,
     micLevel,
     outputLevel,
     connect,
     disconnect,
+    reset,
     sendText: (t) => engineRef.current?.sendText(t),
     interrupt: () => engineRef.current?.interrupt(),
     mute: () => engineRef.current?.mute(),

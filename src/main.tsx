@@ -15,6 +15,11 @@ import "@fontsource/space-grotesk/700.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/600.css";
+import { migrateVoiceProviderStorage } from "./lib/voice/voiceConfig";
+
+// One-time cleanup of the obsolete voice-provider preference so stale
+// browser data can never influence the voice transport.
+migrateVoiceProviderStorage();
 
 // Theme class will be applied by ThemeContext after login
 

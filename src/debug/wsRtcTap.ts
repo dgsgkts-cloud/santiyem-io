@@ -3,12 +3,12 @@
  * Non-invasive: monkey-patches the global constructors to log every
  * open / message / error / close event and every RTC state transition.
  *
- * Enabled only for ElevenLabs endpoints so we don't spam unrelated sockets
- * (Supabase realtime, HMR, etc.).
+ * Enabled only for the OpenAI Realtime endpoints so we don't spam unrelated
+ * sockets (Supabase realtime, HMR, etc.).
  */
 
 const TAG = "[wsrtc]";
-const MATCH = /elevenlabs\.io|convai|livekit/i;
+const MATCH = /api\.openai\.com|realtime/i;
 
 function installWebSocketTap() {
   const OrigWS = window.WebSocket;

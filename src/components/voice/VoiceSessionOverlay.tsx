@@ -48,7 +48,7 @@ const PHASE_LABEL: Record<VoicePhase, string> = {
   thinking: "Yanıt hazırlanıyor",
   speaking: "Yanıtlıyor",
   interrupted: "Dinliyorum",
-  ending: "Bağlantı kesildi",
+  ending: "Görüşme kapatılıyor",
   error: "Bağlantı kesildi",
 };
 
@@ -116,26 +116,39 @@ export function VoiceSessionOverlay({
   const turnCompletedAtRef = useRef<number | null>(null);
 
   // ---- start: permission, then connect --------------------------------
-  const start = useCallback(async () => {
+  // Single-flight: repeated taps can never create a second engine, and a
+  // retry always tears the previous session down first.
+  const startingRef = useRef(false);
+  const start = useCallback(async (isRetry = false) => {
+    if (startingRef.current) return;
+    startingRef.current = true;
     setFailed(false);
     setAskingPermission(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-    } catch {
+      if (isRetry) await voice.reset();
+      let probe: MediaStream | null = null;
+      try {
+        probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        setAskingPermission(false);
+        setMicBlocked(true);
+        return;
+      } finally {
+        // Always release the probe stream — only one mic stream may live.
+        probe?.getTracks().forEach((t) => t.stop());
+      }
+      setMicBlocked(false);
       setAskingPermission(false);
-      setMicBlocked(true);
-      return;
-    }
-    setMicBlocked(false);
-    setAskingPermission(false);
-    setPreparing(true);
-    try {
-      await voice.connect();
-    } catch {
-      setFailed(true);
+      setPreparing(true);
+      try {
+        await voice.connect();
+      } catch {
+        setFailed(true);
+      } finally {
+        setPreparing(false);
+      }
     } finally {
-      setPreparing(false);
+      startingRef.current = false;
     }
   }, [voice]);
 
@@ -165,6 +178,16 @@ export function VoiceSessionOverlay({
     }, CONNECT_TIMEOUT_MS);
     return () => window.clearTimeout(t);
   }, [preparing, showPreparing, voice.state]);
+
+  // The engine can also discover a blocked microphone (device lost or
+  // permission revoked mid-session). That is never a transport failure.
+  useEffect(() => {
+    if (voice.errorKind === "mic_permission") {
+      setPreparing(false);
+      setFailed(false);
+      setMicBlocked(true);
+    }
+  }, [voice.errorKind]);
 
   useEffect(() => {
     if (voice.state === "listening" || voice.state === "speaking" || voice.state === "thinking") {
@@ -245,7 +268,9 @@ export function VoiceSessionOverlay({
   }, [sessionMode, conversationMode, end]);
 
   // ---- one derived phase ----------------------------------------------
-  const phase: VoicePhase = askingPermission
+  const phase: VoicePhase = micBlocked
+    ? "error"
+    : askingPermission
     ? "requesting_permission"
     : failed || voice.state === "error" || voice.state === "disconnected"
       ? "error"
@@ -264,7 +289,7 @@ export function VoiceSessionOverlay({
   transcriptsRef.current = transcripts;
 
   useEffect(() => {
-    if (phase !== "error" || stoppedRef.current) return;
+    if (phase !== "error" || micBlocked || stoppedRef.current) return;
     stoppedRef.current = true;
     const snapshot = transcriptsRef.current;
     if (snapshot.length > 0) {
@@ -277,14 +302,14 @@ export function VoiceSessionOverlay({
     if (autoRetriesRef.current < MAX_AUTO_RETRIES) {
       setRetryIn(RETRY_COUNTDOWN_SECONDS);
     }
-  }, [phase, voice]);
+  }, [phase, micBlocked, voice]);
 
 
   const reconnect = useCallback(() => {
     setRetryIn(null);
     stoppedRef.current = false;
     setMuted(false);
-    void start();
+    void start(true);
   }, [start]);
 
   // Countdown tick → auto reconnect when it reaches zero.
@@ -306,6 +331,32 @@ export function VoiceSessionOverlay({
     .find((t) => t.role !== "user" && t.text.trim())?.text.trim();
 
 
+  // Five user-facing categories — never a raw code.
+  const errorCopy = (() => {
+    switch (voice.errorKind) {
+      case "auth":
+        return {
+          title: "Sesli hizmet başlatılamadı",
+          body: "Şu anda sesli görüşme başlatılamıyor. Daha sonra tekrar deneyebilir veya yazarak devam edebilirsiniz.",
+        };
+      case "audio_playback":
+        return {
+          title: "Sesli yanıt oynatılamadı",
+          body: "Yanıt sesi cihazınızda çalınamadı. Tekrar deneyebilir veya yazarak devam edebilirsiniz.",
+        };
+      case "connection_lost":
+        return {
+          title: "Bağlantı kesildi",
+          body: "Ses durduruldu. Yeniden bağlanabilir veya yazarak devam edebilirsiniz.",
+        };
+      default:
+        return {
+          title: "Sesli bağlantı kurulamadı",
+          body: "Bağlantıyı yeniden kurmayı deneyebilir veya yazarak devam edebilirsiniz.",
+        };
+    }
+  })();
+
   const isSpeaking = phase === "speaking";
   const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
   const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
@@ -319,7 +370,7 @@ export function VoiceSessionOverlay({
   if (micBlocked) {
     return (
       <MicPermissionScreen
-        onRetry={() => { void start(); }}
+        onRetry={() => { void start(true); }}
         onCancel={() => end("user")}
       />
     );
@@ -358,11 +409,11 @@ export function VoiceSessionOverlay({
 
         {phase === "error" ? (
           <div className="w-full max-w-xs text-center">
-            <p className="text-[15px] font-medium text-white/90">Bağlantı kesildi</p>
+            <p className="text-[15px] font-medium text-white/90">{errorCopy.title}</p>
             <p aria-live="polite" className="mt-1 text-[13px] text-white/55">
               {retryIn !== null
                 ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
-                : "Ses durduruldu. Yeniden bağlanabilirsiniz."}
+                : errorCopy.body}
             </p>
 
             {/* The conversation is kept — show where we left off. */}
@@ -394,7 +445,7 @@ export function VoiceSessionOverlay({
                 className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
                 style={{ height: 48 }}
               >
-                {retryIn !== null ? "Şimdi Yeniden Bağlan" : "Yeniden Bağlan"}
+                {retryIn !== null ? "Şimdi Yeniden Bağlan" : "Tekrar Dene"}
               </button>
 
 

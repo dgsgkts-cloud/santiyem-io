@@ -77,8 +77,15 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       await this.openPeerConnection(session);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      // Microphone denial is a permission problem, never a transport
+      // problem — no reconnect attempts, no provider switching.
+      if (msg.includes("audio_device_unavailable")) {
+        await this.teardown();
+        this.emitError("audio_device_unavailable", msg, true, "mic_permission");
+        return;
+      }
       this.emitError("connect_failed", msg, true);
-      await this.retryOrFallback(msg);
+      await this.retryOrFail(msg);
     }
   }
 
@@ -149,12 +156,12 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       });
     };
     dc.onmessage = (e) => this.handleServerEvent(e.data);
-    dc.onclose = () => { if (!this.closing) void this.retryOrFallback("data_channel_closed"); };
+    dc.onclose = () => { if (!this.closing) void this.retryOrFail("data_channel_closed"); };
 
     pc.onconnectionstatechange = () => {
       if (this.closing) return;
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        void this.retryOrFallback(`pc_${pc.connectionState}`);
+        void this.retryOrFail(`pc_${pc.connectionState}`);
       }
     };
 
@@ -176,7 +183,11 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.reconnects = 0;
   }
 
-  private async retryOrFallback(reason: string) {
+  /**
+   * Reconnects up to `maxReconnects` times, then ends the session in an
+   * explicit error state. No other provider is ever initialized.
+   */
+  private async retryOrFail(reason: string) {
     if (this.closing) return;
     const max = this.config.maxReconnects ?? 2;
     if (this.reconnects < max) {
@@ -190,8 +201,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       return;
     }
     await this.teardown();
-    this.setState("disconnected");
-    this.emitFallback(reason);
+    this.emitError("connection_lost", reason, true, "connection_lost");
   }
 
   // ---------- server events ------------------------------------------------

@@ -137,8 +137,8 @@ export function SettingsSheet({
         </Section>
 
         <p className="mt-4 text-[11px] text-white/35 leading-relaxed">
-          Bazı gelişmiş ayarlar (VAD eşiği, konuşma sonu bekleme) ElevenLabs agent panelinden yönetilir.
-          Buradaki ayarlar tarayıcı ses hattını ve arayüz davranışını değiştirir.
+          Konuşma algılama (VAD) ve konuşma sonu bekleme süresi OpenAI Realtime tarafında
+          yönetilir. Buradaki ayarlar tarayıcı ses hattını ve arayüz davranışını değiştirir.
         </p>
       </aside>
     </div>

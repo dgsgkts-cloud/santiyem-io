@@ -1,26 +1,21 @@
 // ============================================================
 // src/lib/voice/voiceConfig.ts
-// Single place that decides which voice provider is active.
-// Swapping providers must never require touching UI code.
+// OpenAI Realtime is the ONLY voice provider. There is no provider
+// switch, no fallback vendor and no stored preference that can
+// change the transport.
 // ============================================================
 
 import type { VoiceProviderId } from "./voiceTypes";
 
-const STORAGE_KEY = "voice_provider";
+/** Legacy key that used to hold a provider preference. */
+const LEGACY_STORAGE_KEY = "voice_provider";
 
-/**
- * Sprint 32.1 — OpenAI Realtime is the primary engine.
- * ElevenLabs stays reachable purely as a silent automatic fallback.
- */
 export const DEFAULT_PROVIDER: VoiceProviderId = "openai-realtime";
-
-/** Provider used when the primary engine cannot be established. */
-export const FALLBACK_PROVIDER: VoiceProviderId = "elevenlabs";
 
 /** User-facing copy for ANY transport problem. Never leak technical detail. */
 export const VOICE_RECONNECT_MESSAGE = "Ses bağlantısı yeniden kuruluyor...";
 
-/** Temporary developer panel (Sprint 32.1 — remove before production). */
+/** Temporary developer panel. */
 export function isVoiceDebugEnabled(): boolean {
   try {
     if (localStorage.getItem("voice_debug") === "1") return true;
@@ -37,15 +32,22 @@ export const OPENAI_REALTIME = {
   voice: "cedar",
 };
 
-
+/** Always OpenAI Realtime — storage, query params and env cannot override it. */
 export function getVoiceProvider(): VoiceProviderId {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    if (v === "openai-realtime" || v === "elevenlabs" || v === "pipeline") return v;
-  } catch { /* noop */ }
   return DEFAULT_PROVIDER;
 }
 
-export function setVoiceProvider(p: VoiceProviderId): void {
-  try { localStorage.setItem(STORAGE_KEY, p); } catch { /* noop */ }
+/**
+ * One-time cleanup of stale browser state. Older builds persisted a
+ * provider preference (sometimes "elevenlabs"); provider selection no
+ * longer exists, so the key is simply removed. Safe in Safari private
+ * mode / storage-disabled environments.
+ */
+export function migrateVoiceProviderStorage(): void {
+  try {
+    if (typeof localStorage === "undefined") return;
+    if (localStorage.getItem(LEGACY_STORAGE_KEY) !== null) {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    }
+  } catch { /* storage unavailable — nothing to migrate */ }
 }
