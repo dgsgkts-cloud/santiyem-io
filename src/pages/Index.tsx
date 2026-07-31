@@ -775,7 +775,7 @@ const Index = () => {
         <button
           onClick={() => setDrawerOpen(false)}
           className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-muted/60 transition-colors"
-          style={{ minWidth: 44, minHeight: 44, marginTop: "env(safe-area-inset-top, 0px)" }}
+          style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Menüyü kapat"
         >
           <X className="w-5 h-5" />
