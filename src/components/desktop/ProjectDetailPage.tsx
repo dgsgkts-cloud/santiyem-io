@@ -62,6 +62,7 @@ interface ProjectDetailPageProps {
 const ProjectDetailPage = ({
   project, onBack, onDelete, onStatusChange, onUpdate, isDeletable,
 }: ProjectDetailPageProps) => {
+  const isMobile = useIsMobile();
   const [editedProject, setEditedProject] = useState<Project>(project);
   const p = editedProject;
   const { user } = useUser();
