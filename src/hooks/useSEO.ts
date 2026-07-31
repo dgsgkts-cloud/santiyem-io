@@ -3,6 +3,8 @@ import { useEffect } from "react";
 interface SEOProps {
   title: string;
   description?: string;
+  /** Shorter copy for og:/twitter: descriptions. Falls back to `description`. */
+  socialDescription?: string;
   /** Path-only (e.g. "/iletisim") or absolute. Defaults to current location. */
   canonicalPath?: string;
 }
@@ -37,7 +39,7 @@ const upsertCanonical = (href: string) => {
   el.setAttribute("href", href);
 };
 
-export const useSEO = ({ title, description, canonicalPath }: SEOProps) => {
+export const useSEO = ({ title, description, socialDescription, canonicalPath }: SEOProps) => {
   useEffect(() => {
     document.title = title;
 
@@ -50,13 +52,16 @@ export const useSEO = ({ title, description, canonicalPath }: SEOProps) => {
 
     if (description) {
       upsertMeta("name", "description", description);
-      upsertMeta("property", "og:description", description);
-      upsertMeta("name", "twitter:description", description);
+    }
+    const social = socialDescription ?? description;
+    if (social) {
+      upsertMeta("property", "og:description", social);
+      upsertMeta("name", "twitter:description", social);
     }
 
     upsertMeta("property", "og:title", title);
     upsertMeta("property", "og:url", url);
     upsertMeta("name", "twitter:title", title);
     upsertCanonical(url);
-  }, [title, description, canonicalPath]);
+  }, [title, description, socialDescription, canonicalPath]);
 };
