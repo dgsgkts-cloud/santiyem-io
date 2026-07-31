@@ -769,7 +769,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         name={name}
         nameReady={nameReady && hasName}
         dateLabel={formatDate(new Date())}
-        lines={briefLines}
+        lines={isMobileView ? briefLines.slice(0, 3) : briefLines}
         loading={!loaded}
         topAction={heroAction}
         onAsk={(text) => {
