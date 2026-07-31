@@ -1238,12 +1238,10 @@ const NavTextLink = ({
     className="group/nav relative flex h-11 cursor-pointer items-center gap-1 px-1.5 text-[15px] font-medium outline-none transition-[color,opacity] duration-200 ease-out active:opacity-80 focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-offset-4"
     style={{
       color: active ? T.text : "#C4C4CC",
-      // Focus ring / offset colors kept inline so the noir header stays consistent.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ["--tw-ring-color" as any]: T.ember,
-      ["--tw-ring-offset-color" as any]: "#000000",
+      ["--tw-ring-color" as string]: T.ember,
+      ["--tw-ring-offset-color" as string]: "#000000",
       ...body,
-    }}
+    } as React.CSSProperties}
     onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
     onMouseLeave={(e) => { e.currentTarget.style.color = active ? T.text : "#C4C4CC"; }}
     {...rest}
