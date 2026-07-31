@@ -47,6 +47,9 @@ const PHASE_LABEL: Record<VoicePhase, string> = {
 /** Only surface "Hazırlanıyor" if initialization is actually slow. */
 const PREPARING_VISIBLE_AFTER_MS = 700;
 const CONNECT_TIMEOUT_MS = 8000;
+/** Short, visible grace period before an automatic reconnect attempt. */
+const RETRY_COUNTDOWN_SECONDS = 3;
+const MAX_AUTO_RETRIES = 2;
 
 export function VoiceSessionOverlay({
   onClose,
@@ -72,6 +75,9 @@ export function VoiceSessionOverlay({
   const endedRef = useRef(false);
   const spokeOnceRef = useRef(false);
   const stoppedRef = useRef(false);
+  const autoRetriesRef = useRef(0);
+  const [retryIn, setRetryIn] = useState<number | null>(null);
+
 
   const activityRef = useRef(Date.now());
   const turnCompletedAtRef = useRef<number | null>(null);
@@ -132,8 +138,11 @@ export function VoiceSessionOverlay({
       setFailed(false);
       setPreparing(false);
       stoppedRef.current = false;
+      autoRetriesRef.current = 0;
+      setRetryIn(null);
     }
   }, [voice.state]);
+
 
 
   // Greeting for wake sessions — spoken once when the session goes live.
@@ -210,21 +219,39 @@ export function VoiceSessionOverlay({
             ? (preparing ? "connecting" : "idle")
             : (voice.state as VoicePhase);
 
-  // Connection lost → immediately silence audio and hold a single
-  // "Bağlantı kesildi" screen with one reconnect action.
+  // Connection lost → immediately silence audio, then run a short
+  // countdown and retry automatically (max 2 attempts) before the
+  // user has to act.
   useEffect(() => {
     if (phase !== "error" || stoppedRef.current) return;
     stoppedRef.current = true;
     try { voice.interrupt(); } catch { /* noop */ }
     try { voice.mute(); } catch { /* noop */ }
     void voice.disconnect().catch(() => { /* noop */ });
+    if (autoRetriesRef.current < MAX_AUTO_RETRIES) {
+      setRetryIn(RETRY_COUNTDOWN_SECONDS);
+    }
   }, [phase, voice]);
 
   const reconnect = useCallback(() => {
+    setRetryIn(null);
     stoppedRef.current = false;
     setMuted(false);
     void start();
   }, [start]);
+
+  // Countdown tick → auto reconnect when it reaches zero.
+  useEffect(() => {
+    if (retryIn === null) return;
+    if (retryIn <= 0) {
+      autoRetriesRef.current += 1;
+      reconnect();
+      return;
+    }
+    const t = window.setTimeout(() => setRetryIn((v) => (v === null ? null : v - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [retryIn, reconnect]);
+
 
 
   const isSpeaking = phase === "speaking";
@@ -280,7 +307,11 @@ export function VoiceSessionOverlay({
         {phase === "error" ? (
           <div className="w-full max-w-xs text-center">
             <p className="text-[15px] font-medium text-white/90">Bağlantı kesildi</p>
-            <p className="mt-1 text-[13px] text-white/55">Ses durduruldu. Yeniden bağlanabilirsiniz.</p>
+            <p aria-live="polite" className="mt-1 text-[13px] text-white/55">
+              {retryIn !== null
+                ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
+                : "Ses durduruldu. Yeniden bağlanabilirsiniz."}
+            </p>
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
@@ -288,8 +319,9 @@ export function VoiceSessionOverlay({
                 className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
                 style={{ height: 48 }}
               >
-                Yeniden Bağlan
+                {retryIn !== null ? "Şimdi Yeniden Bağlan" : "Yeniden Bağlan"}
               </button>
+
 
               <button
                 type="button"
