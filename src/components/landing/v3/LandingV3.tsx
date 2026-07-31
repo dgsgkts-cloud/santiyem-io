@@ -1227,6 +1227,8 @@ const NavV3 = () => {
       </div>
       {open && (
         <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
+          <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[155px] h-auto object-contain mb-2" draggable={false} />
+
           {LINKS.map((l) => (
             <button key={l.h} onClick={() => scrollTo(l.h)} className="block text-[15px]" style={{ color: T.muted, ...body }}>{l.l}</button>
           ))}
