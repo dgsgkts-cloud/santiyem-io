@@ -129,8 +129,10 @@ export function VoiceSessionOverlay({
     if (voice.state === "listening" || voice.state === "speaking" || voice.state === "thinking") {
       setFailed(false);
       setPreparing(false);
+      stoppedRef.current = false;
     }
   }, [voice.state]);
+
 
   // Greeting for wake sessions — spoken once when the session goes live.
   useEffect(() => {
