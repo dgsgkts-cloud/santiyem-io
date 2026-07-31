@@ -441,7 +441,8 @@ export default function MaterialsMobile() {
                     item={{
                       id: m.id, name: m.name, unit: m.unit, currentStock: m.currentStock,
                       min_stock: m.min_stock, status: m.status,
-                      location: project?.name, lastMovement: lastMovementOf(m.id),
+                      location: m.min_stock > 0 ? `Min. ${fmt(m.min_stock)} ${m.unit}` : undefined,
+                      lastMovement: lastMovementOf(m.id),
                     }}
                     fmt={fmt}
                     onOpen={() => setDetailId(m.id)}
