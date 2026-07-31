@@ -755,55 +755,58 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   ];
 
   return (
-    <PageShell maxWidth={1120} className="flex flex-col gap-5 md:gap-7">
+    <PageShell maxWidth={1120}>
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
-      {/* Zone A — Setup */}
-      <div className="flex flex-col gap-4 md:gap-5">
-        <TrialBanner />
-        <PinnedInsights />
-        <WorkspaceSetupCard />
-      </div>
-
-      {/* Zone B — AI Command Center (greeting + daily brief + ask) */}
-      <DailyBriefHero
-        greeting={greeting.text}
-        name={name}
-        nameReady={nameReady && hasName}
-        dateLabel={formatDate(new Date())}
-        lines={isMobileView ? briefLines.slice(0, 3) : briefLines}
-        loading={!loaded}
-        topAction={heroAction}
-        onAsk={(text) => {
-          if (onSend) onSend(text);
-          else {
-            window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
-            onTabChange("chat");
-          }
-        }}
-      />
-
-      {/* Zone C — Attention */}
-      <CriticalAlertsCard items={alertItems} loading={!loaded} />
-
-      {/* Zone D — Executive overview (operational + finance KPIs) */}
-      <div className="flex flex-col gap-4 md:gap-5">
-        <CompactKpiStrip items={kpiItems} loading={!loaded} />
-
-        <div className="relative">
-          {profitLocked && (
-            <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
-          )}
-          <CompactKpiStrip items={financeItems} loading={!loaded} />
+      {/* Dashboard root stack — single source of truth for major section spacing.
+          mobile 16px · tablet 20px · desktop 24px. No section adds its own margins. */}
+      <div className="flex flex-col gap-4 md:gap-5 lg:gap-6">
+        {/* Zone A — Setup */}
+        <div className="flex flex-col gap-3 md:gap-4">
+          <TrialBanner />
+          <PinnedInsights />
+          <WorkspaceSetupCard />
         </div>
-      </div>
 
-      {/* Zone E — Actions */}
-      <TodayActionsCard actions={todayActions} />
+        {/* Zone B — AI Command Center (greeting + daily brief + ask) */}
+        <DailyBriefHero
+          greeting={greeting.text}
+          name={name}
+          nameReady={nameReady && hasName}
+          dateLabel={formatDate(new Date())}
+          lines={isMobileView ? briefLines.slice(0, 3) : briefLines}
+          loading={!loaded}
+          topAction={heroAction}
+          onAsk={(text) => {
+            if (onSend) onSend(text);
+            else {
+              window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
+              onTabChange("chat");
+            }
+          }}
+        />
 
+        {/* Zone C — Attention */}
+        <CriticalAlertsCard items={alertItems} loading={!loaded} />
 
-      {/* 7 — Recent activity */}
-      <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
+        {/* Zone D — Executive overview (KPI group: row 1 + row 2, 16px row gap) */}
+        <div className="flex flex-col gap-3 md:gap-4">
+          <CompactKpiStrip items={kpiItems} loading={!loaded} />
+
+          <div className="relative">
+            {profitLocked && (
+              <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
+            )}
+            <CompactKpiStrip items={financeItems} loading={!loaded} />
+          </div>
+        </div>
+
+        {/* Zone E — Actions */}
+        <TodayActionsCard actions={todayActions} />
+
+        {/* 7 — Recent activity */}
+        <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
+
         <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2.5">
           <h2 className="ds-title text-foreground">Son Aktiviteler</h2>
           <button
@@ -851,10 +854,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </ul>
           )}
         </div>
-      </section>
+        </section>
 
-      {/* 8 — Everything else stays available but visually quiet */}
-      <TodayTimeline />
+        {/* 8 — Everything else stays available but visually quiet */}
+        <TodayTimeline />
+      </div>
+
+
 
       <UpgradeModal
         open={upgradeModal.open}
