@@ -318,7 +318,7 @@ const Index = () => {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showFirstRun, setShowFirstRun] = useState(false);
   const { projects, loading: projectsLoading } = useProjects();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning } = useNotifications();
   const guard = useAccessGuard();
   useAccessSnapshotSync();
 
@@ -716,40 +716,64 @@ const Index = () => {
             {mobileNotifOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMobileNotifOpen(false)} />
-                <div className="absolute right-0 top-11 z-50 w-[280px] rounded-xl shadow-2xl max-h-[350px] flex flex-col" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
-                  <div className="p-3 flex items-center justify-between shrink-0" style={{ borderBottom: "1px solid #1E2732" }}>
+                <div className="absolute right-0 top-11 z-50 w-[300px] rounded-xl shadow-2xl max-h-[60vh] flex flex-col" style={{ backgroundColor: "#161C23", border: "1px solid #1E2732", paddingBottom: "env(safe-area-inset-bottom)" }}>
+                  <div className="px-3 py-2 flex items-center justify-between gap-2 shrink-0" style={{ borderBottom: "1px solid #1E2732" }}>
                     <p className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>Bildirimler</p>
                     {unreadCount > 0 && (
-                      <button onClick={markAllAsRead} className="text-[11px] font-medium" style={{ color: "#FF6B2B" }}>Tümünü Oku</button>
+                      <button
+                        onClick={() => void markAllAsRead()}
+                        disabled={bulkRunning}
+                        aria-label="Tüm bildirimleri okundu yap"
+                        className="text-[11px] font-medium min-h-[44px] px-2 rounded-lg disabled:opacity-50"
+                        style={{ color: "#FF6B2B" }}
+                      >
+                        Tümünü okundu yap
+                      </button>
                     )}
                   </div>
+                  <span className="sr-only" role="status" aria-live="polite">
+                    {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : "Okunmamış bildirim yok"}
+                  </span>
                   <div className="overflow-y-auto flex-1">
                     {notifications.length === 0 ? (
                       <div className="p-6 text-center">
-                        <p className="text-[12px]" style={{ color: "#64748B" }}>Bildirim yok</p>
+                        <p className="text-[12px]" style={{ color: "#64748B" }}>Henüz bildiriminiz yok</p>
                       </div>
                     ) : (
                       notifications.map((n, i) => {
-                        const isRead = dismissedIds.includes(n.id);
+                        const read = isRead(n.id);
                         return (
                           <button
                             key={n.id}
+                            aria-label={`${read ? "Okunmuş bildirim" : "Okunmamış bildirim"}: ${n.title}. ${n.message}`}
                             onClick={() => {
-                              markAsRead([n.id]);
+                              void markAsRead([n.id]);
+                              if (!hasValidDestination(n)) {
+                                toast.info("İlgili kayıt artık mevcut değil.");
+                                return;
+                              }
                               if (n.targetTab === "projects" && n.targetProjectId) {
                                 setSelectedProjectId(n.targetProjectId);
                               }
                               setActiveTab(n.targetTab as Tab);
                               setMobileNotifOpen(false);
                             }}
-                            className="w-full text-left px-3 py-3 transition-colors"
+                            className="w-full text-left px-3 py-3 flex items-start gap-2 transition-colors"
                             style={{
+                              minHeight: 56,
                               borderBottom: i < notifications.length - 1 ? "1px solid #1E2732" : undefined,
-                              backgroundColor: isRead ? "transparent" : "rgba(255,107,43,0.04)",
+                              backgroundColor: read ? "transparent" : "rgba(255,107,43,0.06)",
                             }}
                           >
-                            <p className="text-[12px] font-medium truncate" style={{ color: isRead ? "#94A3B8" : "#F1F5F9" }}>{n.title}</p>
-                            <p className="text-[11px] mt-0.5" style={{ color: isRead ? "#475569" : "#94A3B8" }}>{n.message}</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] truncate" style={{ color: read ? "#CBD5E1" : "#F1F5F9", fontWeight: read ? 400 : 600 }}>{n.title}</p>
+                              <p className="text-[11.5px] mt-0.5" style={{ color: "#94A3B8" }}>{n.message}</p>
+                            </div>
+                            <span
+                              aria-hidden
+                              className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                              style={{ backgroundColor: read ? "transparent" : "#FF6B2B" }}
+                            />
                           </button>
                         );
                       })
@@ -758,6 +782,7 @@ const Index = () => {
                 </div>
               </>
             )}
+
           </div>
           {activeTab === "chat" && messages.length > 0 && (
             <button

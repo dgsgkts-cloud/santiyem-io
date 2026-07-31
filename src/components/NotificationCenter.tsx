@@ -59,7 +59,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const [filter, setFilter] = useState<NotifFilter>("all");
   const [query, setQuery] = useState("");
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds, loading: notifLoading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning, loading: notifLoading } = useNotifications();
   const { projects } = useProjects();
   const { payments = [] } = useCashPayments();
   const { collections = [] } = useCashCollections();
@@ -111,7 +111,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
 
   const filteredNotifs = useMemo(() => {
     return categorized.filter(n => {
-      if (filter === "unread" && dismissedIds.includes(n.id)) return false;
+      if (filter === "unread" && isRead(n.id)) return false;
       if (filter === "finance" && n.cat !== "finance") return false;
       if (filter === "projects" && n.cat !== "projects") return false;
       if (filter === "personnel" && n.cat !== "personnel") return false;
@@ -119,7 +119,8 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
       if (query && !(`${n.title} ${n.message}`).toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
-  }, [categorized, filter, dismissedIds, query]);
+  }, [categorized, filter, isRead, query]);
+
 
   /* SPRINT 38G — priority first: Kritik → Bugün → Daha Önce → Tamamlandı */
   const priorityGroups = useMemo(() => {
@@ -194,7 +195,13 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const aiSuggestions = useMemo(() => (filter === "all" || filter === "ai" ? smartReminders.slice(0, 4) : []), [smartReminders, filter]);
 
   const handleNotifClick = (n: AppNotification) => {
-    markAsRead([n.id]);
+    // 1) read state first (optimistic + persisted), 2) then navigate
+    void markAsRead([n.id]);
+    const destinationOk = hasValidDestination(n);
+    if (!destinationOk) {
+      toast.info("İlgili kayıt artık mevcut değil.");
+      return;
+    }
     if (n.targetTab === "projects" && n.targetProjectId) onNavigate?.("projects", n.targetProjectId);
     else onNavigate?.(n.targetTab);
     onClose();
@@ -213,7 +220,11 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
               </span>
             )}
           </SheetTitle>
+          <span className="sr-only" role="status" aria-live="polite">
+            {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : "Okunmamış bildirim yok"}
+          </span>
         </SheetHeader>
+
 
         {/* Tabs */}
         <div className="flex items-center gap-1 px-2 pt-2 border-b border-border overflow-x-auto">
@@ -242,10 +253,16 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
                   </button>
                 ))}
                 {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="ml-auto shrink-0 ds-caption font-medium text-primary flex items-center gap-1 h-7 px-2">
-                    <Check className="w-3.5 h-3.5" /> Tümünü okundu
+                  <button
+                    onClick={() => void markAllAsRead()}
+                    disabled={bulkRunning}
+                    aria-label="Tüm bildirimleri okundu yap"
+                    className="ml-auto shrink-0 ds-caption font-medium text-primary flex items-center gap-1 min-h-[44px] px-2.5 rounded-control hover:bg-primary/[0.08] disabled:opacity-50 transition-colors"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Tümünü okundu yap
                   </button>
                 )}
+
               </div>
 
               {notifLoading ? (
@@ -253,7 +270,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
               ) : filteredNotifs.length === 0 ? (
                 <OpsEmpty
                   icon="🔔"
-                  title={notifications.length === 0 ? "Şu an dikkat isteyen bir şey yok" : "Bu filtrede bildirim yok"}
+                  title={notifications.length === 0 ? "Henüz bildiriminiz yok" : "Bu filtrede bildirim yok"}
                   description={
                     notifications.length === 0
                       ? "Yaklaşan hatırlatıcılar, kilometre taşları ve gecikmeler burada otomatik toplanır. Bir hatırlatıcı ekleyin ya da projeye kilometre taşı tanımlayın."
@@ -273,16 +290,16 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
                             <NotifRow
                               key={n.id}
                               n={n}
-                              read={dismissedIds.includes(n.id)}
+                              read={isRead(n.id)}
                               tone={g.tone}
                               onOpen={() => handleNotifClick(n)}
-                              onRead={() => markAsRead([n.id])}
                             />
                           ))}
                         </div>
                       </section>
                     );
                   })}
+
 
                   {aiSuggestions.length > 0 && (
                     <section className="space-y-1.5">
@@ -428,12 +445,11 @@ const PriorityDot = ({ tone }: { tone: string }) => (
 );
 
 /** Compact notification row: title → description → time → quick action. */
-const NotifRow = ({ n, read, tone, onOpen, onRead }: {
+const NotifRow = ({ n, read, tone, onOpen }: {
   n: AppNotification & { cat?: string };
   read: boolean;
   tone: string;
   onOpen: () => void;
-  onRead: () => void;
 }) => {
   const when = n.completed
     ? "Tamamlandı"
@@ -444,30 +460,26 @@ const NotifRow = ({ n, read, tone, onOpen, onRead }: {
     <div
       role="button"
       tabIndex={0}
+      aria-label={`${read ? "Okunmuş bildirim" : "Okunmamış bildirim"}: ${n.title}. ${n.message}. ${when}`}
       onClick={onOpen}
-      onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="group relative flex items-center gap-2.5 px-3 cursor-pointer hover:bg-muted/30 transition-colors"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
+      className={`group relative flex items-center gap-2.5 px-3 cursor-pointer transition-colors ${read ? "bg-transparent hover:bg-muted/25" : "bg-primary/[0.05] hover:bg-primary/[0.09]"}`}
       style={{ minHeight: 56 }}
     >
       <PriorityDot tone={tone} />
       <div className="flex-1 min-w-0">
-        <p className={`ds-body truncate ${read ? "font-normal text-muted-foreground" : "font-medium text-foreground"}`}>{n.title}</p>
+        <p className={`ds-body truncate ${read ? "font-normal text-foreground/80" : "font-semibold text-foreground"}`}>{n.title}</p>
         <p className="ds-caption text-muted-foreground truncate">{n.message}</p>
       </div>
       <span className={`ds-caption shrink-0 tabular-nums ${tone === "overdue" ? "text-rose-400" : "text-muted-foreground"}`}>{when}</span>
-      {!read && (
-        <button
-          aria-label="Okundu işaretle"
-          title="Okundu işaretle"
-          onClick={(e) => { e.stopPropagation(); onRead(); }}
-          className="w-9 h-9 rounded-control flex items-center justify-center shrink-0 text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 hover:text-emerald-400 hover:bg-muted transition-all"
-        >
-          <Check className="w-4 h-4" />
-        </button>
-      )}
+      <span
+        aria-hidden
+        className={`w-2 h-2 rounded-full shrink-0 ${read ? "opacity-0" : "bg-primary"}`}
+      />
     </div>
   );
 };
+
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{children}</p>
 );

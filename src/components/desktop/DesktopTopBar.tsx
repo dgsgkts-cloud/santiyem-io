@@ -77,6 +77,7 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
           onClick={() => setNotifOpen(true)}
           className="w-9 h-9 rounded-lg flex items-center justify-center relative hover-icon-btn"
           title="İş Merkezi"
+          aria-label={unreadCount > 0 ? `Bildirimler, ${unreadCount} okunmamış` : "Bildirimler"}
         >
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
@@ -85,6 +86,10 @@ const DesktopTopBar = ({ title, breadcrumb, actions, onTabChange, onProjectSelec
             </div>
           )}
         </button>
+        <span className="sr-only" role="status" aria-live="polite">
+          {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : "Okunmamış bildirim yok"}
+        </span>
+
         <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} onNavigate={handleNavigate} />
       </div>
     </div>
