@@ -890,9 +890,9 @@ const Index = () => {
         </nav>
 
 
-        <div className="mx-5 h-px bg-white/[0.06]" />
+        <div className="mx-4 h-px bg-white/[0.06]" />
 
-        <div className="px-3 py-4">
+        <div className="px-3 pt-3 shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
           {user ? (
             <button
               onClick={() => { signOut(); setDrawerOpen(false); }}
