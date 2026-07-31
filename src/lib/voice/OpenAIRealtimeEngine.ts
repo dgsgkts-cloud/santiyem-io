@@ -185,6 +185,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     if (!json?.client_secret) {
       throw new VoiceFailure("missing_client_secret", "config", false);
     }
+    rtLog("token/session success", { model: json.model, voice: json.voice, expiresAt: json.expires_at ?? null });
     return json as SessionInfo;
   }
 
