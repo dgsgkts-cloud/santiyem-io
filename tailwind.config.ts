@@ -92,7 +92,7 @@ export default {
       },
       // SPRINT 35 — one radius scale (control 14 / card 16 / dialog 20)
       borderRadius: {
-        sm: "var(--radius-control-sm, 10px)",
+        sm: "8px",
         md: "var(--radius-control-sm, 10px)",
         lg: "var(--radius-control-md, 12px)",
         xl: "var(--radius-card, 16px)",

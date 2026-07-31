@@ -34,11 +34,12 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4 text-sm",
-        sm: "h-8 px-3 text-[13px]",
-        lg: "h-12 px-6 text-[15px]",
+        sm: "h-8 px-3 text-[13px] rounded-control-sm",
+        lg: "h-12 px-6 text-[15px] rounded-control-lg",
         icon: "h-10 w-10 p-0",
-        "icon-sm": "h-8 w-8 p-0",
-        "icon-lg": "h-12 w-12 p-0",
+        "icon-sm": "h-8 w-8 p-0 rounded-control-sm",
+        "icon-lg": "h-12 w-12 p-0 rounded-control-lg",
+        pill: "h-9 px-4 text-[13px] rounded-pill",
       },
     },
     defaultVariants: {
