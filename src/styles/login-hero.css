@@ -165,12 +165,12 @@
 .login-hero__ai-card::before {
   content: "";
   position: absolute;
-  inset: -48px;
+  inset: -60px;
   border-radius: 32px;
   background: radial-gradient(
     ellipse 75% 65% at 50% 50%,
-    rgba(15, 20, 25, 0.74) 0%,
-    rgba(15, 20, 25, 0.40) 55%,
+    rgba(15, 20, 25, 0.82) 0%,
+    rgba(15, 20, 25, 0.50) 55%,
     transparent 100%
   );
   pointer-events: none;
