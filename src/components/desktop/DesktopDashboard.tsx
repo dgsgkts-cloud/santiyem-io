@@ -804,10 +804,9 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {/* Zone E — Actions */}
         <TodayActionsCard actions={todayActions} />
 
+        {/* 7 — Recent activity */}
+        <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
 
-
-      {/* 7 — Recent activity */}
-      <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
         <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2.5">
           <h2 className="ds-title text-foreground">Son Aktiviteler</h2>
           <button
