@@ -213,20 +213,8 @@
 .login-hero__response {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.login-hero__response-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.login-hero__response-title {
-  color: #FF8F5A;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  gap: 6px;
+  padding-bottom: 4px;
 }
 
 .login-hero__response-lead {
@@ -256,7 +244,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  min-height: 52px;
+  padding: 10px 14px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -281,6 +270,33 @@
   flex: 1;
 }
 
+/* Inline approval action — compact, deliberately smaller than a CTA. */
+.login-hero__approve {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #FFB48C;
+  background: rgba(255, 107, 43, 0.12);
+  border: 1px solid rgba(255, 107, 43, 0.34);
+  transition: background 0.18s ease, color 0.18s ease;
+  cursor: pointer;
+}
+
+.login-hero__approve:hover {
+  background: rgba(255, 107, 43, 0.20);
+  color: #FFD2BC;
+}
+
+.login-hero__outcome-scheduled {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
 .login-hero__outcome-status {
   width: 8px;
   height: 8px;
@@ -289,6 +305,14 @@
   flex-shrink: 0;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
 }
+
+/* Ready (not completed) state — neutral orange, no success signal. */
+.login-hero__outcome-status--ready {
+  background: transparent;
+  border: 2px solid rgba(255, 107, 43, 0.75);
+  box-shadow: none;
+}
+
 
 /* Closing result statement */
 

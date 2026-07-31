@@ -4,22 +4,16 @@
 // Presentation only: no auth, no routing, no data access.
 // ============================================================
 
-import { Mic, Users, MessageCircle, CalendarCheck, type LucideIcon } from "lucide-react";
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
+import { useState } from "react";
+import { Mic, Users, MessageCircle, CalendarCheck } from "lucide-react";
 import "@/styles/login-hero.css";
 
 const COMMAND =
   "Cuma günü A Şantiyesi’nde beton dökümü var. İlgili herkesi bilgilendir.";
 
-const RESPONSE_TITLE = "Şantiyem AI hazır.";
+const RESPONSE_TITLE = "İlgili ekip ve iletişim akışı hazır.";
 const RESPONSE_BODY =
   "Şantiye şefi, saha mühendisi, beton tedarikçisi ve pompa ekibi belirlendi.";
-
-const OUTCOMES: { icon: LucideIcon; label: string }[] = [
-  { icon: Users, label: "7 kişi eşleştirildi" },
-  { icon: MessageCircle, label: "WhatsApp mesajları hazırlandı" },
-  { icon: CalendarCheck, label: "Teyit akışı planlandı" },
-];
 
 /** Staggered entrance — keeps the reveal order readable top to bottom. */
 const reveal = (delay: number) => ({
@@ -63,6 +57,9 @@ function HeroBackdrop() {
 }
 
 export function LoginHero() {
+  // Pre-approval is the honest marketing state; approving only schedules.
+  const [waApproved, setWaApproved] = useState(false);
+
   return (
     <div className="login-hero flex h-full w-full flex-col lg:overflow-y-auto">
       <HeroBackdrop />
@@ -114,37 +111,78 @@ export function LoginHero() {
               className="login-hero__response login-hero__reveal"
               style={reveal(520)}
             >
-              <div className="login-hero__response-header">
-                <SantiyemMark px={28} tone="light" />
-                <span className="login-hero__response-title">Şantiyem AI</span>
-              </div>
               <p className="login-hero__response-lead">{RESPONSE_TITLE}</p>
               <p className="login-hero__response-body">{RESPONSE_BODY}</p>
             </div>
 
             {/* Operational outcomes */}
             <div className="login-hero__outcomes">
-              {OUTCOMES.map((o, i) => {
-                const Icon = o.icon;
-                return (
-                  <div
-                    key={o.label}
-                    className="login-hero__outcome login-hero__reveal"
-                    style={reveal(720 + i * 120)}
+              <div
+                className="login-hero__outcome login-hero__reveal"
+                style={reveal(720)}
+              >
+                <div className="login-hero__outcome-icon">
+                  <Users className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="login-hero__outcome-label">
+                  7 kişi eşleştirildi
+                </span>
+                <span
+                  className="login-hero__outcome-status"
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div
+                className="login-hero__outcome login-hero__reveal"
+                style={reveal(840)}
+              >
+                <div className="login-hero__outcome-icon">
+                  <MessageCircle className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="login-hero__outcome-label">
+                  {waApproved
+                    ? "WhatsApp gönderimi planlandı"
+                    : "WhatsApp mesajları hazırlandı"}
+                </span>
+                {waApproved ? (
+                  <span className="login-hero__outcome-scheduled">
+                    Gönderim planlandı
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="login-hero__approve"
+                    onClick={() => setWaApproved(true)}
                   >
-                    <div className="login-hero__outcome-icon">
-                      <Icon className="h-4 w-4" strokeWidth={2} />
-                    </div>
-                    <span className="login-hero__outcome-label">
-                      {o.label}
-                    </span>
-                    <span
-                      className="login-hero__outcome-status"
-                      aria-hidden="true"
-                    />
-                  </div>
-                );
-              })}
+                    Gönderilsin mi?
+                  </button>
+                )}
+                <span
+                  className={
+                    waApproved
+                      ? "login-hero__outcome-status"
+                      : "login-hero__outcome-status login-hero__outcome-status--ready"
+                  }
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div
+                className="login-hero__outcome login-hero__reveal"
+                style={reveal(960)}
+              >
+                <div className="login-hero__outcome-icon">
+                  <CalendarCheck className="h-4 w-4" strokeWidth={2} />
+                </div>
+                <span className="login-hero__outcome-label">
+                  Teyit akışı planlandı
+                </span>
+                <span
+                  className="login-hero__outcome-status"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
 
             {/* Closing result statement */}
@@ -152,8 +190,8 @@ export function LoginHero() {
               className="login-hero__result login-hero__reveal"
               style={reveal(1100)}
             >
-              <span className="login-hero__result-accent">Tek cümleyle</span>{" "}
-              tüm operasyon hazır.
+              <span className="login-hero__result-accent">Tek komut.</span>{" "}
+              Doğru ekip. Hazır iletişim.
             </div>
           </div>
         </div>
