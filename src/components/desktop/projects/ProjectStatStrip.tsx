@@ -34,11 +34,12 @@ export default function ProjectStatStrip({ items, activeKey, onSelect }: Props) 
             onClick={() => onSelect(isActive && it.key !== "all" ? "all" : it.key)}
             aria-pressed={isActive}
             className={cn(
-              "group rounded-card border bg-card px-3 py-2 text-left transition-all duration-200 min-w-0",
+              "group rounded-card border bg-card px-3 py-2.5 text-left transition-all duration-200 min-w-0",
+              "flex flex-col justify-center gap-1",
               "hover:border-primary/40 active:scale-[0.98]",
               isActive ? "border-primary/60 shadow-soft" : "border-border/70",
             )}
-            style={{ minHeight: 56 }}
+            style={{ minHeight: 80 }}
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span

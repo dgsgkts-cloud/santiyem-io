@@ -7,7 +7,7 @@ import TeamManagement from "./TeamManagement";
 import DemoDataTab from "./DemoDataTab";
 import { PlanLimitsPanel } from "@/components/billing/PlanLimitsPanel";
 import { OrgAdminPanel } from "@/components/billing/OrgAdminPanel";
-import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw, Mic, Info } from "lucide-react";
+import { User, Bell, CreditCard, Users, Shield, Building2, Upload, X, Camera, Sun, Moon, Palette, Sparkles, Gauge, Building, Rocket, RotateCcw, Mic, Info, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,10 +66,10 @@ const DesktopSettingsPage = () => {
   }, []);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col lg:grid lg:grid-cols-[240px_1fr] gap-4 lg:gap-5">
-        {/* Tabs */}
-        <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+        {/* Tabs — horizontally scrollable segmented nav on mobile */}
+        <div className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar lg:overflow-x-visible p-1 lg:p-0 rounded-button bg-muted/40 lg:bg-transparent border border-border/60 lg:border-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -390,19 +390,32 @@ const FormField = ({ label, value }: { label: string; value: string }) => (
 
 const ToggleRow = ({ label, desc, on, onChange, disabled }: { label: string; desc: string; on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) => {
   return (
-    <div className="flex items-center justify-between py-2 gap-3" style={{ borderBottom: "1px solid #1E2732", opacity: disabled ? 0.6 : 1 }}>
+    <div className="flex items-center justify-between py-2.5 gap-3" style={{ borderBottom: "1px solid #1E2732" }}>
       <div className="min-w-0">
-        <p className="text-[12px] lg:text-[13px] font-medium text-foreground">{label}</p>
-        <p className="text-[10px] lg:text-[11px] text-muted-foreground">{desc}</p>
+        <p className="text-[13px] font-medium text-foreground flex items-center gap-1.5">
+          {label}
+          {disabled && <Lock className="w-3 h-3 text-muted-foreground shrink-0" aria-label="Zorunlu" />}
+        </p>
+        <p className="text-[11px] text-muted-foreground">{desc}</p>
       </div>
       <button
         onClick={() => !disabled && onChange(!on)}
-        className="relative w-10 h-5 rounded-full transition-colors duration-150 shrink-0"
-        style={{ backgroundColor: on ? "#FF6B2B" : "#1E2732", cursor: disabled ? "not-allowed" : "pointer" }}
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
+        disabled={disabled}
+        className="relative rounded-full transition-colors duration-200 shrink-0"
+        style={{
+          width: 48,
+          height: 28,
+          backgroundColor: on ? "#FF6B2B" : "#1E2732",
+          opacity: disabled ? 0.55 : 1,
+          cursor: disabled ? "not-allowed" : "pointer",
+        }}
       >
         <div
-          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150"
-          style={{ transform: on ? "translateX(20px)" : "translateX(2px)" }}
+          className="absolute top-[3px] rounded-full bg-white transition-transform duration-200"
+          style={{ width: 22, height: 22, boxShadow: "0 1px 3px rgba(0,0,0,0.25)", transform: on ? "translateX(23px)" : "translateX(3px)" }}
         />
       </button>
     </div>

@@ -122,10 +122,10 @@ const DesktopProjectsPage = ({ initialProjectId, onProjectIdClear }: DesktopProj
     <div
       className="w-full no-overflow-x safe-area-bottom"
       style={{
-        paddingLeft: "max(env(safe-area-inset-left, 0px), 20px)",
-        paddingRight: "max(env(safe-area-inset-right, 0px), 20px)",
+        paddingLeft: "max(env(safe-area-inset-left, 0px), 16px)",
+        paddingRight: "max(env(safe-area-inset-right, 0px), 16px)",
         paddingTop: "16px",
-        paddingBottom: "24px",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
       <div className="mx-auto w-full" style={{ maxWidth: 1200 }}>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 import { useVoiceSettings } from "@/hooks/useVoiceSettings";
@@ -38,6 +39,7 @@ const WAKE_GREETING =
  * Hidden on the marketing landing (unauthenticated users).
  */
 export function VoiceOrb() {
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [showFinanceTip, setShowFinanceTip] = useState(false);
@@ -202,11 +204,13 @@ export function VoiceOrb() {
   const isNative = Capacitor.isNativePlatform();
   // Sprint M2.0 — Mobile mic moves to bottom-right (WhatsApp-style FAB) above tab bar.
   const isDesktop = typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches;
+  // Sprint 40 — dense settings screens on mobile: the FAB would sit on top of form rows.
+  if (!isDesktop && !open && pathname.startsWith("/settings")) return null;
   const bottomOffset = isDesktop
     ? (isNative
         ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
         : "calc(env(safe-area-inset-bottom, 0px) + 24px)")
-    : "calc(env(safe-area-inset-bottom, 0px) + 88px)";
+    : "calc(env(safe-area-inset-bottom, 0px) + 80px)";
 
   const positionClass = isDesktop
     ? "fixed right-6 z-40 group"

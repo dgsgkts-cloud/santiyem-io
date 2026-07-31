@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { TodayTimeline } from "@/components/dashboard/TodayTimeline";
 import { WorkspaceSetupCard } from "@/components/dashboard/WorkspaceSetupCard";
@@ -192,6 +193,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { checks } = useCashChecks();
   const { kpis: briefKpis, ops: aiOps, findings } = useExecutiveBrief();
   const { execute } = useActionExecutor();
+  const isMobileView = useIsMobile();
 
 
   // Sprint 19 — swap login title for a dashboard-specific one immediately after render.
@@ -769,7 +771,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         name={name}
         nameReady={nameReady && hasName}
         dateLabel={formatDate(new Date())}
-        lines={briefLines}
+        lines={isMobileView ? briefLines.slice(0, 3) : briefLines}
         loading={!loaded}
         topAction={heroAction}
         onAsk={(text) => {
