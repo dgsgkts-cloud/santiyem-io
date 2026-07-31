@@ -90,7 +90,7 @@ interface Props {
 }
 
 const AIHome = ({ onSend, recentTopics = [] }: Props) => {
-  const { user } = useUser();
+  const { firstName } = useDisplayName();
   const { loading, kpis, ops } = useExecutiveBrief();
   const [now] = useState(() => new Date());
 
@@ -104,7 +104,7 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
     }
   }, []);
 
-  const name = (user?.email?.split("@")[0] ?? "").replace(/[._-]/g, " ");
+  const name = firstName;
   const criticalIssues = useMemo(
     () => ops.topRisks.filter((i) => i.priority === "critical" || i.priority === "high").slice(0, 3),
     [ops.topRisks]
@@ -119,10 +119,13 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
   const activity = [...recentTopics, ...recentQuestions].filter(Boolean).slice(0, 5);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 py-6 space-y-6 animate-fade-in">
-      {/* ── Greeting + Orb ── */}
+    <div
+      className="mx-auto w-full max-w-3xl px-4 py-6 space-y-6 animate-fade-in md:px-5"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
+    >
+      {/* ── Greeting + Orb (AI state visual) ── */}
       <div className="flex items-center gap-4">
-        <AIOrb state="idle" size={64} />
+        <AIOrb state="idle" size={52} />
         <div className="min-w-0">
           <h1 className="text-[22px] font-semibold leading-tight text-foreground">
             {greeting(now)}
@@ -135,39 +138,28 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
         </div>
       </div>
 
-      {/* ── Voice entry (Sprint 41 — replaces the floating microphone) ── */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("open-voice-copilot", { detail: { autoSpeak: false } }),
-            )
-          }
-          className="flex items-center justify-center gap-2 rounded-control border border-primary/40 bg-primary/10 px-4 text-[13px] font-semibold text-primary active:opacity-80"
-          style={{ minHeight: 48 }}
-        >
-          <Mic className="h-[18px] w-[18px]" />
-          Sesli Mod
-        </button>
-        <button
-          type="button"
-          onClick={() => document.querySelector<HTMLTextAreaElement>("textarea")?.focus()}
-          className="flex items-center justify-center gap-2 rounded-control border border-border/70 bg-card/60 px-4 text-[13px] font-medium text-foreground active:opacity-80"
-          style={{ minHeight: 48 }}
-        >
-          <MessageSquare className="h-[18px] w-[18px] text-muted-foreground" />
-          Yazarak Sor
-        </button>
-      </div>
+      {/* ── Single compact voice entry (composer holds the primary mic) ── */}
+      <button
+        type="button"
+        onClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("open-voice-copilot", { detail: { autoSpeak: false } }),
+          )
+        }
+        className="flex w-full items-center justify-center gap-2 rounded-control border border-primary/40 bg-primary/10 px-4 text-[13px] font-semibold text-primary active:opacity-80"
+        style={{ minHeight: 48 }}
+      >
+        <Mic className="h-[18px] w-[18px]" />
+        Sesli Görüşmeyi Başlat
+      </button>
 
-
-      {/* ── Today's AI Brief ── */}
-      <section className="rounded-card border border-border/70 bg-card/60 p-5">
+      {/* ── Today's AI summary ── */}
+      <section className="rounded-card border border-border/70 bg-card/60 p-4 md:p-5">
         <SectionTitle
           icon={Sparkles}
-          title="Bugünün AI Brifingi"
+          title="Bugünün AI Özeti"
           desc={now.toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" })}
+
         />
         {loading ? (
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
