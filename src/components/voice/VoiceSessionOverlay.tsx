@@ -178,13 +178,15 @@ export function VoiceSessionOverlay({
 
 
 
-  // Greeting for wake sessions — spoken once when the session goes live.
+  // Greeting for wake sessions — spoken once, and never repeated when we
+  // are resuming an interrupted conversation.
   useEffect(() => {
     if (!greeting || greetedRef.current) return;
     if (voice.state !== "listening") return;
     greetedRef.current = true;
+    if (resumeChunks.length > 0) return;
     voice.sendText(greeting);
-  }, [greeting, voice]);
+  }, [greeting, voice, resumeChunks.length]);
 
   // ---- end session ---------------------------------------------------
   const end = useCallback(
@@ -192,12 +194,15 @@ export function VoiceSessionOverlay({
       if (endedRef.current) return;
       endedRef.current = true;
       voiceHaptic("end");
+      // Deliberate end → the conversation is finished, drop the snapshot.
+      clearVoiceTranscript();
       void voice.disconnect().finally(() => {
         onSessionEnd?.(reason);
         onClose();
       });
     },
     [voice, onSessionEnd, onClose],
+
   );
 
   // Escape closes; body scroll is locked while the overlay owns the screen.
