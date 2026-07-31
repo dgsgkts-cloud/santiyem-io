@@ -9,6 +9,15 @@ Deno.serve(async (req) => {
   if (!key) return json(out);
 
   const body = await req.json().catch(() => ({}));
+  if ((body as { mint?: boolean })?.mint) {
+    const r = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ session: { type: "realtime", model: String((body as { model?: string }).model || "gpt-realtime"), audio: { output: { voice: "cedar" } }, instructions: "diag" } }),
+    });
+    const d = await r.json().catch(() => ({}));
+    return json({ status: r.status, client_secret: d?.value ?? null, model: d?.session?.model ?? null });
+  }
   const model = String((body as { model?: string })?.model || "gpt-realtime");
 
   // 1. Does the key work at all / which realtime models are visible?
