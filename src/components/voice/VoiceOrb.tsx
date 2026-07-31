@@ -39,7 +39,7 @@ const WAKE_GREETING =
  * Hidden on the marketing landing (unauthenticated users).
  */
 export function VoiceOrb() {
-  const { pathname } = useLocation();
+  useLocation();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [showFinanceTip, setShowFinanceTip] = useState(false);
