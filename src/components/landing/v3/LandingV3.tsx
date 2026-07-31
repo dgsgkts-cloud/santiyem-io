@@ -4,6 +4,7 @@
 
 import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   ArrowRight, Play, Mic, Sparkles, TrendingUp, AlertTriangle, CheckCircle2,
@@ -525,19 +526,19 @@ const VoiceSection = () => (
    4 · ONE AI. EVERY DEPARTMENT.
    ═══════════════════════════════════════════════════════════════════ */
 const departments = [
-  { icon: Building2, label: "Projeler", d: "Kanban, milestone, roller" },
-  { icon: Wallet, label: "Finans", d: "Kasa, ödeme, tahsilat" },
-  { icon: Users, label: "Personel", d: "QR puantaj, bordro" },
-  { icon: Package, label: "Malzeme", d: "Stok, tedarik, sarfiyat" },
-  { icon: ClipboardList, label: "Hakediş", d: "AI BOQ eşleştirme" },
-  { icon: FileText, label: "Şantiye Günlüğü", d: "Foto, hava, işgücü" },
+  { icon: Building2, label: "Proje Yönetimi", d: "Kanban, milestone, roller" },
+  { icon: ClipboardList, label: "Saha Operasyonları", d: "Şantiye günlüğü, foto, hava" },
+  { icon: Wallet, label: "Finans ve Hakediş", d: "Kasa, ödeme, AI BOQ eşleştirme" },
+  { icon: Users, label: "Personel ve Puantaj", d: "QR puantaj, bordro" },
+  { icon: Package, label: "Malzeme ve Stok", d: "Stok, tedarik, sarfiyat" },
+  { icon: Brain, label: "Yapay Zekâ Asistanı", d: "Sesli komut, anlık analiz" },
   { icon: Receipt, label: "E-Fatura", d: "UBL, otomatik eşleşme" },
-  { icon: BookOpen, label: "Belgeler", d: "PDF, RAG arama" },
-  { icon: Brain, label: "Şirket Hafızası", d: "Kurumsal bilgi tabanı" },
+  { icon: FileText, label: "Belgeler", d: "PDF, RAG arama" },
+  { icon: BookOpen, label: "Şirket Hafızası", d: "Kurumsal bilgi tabanı" },
 ];
 
 const OneAI = () => (
-  <section id="cozumler" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.bg }}>
+  <section id="ozellikler" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.bg }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="max-w-3xl mb-16">
         <div className="mb-4"><SectionLabel>Bir Zeka · Her Departman</SectionLabel></div>
@@ -716,7 +717,7 @@ const actions = [
 ];
 
 const ActionsSection = () => (
-  <section className="py-24 md:py-32" style={{ background: T.bg }}>
+  <section id="nasil-calisir" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.bg }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="max-w-3xl mb-16">
         <div className="mb-4"><SectionLabel>Gerçek Aksiyonlar</SectionLabel></div>
@@ -1033,7 +1034,7 @@ const plans = [
 ];
 
 const PricingV3 = () => (
-  <section id="pricing" className="py-24 md:py-32" style={{ background: T.bg }}>
+  <section id="fiyatlar" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.bg }}>
     <div className="max-w-7xl mx-auto px-6 lg:px-12">
       <Reveal className="text-center max-w-2xl mx-auto mb-16">
         <div className="mb-4 flex justify-center"><SectionLabel>Fiyatlar</SectionLabel></div>
@@ -1105,7 +1106,7 @@ const faqs = [
 const FAQV3 = () => {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faq" className="py-24 md:py-32" style={{ background: T.elev }}>
+    <section id="sss" className="py-24 md:py-32 scroll-mt-24" style={{ background: T.elev }}>
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
         <Reveal className="mb-12 text-center">
           <div className="mb-4 flex justify-center"><SectionLabel>SSS</SectionLabel></div>
@@ -1172,21 +1173,13 @@ const FinalCTA = () => (
 /* ═══════════════════════════════════════════════════════════════════
    NAVBAR (v3)
    ═══════════════════════════════════════════════════════════════════ */
-// Public navigation — product-facing wording only (no internal terminology).
-const SOLUTIONS = [
-  { l: "Proje Yönetimi", h: "#cozumler" },
-  { l: "Saha Operasyonları", h: "#cozumler" },
-  { l: "Finans ve Hakediş", h: "#cozumler" },
-  { l: "Personel ve Puantaj", h: "#cozumler" },
-  { l: "Malzeme ve Stok", h: "#cozumler" },
-  { l: "Yapay Zekâ Asistanı", h: "#ai-executive" },
-];
-
+// Public navigation — one flat set of labels, shared by desktop and mobile.
+// Product capability areas live inside the Özellikler section, not in the nav.
 const LINKS = [
-  { l: "Ürün", h: "#ai-executive" },
-  { l: "Çözümler", h: "#cozumler", children: SOLUTIONS },
-  { l: "Fiyatlar", h: "#pricing" },
-  { l: "SSS", h: "#faq" },
+  { l: "Özellikler", h: "#ozellikler" },
+  { l: "Nasıl Çalışır", h: "#nasil-calisir" },
+  { l: "Fiyatlar", h: "#fiyatlar" },
+  { l: "SSS", h: "#sss" },
 ];
 
 /* Active-section tracking for the desktop header (intersection based). */
@@ -1276,11 +1269,37 @@ const NavV3 = () => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, [open]);
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  // Escape closes the drawer; Tab stays trapped inside it.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setOpen(false); return; }
+      if (e.key !== "Tab") return;
+      const root = drawerRef.current;
+      if (!root) return;
+      const items = Array.from(
+        root.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (activeEl === first || !root.contains(activeEl))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && activeEl === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    drawerRef.current?.querySelector<HTMLElement>("button, a[href]")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
   const active = useActiveSection(LINKS.map((l) => l.h));
   const scrollTo = (h: string) => {
     setOpen(false);
-    setSolutionsOpen(false);
     const el = document.querySelector(h);
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
@@ -1306,53 +1325,12 @@ const NavV3 = () => {
             draggable={false}
           />
         </Link>
-
-
-
-        <div className="hidden md:flex items-center gap-7 lg:gap-8 xl:gap-9 ml-10 lg:ml-14">
-          {LINKS.map((l) =>
-            l.children ? (
-              <div
-                key={l.l}
-                className="relative"
-                onMouseEnter={() => setSolutionsOpen(true)}
-                onMouseLeave={() => setSolutionsOpen(false)}
-                onFocus={() => setSolutionsOpen(true)}
-                onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setSolutionsOpen(false); }}
-                onKeyDown={(e) => { if (e.key === "Escape") setSolutionsOpen(false); }}
-              >
-                <NavTextLink
-                  label={l.l}
-                  chevron
-                  active={active === l.h || solutionsOpen}
-                  onActivate={() => scrollTo(l.h)}
-                  aria-haspopup="menu"
-                  aria-expanded={solutionsOpen}
-                />
-                <div
-                  className="absolute left-0 top-full pt-3 w-[264px] transition-opacity duration-200 ease-out"
-                  style={{ opacity: solutionsOpen ? 1 : 0, visibility: solutionsOpen ? "visible" : "hidden" }}
-                >
-                  <div className="rounded-[16px] p-2" role="menu" style={{ background: "#0A0A0A", border: `1px solid ${T.borderStrong}`, boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
-                    {l.children.map((c) => (
-                      <button
-                        key={c.l}
-                        role="menuitem"
-                        onClick={() => scrollTo(c.h)}
-                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[14px] outline-none transition-colors duration-200 ease-out hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] active:opacity-80"
-                        style={{ color: T.text, ...body }}
-                      >
-                        {c.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <NavTextLink key={l.h} label={l.l} active={active === l.h} onActivate={() => scrollTo(l.h)} />
-            )
-          )}
+        <div className="hidden md:flex items-center gap-8 lg:gap-9 ml-10 lg:ml-14">
+          {LINKS.map((l) => (
+            <NavTextLink key={l.h} label={l.l} active={active === l.h} onActivate={() => scrollTo(l.h)} />
+          ))}
         </div>
+
 
         <div className="hidden md:flex items-center gap-2.5 ml-8 lg:ml-10">
           <Link
@@ -1380,7 +1358,7 @@ const NavV3 = () => {
             <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-[3px] motion-reduce:transition-none" />
           </Link>
         </div>
-        <button className="md:hidden text-white -mr-2 w-11 h-11 flex items-center justify-center" onClick={() => setOpen(!open)} aria-label="menu">
+        <button className="md:hidden text-white -mr-2 w-11 h-11 flex items-center justify-center" onClick={() => setOpen(!open)} aria-label={open ? "Menüyü kapat" : "Menüyü aç"} aria-expanded={open}>
           <div className="w-5 flex flex-col gap-1">
             <span className="h-0.5 bg-white transition-all" style={{ transform: open ? "rotate(45deg) translate(3px,3px)" : "none" }} />
             <span className="h-0.5 bg-white transition-all" style={{ opacity: open ? 0 : 1 }} />
@@ -1389,9 +1367,9 @@ const NavV3 = () => {
         </button>
 
       </div>
-      {/* Sprint 42B — opaque, safe-area aware mobile drawer. */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-[60]">
+      {/* Opaque, safe-area aware mobile drawer — portalled out of the nav's stacking context. */}
+      {open && createPortal(
+        <div className="md:hidden fixed inset-0 z-[10000]" role="dialog" aria-modal="true" aria-label="Menü">
           <button
             aria-label="Menüyü kapat"
             onClick={() => setOpen(false)}
@@ -1399,6 +1377,7 @@ const NavV3 = () => {
             style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}
           />
           <div
+            ref={drawerRef}
             className="absolute inset-0 flex flex-col"
             style={{
               background: "#050505",
@@ -1406,66 +1385,60 @@ const NavV3 = () => {
               paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
             }}
           >
-            <div className="flex items-center justify-between px-5">
+            <div className="flex items-center justify-between px-6">
               <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[142px] h-auto object-contain" draggable={false} />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Menüyü kapat"
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-white/70"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white/70 outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="mt-6 flex flex-col px-5 overflow-y-auto">
+            <div className="mt-6 flex flex-col gap-1.5 px-6 overflow-y-auto">
               {LINKS.map((l) => (
-                <div key={l.l} className="flex flex-col">
-                  <button
-                    onClick={() => scrollTo(l.h)}
-                    aria-label={l.l}
-                    className="flex min-h-[48px] items-center text-left text-[16px]"
-                    style={{ color: T.text, ...body }}
-                  >
-                    {l.l}
-                  </button>
-                  {l.children && (
-                    <div className="flex flex-col pb-2">
-                      {l.children.map((c) => (
-                        <button
-                          key={c.l}
-                          onClick={() => scrollTo(c.h)}
-                          className="flex min-h-[44px] items-center pl-3 text-left text-[14.5px]"
-                          style={{ color: T.muted, ...body }}
-                        >
-                          {c.l}
-                        </button>
-                      ))}
-                    </div>
+                <button
+                  key={l.h}
+                  onClick={() => scrollTo(l.h)}
+                  aria-label={`${l.l} bölümüne git`}
+                  aria-current={active === l.h ? "true" : undefined}
+                  className="flex items-center rounded-[12px] text-left text-[17px] font-medium outline-none transition-colors duration-200 ease-out active:opacity-80 focus-visible:ring-2 focus-visible:ring-[#FF6B2B] motion-reduce:transition-none"
+                  style={{ minHeight: 54, color: active === l.h ? T.text : "#D4D4D8", ...body }}
+                >
+                  {l.l}
+                  {active === l.h && (
+                    <span
+                      aria-hidden
+                      className="ml-2.5 inline-block"
+                      style={{ width: 16, height: 2, borderRadius: 2, background: T.ember }}
+                    />
                   )}
-                </div>
+                </button>
               ))}
             </div>
 
-            <div className="mt-auto flex flex-col gap-3 px-5 pt-6">
+            <div className="mt-auto flex flex-col gap-3 px-6 pt-6">
               <Link
                 to="/login"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center rounded-[14px] text-[15px] font-medium"
-                style={{ height: 46, color: T.text, border: `1px solid ${T.borderStrong}`, ...body }}
+                className="flex items-center justify-center rounded-[14px] text-[15px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B]"
+                style={{ height: 47, color: T.text, border: `1px solid ${T.borderStrong}`, ...body }}
               >
                 Giriş Yap
               </Link>
               <Link
                 to="/register"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center rounded-[16px] text-[15px] font-semibold text-white"
-                style={{ height: 50, background: T.ember, ...body }}
+                className="flex items-center justify-center rounded-[16px] text-[15px] font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B]"
+                style={{ height: 50, background: T.ember, boxShadow: `0 8px 26px ${T.ember}44`, ...body }}
               >
                 Ücretsiz Başla
               </Link>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
     </nav>
@@ -1489,11 +1462,12 @@ const FooterV3 = () => (
           </p>
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-widest mb-3" style={{ color: T.faint, ...body }}>Ürün</p>
+          <p className="text-[11px] uppercase tracking-widest mb-3" style={{ color: T.faint, ...body }}>Keşfet</p>
           <ul className="space-y-2 text-[13px]" style={body}>
-            <li><a href="#ai-executive" style={{ color: T.muted }}>AI Executive</a></li>
-            <li><a href="#pricing" style={{ color: T.muted }}>Fiyatlar</a></li>
-            <li><a href="#faq" style={{ color: T.muted }}>SSS</a></li>
+            <li><a href="#ozellikler" style={{ color: T.muted }}>Özellikler</a></li>
+            <li><a href="#nasil-calisir" style={{ color: T.muted }}>Nasıl Çalışır</a></li>
+            <li><a href="#fiyatlar" style={{ color: T.muted }}>Fiyatlar</a></li>
+            <li><a href="#sss" style={{ color: T.muted }}>SSS</a></li>
           </ul>
         </div>
         <div>
