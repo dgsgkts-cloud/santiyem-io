@@ -753,14 +753,17 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   ];
 
   return (
-    <PageShell maxWidth={1120} className="space-y-4">
+    <PageShell maxWidth={1120} className="flex flex-col gap-5 md:gap-7">
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
-      <TrialBanner />
-      <PinnedInsights />
-      <WorkspaceSetupCard />
+      {/* Zone A — Setup */}
+      <div className="flex flex-col gap-4 md:gap-5">
+        <TrialBanner />
+        <PinnedInsights />
+        <WorkspaceSetupCard />
+      </div>
 
-      {/* 1 + 2 — Greeting and AI Daily Brief share the hero surface */}
+      {/* Zone B — AI Command Center (greeting + daily brief + ask) */}
       <DailyBriefHero
         greeting={greeting.text}
         name={name}
@@ -778,22 +781,24 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         }}
       />
 
-      {/* 3 — Critical alerts, grouped and deduped */}
+      {/* Zone C — Attention */}
       <CriticalAlertsCard items={alertItems} loading={!loaded} />
 
-      {/* 4 — Compact KPIs */}
-      <CompactKpiStrip items={kpiItems} loading={!loaded} />
+      {/* Zone D — Executive overview (operational + finance KPIs) */}
+      <div className="flex flex-col gap-4 md:gap-5">
+        <CompactKpiStrip items={kpiItems} loading={!loaded} />
 
-      {/* 5 — Finance in the same compact rhythm */}
-      <div className="relative">
-        {profitLocked && (
-          <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
-        )}
-        <CompactKpiStrip items={financeItems} loading={!loaded} />
+        <div className="relative">
+          {profitLocked && (
+            <LockedOverlay label="Profesyonel Paket" onClick={() => openUpgrade("Finansal Özet", false)} />
+          )}
+          <CompactKpiStrip items={financeItems} loading={!loaded} />
+        </div>
       </div>
 
-      {/* 6 — Today's actions */}
+      {/* Zone E — Actions */}
       <TodayActionsCard actions={todayActions} />
+
 
       {/* 7 — Recent activity */}
       <section className="rounded-card border border-border/70 bg-card shadow-card overflow-hidden">
