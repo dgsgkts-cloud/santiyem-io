@@ -72,6 +72,9 @@ export function VoiceSessionOverlay({
   const endedRef = useRef(false);
   const spokeOnceRef = useRef(false);
   const stoppedRef = useRef(false);
+  const autoRetriesRef = useRef(0);
+  const [retryIn, setRetryIn] = useState<number | null>(null);
+
 
   const activityRef = useRef(Date.now());
   const turnCompletedAtRef = useRef<number | null>(null);
