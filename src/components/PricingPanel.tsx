@@ -319,6 +319,9 @@ const PricingPanel = () => {
         <span className={`text-sm font-medium ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>Aylık</span>
         <button
           onClick={() => setYearly(!yearly)}
+          role="switch"
+          aria-checked={yearly}
+          aria-label="Yıllık ödemeye geç"
           className="relative w-12 h-6 rounded-full transition-colors duration-200"
           style={{ backgroundColor: yearly ? "#FF6B2B" : "#1E2732" }}
         >

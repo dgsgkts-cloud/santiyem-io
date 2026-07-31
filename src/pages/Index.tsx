@@ -106,7 +106,7 @@ const coerceTab = (t: Tab): Tab => (DEPRECATED_TABS.has(t) ? "dashboard" : t);
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
+  { id: "dashboard", label: "Ana Sayfa", shortLabel: "Ana", icon: Home },
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "chat", label: "AI Asistan", shortLabel: "AI", icon: MessageSquare },
@@ -209,7 +209,7 @@ const DRAWER_ITEMS: DrawerItem[] = DRAWER_GROUPS.flatMap((g) => g.items);
 
 
 const TAB_TITLES: Record<string, string> = {
-  dashboard: "Dashboard",
+  dashboard: "Ana Sayfa",
   chat: "AI Asistan",
   daily: "Günlük Bilgi",
   
@@ -585,7 +585,7 @@ const Index = () => {
           {/* Top bar - not for chat (it has its own header) */}
           {activeTab !== "chat" && (
             <DesktopTopBar
-              title={TAB_TITLES[activeTab] || "Dashboard"}
+              title={TAB_TITLES[activeTab] || "Ana Sayfa"}
               onTabChange={(t) => handleDesktopTabChange(t as Tab)}
               onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }}
             />
@@ -699,7 +699,9 @@ const Index = () => {
           <div className="relative">
             <button
               onClick={() => setMobileNotifOpen(!mobileNotifOpen)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors relative"
+              aria-label={unreadCount > 0 ? `Bildirimler, ${unreadCount} okunmamış` : "Bildirimler"}
+              aria-expanded={mobileNotifOpen}
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors relative"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -757,7 +759,8 @@ const Index = () => {
           {activeTab === "chat" && messages.length > 0 && (
             <button
               onClick={handleReset}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              aria-label="Sohbeti sıfırla"
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -963,6 +966,18 @@ const Index = () => {
             <EInvoicesPage />
           ) : activeTab === "personnel" ? (
             <PersonnelPage />
+          ) : activeTab === "warehouse" ? (
+            <WarehousePage />
+          ) : activeTab === "procurement" ? (
+            <ProcurementPage />
+          ) : activeTab === "fleet" ? (
+            <FleetPage />
+          ) : activeTab === "reports" ? (
+            <ReportsPage />
+          ) : activeTab === "meetings" ? (
+            <MeetingCenterPage />
+          ) : activeTab === "communication" ? (
+            <CommunicationCenterPage />
           ) : activeTab === "settings" ? (
             <DesktopSettingsPage />
           ) : activeTab === "render" ? (
@@ -978,7 +993,11 @@ const Index = () => {
         </div>
         </div>
 
-        {activeTab !== "chat" && !Capacitor.isNativePlatform() && <Footer minimal />}
+        {activeTab !== "chat" && !Capacitor.isNativePlatform() && (
+          <div className="hidden md:block">
+            <Footer minimal />
+          </div>
+        )}
       </div>
 
       {activeTab === "chat" && (
