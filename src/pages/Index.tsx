@@ -798,21 +798,21 @@ const Index = () => {
 
       {/* ── MOBILE DRAWER PANEL ── */}
       <div
-        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[82%] max-w-[320px] flex flex-col transform transition-transform duration-200 ease-out ${
+        className={`lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86%] max-w-[360px] flex flex-col transform transition-transform duration-200 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ backgroundColor: "#0F1419", paddingTop: "env(safe-area-inset-top, 0px)", boxShadow: drawerOpen ? "8px 0 40px -12px rgba(0,0,0,0.6)" : "none" }}
       >
         <button
           onClick={() => setDrawerOpen(false)}
-          className="absolute top-3 right-3 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-muted/60 transition-colors"
+          className="absolute top-2 right-2 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-muted/60 transition-colors"
           style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Menüyü kapat"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Profile card — single source of role identity */}
+        {/* Profile card — single source of role identity (max 116px tall) */}
         {(() => {
           const displayName = profile?.full_name || user?.user_metadata?.full_name || (user ? "Kullanıcı" : "Misafir");
           const title = profile?.title || "İnşaat Mühendisi";
@@ -821,7 +821,7 @@ const Index = () => {
           const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
           const roleLabel = ROLE_LABELS[String(role || "").toLowerCase()] || (isAdmin ? "Yönetici" : "");
           return (
-            <div className="px-5 pt-8 pb-5">
+            <div className="px-4 pt-5 pb-4" style={{ maxHeight: 116 }}>
               <div className="flex items-center gap-3">
                 <div className="rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-[#FF6B2B] to-[#FF8F5E]" style={{ width: 42, height: 42 }}>
                   {user ? (
@@ -830,7 +830,7 @@ const Index = () => {
                     <User className="w-5 h-5 text-white" />
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 pr-10">
                   <div className="flex items-center gap-2">
                     <p className="text-white font-semibold text-[14px] truncate">{displayName}</p>
                     {roleLabel && (
@@ -853,32 +853,42 @@ const Index = () => {
           );
         })()}
 
-        <div className="mx-5 h-px bg-white/[0.06]" />
+        <div className="mx-4 h-px bg-white/[0.06]" />
 
         <nav
-          className="flex-1 min-h-0 px-3 py-4 space-y-0.5"
+          className="flex-1 min-h-0 px-3 py-3"
           style={{ overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
         >
-          {visibleDrawerItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleDrawerNav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
-                  isActive
-                    ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
-                    : "text-white/70 hover:text-white hover:bg-white/[0.04]"
-                }`}
-                style={{ minHeight: "44px" }}
-              >
-                <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
-                <span className={`text-[13.5px] ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
-              </button>
-            );
-          })}
+          {visibleDrawerGroups.map((group) => (
+            <div key={group.title} className="mb-4 last:mb-0">
+              <p className="px-3 mb-1 text-[10px] font-semibold tracking-[0.12em] text-white/35">
+                {group.title}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleDrawerNav(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
+                        isActive
+                          ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                          : "text-white/70 hover:text-white hover:bg-white/[0.04]"
+                      }`}
+                      style={{ minHeight: "44px" }}
+                    >
+                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
+                      <span className={`text-[14px] ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
+
 
         <div className="mx-5 h-px bg-white/[0.06]" />
 
