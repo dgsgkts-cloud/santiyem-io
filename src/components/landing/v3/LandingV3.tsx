@@ -1172,9 +1172,19 @@ const FinalCTA = () => (
 /* ═══════════════════════════════════════════════════════════════════
    NAVBAR (v3)
    ═══════════════════════════════════════════════════════════════════ */
+// Public navigation — product-facing wording only (no internal terminology).
+const SOLUTIONS = [
+  { l: "Proje Yönetimi", h: "#cozumler" },
+  { l: "Saha Operasyonları", h: "#cozumler" },
+  { l: "Finans ve Hakediş", h: "#cozumler" },
+  { l: "Personel ve Puantaj", h: "#cozumler" },
+  { l: "Malzeme ve Stok", h: "#cozumler" },
+  { l: "Yapay Zekâ Asistanı", h: "#ai-executive" },
+];
+
 const LINKS = [
   { l: "Ürün", h: "#ai-executive" },
-  { l: "Departmanlar", h: "#pricing" },
+  { l: "Çözümler", h: "#cozumler", children: SOLUTIONS },
   { l: "Fiyatlar", h: "#pricing" },
   { l: "SSS", h: "#faq" },
 ];
