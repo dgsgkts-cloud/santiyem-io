@@ -597,7 +597,7 @@ const Index = () => {
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
-            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto smooth-scroll bg-background">
+            <div ref={scrollRef} data-app-scroll className="flex-1 min-h-0 overflow-y-auto smooth-scroll bg-background">
               <div className="flex min-h-full flex-col">
                 <div className="flex-1 pb-12">
                 <Suspense fallback={<TabFallback />}>
@@ -920,7 +920,7 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} data-app-scroll className="flex-1 min-h-0 overflow-y-auto overscroll-contain smooth-scroll">
         <div className="flex min-h-full flex-col">
           <div className="flex-1 pb-8 md:pb-10">
           <Suspense fallback={<TabFallback />}>
