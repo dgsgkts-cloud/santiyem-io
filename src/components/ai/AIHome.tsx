@@ -11,6 +11,9 @@ import {
   Clock,
   HardHat,
   History,
+  MessageSquare,
+  Mic,
+
   Sparkles,
   TrendingUp,
   Wallet,
