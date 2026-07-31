@@ -252,12 +252,20 @@ export function VoiceSessionOverlay({
             ? (preparing ? "connecting" : "idle")
             : (voice.state as VoicePhase);
 
-  // Connection lost → immediately silence audio, then run a short
-  // countdown and retry automatically (max 2 attempts) before the
-  // user has to act.
+  // Connection lost → keep the transcript, immediately silence audio,
+  // then run a short countdown and retry automatically (max 2 attempts)
+  // before the user has to act.
+  const transcriptsRef = useRef<TranscriptChunk[]>([]);
+  transcriptsRef.current = transcripts;
+
   useEffect(() => {
     if (phase !== "error" || stoppedRef.current) return;
     stoppedRef.current = true;
+    const snapshot = transcriptsRef.current;
+    if (snapshot.length > 0) {
+      saveVoiceTranscript(snapshot);
+      setResumeChunks(snapshot);
+    }
     try { voice.interrupt(); } catch { /* noop */ }
     try { voice.mute(); } catch { /* noop */ }
     void voice.disconnect().catch(() => { /* noop */ });
@@ -265,6 +273,7 @@ export function VoiceSessionOverlay({
       setRetryIn(RETRY_COUNTDOWN_SECONDS);
     }
   }, [phase, voice]);
+
 
   const reconnect = useCallback(() => {
     setRetryIn(null);
