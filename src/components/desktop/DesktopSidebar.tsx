@@ -8,6 +8,7 @@ import {
   Settings, LogOut, ChevronLeft, ChevronRight, Lock, Package, FileSpreadsheet,
   ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio, ChevronRight as Arrow,
 } from "lucide-react";
+import { BrandHomeLink } from "@/components/brand/BrandHomeLink";
 import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
@@ -229,16 +230,18 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      {/* Brand */}
-      <div
-        className={`flex items-center cursor-pointer shrink-0 ${collapsed ? "overflow-hidden" : ""}`}
-        style={{
-          height: collapsed ? 64 : 72,
-          padding: collapsed ? "0 16px" : "0 18px",
-          justifyContent: collapsed ? "center" : "flex-start",
-        }}
-        onClick={() => onTabChange("dashboard")}
+      {/* Brand — navigates to Ana Sayfa (dashboard) */}
+      <BrandHomeLink
+        className={`flex items-center shrink-0 ${collapsed ? "overflow-hidden" : ""}`}
+        onNavigate={() => onTabChange("dashboard")}
       >
+        <span
+          className={`flex items-center w-full ${collapsed ? "justify-center" : "justify-start"}`}
+          style={{
+            height: collapsed ? 64 : 72,
+            padding: collapsed ? "0 16px" : "0 18px",
+          }}
+        >
         {collapsed ? (
           <SantiyemMark px={36} />
         ) : (
@@ -260,7 +263,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             />
           </>
         )}
-      </div>
+        </span>
+      </BrandHomeLink>
 
 
 

@@ -1,3 +1,4 @@
+import { BrandHomeLink } from "@/components/brand/BrandHomeLink";
 import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
@@ -596,7 +597,7 @@ const Index = () => {
               <DesktopChatLayout scrollRef={scrollRef} />
             </div>
           ) : (
-            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto smooth-scroll bg-background">
+            <div ref={scrollRef} data-app-scroll className="flex-1 min-h-0 overflow-y-auto smooth-scroll bg-background">
               <div className="flex min-h-full flex-col">
                 <div className="flex-1 pb-12">
                 <Suspense fallback={<TabFallback />}>
@@ -684,9 +685,12 @@ const Index = () => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center cursor-pointer" onClick={() => goToTab("dashboard")}>
+          <BrandHomeLink
+            className="min-w-[44px] min-h-[44px] justify-center"
+            onNavigate={() => { setDrawerOpen(false); goToTab("dashboard"); }}
+          >
             <SantiyemMark px={34} />
-          </div>
+          </BrandHomeLink>
 
 
         </div>
@@ -916,7 +920,7 @@ const Index = () => {
       </div>
 
       {/* ── CONTENT AREA ── */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} data-app-scroll className="flex-1 min-h-0 overflow-y-auto overscroll-contain smooth-scroll">
         <div className="flex min-h-full flex-col">
           <div className="flex-1 pb-8 md:pb-10">
           <Suspense fallback={<TabFallback />}>
