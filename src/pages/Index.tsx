@@ -159,23 +159,53 @@ const BRAIN_SECTION_TO_TAB: Record<string, Tab> = {
   "documents": "company-docs",
 };
 
-// Mobile drawer menu items
-const DRAWER_ITEMS: { id: Tab | string; label: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", icon: Home },
-  { id: "chat", label: "AI Asistan", icon: MessageSquare },
-  { id: "projects", label: "Proje Yönetimi", icon: FolderOpen },
-  { id: "hakedis", label: "Hakediş Yönetimi", icon: FileText },
-  { id: "contracts", label: "Sözleşmeler", icon: FileText },
-  { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
-  { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
-  { id: "materials", label: "Malzeme Takibi", icon: Package },
-  { id: "personnel", label: "Personel & Puantaj", icon: HardHat },
-  { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
-  { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
-  { id: "communication", label: "İletişim Merkezi", icon: Radio },
-  { id: "reports", label: "Raporlar", icon: BarChart3 },
-  { id: "settings", label: "Ayarlar", icon: Settings },
+// Mobile drawer menu — grouped navigation (SPRINT 40)
+type DrawerItem = { id: Tab | string; label: string; icon: React.ElementType };
+
+const DRAWER_GROUPS: { title: string; items: DrawerItem[] }[] = [
+  {
+    title: "ANA",
+    items: [
+      { id: "dashboard", label: "Ana Sayfa", icon: Home },
+      { id: "chat", label: "AI Asistan", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "OPERASYON",
+    items: [
+      { id: "projects", label: "Projeler", icon: FolderOpen },
+      { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
+      { id: "personnel", label: "Personel & Puantaj", icon: HardHat },
+      { id: "materials", label: "Malzeme Takibi", icon: Package },
+    ],
+  },
+  {
+    title: "FİNANS",
+    items: [
+      { id: "hakedis", label: "Hakediş", icon: FileText },
+      { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
+      { id: "contracts", label: "Sözleşmeler", icon: FileText },
+      { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
+    ],
+  },
+  {
+    title: "İLETİŞİM",
+    items: [
+      { id: "communication", label: "İletişim Merkezi", icon: Radio },
+      { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "ANALİZ",
+    items: [
+      { id: "reports", label: "Raporlar", icon: BarChart3 },
+      { id: "settings", label: "Ayarlar", icon: Settings },
+    ],
+  },
 ];
+
+const DRAWER_ITEMS: DrawerItem[] = DRAWER_GROUPS.flatMap((g) => g.items);
+
 
 const TAB_TITLES: Record<string, string> = {
   dashboard: "Dashboard",
