@@ -74,7 +74,7 @@
 .login-hero__wire path,
 .login-hero__wire line,
 .login-hero__wire polyline {
-  stroke: rgba(255, 107, 43, 0.12);
+  stroke: rgba(255, 107, 43, 0.10);
   stroke-width: 1;
   fill: none;
   stroke-dasharray: 1400;
