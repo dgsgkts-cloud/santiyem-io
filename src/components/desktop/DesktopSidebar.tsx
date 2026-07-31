@@ -1,19 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useUser, isOfficePlan } from "@/contexts/UserContext";
 import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, MessageSquare, FolderKanban, Receipt,
-  BookOpen, Wallet, HardHat, BarChart3, Activity,
+  BookOpen, Wallet, HardHat, BarChart3,
   Settings, LogOut, ChevronLeft, ChevronRight, Lock, Package, FileSpreadsheet,
-  ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio, ChevronRight as Arrow,
+  ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio,
 } from "lucide-react";
 import { BrandHomeLink } from "@/components/brand/BrandHomeLink";
 import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { useDisplayName } from "@/hooks/useDisplayName";
-import { useNotifications } from "@/hooks/useNotifications";
 
 // Localized role labels — extend as new roles are added
 const ROLE_LABELS: Record<string, string> = {
@@ -43,7 +42,7 @@ const NAV_SECTIONS = [
   {
     label: "OPERASYON",
     items: [
-      { id: "dashboard" as Tab, label: "Dashboard", icon: LayoutDashboard },
+      { id: "dashboard" as Tab, label: "Ana Sayfa", icon: LayoutDashboard },
       { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
       { id: "materials" as Tab, label: "Malzeme", icon: Package },
@@ -91,95 +90,8 @@ const NAV_SECTIONS = [
 
 void isNativeApp;
 
-/** Live operational health, derived from the user's real reminders & milestones. */
-const AIHealthCard = ({ onOpen }: { onOpen: () => void }) => {
-  const { notifications, loading } = useNotifications();
-
-  const { score, critical, today, overdue } = useMemo(() => {
-    const open = notifications.filter((n) => !n.completed);
-    const overdue = open.filter((n) => n.daysLeft < 0).length;
-    const today = open.filter((n) => n.daysLeft === 0).length;
-    const soon = open.filter((n) => n.daysLeft > 0 && n.daysLeft <= 3).length;
-    const raw = 100 - overdue * 8 - today * 4 - soon * 2;
-    return {
-      score: Math.max(0, Math.min(100, raw)),
-      critical: overdue + today,
-      today,
-      overdue,
-    };
-  }, [notifications]);
-
-  const tone =
-    score >= 80 ? "success" : score >= 55 ? "warning" : "danger";
-  const toneColor = `hsl(var(--${tone}))`;
-
-  if (loading) {
-    return (
-      <div className="ds-card" style={{ padding: 16, borderRadius: 16 }}>
-        <div className="ds-skeleton h-2.5 w-20 mb-3" />
-        <div className="ds-skeleton h-6 w-24 mb-3" />
-        <div className="ds-skeleton h-2 w-full" />
-      </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={onOpen}
-      className="ds-press ds-focus-ring w-full text-left ds-card ds-card-interactive ds-enter"
-      style={{ padding: 16, borderRadius: 16 }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="ds-label" style={{ fontSize: 10 }}>Bugünkü Sağlık</span>
-        <Activity className="w-3.5 h-3.5" style={{ color: toneColor }} />
-      </div>
-
-      <div className="flex items-baseline gap-1.5 mb-3">
-        <span className="ds-heading ds-numeric" style={{ color: toneColor, fontSize: 26, lineHeight: "28px" }}>
-          {score}
-        </span>
-        <span className="ds-caption">/100</span>
-      </div>
-
-      <div className="h-1.5 w-full rounded-full overflow-hidden bg-muted/60 mb-3">
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `${score}%`,
-            background: toneColor,
-            transition: "width 640ms var(--ease-spring)",
-          }}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between ds-caption">
-          <span>Kritik</span>
-          <span className="ds-numeric font-semibold" style={{ color: critical ? "hsl(var(--danger-muted))" : undefined }}>
-            {critical}
-          </span>
-        </div>
-        <div className="flex items-center justify-between ds-caption">
-          <span>Gecikme</span>
-          <span className="ds-numeric font-semibold" style={{ color: overdue ? "hsl(var(--warning-muted))" : undefined }}>
-            {overdue}
-          </span>
-        </div>
-        <div className="flex items-center justify-between ds-caption">
-          <span>Bugün</span>
-          <span className="ds-numeric font-semibold">{today}</span>
-        </div>
-      </div>
-
-      <span className="mt-3 inline-flex items-center gap-1 ds-caption text-primary font-semibold">
-        Detay <Arrow className="w-3 h-3" />
-      </span>
-    </button>
-  );
-};
-
 const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
-  const { user, profile, plan, role, usage, signOut, isAdmin, profileLoaded } = useUser();
+  const { user, profile, plan, role, signOut, isAdmin, profileLoaded } = useUser();
   const guard = useAccessGuard();
   const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
@@ -334,12 +246,12 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         {NAV_SECTIONS.map((section, si) => (
           <div key={section.label || `s-${si}`}>
             {!collapsed && section.label && (
-              <p className="ds-label px-3 mb-2.5" style={{ fontSize: 10, opacity: 0.7 }}>
+              <p className="ds-label px-3" style={{ fontSize: 10, opacity: 0.7, marginBottom: 9 }}>
                 {section.label}
               </p>
             )}
             {collapsed && si > 0 && <div className="h-px bg-border/60 mx-2 mb-3" />}
-            <div className="space-y-1">
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {section.items.map((item) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
@@ -352,8 +264,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     onClick={() => { if (gatesReady) onTabChange(item.id); }}
                     className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
                     style={{
-                      height: 38,
-                      borderRadius: 12,
+                      height: 42,
+                      borderRadius: 13,
                       background: isActive ? "hsl(var(--primary) / 0.18)" : "transparent",
                       color: isLocked
                         ? "hsl(var(--muted-foreground) / 0.55)"
@@ -421,7 +333,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           <button
             onClick={() => onTabChange("pricing")}
             className="ds-press ds-focus-ring w-full mb-2 ds-body-strong text-primary-foreground"
-            style={{ height: 36, borderRadius: 12, background: "hsl(var(--primary))" }}
+            style={{ height: 40, borderRadius: "var(--radius-control-md)", background: "hsl(var(--primary))" }}
           >
             Planı Yükselt
           </button>
@@ -431,8 +343,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             <TooltipTrigger asChild>
               <button
                 onClick={user ? signOut : () => navigate("/login")}
-                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-md hover-logout"
-                style={{ height: 36 }}
+                className="ds-press ds-focus-ring w-full flex items-center justify-center rounded-control hover-logout"
+                style={{ height: 40 }}
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -442,8 +354,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         ) : (
           <button
             onClick={user ? signOut : () => navigate("/login")}
-            className="ds-press ds-focus-ring w-full flex items-center gap-3 rounded-md hover-logout ds-body-strong"
-            style={{ height: 36, padding: "0 12px" }}
+            className="ds-press ds-focus-ring w-full flex items-center gap-3 rounded-control hover-logout ds-body-strong"
+            style={{ height: 40, padding: "0 12px" }}
           >
             <LogOut className="w-4 h-4" />
             <span>{user ? "Çıkış Yap" : "Giriş Yap"}</span>
