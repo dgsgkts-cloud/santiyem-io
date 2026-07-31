@@ -1,6 +1,6 @@
 // ============================================================
 // src/components/auth/LoginHero.tsx
-// Sprint 32.3 — Login hero showcase panel.
+// Login hero showcase panel — premium, calm, Turkish-only.
 // Presentation only: no auth, no routing, no data access.
 // ============================================================
 
@@ -8,12 +8,9 @@ import {
   Building2,
   Wallet,
   HardHat,
-  PackageSearch,
   Bot,
-  LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
-import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import "@/styles/login-hero.css";
 
 type Feature = { icon: LucideIcon; title: string; line: string };
@@ -21,37 +18,27 @@ type Feature = { icon: LucideIcon; title: string; line: string };
 const FEATURES: Feature[] = [
   {
     icon: Building2,
-    title: "Proje Yönetimi",
-    line: "Projeleri, ilerlemeyi ve gecikmeleri gerçek zamanlı takip edin.",
+    title: "Proje ve Saha Yönetimi",
+    line: "Planları, ilerlemeyi ve gecikmeleri tek merkezden takip edin.",
   },
   {
     icon: Wallet,
-    title: "Nakit Yönetimi",
-    line: "Gelir, gider ve 30 günlük nakit projeksiyonunu görün.",
+    title: "Finans ve Hakediş",
+    line: "Nakit akışını, ödemeleri ve hakedişleri anlık izleyin.",
   },
   {
     icon: HardHat,
-    title: "Personel Takibi",
-    line: "Puantaj, ekipler ve maliyetleri tek ekranda yönetin.",
-  },
-  {
-    icon: PackageSearch,
-    title: "Satın Alma",
-    line: "Malzeme ihtiyaçlarını AI ile önceden tahmin edin.",
+    title: "Personel ve Kaynaklar",
+    line: "Ekipleri, puantajı ve kaynak kullanımını yönetin.",
   },
   {
     icon: Bot,
-    title: "Şantiyem AI",
-    line: "Sorular sorun, analiz alın, aksiyon oluşturun.",
-  },
-  {
-    icon: LayoutDashboard,
-    title: "Yönetici Paneli",
-    line: "Riskleri, fırsatları ve öncelikleri anında görün.",
+    title: "Yapay Zekâ Destekli Kararlar",
+    line: "Riskleri erken görün ve önerilen aksiyonları uygulayın.",
   },
 ];
 
-const STATUS_BADGES = ["Realtime AI", "Construction Brain", "OpenAI Powered"];
+const STATUS_BADGES = ["Canlı AI", "Proje verileriyle çalışır"];
 
 /** Staggered entrance — keeps the reveal order readable top to bottom. */
 const reveal = (delay: number) => ({
@@ -98,35 +85,17 @@ export function LoginHero() {
     <div className="login-hero flex h-full w-full flex-col justify-center px-5 py-10 sm:px-8 lg:overflow-y-auto xl:px-14">
       <HeroBackdrop />
 
-      <div className="relative z-10 mx-auto w-full max-w-[560px]">
-        {/* Eyebrow */}
-        <div
-          className="login-hero__reveal mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
-          style={{
-            ...reveal(0),
-            borderColor: "rgba(255,107,43,0.28)",
-            backgroundColor: "rgba(255,107,43,0.08)",
-          }}
-        >
-          <SantiyemMark px={16} tone="light" />
-          <span
-            className="text-[11px] font-semibold uppercase tracking-[0.14em]"
-            style={{ color: "#FF8F5A" }}
-          >
-            Construction Operating System
-          </span>
-        </div>
-
+      <div className="relative z-10 mx-auto w-full max-w-[520px]">
         {/* Headline */}
         <h2
-          className="login-hero__reveal text-[30px] font-bold leading-[1.12] tracking-[-0.02em] xl:text-[38px]"
+          className="login-hero__reveal text-[28px] font-bold leading-[1.16] tracking-[-0.02em] md:text-[32px] xl:text-[36px]"
           style={{
-            ...reveal(80),
+            ...reveal(0),
             color: "#F8FAFC",
             fontFamily: "'Space Grotesk', sans-serif",
           }}
         >
-          Şantiyenizi{" "}
+          Tüm inşaat operasyonunuzu{" "}
           <span
             style={{
               background: "linear-gradient(100deg, #FF6B2B 0%, #FF9F6B 100%)",
@@ -135,31 +104,33 @@ export function LoginHero() {
               color: "transparent",
             }}
           >
-            Yapay Zekâ
+            yapay zekâyla
           </span>{" "}
-          ile Yönetin.
+          yönetin.
         </h2>
 
-        {/* Subtitle */}
+        {/* Description */}
         <p
-          className="login-hero__reveal mt-3.5 max-w-[520px] text-[14px] leading-relaxed xl:text-[15px]"
-          style={{ ...reveal(150), color: "#94A3B8" }}
+          className="login-hero__reveal mt-6 max-w-[520px] text-[14px] leading-[1.65] xl:text-[15px]"
+          style={{ ...reveal(80), color: "#94A3B8" }}
         >
-          Şantiyem AI; projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
-          satın alma süreçlerinizi tek merkezden yöneten yapay zekâ destekli Construction
-          Operating System'dir.
+          Projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
+          satın alma süreçlerinizi tek merkezden yönetin. Şantiyem AI riskleri
+          erkenden fark eder, öncelikleri belirler ve uygulanabilir aksiyonlar
+          sunar.
         </p>
 
-        {/* Feature grid */}
-        <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        {/* Feature grid — 2×2 on desktop, compact cards */}
+        <div className="login-hero__reveal mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
+          style={reveal(160)}>
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.title}
-                className="login-hero__card login-hero__reveal flex items-start gap-2.5 rounded-xl border p-3"
+                className="login-hero__card login-hero__reveal flex items-start gap-3 rounded-xl border p-3"
                 style={{
-                  ...reveal(220 + i * 60),
+                  ...reveal(240 + i * 60),
                   borderColor: "rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(255,255,255,0.025)",
                 }}
@@ -171,7 +142,7 @@ export function LoginHero() {
                   <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>
+                  <p className="text-[12.5px] font-semibold" style={{ color: "#E2E8F0" }}>
                     {f.title}
                   </p>
                   <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "#7C8A9C" }}>
@@ -185,29 +156,28 @@ export function LoginHero() {
 
         {/* AI preview — static showcase, deliberately not interactive */}
         <div
-          className="login-hero__reveal mt-5 rounded-2xl border p-4 backdrop-blur-xl"
+          className="login-hero__reveal mt-7 rounded-xl border p-3.5"
           style={{
-            ...reveal(620),
+            ...reveal(520),
             borderColor: "rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15,20,25,0.62)",
-            boxShadow: "0 24px 60px -32px rgba(0,0,0,0.9)",
+            backgroundColor: "rgba(15,20,25,0.55)",
           }}
-          aria-label="Şantiyem AI örnek konuşması"
+          aria-label="Şantiyem AI örnek analizi"
         >
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2.5 flex items-center gap-2">
             <Bot className="h-3.5 w-3.5" style={{ color: "#FF6B2B" }} />
             <span
               className="text-[10px] font-semibold uppercase tracking-[0.12em]"
               style={{ color: "#64748B" }}
             >
-              Örnek Konuşma
+              Örnek AI Analizi
             </span>
           </div>
 
           {/* User turn */}
           <div className="flex justify-end">
             <div
-              className="max-w-[85%] rounded-xl rounded-br-sm px-3 py-2 text-[13px]"
+              className="max-w-[90%] rounded-xl rounded-br-sm px-3 py-1.5 text-[12.5px]"
               style={{ backgroundColor: "#FF6B2B", color: "#FFFFFF" }}
             >
               Bugün en büyük riskimiz ne?
@@ -215,36 +185,23 @@ export function LoginHero() {
           </div>
 
           {/* AI turn */}
-          <div className="mt-3 flex gap-2.5">
+          <div className="mt-2.5 flex gap-2.5">
             <div
               className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
               style={{ backgroundColor: "rgba(255,107,43,0.14)" }}
             >
               <Bot className="h-3.5 w-3.5" style={{ color: "#FF6B2B" }} />
             </div>
-            <div className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-              <p>
-                <span style={{ color: "#F1F5F9", fontWeight: 600 }}>
-                  İzmir Panorama Villaları
-                </span>{" "}
-                projesi planın 9 gün gerisinde.
+            <div className="min-w-0">
+              <p className="text-[12.5px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+                İzmir Panorama Villaları planın 9 gün gerisinde. Üç personelin
+                aktarılması teslim riskini azaltabilir.
               </p>
-              <p className="mt-2 text-[12px]" style={{ color: "#94A3B8" }}>
-                Önerim:
-              </p>
-              <ul className="mt-1 space-y-1 text-[12.5px]" style={{ color: "#94A3B8" }}>
-                <li className="flex gap-2">
-                  <span style={{ color: "#FF6B2B" }}>•</span>
-                  <span>3 personeli bu projeye aktarın.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span style={{ color: "#FF6B2B" }}>•</span>
-                  <span>Cephe satın almasını bugün tamamlayın.</span>
-                </li>
-              </ul>
-              <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium"
-                style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#4ADE80" }}>
-                Beklenen kazanım: +5 gün zaman tasarrufu
+              <p
+                className="mt-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium"
+                style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#4ADE80" }}
+              >
+                Tahmini kazanım: 5 gün
                 <span className="login-hero__caret" />
               </p>
             </div>
@@ -253,8 +210,8 @@ export function LoginHero() {
 
         {/* Live status ribbon */}
         <div
-          className="login-hero__reveal mt-4 flex flex-wrap items-center gap-2"
-          style={reveal(720)}
+          className="login-hero__reveal mt-7 flex flex-wrap items-center gap-2.5"
+          style={reveal(620)}
         >
           <div
             className="flex items-center gap-2 rounded-full border px-3 py-1.5"
@@ -271,7 +228,7 @@ export function LoginHero() {
               Şantiyem AI
             </span>
             <span className="text-[11.5px]" style={{ color: "#4ADE80" }}>
-              Online
+              Çevrimiçi
             </span>
           </div>
 
