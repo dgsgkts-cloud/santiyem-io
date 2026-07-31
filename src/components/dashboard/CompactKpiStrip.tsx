@@ -37,7 +37,7 @@ export function CompactKpiStrip({ items, loading }: Props) {
             type={it.onClick ? "button" : undefined}
             onClick={it.onClick}
             className={cn(
-              "rounded-card border border-border/70 bg-card px-3 py-2 text-left min-w-0 transition-all duration-200",
+              "rounded-card border border-border/70 bg-card px-3 py-2 text-left min-w-0 h-full transition-all duration-200",
               it.onClick && "hover:border-primary/40 active:scale-[0.98] cursor-pointer",
             )}
             style={{ minHeight: 60 }}
