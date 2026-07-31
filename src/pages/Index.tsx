@@ -685,9 +685,12 @@ const Index = () => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center cursor-pointer" onClick={() => goToTab("dashboard")}>
+          <BrandHomeLink
+            className="min-w-[44px] min-h-[44px] justify-center"
+            onNavigate={() => { setDrawerOpen(false); goToTab("dashboard"); }}
+          >
             <SantiyemMark px={34} />
-          </div>
+          </BrandHomeLink>
 
 
         </div>
