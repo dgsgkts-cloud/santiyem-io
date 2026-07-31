@@ -9,7 +9,7 @@ import {
   ArrowRight, Play, Mic, Sparkles, TrendingUp, AlertTriangle, CheckCircle2,
   Building2, Wallet, Users, Package, FileText, ClipboardList, Receipt, BookOpen,
   Brain, MessageSquare, Send, Zap, ShieldCheck, Clock, ArrowUpRight,
-  BarChart3, Activity, Waves, Database, Layers, ChevronDown, Check,
+  BarChart3, Activity, Waves, Database, Layers, ChevronDown, Check, X,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════
