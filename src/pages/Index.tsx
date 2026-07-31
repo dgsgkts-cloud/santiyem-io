@@ -635,13 +635,15 @@ const Index = () => {
       <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
       {/* ── MOBILE HEADER ── */}
       <header
-        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md flex items-center justify-between shrink-0 h-16"
+        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md shrink-0"
         style={{
           paddingTop: "env(safe-area-inset-top, 0px)",
+          minHeight: "calc(4rem + env(safe-area-inset-top, 0px))",
           paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
           paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
         }}
       >
+        <div className="h-16 flex items-center justify-between">
         <div className="flex items-center gap-[15px]">
           <button
             type="button"
