@@ -1,5 +1,5 @@
 // Voice Copilot mode & settings — client-side UX presets only.
-// No backend / ElevenLabs auth changes; these tune browser audio pipeline
+// No backend / voice-provider auth changes; these tune the browser audio pipeline
 // and local UX (PTT, wake word, barge-in, volume).
 
 export type VoiceMode = "office" | "site" | "driving";

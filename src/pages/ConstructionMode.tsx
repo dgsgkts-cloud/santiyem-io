@@ -5,7 +5,7 @@ import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 
 /**
  * Hands-free "Saha Modu" — big microphone, glove-friendly.
- * Uses VoiceCopilot in compact mode (no dashboard rail).
+ * Uses the shared in-page OpenAI Realtime voice overlay.
  */
 export default function ConstructionMode() {
   const navigate = useNavigate();

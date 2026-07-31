@@ -12,19 +12,18 @@ interface Props {
   state: VoiceState;
   metrics: VoiceMetrics;
   micLevel: number;
-  fellBack: boolean;
 }
 
 function ms(v: number | null) {
   return v == null ? "—" : `${v}ms`;
 }
 
-export function VoiceDebugPanel({ provider, state, metrics, micLevel, fellBack }: Props) {
+export function VoiceDebugPanel({ provider, state, metrics, micLevel }: Props) {
   return (
     <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
       <div className="mb-1 flex items-center justify-between">
         <span className="font-semibold text-foreground">VOICE DEBUG</span>
-        <span>{provider}{fellBack ? " (fallback)" : ""}</span>
+        <span>{provider}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-3">
         <span>state</span><span className="text-foreground">{state}</span>

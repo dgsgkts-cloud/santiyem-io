@@ -6,6 +6,7 @@
 import { VoiceEmitter } from "./voiceEvents";
 import type {
   TranscriptChunk,
+  VoiceErrorKind,
   VoiceEngine,
   VoiceEngineConfig,
   VoiceProviderId,
@@ -30,19 +31,13 @@ export abstract class BaseVoiceEngine implements VoiceEngine {
     this.emitter.emit("transcript", chunk);
   }
 
-  protected emitError(code: string, message: string, fatal = false) {
+  /**
+   * Technical codes stay in the console; the UI only ever consumes `kind`.
+   */
+  protected emitError(code: string, message: string, fatal = false, kind?: VoiceErrorKind) {
     console.error(`[voice:${this.provider}] ${code}: ${message}`);
-    this.emitter.emit("error", { code, message, fatal });
+    this.emitter.emit("error", { code, message, fatal, kind: kind ?? classifyVoiceError(code) });
     if (fatal) this.setState("error");
-  }
-
-  protected emitFallback(reason: string) {
-    this.emitter.emit("fallback", { reason });
-    // Global signal so the UI shell can swap providers even if the
-    // subscribing panel already unmounted.
-    try {
-      window.dispatchEvent(new CustomEvent("voice-engine-fallback", { detail: reason }));
-    } catch { /* noop */ }
   }
 
   abstract connect(config?: VoiceEngineConfig): Promise<void>;
@@ -69,9 +64,19 @@ export abstract class BaseVoiceEngine implements VoiceEngine {
   onTranscript(cb: (t: TranscriptChunk) => void) { return this.emitter.on("transcript", cb); }
   onResponse(cb: (r: { text: string; ts: number }) => void) { return this.emitter.on("response", cb); }
   onStateChange(cb: (s: VoiceState) => void) { return this.emitter.on("state", cb); }
-  onError(cb: (e: { code: string; message: string; fatal?: boolean }) => void) { return this.emitter.on("error", cb); }
-  onFallback(cb: (e: { reason: string }) => void) { return this.emitter.on("fallback", cb); }
+  onError(cb: (e: { code: string; message: string; fatal?: boolean; kind?: VoiceErrorKind }) => void) {
+    return this.emitter.on("error", cb);
+  }
   onToolCall(cb: (c: { callId: string; name: string; args: Record<string, unknown> }) => void) {
     return this.emitter.on("toolCall", cb);
   }
+}
+
+/** Maps internal codes to the five user-facing categories. */
+export function classifyVoiceError(code: string): VoiceErrorKind {
+  if (/audio_device_unavailable|mic|permission|NotAllowed/i.test(code)) return "mic_permission";
+  if (/token|auth|401|403|client_secret|quota/i.test(code)) return "auth";
+  if (/connection_lost|data_channel_closed|pc_failed|pc_disconnected/i.test(code)) return "connection_lost";
+  if (/playback|audio_play/i.test(code)) return "audio_playback";
+  return "connection";
 }

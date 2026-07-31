@@ -2,14 +2,13 @@
 // src/components/voice/VoiceExperience.tsx
 // Sprint 42B — ONE voice surface for the whole product: the
 // in-page full-screen overlay. The obsolete second voice screen
-// (VoiceCopilot) is no longer part of the user flow; provider
-// selection and the ElevenLabs fallback stay inside the engine
-// layer (useVoiceEngine → VoiceEngineFactory), so nothing about
-// the backend or the AI tools changes here.
+// has been removed. OpenAI Realtime is the only transport and it
+// lives entirely inside the engine layer (useVoiceEngine →
+// VoiceEngineFactory), so nothing about the AI tools changes here.
 // ============================================================
 
 import type { VoiceAccess } from "@/hooks/useVoiceAccess";
-import type { RealtimeCard } from "./RealtimeVoicePanel";
+import type { RealtimeCard } from "@/lib/voice/voiceTypes";
 import { VoiceSessionOverlay } from "./VoiceSessionOverlay";
 
 interface Props {

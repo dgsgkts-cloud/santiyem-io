@@ -1,10 +1,31 @@
 // ============================================================
 // src/lib/voice/voiceTypes.ts
 // Provider-agnostic voice types. Nothing here may reference a
-// concrete vendor (ElevenLabs, OpenAI, …).
+// concrete vendor beyond the single supported transport.
 // ============================================================
 
-export type VoiceProviderId = "openai-realtime" | "elevenlabs" | "pipeline";
+/** OpenAI Realtime is the only supported voice provider. */
+export type VoiceProviderId = "openai-realtime";
+
+/**
+ * User-facing error categories. Raw technical codes (token_401, sdp_500,
+ * pc_failed, data_channel_closed) never reach the UI.
+ */
+export type VoiceErrorKind =
+  | "mic_permission"
+  | "auth"
+  | "connection"
+  | "connection_lost"
+  | "audio_playback";
+
+/** Compact card payload handed to a voice session as initial context. */
+export interface RealtimeCard {
+  id: string;
+  title: string;
+  value?: string;
+  detail?: string;
+  tone?: "positive" | "warning" | "danger" | "neutral";
+}
 
 /** Global voice lifecycle states (Sprint 32.0 contract). */
 export type VoiceState =
@@ -43,9 +64,7 @@ export interface VoiceEngineEvents {
   /** Final assistant text for a completed turn. */
   response: { text: string; ts: number };
   toolCall: VoiceToolCall;
-  error: { code: string; message: string; fatal?: boolean };
-  /** Emitted when the engine gives up and the UI should fall back to text chat. */
-  fallback: { reason: string };
+  error: { code: string; message: string; fatal?: boolean; kind?: VoiceErrorKind };
 }
 
 export type VoiceEventName = keyof VoiceEngineEvents;
@@ -68,7 +87,7 @@ export interface VoiceEngineConfig {
   /** 0..1 output volume. */
   volume?: number;
   language?: string;
-  /** Auto reconnect attempts before emitting `fallback`. */
+  /** Auto reconnect attempts before the session ends in an error state. */
   maxReconnects?: number;
 }
 
@@ -116,6 +135,5 @@ export interface VoiceEngine {
   onTranscript(cb: (t: TranscriptChunk) => void): () => void;
   onResponse(cb: (r: { text: string; ts: number }) => void): () => void;
   onStateChange(cb: (s: VoiceState) => void): () => void;
-  onError(cb: (e: { code: string; message: string; fatal?: boolean }) => void): () => void;
-  onFallback(cb: (e: { reason: string }) => void): () => void;
+  onError(cb: (e: { code: string; message: string; fatal?: boolean; kind?: VoiceErrorKind }) => void): () => void;
 }

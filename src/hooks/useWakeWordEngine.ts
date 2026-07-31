@@ -14,6 +14,7 @@ import type {
   WakeWordState,
 } from "@/lib/voice/wake";
 import { useVoiceActivityGuards, type VoicePauseReason } from "./useVoiceActivityGuards";
+import { claimMic, getMicOwner, onMicOwnerChange, releaseMic } from "@/lib/voice/micOwnership";
 
 interface Options {
   /** Master switch — false releases the microphone entirely. */
@@ -52,9 +53,18 @@ export function useWakeWordEngine({
   const guards = useVoiceActivityGuards(enabled);
   const phrasesKey = phrases.join("|");
 
+  // --- microphone ownership --------------------------------------------
+  // A live voice session always owns the microphone. Wake-word detection
+  // must never call getUserMedia at the same time.
+  const [micOwner, setMicOwner] = useState(getMicOwner);
+  useEffect(() => onMicOwnerChange(setMicOwner), []);
+  const sessionOwnsMic = micOwner === "voice_session";
+
   // --- engine lifecycle -------------------------------------------------
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || sessionOwnsMic) return;
+    // Refused while a conversation holds the microphone.
+    if (!claimMic("wake_word")) return;
 
     const engine = createWakeWordEngine(provider);
     engineRef.current = engine;
@@ -71,12 +81,13 @@ export function useWakeWordEngine({
       // Releases the microphone — nothing keeps listening once disabled.
       engine.destroy();
       engineRef.current = null;
+      releaseMic("wake_word");
       setState("stopped");
     };
-  }, [enabled, provider, language, phrasesKey]);
+  }, [enabled, provider, language, phrasesKey, sessionOwnsMic]);
 
   // --- automatic pause / resume ----------------------------------------
-  const shouldPause = guards.paused || suspended;
+  const shouldPause = guards.paused || suspended || sessionOwnsMic;
 
   useEffect(() => {
     const engine = engineRef.current;
@@ -115,7 +126,7 @@ export function useWakeWordEngine({
     };
   }, [enabled]);
 
-  const active = enabled && state === "listening";
+  const active = enabled && !sessionOwnsMic && state === "listening";
 
   return {
     state,

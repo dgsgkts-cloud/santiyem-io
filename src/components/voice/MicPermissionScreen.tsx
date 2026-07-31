@@ -75,11 +75,11 @@ export function MicPermissionScreen({ onRetry, onCancel }: Props) {
         </div>
 
         <h2 className="mt-4 text-lg font-semibold text-foreground">
-          Mikrofon izni verilmedi
+          Mikrofon izni gerekli
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Sesli mod için mikrofon iznine ihtiyacımız var. Tarayıcınız izni reddettiği
-          için konuşmayı başlatamıyoruz. İzni verdikten sonra hemen devam edebilirsiniz.
+          Sesli görüşmeyi kullanabilmek için mikrofon erişimine izin vermelisiniz.
+          İzni verdikten sonra hemen devam edebilirsiniz.
         </p>
 
         <div className="mt-4 flex items-start gap-2 rounded-[14px] border border-emerald-500/20 bg-emerald-500/5 p-3 text-left">
@@ -115,17 +115,20 @@ export function MicPermissionScreen({ onRetry, onCancel }: Props) {
 
         <div className="mt-5 space-y-2">
           <Button className="min-h-[48px] w-full" onClick={onRetry}>
-            <RotateCw className="mr-2 h-4 w-4" /> Tekrar dene
+            <RotateCw className="mr-2 h-4 w-4" /> Tekrar Dene
           </Button>
           <Button
             variant="secondary"
             className="min-h-[44px] w-full"
             onClick={() => setShowSteps(true)}
           >
-            <Settings2 className="mr-2 h-4 w-4" /> Ayarlarım nerede?
+            <Settings2 className="mr-2 h-4 w-4" /> Ayarları Aç
           </Button>
           <Button variant="ghost" className="min-h-[44px] w-full" onClick={onCancel}>
-            Yazarak devam et
+            Yazarak Devam Et
+          </Button>
+          <Button variant="ghost" className="min-h-[44px] w-full" onClick={onCancel}>
+            Kapat
           </Button>
         </div>
       </div>

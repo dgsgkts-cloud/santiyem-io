@@ -19,7 +19,7 @@ export class VoiceErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: unknown) {
     // eslint-disable-next-line no-console
-    console.error("[VoiceCopilot crashed]", error, info);
+    console.error("[voice session crashed]", error, info);
   }
 
   render() {

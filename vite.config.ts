@@ -33,7 +33,6 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("recharts") || id.includes("d3-")) return "charts";
           if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("canvg")) return "pdf";
           if (id.includes("xlsx") || id.includes("exceljs")) return "spreadsheet";
-          if (id.includes("@elevenlabs")) return "voice";
           if (id.includes("@capacitor")) return "capacitor";
         },
       },
