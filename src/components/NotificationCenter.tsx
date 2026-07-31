@@ -111,7 +111,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
 
   const filteredNotifs = useMemo(() => {
     return categorized.filter(n => {
-      if (filter === "unread" && dismissedIds.includes(n.id)) return false;
+      if (filter === "unread" && isRead(n.id)) return false;
       if (filter === "finance" && n.cat !== "finance") return false;
       if (filter === "projects" && n.cat !== "projects") return false;
       if (filter === "personnel" && n.cat !== "personnel") return false;
@@ -119,7 +119,8 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
       if (query && !(`${n.title} ${n.message}`).toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
-  }, [categorized, filter, dismissedIds, query]);
+  }, [categorized, filter, isRead, query]);
+
 
   /* SPRINT 38G — priority first: Kritik → Bugün → Daha Önce → Tamamlandı */
   const priorityGroups = useMemo(() => {
