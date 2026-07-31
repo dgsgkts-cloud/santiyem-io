@@ -192,32 +192,39 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
               <Metric
                 icon={Wallet}
                 label="Nakit"
                 value={fmtTRY(kpis?.cashOnHand ?? 0)}
-                sub={`${kpis?.pendingPayments ?? 0} bekleyen ödeme`}
+                sub="Kasa bakiyesi"
               />
               <Metric
                 icon={Clock}
-                label="Bugün Vadesi"
-                value={fmtTRY(kpis?.paymentsDueTodayAmount ?? 0)}
-                sub={`${kpis?.paymentsDueTodayCount ?? 0} kayıt`}
+                label="Bekleyen Ödemeler"
+                value={`${kpis?.pendingPayments ?? 0} ödeme`}
+                sub={`Bugün vadeli: ${fmtTRY(kpis?.paymentsDueTodayAmount ?? 0)}`}
               />
               <Metric
                 icon={HardHat}
                 label="Sahada"
                 value={`${kpis?.activeWorkersToday ?? 0} kişi`}
-                sub={`${kpis?.tasksDueToday ?? 0} görev bugün`}
+                sub={`Bugün ${kpis?.tasksDueToday ?? 0} görev`}
               />
               <Metric
-                icon={TrendingUp}
+                icon={Package}
                 label="Stok Uyarısı"
-                value={`${kpis?.criticalStockItems ?? 0} kalem`}
-                sub={`${kpis?.pendingHakedisCount ?? 0} bekleyen hakediş`}
+                value={`${kpis?.criticalStockItems ?? 0} kritik kalem`}
+                sub="Kritik seviyenin altında"
+              />
+              <Metric
+                icon={FileCheck2}
+                label="Bekleyen Hakediş"
+                value={`${kpis?.pendingHakedisCount ?? 0} hakediş`}
+                sub="Onay bekliyor"
               />
             </div>
+
 
             {!!kpis?.todayEvents?.length && (
               <div className="mt-3 flex flex-wrap gap-1.5">
