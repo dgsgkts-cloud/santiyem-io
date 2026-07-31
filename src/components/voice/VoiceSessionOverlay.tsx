@@ -135,8 +135,11 @@ export function VoiceSessionOverlay({
       setFailed(false);
       setPreparing(false);
       stoppedRef.current = false;
+      autoRetriesRef.current = 0;
+      setRetryIn(null);
     }
   }, [voice.state]);
+
 
 
   // Greeting for wake sessions — spoken once when the session goes live.
