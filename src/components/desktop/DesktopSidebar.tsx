@@ -268,8 +268,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
 
 
 
-      {/* User card + AI health */}
-      <div className="shrink-0" style={{ padding: collapsed ? "0 12px 12px" : "0 16px 16px" }}>
+      {/* Compact user card — no KPIs, health cards or quota counters in navigation */}
+      <div className="shrink-0" style={{ padding: collapsed ? "0 12px 20px" : "0 14px 22px" }}>
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -291,62 +291,46 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
             </TooltipContent>
           </Tooltip>
         ) : (
-          <div className="space-y-3">
-            <button
-              onClick={() => onTabChange("settings")}
-              className="ds-press ds-focus-ring w-full ds-card ds-card-interactive flex items-center gap-3 text-left"
-              style={{ padding: 12, borderRadius: 16 }}
+          <button
+            onClick={() => onTabChange("settings")}
+            className="ds-press ds-focus-ring w-full ds-card ds-card-interactive flex items-center gap-3 text-left"
+            style={{ padding: 12, borderRadius: 16 }}
+          >
+            <span
+              className="rounded-full flex items-center justify-center shrink-0 ds-body-strong"
+              style={{ width: 34, height: 34, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
             >
-              <span
-                className="rounded-full flex items-center justify-center shrink-0 ds-body-strong"
-                style={{ width: 34, height: 34, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
-              >
-                {initials}
-              </span>
-              <span className="flex-1 min-w-0">
-                {nameHasName ? (
-                  <span className="block ds-subtitle truncate text-foreground">{displayName}</span>
-                ) : !nameReady ? (
-                  <span className="ds-skeleton block h-3 w-24" />
-                ) : (
-                  <span className="block ds-subtitle text-foreground">—</span>
-                )}
-                <span className="block ds-caption truncate">{roleLabel || title}</span>
-              </span>
-              <span className={`ds-chip ${planTone} shrink-0`} style={{ height: 20, fontSize: 10, padding: "0 8px" }}>
-                {planLabel}
-              </span>
-            </button>
-
-            <AIHealthCard onOpen={() => onTabChange("dashboard")} />
-
-            {plan === "free" && (
-              <div className="px-1">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="ds-caption">AI Soruları</span>
-                  <span className="ds-caption ds-numeric">{usage.aiQuestions.used}/{usage.aiQuestions.max}</span>
-                </div>
-                <div className="w-full h-1 rounded-full bg-muted/60 overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      background: "hsl(var(--primary))",
-                      width: `${(usage.aiQuestions.used / usage.aiQuestions.max) * 100}%`,
-                      transition: "width 600ms var(--ease-spring)",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+              {initials}
+            </span>
+            <span className="flex-1 min-w-0">
+              {nameHasName ? (
+                <span className="block ds-subtitle truncate text-foreground">{displayName}</span>
+              ) : !nameReady ? (
+                <span className="ds-skeleton block h-3 w-24" />
+              ) : (
+                <span className="block ds-subtitle text-foreground">—</span>
+              )}
+              <span className="block ds-caption truncate">{roleLabel || title}</span>
+            </span>
+            <span className={`ds-chip ${planTone} shrink-0`} style={{ height: 20, fontSize: 10, padding: "0 8px" }}>
+              {planLabel}
+            </span>
+          </button>
         )}
       </div>
 
       {/* Navigation */}
       <nav
-        className="flex-1 space-y-6"
-        style={{ padding: collapsed ? "0 12px 16px" : "0 12px 16px", overflow: "visible auto" }}
+        className="flex-1"
+        style={{
+          padding: collapsed ? "0 12px 16px" : "0 14px 16px",
+          overflow: "visible auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 22,
+        }}
       >
+
         {NAV_SECTIONS.map((section, si) => (
           <div key={section.label || `s-${si}`}>
             {!collapsed && section.label && (
