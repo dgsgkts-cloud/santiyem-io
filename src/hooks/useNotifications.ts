@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useCallback, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
