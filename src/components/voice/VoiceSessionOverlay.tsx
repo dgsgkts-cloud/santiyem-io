@@ -188,7 +188,7 @@ export function VoiceSessionOverlay({
     const next = !muted;
     setMuted(next);
     if (next) voice.mute(); else voice.unmute();
-    voiceHaptic("tap");
+    voiceHaptic("start");
   };
 
   if (micBlocked) {
