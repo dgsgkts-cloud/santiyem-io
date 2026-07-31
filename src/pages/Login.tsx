@@ -54,9 +54,9 @@ const Login = () => {
         <div className="flex flex-col items-center mb-6 lg:mb-8">
           <SantiyemAuthLockup className="mb-3 brand-logo-enter" />
           <h1 className="text-lg lg:text-xl font-bold" style={{ color: "#F1F5F9", fontFamily: isLg ? "'Space Grotesk', sans-serif" : undefined }}>
-            Şantiyem'ya Giriş Yap
+            Tekrar Hoş Geldiniz
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#64748B" }}>İnşaat & Mühendislik Asistanınız</p>
+          <p className="text-sm mt-1" style={{ color: "#64748B" }}>Şantiyem AI hesabınıza giriş yapın.</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
