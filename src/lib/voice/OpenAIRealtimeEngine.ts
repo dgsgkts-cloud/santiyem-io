@@ -549,6 +549,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   }
 
   private async teardown() {
+    this.clearTimers();
+    this.sessionReady = false;
+    if (this.dc) this.dc.onclose = null;
     try { this.dc?.close(); } catch { /* noop */ }
     try { this.pc?.getSenders().forEach((s) => s.track?.stop()); } catch { /* noop */ }
     try { this.pc?.close(); } catch { /* noop */ }
@@ -558,7 +561,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
     this.outAnalyser = null; this.outBuf = null;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
+    rtLog("teardown complete");
   }
+
 }
 
 function safeJson(s: string): Record<string, unknown> {
