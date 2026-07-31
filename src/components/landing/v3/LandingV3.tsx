@@ -1187,7 +1187,15 @@ const NavV3 = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  // Body scroll stays locked while the drawer owns the screen.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
   const scrollTo = (h: string) => { setOpen(false); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); };
+
   return (
     <nav
       className="fixed inset-x-0 top-0 z-50 transition-all pt-[env(safe-area-inset-top)]"
@@ -1229,19 +1237,69 @@ const NavV3 = () => {
         </button>
 
       </div>
+      {/* Sprint 42B — opaque, safe-area aware mobile drawer. */}
       {open && (
-        <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
-          <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[155px] h-auto object-contain mb-2" draggable={false} />
+        <div className="md:hidden fixed inset-0 z-[60]">
+          <button
+            aria-label="Menüyü kapat"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 w-full"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}
+          />
+          <div
+            className="absolute inset-0 flex flex-col"
+            style={{
+              background: "#050505",
+              paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)",
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+            }}
+          >
+            <div className="flex items-center justify-between px-5">
+              <img src="/brand/horizontal-light.svg" alt="Şantiyem AI" className="w-[142px] h-auto object-contain" draggable={false} />
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Menüyü kapat"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white/70"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          {LINKS.map((l) => (
-            <button key={l.h} onClick={() => scrollTo(l.h)} className="block text-[15px]" style={{ color: T.muted, ...body }}>{l.l}</button>
-          ))}
-          <div className="pt-4 flex flex-col gap-2 border-t" style={{ borderColor: T.border }}>
-            <Link to="/login" className="text-center py-2 text-[14px]" style={{ color: T.muted, ...body }}>Giriş</Link>
-            <Link to="/register" className="text-center py-3 rounded-full font-semibold text-white" style={{ background: T.ember, ...body }}>Ücretsiz Başla</Link>
+            <div className="mt-6 flex flex-col px-5">
+              {LINKS.map((l) => (
+                <button
+                  key={l.h}
+                  onClick={() => scrollTo(l.h)}
+                  className="flex min-h-[48px] items-center text-left text-[16px]"
+                  style={{ color: T.text, ...body }}
+                >
+                  {l.l}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-auto flex flex-col gap-3 px-5 pt-6">
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center rounded-[14px] text-[15px] font-medium"
+                style={{ height: 46, color: T.text, border: `1px solid ${T.borderStrong}`, ...body }}
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center rounded-[16px] text-[15px] font-semibold text-white"
+                style={{ height: 50, background: T.ember, ...body }}
+              >
+                Ücretsiz Başla
+              </Link>
+            </div>
           </div>
         </div>
       )}
+
     </nav>
   );
 };
