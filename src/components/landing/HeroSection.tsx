@@ -7,8 +7,8 @@ const HeroSection = () => {
 
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-6 overflow-hidden"
-      style={{ background: "#0F1419" }}
+      className="relative min-h-screen flex items-center justify-center pb-16 px-6 overflow-hidden"
+      style={{ background: "#0F1419", paddingTop: "calc(5rem + env(safe-area-inset-top, 0px))" }}
     >
       {/* Radial glow */}
       <div className="absolute inset-0 pointer-events-none" style={{
