@@ -43,6 +43,8 @@ import ProjectNotesSection from "./project-detail/ProjectNotesSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
 import CollapsibleSection from "./projects/CollapsibleSection";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ProjectDetailMobile from "@/components/mobile/project-detail/ProjectDetailMobile";
 
 
 
