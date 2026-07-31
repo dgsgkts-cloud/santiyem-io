@@ -276,7 +276,7 @@ const HeroDashboardMock = () => {
 
 
 const Hero = () => (
-  <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
+  <section className="relative pt-[calc(env(safe-area-inset-top)+110px)] pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
     {/* Ember glow */}
     <div className="absolute inset-0 pointer-events-none opacity-60">
       <div className="absolute top-1/4 -left-40 w-[600px] h-[600px] rounded-full" style={{ background: `radial-gradient(circle, ${T.ember}22 0%, transparent 70%)`, filter: "blur(60px)" }} />
