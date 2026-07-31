@@ -359,6 +359,29 @@ export function VoiceSessionOverlay({
                 ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
                 : "Ses durduruldu. Yeniden bağlanabilirsiniz."}
             </p>
+
+            {/* The conversation is kept — show where we left off. */}
+            {(lastUserLine || lastAssistantLine) && (
+              <div className="mt-4 rounded-[14px] border border-white/10 bg-white/[0.04] p-3 text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                  Konuşma korundu
+                </p>
+                {lastUserLine && (
+                  <p className="mt-2 line-clamp-2 text-[13px] text-white/75">
+                    <span className="text-white/45">Siz: </span>{lastUserLine}
+                  </p>
+                )}
+                {lastAssistantLine && (
+                  <p className="mt-1 line-clamp-2 text-[13px] text-white/75">
+                    <span className="text-white/45">Şantiyem AI: </span>{lastAssistantLine}
+                  </p>
+                )}
+                <p className="mt-2 text-[12px] text-white/45">
+                  Yeniden bağlanınca kaldığınız yerden devam edeceksiniz.
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
