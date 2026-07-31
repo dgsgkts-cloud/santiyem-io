@@ -1218,13 +1218,14 @@ const NavV3 = () => {
           <Link to="/login" className="text-[13px]" style={{ color: T.muted, ...body }}>Giriş</Link>
           <PrimaryBtn to="/register">Ücretsiz Başla</PrimaryBtn>
         </div>
-        <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)} aria-label="menu">
+        <button className="md:hidden text-white -mr-2 w-11 h-11 flex items-center justify-center" onClick={() => setOpen(!open)} aria-label="menu">
           <div className="w-5 flex flex-col gap-1">
             <span className="h-0.5 bg-white transition-all" style={{ transform: open ? "rotate(45deg) translate(3px,3px)" : "none" }} />
             <span className="h-0.5 bg-white transition-all" style={{ opacity: open ? 0 : 1 }} />
             <span className="h-0.5 bg-white transition-all" style={{ transform: open ? "rotate(-45deg) translate(3px,-3px)" : "none" }} />
           </div>
         </button>
+
       </div>
       {open && (
         <div className="md:hidden border-t px-6 py-5 space-y-4" style={{ background: "rgba(0,0,0,0.95)", borderColor: T.border }}>
