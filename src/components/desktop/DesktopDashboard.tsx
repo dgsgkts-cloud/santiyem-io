@@ -854,10 +854,13 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
             </ul>
           )}
         </div>
-      </section>
+        </section>
 
-      {/* 8 — Everything else stays available but visually quiet */}
-      <TodayTimeline />
+        {/* 8 — Everything else stays available but visually quiet */}
+        <TodayTimeline />
+      </div>
+
+
 
       <UpgradeModal
         open={upgradeModal.open}
