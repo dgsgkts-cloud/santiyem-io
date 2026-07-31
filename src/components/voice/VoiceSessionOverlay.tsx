@@ -433,12 +433,14 @@ export function VoiceSessionOverlay({
         )}
       </div>
 
-      {/* Captions — own region, never behind the controls. */}
-      {captionsOn && phase !== "error" && (
+      {/* Captions — own region, never behind the controls. Kept visible
+          while disconnected so the transcript is not lost from view. */}
+      {captionsOn && transcripts.length > 0 && (
         <div className="shrink-0 px-5">
-          <VoiceCaptions transcripts={voice.transcripts} />
+          <VoiceCaptions transcripts={transcripts} />
         </div>
       )}
+
 
       {/* Controls — three essentials + optional text hand-off. */}
       {phase !== "error" && (
