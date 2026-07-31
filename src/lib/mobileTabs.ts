@@ -1,12 +1,12 @@
 import {
   Home, FolderOpen, FileText, BookOpen, Users, CreditCard,
-  CheckSquare, Settings, User, type LucideIcon,
+  CheckSquare, Settings, User, Sparkles, type LucideIcon,
 } from "lucide-react";
 import type { ProjectRole } from "@/lib/projectPermissions";
 
 export type MobileTabId =
   | "dashboard" | "projects" | "hakedis" | "site-diary"
-  | "payments-kasa" | "settings" | "more" | "personnel";
+  | "payments-kasa" | "settings" | "more" | "personnel" | "chat";
 
 export interface MobileTab {
   id: MobileTabId;
@@ -14,15 +14,15 @@ export interface MobileTab {
   icon: LucideIcon;
 }
 
-// Sprint 18.4: Bottom nav is now 5 concrete destinations (no "Daha Fazla").
-// The hamburger button in the mobile header owns the drawer.
+// Sprint 41: bottom nav simplified to 4 primary destinations. Hakediş and
+// Şantiye Günlüğü moved to the drawer; AI replaces the floating microphone.
 const FULL_TABS: MobileTab[] = [
   { id: "dashboard", label: "Ana Sayfa", icon: Home },
   { id: "projects", label: "Projeler", icon: FolderOpen },
-  { id: "hakedis", label: "Hakediş", icon: FileText },
-  { id: "site-diary", label: "Günlük", icon: BookOpen },
+  { id: "chat", label: "AI", icon: Sparkles },
   { id: "settings", label: "Profil", icon: User },
 ];
+
 
 /**
  * Bottom tab bar definitions per role. Owner/manager get the full menu.
