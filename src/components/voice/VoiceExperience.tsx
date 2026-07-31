@@ -10,7 +10,9 @@ import type { VoiceAccess } from "@/hooks/useVoiceAccess";
 import { createVoiceEngine, usesLegacyComponent } from "@/lib/voice/VoiceEngineFactory";
 import { FALLBACK_PROVIDER, getVoiceProvider, VOICE_RECONNECT_MESSAGE } from "@/lib/voice/voiceConfig";
 import { VoiceCopilot } from "./VoiceCopilot";
-import { RealtimeVoicePanel, type RealtimeCard } from "./RealtimeVoicePanel";
+import type { RealtimeCard } from "./RealtimeVoicePanel";
+import { VoiceSessionOverlay } from "./VoiceSessionOverlay";
+
 
 interface Props {
   onClose: () => void;
@@ -80,14 +82,12 @@ export function VoiceExperience(props: Props) {
     );
   }
 
+  // Sprint 42 — single unified voice surface: the in-page overlay.
   return (
-    <RealtimeVoicePanel
+    <VoiceSessionOverlay
       onClose={props.onClose}
-      compact={props.compact}
-      autoStart={props.autoStart}
+      autoStart
       initialContext={props.initialContext}
-      initialCards={props.initialCards}
-      autoSpeak={props.autoSpeak}
       sessionMode={props.sessionMode}
       conversationMode={props.conversationMode}
       greeting={props.greeting}
@@ -95,3 +95,4 @@ export function VoiceExperience(props: Props) {
     />
   );
 }
+
