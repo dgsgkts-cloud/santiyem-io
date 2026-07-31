@@ -59,7 +59,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const [filter, setFilter] = useState<NotifFilter>("all");
   const [query, setQuery] = useState("");
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissedIds, loading: notifLoading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning, loading: notifLoading } = useNotifications();
   const { projects } = useProjects();
   const { payments = [] } = useCashPayments();
   const { collections = [] } = useCashCollections();
