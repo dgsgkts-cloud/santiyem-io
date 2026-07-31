@@ -1,4 +1,4 @@
-import { SantiyemMark, SantiyemWordmark } from "@/components/brand/SantiyemLogo";
+import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import OnboardingModal, { shouldShowOnboarding, markOnboardingDone } from "@/components/desktop/OnboardingModal";
 import FirstRunWizard, { isFirstRunDone, shouldShowWelcomeBrief, clearWelcomeBrief } from "@/components/desktop/FirstRunWizard";
@@ -635,21 +635,26 @@ const Index = () => {
       <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
       {/* ── MOBILE HEADER ── */}
       <header
-        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md px-3 py-2.5 flex items-center justify-between shrink-0"
-        style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top, 0px))" }}
+        className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md flex items-center justify-between shrink-0 h-16"
+        style={{
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+        }}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-[15px]">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="Menüyü aç"
-            className="w-11 h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 active:scale-95 transition-all duration-200"
+            className="w-11 h-11 -ml-1 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 active:scale-95 transition-all duration-200"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center cursor-pointer pl-0.5" onClick={() => goToTab("dashboard")}>
-            <SantiyemWordmark px={26} />
+          <div className="flex items-center cursor-pointer" onClick={() => goToTab("dashboard")}>
+            <SantiyemMark px={34} />
           </div>
+
 
         </div>
         <div className="flex items-center gap-1">
