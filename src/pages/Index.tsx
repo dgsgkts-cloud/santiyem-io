@@ -1000,9 +1000,9 @@ const Index = () => {
         </>
       )}
 
-      {/* ── MOBILE BOTTOM TAB BAR ── */}
+      {/* ── MOBILE BOTTOM TAB BAR (Sprint 41 — compact, 4 items) ── */}
       <nav
-        className="md:hidden shrink-0 border-t border-border bg-card/95 backdrop-blur-md shadow-lg"
+        className="md:hidden shrink-0 border-t border-border/70 bg-card/95 backdrop-blur-sm"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         aria-label="Alt navigasyon"
       >
@@ -1018,16 +1018,16 @@ const Index = () => {
                   setDrawerOpen(false);
                   goToTab(tab.id as Tab);
                 }}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-all duration-200 active:scale-[0.94]"
+                className="flex-1 flex flex-col items-center justify-center gap-[3px] transition-colors duration-200 active:opacity-70"
                 style={{
-                  minHeight: 66,
-                  color: isActive ? "#FF6B2B" : "#94A3B8",
+                  height: 60,
+                  color: isActive ? "#FF6B2B" : "#8A94A6",
                 }}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={tab.label}
               >
-                <Icon className="w-5 h-5 transition-transform duration-200" strokeWidth={isActive ? 2.4 : 2} />
-                <span className="text-[11px] leading-tight transition-all" style={{ fontWeight: isActive ? 600 : 500 }}>
+                <Icon style={{ width: 23, height: 23 }} strokeWidth={isActive ? 2.3 : 1.9} />
+                <span className="text-[11px] leading-none" style={{ fontWeight: isActive ? 600 : 500 }}>
                   {tab.label}
                 </span>
               </button>
@@ -1035,6 +1035,7 @@ const Index = () => {
           })}
         </div>
       </nav>
+
     </div>
   );
 };

@@ -11,6 +11,9 @@ import {
   Clock,
   HardHat,
   History,
+  MessageSquare,
+  Mic,
+
   Sparkles,
   TrendingUp,
   Wallet,
@@ -131,6 +134,33 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
           </p>
         </div>
       </div>
+
+      {/* ── Voice entry (Sprint 41 — replaces the floating microphone) ── */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("open-voice-copilot", { detail: { autoSpeak: false } }),
+            )
+          }
+          className="flex items-center justify-center gap-2 rounded-control border border-primary/40 bg-primary/10 px-4 text-[13px] font-semibold text-primary active:opacity-80"
+          style={{ minHeight: 48 }}
+        >
+          <Mic className="h-[18px] w-[18px]" />
+          Sesli Mod
+        </button>
+        <button
+          type="button"
+          onClick={() => document.querySelector<HTMLTextAreaElement>("textarea")?.focus()}
+          className="flex items-center justify-center gap-2 rounded-control border border-border/70 bg-card/60 px-4 text-[13px] font-medium text-foreground active:opacity-80"
+          style={{ minHeight: 48 }}
+        >
+          <MessageSquare className="h-[18px] w-[18px] text-muted-foreground" />
+          Yazarak Sor
+        </button>
+      </div>
+
 
       {/* ── Today's AI Brief ── */}
       <section className="rounded-card border border-border/70 bg-card/60 p-5">

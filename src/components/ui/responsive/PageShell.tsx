@@ -30,16 +30,20 @@ export function PageShell({
   const mw = typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth;
   return (
     <div
-      className={cn("w-full no-overflow-x safe-area-bottom", className)}
+      className={cn(
+        "w-full no-overflow-x safe-area-bottom",
+        // Sprint 41 — mobile: bottom nav (60px) + safe area + 16px breathing room.
+        "pb-[calc(env(safe-area-inset-bottom,0px)+76px)] md:pb-10",
+        className,
+      )}
       style={{
-        // SPRINT 40 — mobile rhythm: 16px gutters, 16px top, generous bottom so
-        // the floating voice button never covers the last row.
+        // SPRINT 40 — mobile rhythm: 16px gutters, 16px top.
         paddingLeft: "max(env(safe-area-inset-left, 0px), 16px)",
         paddingRight: "max(env(safe-area-inset-right, 0px), 16px)",
         paddingTop: "16px",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
+
       <div
         className={cn(bleed ? "w-full" : "mx-auto w-full")}
         style={bleed ? undefined : { maxWidth: mw }}
