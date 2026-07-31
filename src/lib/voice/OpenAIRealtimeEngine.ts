@@ -504,8 +504,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.assistantBuffer = "";
     this.speaking = false;
     this.setState("interrupted");
-    this.setState("listening");
+    this.goListening();
   }
+
 
   private attachLevelMeter(stream: MediaStream) {
     try {
