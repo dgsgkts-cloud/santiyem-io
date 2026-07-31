@@ -89,17 +89,27 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" checked={remember} onCheckedChange={(c) => setRemember(!!c)}
-                className="border-white/20 data-[state=checked]:bg-[#FF6B2B] data-[state=checked]:border-[#FF6B2B]" />
-              <label htmlFor="remember" className="text-xs" style={{ color: "#64748B" }}>Beni hatırla</label>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            {/* 20px checkbox inside a 44px tap target (Sprint 42B) */}
+            <label
+              htmlFor="remember"
+              className="-ml-2 flex min-h-[44px] cursor-pointer items-center gap-2 px-2 text-xs"
+              style={{ color: "#64748B" }}
+            >
+              <Checkbox
+                id="remember"
+                checked={remember}
+                onCheckedChange={(c) => setRemember(!!c)}
+                className="h-5 w-5 shrink-0 rounded-[6px] border-white/20 data-[state=checked]:bg-[#FF6B2B] data-[state=checked]:border-[#FF6B2B]"
+              />
+              <span>Beni hatırla</span>
+            </label>
             <Link to="/forgot-password" className="text-xs sm:text-sm font-medium hover:underline transition-colors"
               style={{ color: "#FF6B2B" }}>
               Şifremi Unuttum
             </Link>
           </div>
+
 
           <button type="submit" disabled={loading}
             className="w-full rounded-lg text-[14px] font-semibold text-white transition-colors disabled:opacity-50"
@@ -159,18 +169,33 @@ const Login = () => {
   }
 
   // Mobile / tablet: form first, hero stacked underneath.
+  // Sprint 42B — back control sits below the iOS status bar (no negative
+  // margins, no fixed device offsets) and the card starts after a balanced gap.
   return (
-    <div className="min-h-screen relative login-dark" style={{ backgroundColor: "#0F1419" }}>
-      <button onClick={() => navigate("/")}
-        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm">
-        <ArrowLeft className="w-4 h-4" /> Ana Sayfa
-      </button>
-      <div className="flex min-h-screen items-center justify-center px-4">
+    <div
+      className="relative login-dark"
+      style={{
+        backgroundColor: "#0F1419",
+        minHeight: "100dvh",
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+      }}
+    >
+      <div className="px-4">
+        <button
+          onClick={() => navigate("/")}
+          aria-label="Ana Sayfaya dön"
+          className="-ml-2 flex h-11 min-w-[44px] items-center gap-1.5 rounded-xl px-2 text-sm text-white/60 transition-colors hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4" /> Ana Sayfa
+        </button>
+      </div>
+      <div className="flex justify-center px-4 pb-10" style={{ paddingTop: 24 }}>
         {formContent}
       </div>
       <LoginHero />
     </div>
   );
+
 
 };
 
