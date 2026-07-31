@@ -42,15 +42,22 @@ interface Props {
 const PHASE_LABEL: Record<VoicePhase, string> = {
   idle: "Hazır",
   requesting_permission: "Mikrofon izni bekleniyor",
-  connecting: "Hazırlanıyor",
+  mic_setup: "Mikrofon hazırlanıyor...",
+  connecting: "OpenAI'ya bağlanılıyor...",
+  ready: "Hazır",
   listening: "Dinliyorum",
   user_finished: "Anlıyorum",
-  thinking: "Yanıt hazırlanıyor",
-  speaking: "Yanıtlıyor",
+  thinking: "Düşünüyorum...",
+  speaking: "Yanıtlıyor...",
   interrupted: "Dinliyorum",
   ending: "Görüşme kapatılıyor",
   error: "Bağlantı kesildi",
 };
+
+/** Session states that mean the transport is genuinely alive. */
+const LIVE_STATES = ["ready", "listening", "speaking", "thinking"] as const;
+const isLive = (s: string) => (LIVE_STATES as readonly string[]).includes(s);
+
 
 /** Only surface "Hazırlanıyor" if initialization is actually slow. */
 const PREPARING_VISIBLE_AFTER_MS = 700;

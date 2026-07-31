@@ -59,7 +59,13 @@ export function VoiceReactiveOrb({ phase, level, fallbackMotion = false }: Props
       raf = requestAnimationFrame(tick);
       // Breathing fallback keeps the orb alive when analysers are silent.
       const breathe =
-        fallbackMotion || phase === "connecting" || phase === "thinking" || phase === "requesting_permission"
+        fallbackMotion ||
+        phase === "connecting" ||
+        phase === "mic_setup" ||
+        phase === "ready" ||
+        phase === "thinking" ||
+        phase === "requesting_permission"
+
           ? (Math.sin((t - t0) / 620) + 1) / 2 * 0.35
           : 0;
       const want = Math.max(target.current, breathe);
