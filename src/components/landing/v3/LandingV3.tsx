@@ -1280,7 +1280,16 @@ const NavV3 = () => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, [open]);
-  const scrollTo = (h: string) => { setOpen(false); document.querySelector(h)?.scrollIntoView({ behavior: "smooth" }); };
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
+  const active = useActiveSection(LINKS.map((l) => l.h));
+  const scrollTo = (h: string) => {
+    setOpen(false);
+    setSolutionsOpen(false);
+    const el = document.querySelector(h);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    if (h.startsWith("#") && history.replaceState) history.replaceState(null, "", h);
+  };
 
   return (
     <nav
