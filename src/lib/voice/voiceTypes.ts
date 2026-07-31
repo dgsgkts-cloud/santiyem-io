@@ -30,13 +30,19 @@ export interface RealtimeCard {
 /** Global voice lifecycle states (Sprint 32.0 contract). */
 export type VoiceState =
   | "idle"
+  /** Microphone is being requested / prepared. */
+  | "mic_setup"
+  /** Transport (token + WebRTC + data channel) is being established. */
   | "connecting"
+  /** Realtime session exists (session.created) but no turn started yet. */
+  | "ready"
   | "listening"
   | "thinking"
   | "speaking"
   | "interrupted"
   | "disconnected"
   | "error";
+
 
 export type TranscriptRole = "user" | "assistant";
 
