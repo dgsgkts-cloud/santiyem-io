@@ -192,6 +192,7 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { checks } = useCashChecks();
   const { kpis: briefKpis, ops: aiOps, findings } = useExecutiveBrief();
   const { execute } = useActionExecutor();
+  const isMobileView = useIsMobile();
 
 
   // Sprint 19 — swap login title for a dashboard-specific one immediately after render.
