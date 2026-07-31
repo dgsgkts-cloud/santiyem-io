@@ -101,7 +101,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
 
   // --- live audio levels (drive the orb animation) ---------------------
   useEffect(() => {
-    const live = state === "listening" || state === "speaking" || state === "thinking";
+    const live = state === "listening" || state === "speaking" || state === "thinking" || state === "ready";
     if (!live) { setMicLevel(0); setOutputLevel(0); return; }
     let raf = 0;
     let last = 0;

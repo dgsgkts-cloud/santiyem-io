@@ -361,9 +361,10 @@ export function VoiceSessionOverlay({
         };
       default:
         return {
-          title: "Sesli bağlantı kurulamadı",
+          title: "OpenAI bağlantısı kurulamadı",
           body: "Bağlantıyı yeniden kurmayı deneyebilir veya yazarak devam edebilirsiniz.",
         };
+
     }
   })();
 
