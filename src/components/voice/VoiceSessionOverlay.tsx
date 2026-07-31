@@ -328,7 +328,7 @@ export function VoiceSessionOverlay({
 
       {/* Captions — own region, never behind the controls. */}
       {captionsOn && phase !== "error" && (
-        <div className="shrink-0 px-5" style={{ maxHeight: "32vh" }}>
+        <div className="shrink-0 px-5">
           <VoiceCaptions transcripts={voice.transcripts} />
         </div>
       )}
