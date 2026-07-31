@@ -1197,8 +1197,10 @@ const NavV3 = () => {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center" aria-label="Şantiyem AI">
-          <SantiyemWordmark px={32} tone="light" />
+          <span className="md:hidden inline-flex"><SantiyemMark px={34} tone="light" /></span>
+          <span className="hidden md:inline-flex"><SantiyemWordmark px={32} tone="light" /></span>
         </Link>
+
 
         <div className="hidden md:flex items-center gap-8">
           {LINKS.map((l) => (
