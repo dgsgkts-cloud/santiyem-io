@@ -35,28 +35,33 @@ const ROLE_TABS: Record<ProjectRole, MobileTab[]> = {
   site_engineer: [
     { id: "projects", label: "Şantiye", icon: FolderOpen },
     { id: "personnel", label: "Puantaj", icon: CheckSquare },
-    { id: "site-diary", label: "Günlük", icon: BookOpen },
+    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   accountant: [
     { id: "hakedis", label: "Hakediş", icon: FileText },
     { id: "payments-kasa", label: "Kasa", icon: CreditCard },
+    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   subcontractor: [
     { id: "projects", label: "Ekibim", icon: Users },
     { id: "payments-kasa", label: "Ödemelerim", icon: CreditCard },
+    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   worker: [
     { id: "personnel", label: "Yoklama", icon: CheckSquare },
+    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   landowner: [
     { id: "projects", label: "Proje", icon: FolderOpen },
     { id: "site-diary", label: "Günlük", icon: BookOpen },
+    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
+
 };
 
 /** Bottom tabs for the given primary role. Defaults to full menu when unknown. */
