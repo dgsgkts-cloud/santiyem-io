@@ -407,7 +407,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       case "response.done":
         this.speaking = false;
         this.metrics.resetTurn();
-        if (this.state !== "listening") this.setState("listening");
+        if (this.state !== "listening") this.goListening();
         break;
       case "error":
         this.emitError("server_error", JSON.stringify(evt.error ?? evt).slice(0, 300));
@@ -416,6 +416,18 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
     }
   }
+
+  /** "Dinliyorum" is only ever shown once the realtime session is ready. */
+  private goListening() {
+    if (this.closing) return;
+    if (!this.sessionReady) return;
+    if (this.readyFallbackTimer !== null) {
+      window.clearTimeout(this.readyFallbackTimer);
+      this.readyFallbackTimer = null;
+    }
+    this.setState("listening");
+  }
+
 
   private async runTool(call: VoiceToolCall) {
     if (!call.name) return;
