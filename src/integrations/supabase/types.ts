@@ -2227,6 +2227,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          expires_at: string
           id: string
           invited_by: string
           role: string
@@ -2237,6 +2238,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          expires_at?: string
           id?: string
           invited_by: string
           role?: string
@@ -2247,6 +2249,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          expires_at?: string
           id?: string
           invited_by?: string
           role?: string
@@ -2276,6 +2279,8 @@ export type Database = {
           id: string
           joined_at: string
           role: string
+          status: string
+          suspended_at: string | null
           team_id: string
           user_id: string
         }
@@ -2283,6 +2288,8 @@ export type Database = {
           id?: string
           joined_at?: string
           role?: string
+          status?: string
+          suspended_at?: string | null
           team_id: string
           user_id: string
         }
@@ -2290,6 +2297,8 @@ export type Database = {
           id?: string
           joined_at?: string
           role?: string
+          status?: string
+          suspended_at?: string | null
           team_id?: string
           user_id?: string
         }
@@ -2679,6 +2688,7 @@ export type Database = {
         Row: {
           city: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           plan: string
@@ -2691,6 +2701,7 @@ export type Database = {
         Insert: {
           city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           plan?: string
@@ -2703,6 +2714,7 @@ export type Database = {
         Update: {
           city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           plan?: string
@@ -4044,6 +4056,7 @@ export type Database = {
         Args: { _delta?: number; _metric: string; _reason?: string }
         Returns: number
       }
+      is_member_suspended: { Args: { _user_id: string }; Returns: boolean }
       is_project_manager_or_owner: {
         Args: { _project: string; _user: string }
         Returns: boolean

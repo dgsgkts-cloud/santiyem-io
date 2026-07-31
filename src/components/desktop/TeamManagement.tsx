@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTeam } from "@/hooks/useTeam";
 import { useUser } from "@/contexts/UserContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileUsersPage from "@/components/mobile/users/MobileUsersPage";
 import { Users, Mail, Shield, Eye, Edit3, Trash2, Plus, Copy, X, Crown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,6 +14,7 @@ const ROLE_LABELS: Record<string, { label: string; icon: typeof Shield; color: s
 
 const TeamManagement = () => {
   const { plan } = useUser();
+  const isMobile = useIsMobile();
   const { team, members, invitations, loading, isOwner, createTeam, inviteMember, cancelInvitation, removeMember, updateMemberRole } = useTeam();
   const [teamName, setTeamName] = useState("Ofisim");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -19,6 +22,10 @@ const TeamManagement = () => {
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   const cardStyle = {  };
+
+  // SPRINT 41C — mobile gets the dedicated users / roles / permissions experience.
+  if (isMobile) return <MobileUsersPage />;
+
 
   if (plan !== "office_free" && plan !== "office_pro" && plan !== "office_custom") {
     return (
