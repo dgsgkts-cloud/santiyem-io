@@ -98,9 +98,12 @@ type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" |
 // Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
 // kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
 // yönlendiriyoruz; hiçbir 404 gösterilmiyor.
+// NOT: Sidebar'da görünen ve gerçek bir sayfa bileşeni olan sekmeler (Toplantılar,
+// İletişim Merkezi, Sözleşmeler) buraya EKLENMEZ — aksi halde tıklama sessizce
+// Dashboard'a düşer.
 const DEPRECATED_TABS = new Set<Tab>([
   "company-memory", "company-kb", "ai-decisions", "decision-history", "company-docs",
-  "meetings", "communication", "contracts", "reminders", "daily", "render",
+  "reminders", "daily", "render",
 ]);
 const coerceTab = (t: Tab): Tab => (DEPRECATED_TABS.has(t) ? "dashboard" : t);
 
