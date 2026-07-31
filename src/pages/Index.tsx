@@ -106,7 +106,7 @@ const coerceTab = (t: Tab): Tab => (DEPRECATED_TABS.has(t) ? "dashboard" : t);
 
 // Visible tab chips (tablet) + shared tab metadata
 const TABS: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", shortLabel: "Ana", icon: Home },
+  { id: "dashboard", label: "Ana Sayfa", shortLabel: "Ana", icon: Home },
   { id: "projects", label: "Projeler", shortLabel: "Proje", icon: FolderOpen },
   { id: "hakedis", label: "Hakediş", shortLabel: "Hakediş", icon: FileText },
   { id: "chat", label: "AI Asistan", shortLabel: "AI", icon: MessageSquare },
@@ -209,7 +209,7 @@ const DRAWER_ITEMS: DrawerItem[] = DRAWER_GROUPS.flatMap((g) => g.items);
 
 
 const TAB_TITLES: Record<string, string> = {
-  dashboard: "Dashboard",
+  dashboard: "Ana Sayfa",
   chat: "AI Asistan",
   daily: "Günlük Bilgi",
   
@@ -585,7 +585,7 @@ const Index = () => {
           {/* Top bar - not for chat (it has its own header) */}
           {activeTab !== "chat" && (
             <DesktopTopBar
-              title={TAB_TITLES[activeTab] || "Dashboard"}
+              title={TAB_TITLES[activeTab] || "Ana Sayfa"}
               onTabChange={(t) => handleDesktopTabChange(t as Tab)}
               onProjectSelect={(id) => { setSelectedProjectId(id); handleDesktopTabChange("projects"); }}
             />
