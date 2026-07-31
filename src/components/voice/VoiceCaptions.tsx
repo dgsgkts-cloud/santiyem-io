@@ -26,8 +26,8 @@ export function VoiceCaptions({ transcripts }: Props) {
     <div
       ref={ref}
       aria-live="polite"
-      className="mx-auto w-full max-w-md overflow-y-auto rounded-card bg-black/35 px-4 py-3 backdrop-blur-md"
-      style={{ maxHeight: "26vh" }}
+      className="mx-auto w-full max-w-md overflow-y-auto bg-black/35 px-4 py-3 backdrop-blur-md"
+      style={{ maxHeight: "26vh", borderRadius: "var(--radius-card, 16px)" }}
     >
       {lastUser && (
         <div className="mb-2">
