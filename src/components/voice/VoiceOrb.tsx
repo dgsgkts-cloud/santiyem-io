@@ -206,7 +206,7 @@ export function VoiceOrb() {
     ? (isNative
         ? "calc(env(safe-area-inset-bottom, 0px) + 96px)"
         : "calc(env(safe-area-inset-bottom, 0px) + 24px)")
-    : "calc(env(safe-area-inset-bottom, 0px) + 88px)";
+    : "calc(env(safe-area-inset-bottom, 0px) + 80px)";
 
   const positionClass = isDesktop
     ? "fixed right-6 z-40 group"
