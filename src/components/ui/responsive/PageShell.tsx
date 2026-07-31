@@ -45,7 +45,7 @@ export function PageShell({
         style={bleed ? undefined : { maxWidth: mw }}
       >
         {(title || actions) && (
-          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 sm:mb-6">
             <div className="min-w-0">
               {title && <h1 className="ds-heading text-foreground truncate">{title}</h1>}
               {subtitle && <p className="ds-body text-muted-foreground mt-1">{subtitle}</p>}
