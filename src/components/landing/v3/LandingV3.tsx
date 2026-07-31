@@ -276,7 +276,7 @@ const HeroDashboardMock = () => {
 
 
 const Hero = () => (
-  <section className="relative pt-[calc(env(safe-area-inset-top)+110px)] pb-24 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
+  <section className="relative pt-[calc(env(safe-area-inset-top)+100px)] pb-20 md:pt-40 md:pb-32 overflow-hidden" style={{ background: T.bg }}>
     {/* Ember glow */}
     <div className="absolute inset-0 pointer-events-none opacity-60">
       <div className="absolute top-1/4 -left-40 w-[600px] h-[600px] rounded-full" style={{ background: `radial-gradient(circle, ${T.ember}22 0%, transparent 70%)`, filter: "blur(60px)" }} />
@@ -293,7 +293,7 @@ const Hero = () => (
 
     <div className="relative max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
       <Reveal className="lg:col-span-6">
-        <div className="mb-6"><EmberBadge>Şantiyem AI · v3</EmberBadge></div>
+        <div className="mb-5"><EmberBadge>Şantiyem AI</EmberBadge></div>
         <h1
           className="text-[40px] sm:text-5xl md:text-6xl lg:text-[64px] font-semibold leading-[1.04] mb-6"
           style={{ color: T.text, ...heading }}
@@ -307,19 +307,20 @@ const Hero = () => (
         <Sub className="max-w-xl mb-8">
           Projeler, finans, hakediş, personel, stok ve şantiye yönetimi tek bir yapay zekâda birleşiyor.
         </Sub>
-        <div className="flex flex-wrap gap-3 mb-10">
+        {/* Sprint 42B — exactly two hero actions; stacked on mobile. */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <PrimaryBtn to="/register">Ücretsiz Dene</PrimaryBtn>
           <GhostBtn icon={<Play className="w-4 h-4" style={{ color: T.ember }} />} onClick={() => {}}>
-            2 dk Demo İzle
+            Demoyu İzle
           </GhostBtn>
-          <GhostBtn to="/iletisim">Demo Talep Et</GhostBtn>
         </div>
 
-        <div className="flex flex-wrap gap-x-8 gap-y-2 text-[12.5px]" style={{ color: T.faint, ...body }}>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> Kart gerekmez</span>
-          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5" style={{ color: T.ember }} /> 5 dakikada kurulum</span>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]" style={{ color: T.faint, ...body }}>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> 14 gün ücretsiz</span>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> Kart gerekmez</span>
+          <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 shrink-0" style={{ color: T.ember }} /> 5 dakikada kurulum</span>
         </div>
+
       </Reveal>
 
       <Reveal delay={200} className="lg:col-span-6">
