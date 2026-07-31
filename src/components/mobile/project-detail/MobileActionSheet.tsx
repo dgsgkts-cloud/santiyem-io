@@ -37,16 +37,17 @@ export default function MobileActionSheet({
         }}
       >
         <div className="px-4 pt-3 overflow-y-auto">
-          {(title || description) && (
-            <div className="pb-3">
-              {title && <div className="text-[17px] font-semibold text-foreground">{title}</div>}
-              {description && (
-                <div className="text-[13px] text-muted-foreground mt-1 leading-snug">{description}</div>
-              )}
-            </div>
-          )}
+          <div className={title || description ? "pb-3" : "sr-only"}>
+            <DrawerTitle className="text-[17px] font-semibold text-foreground">
+              {title ?? "İşlemler"}
+            </DrawerTitle>
+            <DrawerDescription className="text-[13px] text-muted-foreground mt-1 leading-snug">
+              {description ?? "Proje işlemleri"}
+            </DrawerDescription>
+          </div>
 
           {children}
+
 
           {actions && actions.length > 0 && (
             <div className="rounded-[16px] bg-muted/40 overflow-hidden divide-y divide-border/60">
