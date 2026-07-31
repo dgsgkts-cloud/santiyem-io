@@ -53,6 +53,7 @@ function HeroBackdrop() {
   return (
     <div className="login-hero__bg" aria-hidden="true">
       <div className="login-hero__glow" />
+      <div className="login-hero__vignette" />
       <div className="login-hero__grid" />
       <div className="login-hero__bloom" />
       <svg
@@ -82,170 +83,148 @@ function HeroBackdrop() {
 
 export function LoginHero() {
   return (
-    <div className="login-hero flex h-full w-full flex-col justify-center px-5 py-10 sm:px-8 lg:overflow-y-auto xl:px-14">
+    <div className="login-hero flex h-full w-full flex-col lg:overflow-y-auto">
       <HeroBackdrop />
 
-      <div className="relative z-10 mx-auto w-full max-w-[520px]">
-        {/* Headline */}
-        <h2
-          className="login-hero__reveal text-[28px] font-bold leading-[1.16] tracking-[-0.02em] md:text-[32px] xl:text-[36px]"
-          style={{
-            ...reveal(0),
-            color: "#F8FAFC",
-            fontFamily: "'Space Grotesk', sans-serif",
-          }}
-        >
-          Tüm inşaat operasyonunuzu{" "}
-          <span
+      <div className="login-hero__content relative z-10 mx-auto flex w-full min-h-full flex-col justify-center px-5 py-12 sm:px-8 xl:px-14">
+        <div className="w-full max-w-[640px] mx-auto">
+          {/* Headline */}
+          <h2
+            className="login-hero__reveal text-[32px] font-bold leading-[1.12] tracking-[-0.02em] md:text-[40px] lg:text-[46px]"
             style={{
-              background: "linear-gradient(100deg, #FF6B2B 0%, #FF9F6B 100%)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
+              ...reveal(0),
+              color: "#F8FAFC",
+              fontFamily: "'Space Grotesk', sans-serif",
+              marginBottom: "20px",
             }}
           >
-            yapay zekâyla
-          </span>{" "}
-          yönetin.
-        </h2>
+            Tüm inşaat operasyonunuzu{" "}
+            <span style={{ color: "#FF6B2B" }}>yapay zekâyla</span>{" "}
+            yönetin.
+          </h2>
 
-        {/* Description */}
-        <p
-          className="login-hero__reveal mt-6 max-w-[520px] text-[14px] leading-[1.65] xl:text-[15px]"
-          style={{ ...reveal(80), color: "#94A3B8" }}
-        >
-          Projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
-          satın alma süreçlerinizi tek merkezden yönetin. Şantiyem AI riskleri
-          erkenden fark eder, öncelikleri belirler ve uygulanabilir aksiyonlar
-          sunar.
-        </p>
+          {/* Description */}
+          <p
+            className="login-hero__reveal text-[15px] leading-[1.65] md:text-[16px]"
+            style={{
+              ...reveal(80),
+              color: "#CBD5E1",
+              maxWidth: "600px",
+              marginBottom: "28px",
+            }}
+          >
+            Projelerinizi, hakedişlerinizi, nakit akışınızı, personelinizi ve
+            satın alma süreçlerinizi tek merkezden yönetin. Şantiyem AI riskleri
+            erkenden fark eder, öncelikleri belirler ve uygulanabilir aksiyonlar
+            sunar.
+          </p>
 
-        {/* Feature grid — 2×2 on desktop, compact cards */}
-        <div className="login-hero__reveal mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
-          style={reveal(160)}>
-          {FEATURES.map((f, i) => {
-            const Icon = f.icon;
-            return (
-              <div
-                key={f.title}
-                className="login-hero__card login-hero__reveal flex items-start gap-3 rounded-xl border p-3"
-                style={{
-                  ...reveal(240 + i * 60),
-                  borderColor: "rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(255,255,255,0.025)",
-                }}
-              >
+          {/* Feature grid — 2×2 on desktop, compact cards */}
+          <div
+            className="login-hero__reveal grid grid-cols-1 gap-3.5 sm:grid-cols-2"
+            style={{
+              ...reveal(160),
+              marginBottom: "26px",
+            }}
+          >
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
                 <div
-                  className="login-hero__card-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FF6B2B" }}
+                  key={f.title}
+                  className="login-hero__card login-hero__reveal flex items-start gap-3 rounded-[14px] border p-4"
+                  style={{
+                    ...reveal(240 + i * 60),
+                    minHeight: "96px",
+                    borderColor: "rgba(255,255,255,0.10)",
+                    backgroundColor: "rgba(255,255,255,0.035)",
+                  }}
                 >
-                  <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                  <div
+                    className="login-hero__card-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: "rgba(255,107,43,0.12)", color: "#FF6B2B" }}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold" style={{ color: "#E2E8F0" }}>
+                      {f.title}
+                    </p>
+                    <p className="mt-1 text-[13px] leading-[1.45]" style={{ color: "#A9B5C4" }}>
+                      {f.line}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold" style={{ color: "#E2E8F0" }}>
-                    {f.title}
-                  </p>
-                  <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "#7C8A9C" }}>
-                    {f.line}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* AI preview — static showcase, deliberately not interactive */}
-        <div
-          className="login-hero__reveal mt-7 rounded-xl border p-3.5"
-          style={{
-            ...reveal(520),
-            borderColor: "rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15,20,25,0.55)",
-          }}
-          aria-label="Şantiyem AI örnek analizi"
-        >
-          <div className="mb-2.5 flex items-center gap-2">
-            <Bot className="h-3.5 w-3.5" style={{ color: "#FF6B2B" }} />
-            <span
-              className="text-[10px] font-semibold uppercase tracking-[0.12em]"
-              style={{ color: "#64748B" }}
-            >
-              Örnek AI Analizi
-            </span>
+              );
+            })}
           </div>
 
-          {/* User turn */}
-          <div className="flex justify-end">
+          {/* AI preview — static showcase, deliberately not interactive */}
+          <div
+            className="login-hero__reveal w-full rounded-[16px] border p-5"
+            style={{
+              ...reveal(520),
+              marginBottom: "20px",
+              borderColor: "rgba(255,255,255,0.10)",
+              backgroundColor: "rgba(15,20,25,0.65)",
+            }}
+            aria-label="Şantiyem AI örnek analizi"
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <Bot className="h-4 w-4" style={{ color: "#FF6B2B" }} />
+              <span
+                className="text-[11px] font-semibold uppercase tracking-[0.12em]"
+                style={{ color: "#8A98A8" }}
+              >
+                Örnek AI Analizi
+              </span>
+            </div>
+
+            {/* Question */}
             <div
-              className="max-w-[90%] rounded-xl rounded-br-sm px-3 py-1.5 text-[12.5px]"
-              style={{ backgroundColor: "#FF6B2B", color: "#FFFFFF" }}
+              className="mb-3 w-fit rounded-[12px] rounded-bl-sm px-3.5 py-2 text-[13.5px]"
+              style={{ backgroundColor: "rgba(255,107,43,0.16)", color: "#FDBA8C" }}
             >
               Bugün en büyük riskimiz ne?
             </div>
-          </div>
 
-          {/* AI turn */}
-          <div className="mt-2.5 flex gap-2.5">
-            <div
-              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-              style={{ backgroundColor: "rgba(255,107,43,0.14)" }}
-            >
-              <Bot className="h-3.5 w-3.5" style={{ color: "#FF6B2B" }} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[12.5px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-                İzmir Panorama Villaları planın 9 gün gerisinde. Üç personelin
-                aktarılması teslim riskini azaltabilir.
-              </p>
-              <p
-                className="mt-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium"
-                style={{ backgroundColor: "rgba(34,197,94,0.1)", color: "#4ADE80" }}
+            {/* Answer */}
+            <p className="text-[14px] leading-[1.55]" style={{ color: "#E2E8F0" }}>
+              İzmir Panorama Villaları planın 9 gün gerisinde. Üç personelin
+              aktarılması teslim riskini azaltabilir.
+            </p>
+
+            {/* Result badge */}
+            <div className="mt-3.5">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium"
+                style={{ backgroundColor: "rgba(34,197,94,0.10)", color: "#4ADE80" }}
               >
                 Tahmini kazanım: 5 gün
-                <span className="login-hero__caret" />
-              </p>
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Live status ribbon */}
-        <div
-          className="login-hero__reveal mt-7 flex flex-wrap items-center gap-2.5"
-          style={reveal(620)}
-        >
+          {/* Trust badges */}
           <div
-            className="flex items-center gap-2 rounded-full border px-3 py-1.5"
-            style={{
-              borderColor: "rgba(34,197,94,0.25)",
-              backgroundColor: "rgba(34,197,94,0.07)",
-            }}
+            className="login-hero__reveal flex flex-wrap items-center gap-2"
+            style={reveal(620)}
           >
-            <span
-              className="login-hero__dot h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: "#22C55E" }}
-            />
-            <span className="text-[11.5px] font-medium" style={{ color: "#CBD5E1" }}>
-              Şantiyem AI
-            </span>
-            <span className="text-[11.5px]" style={{ color: "#4ADE80" }}>
-              Çevrimiçi
-            </span>
+            {STATUS_BADGES.map((b, i) => (
+              <span
+                key={b}
+                className="login-hero__badge rounded-full border px-3 py-1.5 text-[12px]"
+                style={{
+                  animationDelay: `${i * 700}ms`,
+                  borderColor: "rgba(255,255,255,0.10)",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  color: "#A9B5C4",
+                }}
+              >
+                {b}
+              </span>
+            ))}
           </div>
-
-          {STATUS_BADGES.map((b, i) => (
-            <span
-              key={b}
-              className="login-hero__badge rounded-full border px-3 py-1.5 text-[11.5px]"
-              style={{
-                animationDelay: `${i * 700}ms`,
-                borderColor: "rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.03)",
-                color: "#8A98A8",
-              }}
-            >
-              {b}
-            </span>
-          ))}
         </div>
       </div>
     </div>
