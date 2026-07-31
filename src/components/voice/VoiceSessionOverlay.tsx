@@ -307,7 +307,11 @@ export function VoiceSessionOverlay({
         {phase === "error" ? (
           <div className="w-full max-w-xs text-center">
             <p className="text-[15px] font-medium text-white/90">Bağlantı kesildi</p>
-            <p className="mt-1 text-[13px] text-white/55">Ses durduruldu. Yeniden bağlanabilirsiniz.</p>
+            <p aria-live="polite" className="mt-1 text-[13px] text-white/55">
+              {retryIn !== null
+                ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
+                : "Ses durduruldu. Yeniden bağlanabilirsiniz."}
+            </p>
             <div className="mt-4 flex flex-col gap-2">
               <button
                 type="button"
@@ -315,8 +319,9 @@ export function VoiceSessionOverlay({
                 className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
                 style={{ height: 48 }}
               >
-                Yeniden Bağlan
+                {retryIn !== null ? "Şimdi Yeniden Bağlan" : "Yeniden Bağlan"}
               </button>
+
 
               <button
                 type="button"
