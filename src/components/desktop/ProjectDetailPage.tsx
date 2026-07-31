@@ -43,6 +43,8 @@ import ProjectNotesSection from "./project-detail/ProjectNotesSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
 import CollapsibleSection from "./projects/CollapsibleSection";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ProjectDetailMobile from "@/components/mobile/project-detail/ProjectDetailMobile";
 
 
 
@@ -62,6 +64,7 @@ interface ProjectDetailPageProps {
 const ProjectDetailPage = ({
   project, onBack, onDelete, onStatusChange, onUpdate, isDeletable,
 }: ProjectDetailPageProps) => {
+  const isMobile = useIsMobile();
   const [editedProject, setEditedProject] = useState<Project>(project);
   const p = editedProject;
   const { user } = useUser();
@@ -215,6 +218,11 @@ const ProjectDetailPage = ({
   const exportHakedisExcel = () => {
     import("@/lib/hakedisExport").then(m => m.exportHakedisExcel(hakedisler, p.name));
   };
+
+  // SPRINT 41A — mobile gets a dedicated native workspace; desktop unchanged.
+  if (isMobile) {
+    return <ProjectDetailMobile project={p} onBack={onBack} onUpdate={onUpdate} />;
+  }
 
   return (
     <PageShell maxWidth={1200}>
