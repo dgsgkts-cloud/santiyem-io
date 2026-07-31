@@ -41,9 +41,12 @@ export default function MobileActionSheet({
             <DrawerTitle className="text-[17px] font-semibold text-foreground">
               {title ?? "İşlemler"}
             </DrawerTitle>
-            <DrawerDescription className="text-[13px] text-muted-foreground mt-1 leading-snug">
+            <DrawerDescription
+              className={description ? "text-[13px] text-muted-foreground mt-1 leading-snug" : "sr-only"}
+            >
               {description ?? "Proje işlemleri"}
             </DrawerDescription>
+
           </div>
 
           {children}
