@@ -90,8 +90,11 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   async connect(config: VoiceEngineConfig = {}): Promise<void> {
     this.config = { maxReconnects: 2, ...this.config, ...config };
     this.closing = false;
-    this.setState("connecting");
+    this.sessionReady = false;
+    this.eventCount = 0;
+    this.setState("mic_setup");
     this.metrics.startSession();
+    rtLog("connect() start — requesting microphone");
 
     try {
       const session = await this.mintSession();
@@ -113,6 +116,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private async mintSession(): Promise<SessionInfo> {
     const { data: sess } = await supabase.auth.getSession();
     const jwt = sess?.session?.access_token ?? "";
+    const t0 = performance.now();
     const res = await fetch(OPENAI_REALTIME.tokenEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
@@ -124,10 +128,14 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       }),
     });
     const json = await res.json().catch(() => ({}));
+    rtLog(`token endpoint → ${res.status} in ${Math.round(performance.now() - t0)}ms`, {
+      hasSecret: Boolean(json?.client_secret), model: json?.model, voice: json?.voice,
+    });
     if (!res.ok) throw new Error(json?.error ? `${json.error}` : `token_${res.status}`);
     if (!json?.client_secret) throw new Error("missing_client_secret");
     return json as SessionInfo;
   }
+
 
   private async openPeerConnection(session: SessionInfo) {
     const pc = new RTCPeerConnection();
