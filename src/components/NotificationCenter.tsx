@@ -253,10 +253,16 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
                   </button>
                 ))}
                 {unreadCount > 0 && (
-                  <button onClick={markAllAsRead} className="ml-auto shrink-0 ds-caption font-medium text-primary flex items-center gap-1 h-7 px-2">
-                    <Check className="w-3.5 h-3.5" /> Tümünü okundu
+                  <button
+                    onClick={() => void markAllAsRead()}
+                    disabled={bulkRunning}
+                    aria-label="Tüm bildirimleri okundu yap"
+                    className="ml-auto shrink-0 ds-caption font-medium text-primary flex items-center gap-1 min-h-[44px] px-2.5 rounded-control hover:bg-primary/[0.08] disabled:opacity-50 transition-colors"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Tümünü okundu yap
                   </button>
                 )}
+
               </div>
 
               {notifLoading ? (
