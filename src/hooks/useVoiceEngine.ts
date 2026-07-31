@@ -68,14 +68,15 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     const offs = [
       active.onStateChange((s) => {
         setState(s);
-        if (s === "connecting") {
+        if (s === "connecting" || s === "mic_setup") {
           setStatusMessage(wasConnectedRef.current ? RECONNECT_MESSAGE : null);
-        } else if (s === "listening" || s === "speaking" || s === "thinking") {
+        } else if (s === "ready" || s === "listening" || s === "speaking" || s === "thinking") {
           wasConnectedRef.current = true;
           setStatusMessage(null);
           setErrorKind(null);
         }
       }),
+
       // Technical codes are logged only — users see the mapped category.
       active.onError((e) => {
         console.error(`[voice] ${e.code}: ${e.message}`);
@@ -100,7 +101,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
 
   // --- live audio levels (drive the orb animation) ---------------------
   useEffect(() => {
-    const live = state === "listening" || state === "speaking" || state === "thinking";
+    const live = state === "listening" || state === "speaking" || state === "thinking" || state === "ready";
     if (!live) { setMicLevel(0); setOutputLevel(0); return; }
     let raf = 0;
     let last = 0;

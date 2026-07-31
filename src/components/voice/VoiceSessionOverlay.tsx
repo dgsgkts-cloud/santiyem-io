@@ -42,15 +42,22 @@ interface Props {
 const PHASE_LABEL: Record<VoicePhase, string> = {
   idle: "Hazır",
   requesting_permission: "Mikrofon izni bekleniyor",
-  connecting: "Hazırlanıyor",
+  mic_setup: "Mikrofon hazırlanıyor...",
+  connecting: "OpenAI'ya bağlanılıyor...",
+  ready: "Hazır",
   listening: "Dinliyorum",
   user_finished: "Anlıyorum",
-  thinking: "Yanıt hazırlanıyor",
-  speaking: "Yanıtlıyor",
+  thinking: "Düşünüyorum...",
+  speaking: "Yanıtlıyor...",
   interrupted: "Dinliyorum",
   ending: "Görüşme kapatılıyor",
   error: "Bağlantı kesildi",
 };
+
+/** Session states that mean the transport is genuinely alive. */
+const LIVE_STATES = ["ready", "listening", "speaking", "thinking"] as const;
+const isLive = (s: string) => (LIVE_STATES as readonly string[]).includes(s);
+
 
 /** Only surface "Hazırlanıyor" if initialization is actually slow. */
 const PREPARING_VISIBLE_AFTER_MS = 700;
@@ -171,7 +178,7 @@ export function VoiceSessionOverlay({
   useEffect(() => {
     if (!preparing && !showPreparing) return;
     const t = window.setTimeout(() => {
-      if (voice.state !== "listening" && voice.state !== "speaking" && voice.state !== "thinking") {
+      if (!isLive(voice.state)) {
         setPreparing(false);
         setFailed(true);
       }
@@ -190,7 +197,7 @@ export function VoiceSessionOverlay({
   }, [voice.errorKind]);
 
   useEffect(() => {
-    if (voice.state === "listening" || voice.state === "speaking" || voice.state === "thinking") {
+    if (isLive(voice.state)) {
       setFailed(false);
       setPreparing(false);
       stoppedRef.current = false;
@@ -198,6 +205,7 @@ export function VoiceSessionOverlay({
       setRetryIn(null);
     }
   }, [voice.state]);
+
 
 
 
@@ -268,19 +276,21 @@ export function VoiceSessionOverlay({
   }, [sessionMode, conversationMode, end]);
 
   // ---- one derived phase ----------------------------------------------
+  // The label always reflects the real transport state: mic → OpenAI →
+  // hazır → dinliyorum. "Dinliyorum" can only come from the engine, which
+  // sets it after `session.created`.
   const phase: VoicePhase = micBlocked
     ? "error"
     : askingPermission
     ? "requesting_permission"
     : failed || voice.state === "error" || voice.state === "disconnected"
       ? "error"
-      : showPreparing
-        ? "connecting"
-        : voice.state === "interrupted"
-          ? "listening"
-          : voice.state === "idle"
-            ? (preparing ? "connecting" : "idle")
-            : (voice.state as VoicePhase);
+      : voice.state === "interrupted"
+        ? "listening"
+        : voice.state === "idle"
+          ? (preparing ? "mic_setup" : "idle")
+          : (voice.state as VoicePhase);
+
 
   // Connection lost → keep the transcript, immediately silence audio,
   // then run a short countdown and retry automatically (max 2 attempts)
@@ -351,9 +361,10 @@ export function VoiceSessionOverlay({
         };
       default:
         return {
-          title: "Sesli bağlantı kurulamadı",
+          title: "OpenAI bağlantısı kurulamadı",
           body: "Bağlantıyı yeniden kurmayı deneyebilir veya yazarak devam edebilirsiniz.",
         };
+
     }
   })();
 

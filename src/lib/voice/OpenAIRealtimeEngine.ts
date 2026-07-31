@@ -21,6 +21,18 @@ type SessionInfo = {
   base_url?: string;
 };
 
+/** Always-on runtime trace for the realtime transport. */
+const RT = "[voice:rt]";
+function rtLog(msg: string, data?: unknown) {
+  if (data === undefined) console.log(`${RT} ${msg}`);
+  else console.log(`${RT} ${msg}`, data);
+}
+
+/** No OpenAI event at all within this window = the session never came up. */
+const NO_EVENT_TIMEOUT_MS = 5000;
+/** Fallback if `session.updated` never arrives after `session.created`. */
+const SESSION_READY_FALLBACK_MS = 800;
+
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   readonly provider: VoiceProviderId = "openai-realtime";
 
@@ -38,8 +50,17 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private outAnalyser: AnalyserNode | null = null;
   private outBuf: Uint8Array<ArrayBuffer> | null = null;
   private speaking = false;
+  /** true only after `session.created` — gates the "listening" state. */
+  private sessionReady = false;
+  private eventCount = 0;
+  private noEventTimer: number | null = null;
+  private readyFallbackTimer: number | null = null;
+  private statsTimer: number | null = null;
+  private lastBytesSent = 0;
+  private silentUplinkChecks = 0;
 
   getMetrics() { return this.metrics.snapshot(); }
+
 
   getMicLevel(): number {
     if (!this.analyser || !this.levelBuf) return 0;
@@ -69,8 +90,11 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   async connect(config: VoiceEngineConfig = {}): Promise<void> {
     this.config = { maxReconnects: 2, ...this.config, ...config };
     this.closing = false;
-    this.setState("connecting");
+    this.sessionReady = false;
+    this.eventCount = 0;
+    this.setState("mic_setup");
     this.metrics.startSession();
+    rtLog("connect() start — requesting microphone");
 
     try {
       const session = await this.mintSession();
@@ -92,6 +116,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private async mintSession(): Promise<SessionInfo> {
     const { data: sess } = await supabase.auth.getSession();
     const jwt = sess?.session?.access_token ?? "";
+    const t0 = performance.now();
     const res = await fetch(OPENAI_REALTIME.tokenEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
@@ -103,10 +128,14 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       }),
     });
     const json = await res.json().catch(() => ({}));
+    rtLog(`token endpoint → ${res.status} in ${Math.round(performance.now() - t0)}ms`, {
+      hasSecret: Boolean(json?.client_secret), model: json?.model, voice: json?.voice,
+    });
     if (!res.ok) throw new Error(json?.error ? `${json.error}` : `token_${res.status}`);
     if (!json?.client_secret) throw new Error("missing_client_secret");
     return json as SessionInfo;
   }
+
 
   private async openPeerConnection(session: SessionInfo) {
     const pc = new RTCPeerConnection();
@@ -118,7 +147,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     audio.volume = this.config.volume ?? 1;
     this.audioEl = audio;
     pc.ontrack = (e) => {
+      rtLog("pc.ontrack — remote audio attached", { kind: e.track.kind, id: e.track.id });
       audio.srcObject = e.streams[0];
+      void audio.play().catch((err) => rtLog("remote audio play() rejected", String(err)));
       this.attachOutputMeter(e.streams[0]);
     };
 
@@ -132,16 +163,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       throw new Error(`audio_device_unavailable: ${err instanceof Error ? err.message : String(err)}`);
     }
     this.micStream = mic;
+    rtLog("microphone acquired", mic.getAudioTracks().map((t) => ({
+      label: t.label, enabled: t.enabled, muted: t.muted, state: t.readyState,
+    })));
     this.attachLevelMeter(mic);
     for (const track of mic.getTracks()) pc.addTrack(track, mic);
+
+    // Transport is up next — token + WebRTC handshake.
+    this.setState("connecting");
 
     // Control channel.
     const dc = pc.createDataChannel("oai-events");
     this.dc = dc;
     dc.onopen = () => {
+      rtLog(`data channel "oai-events" OPEN (readyState=${dc.readyState})`);
       logger.debug("[voice:openai] data channel open");
-      this.setState("listening");
       this.metrics.markConnected();
+      // NOT "listening" yet — we wait for session.created from OpenAI.
+      this.armNoEventWatchdog();
       this.sendEvent({
         type: "session.update",
         session: {
@@ -156,19 +195,27 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       });
     };
     dc.onmessage = (e) => this.handleServerEvent(e.data);
-    dc.onclose = () => { if (!this.closing) void this.retryOrFail("data_channel_closed"); };
+    dc.onerror = (e) => rtLog("data channel ERROR", e);
+    dc.onclose = () => {
+      rtLog("data channel CLOSED");
+      if (!this.closing) void this.retryOrFail("data_channel_closed");
+    };
 
     pc.onconnectionstatechange = () => {
+      rtLog(`pc.connectionState → ${pc.connectionState}`);
       if (this.closing) return;
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
         void this.retryOrFail(`pc_${pc.connectionState}`);
       }
     };
+    pc.oniceconnectionstatechange = () => rtLog(`pc.iceConnectionState → ${pc.iceConnectionState}`);
+    pc.onicegatheringstatechange = () => rtLog(`pc.iceGatheringState → ${pc.iceGatheringState}`);
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
     const base = session.base_url ?? "https://api.openai.com/v1/realtime/calls";
+    const t0 = performance.now();
     const sdpRes = await fetch(`${base}?model=${encodeURIComponent(session.model)}`, {
       method: "POST",
       body: offer.sdp ?? "",
@@ -177,11 +224,76 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         "Content-Type": "application/sdp",
       },
     });
+    rtLog(`SDP exchange → ${sdpRes.status} in ${Math.round(performance.now() - t0)}ms`);
     if (!sdpRes.ok) throw new Error(`sdp_${sdpRes.status}: ${(await sdpRes.text()).slice(0, 200)}`);
     const answer = await sdpRes.text();
     await pc.setRemoteDescription({ type: "answer", sdp: answer });
     this.reconnects = 0;
+    // Even if the data channel never opens, we must not hang forever.
+    this.armNoEventWatchdog();
+    this.startUplinkStats();
   }
+
+  // ---------- runtime guards ----------------------------------------------
+
+  /**
+   * If OpenAI sends no event at all within 5s, the session never came up.
+   * Fail loudly instead of leaving the UI on "Dinliyorum" forever.
+   */
+  private armNoEventWatchdog() {
+    if (this.noEventTimer !== null) return;
+    this.noEventTimer = window.setTimeout(() => {
+      this.noEventTimer = null;
+      if (this.closing || this.sessionReady || this.eventCount > 0) return;
+      rtLog(`no OpenAI event in ${NO_EVENT_TIMEOUT_MS}ms`, {
+        dc: this.dc?.readyState ?? "none",
+        pc: this.pc?.connectionState ?? "none",
+        ice: this.pc?.iceConnectionState ?? "none",
+      });
+      void this.failNoEvents();
+    }, NO_EVENT_TIMEOUT_MS);
+  }
+
+  private async failNoEvents() {
+    await this.teardown();
+    this.emitError("openai_no_events", "OpenAI bağlantısı kurulamadı", true, "connection");
+  }
+
+  private clearTimers() {
+    if (this.noEventTimer !== null) { window.clearTimeout(this.noEventTimer); this.noEventTimer = null; }
+    if (this.readyFallbackTimer !== null) { window.clearTimeout(this.readyFallbackTimer); this.readyFallbackTimer = null; }
+    if (this.statsTimer !== null) { window.clearInterval(this.statsTimer); this.statsTimer = null; }
+  }
+
+  /** Proves the microphone uplink is really shipping RTP packets. */
+  private startUplinkStats() {
+    if (this.statsTimer !== null) return;
+    this.lastBytesSent = 0;
+    this.silentUplinkChecks = 0;
+    this.statsTimer = window.setInterval(async () => {
+      const pc = this.pc;
+      if (!pc) return;
+      try {
+        const stats = await pc.getStats();
+        stats.forEach((r: RTCStats & { kind?: string; bytesSent?: number; packetsSent?: number }) => {
+          if (r.type !== "outbound-rtp" || r.kind !== "audio") return;
+          const bytes = r.bytesSent ?? 0;
+          const delta = bytes - this.lastBytesSent;
+          this.lastBytesSent = bytes;
+          rtLog(`mic uplink: packetsSent=${r.packetsSent ?? 0} bytesSent=${bytes} (+${delta})`);
+          if (delta <= 0 && !this.isMuted()) {
+            this.silentUplinkChecks += 1;
+            if (this.silentUplinkChecks === 3) {
+              console.warn(`${RT} microphone uplink appears silent — no RTP bytes sent`);
+            }
+          } else {
+            this.silentUplinkChecks = 0;
+          }
+        });
+      } catch { /* stats are best-effort */ }
+    }, 2000);
+  }
+
 
   /**
    * Reconnects up to `maxReconnects` times, then ends the session in an
@@ -211,13 +323,37 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     try { evt = JSON.parse(raw); } catch { return; }
     const type = String(evt.type ?? "");
 
+    // Every OpenAI event is traced; the watchdog only cares that one arrived.
+    this.eventCount += 1;
+    rtLog(`⬅ ${type}`, type === "error" ? evt.error ?? evt : undefined);
+    if (this.noEventTimer !== null) {
+      window.clearTimeout(this.noEventTimer);
+      this.noEventTimer = null;
+    }
+
     switch (type) {
+      case "session.created":
+        // The realtime session exists — this is the real readiness signal.
+        this.sessionReady = true;
+        this.setState("ready");
+        if (this.readyFallbackTimer === null) {
+          this.readyFallbackTimer = window.setTimeout(() => {
+            this.readyFallbackTimer = null;
+            if (!this.closing && this.state === "ready") this.goListening();
+          }, SESSION_READY_FALLBACK_MS);
+        }
+        break;
+      case "session.updated":
+        this.goListening();
+        break;
+
       case "input_audio_buffer.speech_started":
         // Barge-in: kill assistant audio instantly and resume listening.
         if (this.speaking || this.state === "speaking") this.stopPlayback();
         this.metrics.markTurnStart();
-        this.setState("listening");
+        this.goListening();
         break;
+
       case "output_audio_buffer.started":
         this.speaking = true;
         this.metrics.markFirstAudio();
@@ -271,7 +407,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       case "response.done":
         this.speaking = false;
         this.metrics.resetTurn();
-        if (this.state !== "listening") this.setState("listening");
+        if (this.state !== "listening") this.goListening();
         break;
       case "error":
         this.emitError("server_error", JSON.stringify(evt.error ?? evt).slice(0, 300));
@@ -280,6 +416,18 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
     }
   }
+
+  /** "Dinliyorum" is only ever shown once the realtime session is ready. */
+  private goListening() {
+    if (this.closing) return;
+    if (!this.sessionReady) return;
+    if (this.readyFallbackTimer !== null) {
+      window.clearTimeout(this.readyFallbackTimer);
+      this.readyFallbackTimer = null;
+    }
+    this.setState("listening");
+  }
+
 
   private async runTool(call: VoiceToolCall) {
     if (!call.name) return;
@@ -299,16 +447,26 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   }
 
   private sendEvent(payload: Record<string, unknown>) {
-    if (this.dc?.readyState !== "open") return;
-    try { this.dc.send(JSON.stringify(payload)); } catch { /* noop */ }
+    const type = String(payload.type ?? "unknown");
+    if (this.dc?.readyState !== "open") {
+      rtLog(`➡ ${type} DROPPED (data channel ${this.dc?.readyState ?? "none"})`);
+      return;
+    }
+    try {
+      this.dc.send(JSON.stringify(payload));
+      rtLog(`➡ ${type} sent`);
+    } catch (err) {
+      rtLog(`➡ ${type} send FAILED`, String(err));
+    }
   }
 
   // ---------- controls -----------------------------------------------------
 
   startListening() {
     this.unmute();
-    if (this.isConnected()) this.setState("listening");
+    if (this.isConnected()) this.goListening();
   }
+
 
   stopListening() {
     this.mute();
@@ -346,8 +504,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.assistantBuffer = "";
     this.speaking = false;
     this.setState("interrupted");
-    this.setState("listening");
+    this.goListening();
   }
+
 
   private attachLevelMeter(stream: MediaStream) {
     try {
@@ -390,6 +549,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   }
 
   private async teardown() {
+    this.clearTimers();
+    this.sessionReady = false;
+    if (this.dc) this.dc.onclose = null;
     try { this.dc?.close(); } catch { /* noop */ }
     try { this.pc?.getSenders().forEach((s) => s.track?.stop()); } catch { /* noop */ }
     try { this.pc?.close(); } catch { /* noop */ }
@@ -399,7 +561,9 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
     this.outAnalyser = null; this.outBuf = null;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
+    rtLog("teardown complete");
   }
+
 }
 
 function safeJson(s: string): Record<string, unknown> {
