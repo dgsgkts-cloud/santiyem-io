@@ -71,6 +71,8 @@ export function VoiceSessionOverlay({
   const greetedRef = useRef(false);
   const endedRef = useRef(false);
   const spokeOnceRef = useRef(false);
+  const stoppedRef = useRef(false);
+
   const activityRef = useRef(Date.now());
   const turnCompletedAtRef = useRef<number | null>(null);
 
