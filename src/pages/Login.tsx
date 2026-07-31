@@ -95,7 +95,10 @@ const Login = () => {
                 className="border-white/20 data-[state=checked]:bg-[#FF6B2B] data-[state=checked]:border-[#FF6B2B]" />
               <label htmlFor="remember" className="text-xs" style={{ color: "#64748B" }}>Beni hatırla</label>
             </div>
-            <Link to="/forgot-password" className="text-xs font-medium" style={{ color: "#FF6B2B" }}>Şifremi Unuttum</Link>
+            <Link to="/forgot-password" className="text-xs sm:text-sm font-medium hover:underline transition-colors"
+              style={{ color: "#FF6B2B" }}>
+              Şifremi Unuttum
+            </Link>
           </div>
 
           <button type="submit" disabled={loading}
