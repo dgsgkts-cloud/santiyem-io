@@ -38,7 +38,7 @@ export default function ProjectStatStrip({ items, activeKey, onSelect }: Props) 
               "hover:border-primary/40 active:scale-[0.98]",
               isActive ? "border-primary/60 shadow-soft" : "border-border/70",
             )}
-            style={{ minHeight: 56 }}
+            style={{ minHeight: 80 }}
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span
