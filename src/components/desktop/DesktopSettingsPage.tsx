@@ -66,10 +66,10 @@ const DesktopSettingsPage = () => {
   }, []);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-4 lg:p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col lg:grid lg:grid-cols-[240px_1fr] gap-4 lg:gap-5">
-        {/* Tabs */}
-        <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+        {/* Tabs — horizontally scrollable segmented nav on mobile */}
+        <div className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar lg:overflow-x-visible p-1 lg:p-0 rounded-button bg-muted/40 lg:bg-transparent border border-border/60 lg:border-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
