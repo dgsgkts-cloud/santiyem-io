@@ -53,6 +53,8 @@ export default function ProjectDetailMobile({ project: p, onBack, onUpdate }: Pr
   const [view, setView] = useState<MobileProjectView>("overview");
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [quickOverflowOpen, setQuickOverflowOpen] = useState(false);
+  const [noteSheetOpen, setNoteSheetOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
   const [lockedModule, setLockedModule] = useState<ModuleRow | null>(null);
   const [aiDismissed, setAiDismissed] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
