@@ -233,14 +233,15 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       <div
         className="flex items-center cursor-pointer shrink-0 overflow-hidden"
         style={{
-          height: 64,
+          height: collapsed ? 64 : 88,
           padding: collapsed ? "0 16px" : "0 20px",
           justifyContent: collapsed ? "center" : "flex-start",
           gap: collapsed ? 0 : 10,
         }}
         onClick={() => onTabChange("dashboard")}
       >
-        {collapsed ? <SantiyemMark px={32} /> : <SantiyemWordmark px={36} />}
+        {collapsed ? <SantiyemMark px={32} /> : <SantiyemWordmark px={72} />}
+
 
       </div>
 
