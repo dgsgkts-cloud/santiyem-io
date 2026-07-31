@@ -1235,13 +1235,11 @@ const NavTextLink = ({
     type="button"
     onClick={onActivate}
     aria-current={active ? "true" : undefined}
-    className="group/nav relative flex h-11 cursor-pointer items-center gap-1 px-1.5 text-[15px] font-medium outline-none transition-[color,opacity] duration-200 ease-out active:opacity-80 focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-offset-4"
+    className="group/nav relative flex h-11 cursor-pointer items-center gap-1 px-1.5 text-[15px] font-medium outline-none transition-[color,opacity] duration-200 ease-out active:opacity-80 focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
     style={{
       color: active ? T.text : "#C4C4CC",
-      ["--tw-ring-color" as string]: T.ember,
-      ["--tw-ring-offset-color" as string]: "#000000",
       ...body,
-    } as React.CSSProperties}
+    }}
     onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
     onMouseLeave={(e) => { e.currentTarget.style.color = active ? T.text : "#C4C4CC"; }}
     {...rest}
@@ -1341,8 +1339,8 @@ const NavV3 = () => {
                         key={c.l}
                         role="menuitem"
                         onClick={() => scrollTo(c.h)}
-                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[14px] outline-none transition-colors duration-200 ease-out hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:ring-2 active:opacity-80"
-                        style={{ color: T.text, ["--tw-ring-color" as string]: T.ember, ...body } as React.CSSProperties}
+                        className="w-full text-left px-3 py-2.5 rounded-[12px] text-[14px] outline-none transition-colors duration-200 ease-out hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] active:opacity-80"
+                        style={{ color: T.text, ...body }}
                       >
                         {c.l}
                       </button>
@@ -1359,28 +1357,24 @@ const NavV3 = () => {
         <div className="hidden md:flex items-center gap-2.5 ml-8 lg:ml-10">
           <Link
             to="/login"
-            className="inline-flex h-[43px] items-center rounded-[13px] px-4 lg:px-5 text-[15px] font-medium outline-none transition-all duration-200 ease-out hover:border-white/25 hover:bg-[rgba(255,107,43,0.10)] hover:text-white active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-offset-4"
+            className="inline-flex h-[43px] items-center rounded-[13px] px-4 lg:px-5 text-[15px] font-medium outline-none transition-all duration-200 ease-out hover:border-white/25 hover:bg-[rgba(255,107,43,0.10)] hover:text-white active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
             style={{
               color: "#E4E4E7",
               border: `1px solid ${T.borderStrong}`,
               background: "transparent",
-              ["--tw-ring-color" as string]: T.ember,
-              ["--tw-ring-offset-color" as string]: "#000000",
               ...body,
-            } as React.CSSProperties}
+            }}
           >
             Giriş Yap
           </Link>
           <Link
             to="/register"
-            className="group/cta inline-flex h-[45px] items-center gap-2 rounded-[15px] px-5 text-[15px] font-semibold text-white outline-none transition-all duration-200 ease-out hover:brightness-110 active:translate-y-[1px] active:shadow-none focus-visible:ring-2 focus-visible:ring-offset-4"
+            className="group/cta inline-flex h-[45px] items-center gap-2 rounded-[15px] px-5 text-[15px] font-semibold text-white outline-none transition-all duration-200 ease-out hover:brightness-110 active:translate-y-[1px] active:shadow-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
             style={{
               background: T.ember,
               boxShadow: `0 8px 26px ${T.ember}44`,
-              ["--tw-ring-color" as string]: T.ember,
-              ["--tw-ring-offset-color" as string]: "#000000",
               ...body,
-            } as React.CSSProperties}
+            }}
           >
             Ücretsiz Başla
             <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-[3px] motion-reduce:transition-none" />
