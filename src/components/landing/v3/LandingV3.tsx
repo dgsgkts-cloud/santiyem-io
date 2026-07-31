@@ -1351,18 +1351,7 @@ const NavV3 = () => {
 
 
         <div className="hidden md:flex items-center gap-2.5 ml-8 lg:ml-10">
-          <Link
-            to="/login"
-            className="inline-flex h-[43px] items-center rounded-[13px] px-4 lg:px-5 text-[15px] font-medium outline-none transition-all duration-200 ease-out hover:border-white/25 hover:bg-[rgba(255,107,43,0.10)] hover:text-white active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
-            style={{
-              color: "#E4E4E7",
-              border: `1px solid ${T.borderStrong}`,
-              background: "transparent",
-              ...body,
-            }}
-          >
-            Giriş Yap
-          </Link>
+          <LoginButton>Giriş Yap</LoginButton>
           <Link
             to="/register"
             className="group/cta inline-flex h-[45px] items-center gap-2 rounded-[15px] px-5 text-[15px] font-semibold text-white outline-none transition-all duration-200 ease-out hover:brightness-110 active:translate-y-[1px] active:shadow-none focus-visible:ring-2 focus-visible:ring-[#FF6B2B] focus-visible:ring-offset-4 focus-visible:ring-offset-black"
