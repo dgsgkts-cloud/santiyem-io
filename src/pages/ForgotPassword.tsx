@@ -35,13 +35,20 @@ const ForgotPassword = () => {
 
         {sent ? (
           <div className="text-center">
-            <div className="text-4xl mb-4">📧</div>
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+              style={{ backgroundColor: "rgba(34,197,94,0.12)" }}>
+              <svg className="h-8 w-8" style={{ color: "#22C55E" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
             <h2 className="text-lg font-semibold text-white mb-2">E-postanızı kontrol edin</h2>
             <p className="text-sm text-white/60 mb-6">
               Şifre sıfırlama linki <strong className="text-white/80">{email}</strong> adresine gönderildi.
             </p>
-            <Link to="/login" className="text-[#FF6B2B] text-sm hover:underline">
-              ← Giriş sayfasına dön
+            <Link to="/login" className="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-colors"
+              style={{ backgroundColor: "#FF6B2B" }}>
+              Girişe Dön
             </Link>
           </div>
         ) : (
