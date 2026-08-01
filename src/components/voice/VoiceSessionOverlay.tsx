@@ -40,19 +40,22 @@ interface Props {
  * ONLINE/OFFLINE, and never two contradictory labels on one screen.
  */
 const PHASE_LABEL: Record<VoicePhase, string> = {
-  idle: "Hazır",
+  idle: "AI hazırlanıyor...",
   requesting_permission: "Mikrofon izni bekleniyor",
-  mic_setup: "Mikrofon hazırlanıyor...",
+  mic_setup: "AI hazırlanıyor...",
   connecting: "OpenAI'ya bağlanılıyor...",
-  ready: "Hazır",
+  ready: "AI hazırlanıyor...",
   listening: "Dinliyorum",
   user_finished: "Anlıyorum",
   thinking: "Düşünüyorum...",
-  speaking: "Yanıtlıyor...",
+  speaking: "Yanıtlıyorum...",
   interrupted: "Dinliyorum",
   ending: "Görüşme kapatılıyor",
   error: "Bağlantı kesildi",
 };
+
+/** Short personality line, shown only before the first exchange. */
+const OPENING_HINT = "Merhaba. Hazırım. Projenizle ilgili ne öğrenmek istersiniz?";
 
 /** Session states that mean the transport is genuinely alive. */
 const LIVE_STATES = ["ready", "listening", "speaking", "thinking"] as const;
