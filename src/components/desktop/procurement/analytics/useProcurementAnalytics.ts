@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useLicense } from "@/lib/licenseStore";
 import type { OrderWorkflow } from "../orders/usePurchaseOrders";
-import type { RfqRecord } from "../rfq/rfqModel";
+import { loadRfqRecords } from "../rfq/useRfqWorkflow";
 import type { Request } from "../procurementConstants";
 import {
   buildAnalytics,
@@ -37,7 +37,6 @@ export interface ProcurementAnalytics {
 interface Args {
   orderWorkflow: OrderWorkflow;
   requests: Request[];
-  rfqs: RfqRecord[];
   filters: AnalyticsFilters;
   onFiltersChange: (next: AnalyticsFilters) => void;
 }
@@ -45,7 +44,6 @@ interface Args {
 export const useProcurementAnalytics = ({
   orderWorkflow,
   requests,
-  rfqs,
   filters,
   onFiltersChange,
 }: Args): ProcurementAnalytics => {
@@ -79,6 +77,9 @@ export const useProcurementAnalytics = ({
     orderWorkflow.refetch();
     setLastRefreshedAt(new Date());
   }, [orderWorkflow]);
+
+  // RFQ records are still persisted in the local store (no rfq tables yet).
+  const rfqs = useMemo(() => loadRfqRecords(), [lastRefreshedAt]);
 
   const result = useMemo(
     () =>
