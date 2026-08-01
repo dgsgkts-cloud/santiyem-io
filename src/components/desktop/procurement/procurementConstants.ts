@@ -114,6 +114,8 @@ export type Request = {
   submittedForApprovalBy?: string;
   approvalDueAt?: string;
   approvalNote?: string;
+  approvalWithdrawnAt?: string;
+  approvalWithdrawnBy?: string;
   approvedBy?: string;
   approvedAt?: string;
   rejectedBy?: string;
