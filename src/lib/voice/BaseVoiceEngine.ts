@@ -4,8 +4,8 @@
 // ============================================================
 
 import { VoiceEmitter } from "./voiceEvents";
-import type {
 import { setVoiceDiagnostics } from "./voiceDiagnostics";
+import type {
   TranscriptChunk,
   VoiceErrorKind,
   VoiceEngine,
