@@ -99,9 +99,10 @@ export const CEOView = ({ data, onCreateRequest }: Props) => {
         ) : (
           <div className="space-y-2">
             {data.dataQuality.slice(0, 8).map((i, idx) => (
-              <div key={`${i.itemId}-${i.kind}-${idx}`} className="flex items-start justify-between gap-2 min-w-0">
-                <span className="ds-caption text-foreground/75 truncate">{i.itemName}</span>
+              <div key={`${i.materialId}-${i.kind}-${idx}`} className="flex items-start justify-between gap-2 min-w-0">
+                <span className="ds-caption text-foreground/75 truncate">{i.materialName}</span>
                 <span className="ds-caption text-muted-foreground shrink-0">{issueLabel(i.kind)}</span>
+
               </div>
             ))}
           </div>
