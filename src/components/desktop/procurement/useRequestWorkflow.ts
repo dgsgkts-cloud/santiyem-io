@@ -22,13 +22,22 @@ export type MutationKey = `${string}:${WorkflowAction}`;
 interface ApproveInput { id: string }
 interface RejectInput { id: string; reason: string; note?: string }
 interface RfqInput { id: string; suppliers: string[]; deadline: string; notes?: string }
+export interface SubmitInput {
+  id: string;
+  approverUserId: string | null;
+  approverName: string | null;
+  approverRole: string | null;
+  approvalDueAt?: string;
+  approvalNote?: string;
+  submittedBy: string;
+}
 
 export interface RequestWorkflow {
   requests: Request[];
   pending: MutationKey | null;
   isPending: (id: string, action: WorkflowAction) => boolean;
   can: (action: WorkflowAction) => boolean;
-  submit: (id: string) => Promise<boolean>;
+  submit: (input: SubmitInput) => Promise<boolean>;
   approve: (input: ApproveInput) => Promise<boolean>;
   reject: (input: RejectInput) => Promise<boolean>;
   createRfq: (input: RfqInput) => Promise<RequestRFQ | null>;
@@ -40,11 +49,43 @@ export interface RequestWorkflow {
 
 const wait = (ms = 420) => new Promise((r) => setTimeout(r, ms));
 
+/** Overrides are persisted locally so an assigned approver survives refresh
+ *  until a real purchase_requests table exists. */
+const STORE_KEY = "santiyem_pr_workflow_overrides";
+type OverrideMap = Record<string, Partial<Request> | "deleted">;
+
+const readStore = (): OverrideMap => {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? (JSON.parse(raw) as OverrideMap) : {};
+  } catch {
+    return {};
+  }
+};
+const writeStore = (map: OverrideMap) => {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(map));
+  } catch {
+    /* storage unavailable — in-memory state still applies */
+  }
+};
+
 export function useRequestWorkflow(seedRequests: Request[]): RequestWorkflow {
   const license = useLicense();
-  const [overrides, setOverrides] = useState<Record<string, Partial<Request> | "deleted">>({});
+  const [overrides, setOverridesRaw] = useState<OverrideMap>(() => readStore());
   const [pending, setPending] = useState<MutationKey | null>(null);
   const inflight = useRef<Set<string>>(new Set());
+
+  const setOverrides = useCallback(
+    (updater: (prev: OverrideMap) => OverrideMap) =>
+      setOverridesRaw((prev) => {
+        const next = updater(prev);
+        writeStore(next);
+        return next;
+      }),
+    []
+  );
+
 
   const requests = useMemo(
     () =>
