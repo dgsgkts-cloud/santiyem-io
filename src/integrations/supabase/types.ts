@@ -571,6 +571,39 @@ export type Database = {
           },
         ]
       }
+      company_health_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          owner_id: string | null
+          scope: string | null
+          section: string
+          team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+          scope?: string | null
+          section: string
+          team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+          scope?: string | null
+          section?: string
+          team_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_memories: {
         Row: {
           category: string | null
@@ -4813,6 +4846,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      company_health_access: { Args: never; Returns: Json }
       compute_project_labor_cost: {
         Args: { _month: string; _project: string }
         Returns: Json
@@ -4832,6 +4866,7 @@ export type Database = {
       }
       expire_trials: { Args: never; Returns: number }
       get_account_usage: { Args: never; Returns: Json }
+      get_company_health: { Args: never; Returns: Json }
       get_hakedis_by_approval_token: { Args: { _token: string }; Returns: Json }
       get_org_plan_summary: { Args: never; Returns: Json }
       get_project_name_by_qr_token: {
@@ -4929,6 +4964,10 @@ export type Database = {
           team_size: number
           title: string
         }[]
+      }
+      log_company_health_access: {
+        Args: { _action?: string; _section: string }
+        Returns: undefined
       }
       match_company_memories: {
         Args: {

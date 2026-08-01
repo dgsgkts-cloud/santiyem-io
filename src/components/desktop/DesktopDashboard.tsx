@@ -8,6 +8,9 @@ import { CriticalAlertsCard, type AlertItem } from "@/components/dashboard/Criti
 import { CompactKpiStrip, type CompactKpi } from "@/components/dashboard/CompactKpiStrip";
 import { TodayActionsCard, type TodayAction } from "@/components/dashboard/TodayActionsCard";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
+import { useCompanyHealth } from "@/hooks/useCompanyHealth";
+import { voiceHealthContext } from "@/lib/companyHealth";
+import { setVoicePageContext, clearVoicePageContext } from "@/lib/voice/pageContext";
 import { useActionExecutor } from "@/hooks/useActionExecutor";
 import { useDisplayName } from "@/hooks/useDisplayName";
 
@@ -192,6 +195,14 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   const { accounts } = useCashAccounts();
   const { checks } = useCashChecks();
   const { kpis: briefKpis, ops: aiOps, findings } = useExecutiveBrief();
+  const { denied: healthDenied, payload: healthPayload } = useCompanyHealth();
+
+  // Keep the single global Voice AI mic aligned with what the user is allowed
+  // to see: without permission the assistant is told to refuse health figures.
+  useEffect(() => {
+    setVoicePageContext("dashboard", voiceHealthContext(healthPayload, !healthDenied));
+    return () => clearVoicePageContext("dashboard");
+  }, [healthPayload, healthDenied]);
   const { execute } = useActionExecutor();
   const isMobileView = useIsMobile();
 
@@ -705,13 +716,17 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
   }, [findings, aiOps.topRisks, onTabChange, onProjectSelect, execute]);
 
   const kpiItems: CompactKpi[] = [
-    {
-      key: "health",
-      label: "Şirket Sağlığı",
-      value: `${briefKpis.healthScore}`,
-      tone: briefKpis.healthScore >= 80 ? "good" : briefKpis.healthScore >= 60 ? "warn" : "alert",
-      icon: TrendingUp,
-    },
+    // Company health is management-only — the tile disappears completely for
+    // users without permission (no masked value, no placeholder).
+    ...(healthDenied
+      ? []
+      : [{
+          key: "health",
+          label: "Şirket Sağlığı",
+          value: `${briefKpis.healthScore}`,
+          tone: (briefKpis.healthScore >= 80 ? "good" : briefKpis.healthScore >= 60 ? "warn" : "alert") as CompactKpi["tone"],
+          icon: TrendingUp,
+        }]),
     {
       key: "cash",
       label: "Kasa",

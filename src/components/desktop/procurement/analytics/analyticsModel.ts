@@ -1396,7 +1396,11 @@ export const FINANCIAL_MASK = "Yetki gerekli";
 
 /* ── Voice context ─────────────────────────────────────────── */
 
-export const buildVoiceContext = (r: AnalyticsResult, f: AnalyticsFilters): string => {
+export const buildVoiceContext = (
+  r: AnalyticsResult,
+  f: AnalyticsFilters,
+  view?: { tab?: string; masked?: boolean },
+): string => {
   const filterBits = [
     `tarih ${rangeLabel(r.range)}`,
     f.project !== ALL ? `proje ${f.project}` : null,
@@ -1423,6 +1427,10 @@ export const buildVoiceContext = (r: AnalyticsResult, f: AnalyticsFilters): stri
     r.delivery.onTimeRate !== null
       ? `Zamanında teslimat oranı ${fmtPct(r.delivery.onTimeRate)}.`
       : "Teslimat performansı için yeterli veri yok.",
+    view?.tab ? `Kullanıcı şu an "${view.tab}" ekranında.` : null,
+    view?.masked ? "Kullanıcının finansal tutarları görme yetkisi yok; tutar paylaşma." : null,
     "Bu veriler yalnızca kullanıcının yetkili olduğu kayıtlardan gelir; rakamları uydurma.",
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 };

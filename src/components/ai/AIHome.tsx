@@ -21,6 +21,7 @@ import { AIOrb } from "@/components/ai/AIOrb";
 import AIInsightCard from "@/components/ai/AIInsightCard";
 import AISmartSuggestions from "@/components/ai/AISmartSuggestions";
 import { useExecutiveBrief } from "@/hooks/useExecutiveBrief";
+import { useCompanyHealth } from "@/hooks/useCompanyHealth";
 import { useDisplayName } from "@/hooks/useDisplayName";
 import { Skeleton } from "@/components/ui/Skeletons";
 
@@ -92,6 +93,7 @@ interface Props {
 const AIHome = ({ onSend, recentTopics = [] }: Props) => {
   const { firstName } = useDisplayName();
   const { loading, kpis, ops } = useExecutiveBrief();
+  const { denied: healthDenied } = useCompanyHealth();
   const [now] = useState(() => new Date());
 
   const [recentQuestions, setRecentQuestions] = useState<string[]>([]);
@@ -169,7 +171,8 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
           </div>
         ) : (
           <>
-            {/* Project health */}
+            {/* Company health — management-only, hidden without permission */}
+            {!healthDenied && (
             <div className="mb-3 flex items-center gap-4 rounded-card border border-border/60 bg-background/40 p-4">
               <div
                 className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
@@ -183,7 +186,7 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Proje Sağlık Skoru
+                  Firma Sağlık Skoru
                 </p>
                 <p className={`text-[14px] font-semibold ${tone.text}`}>{tone.label}</p>
                 <p className="text-[11.5px] text-muted-foreground">
@@ -191,6 +194,7 @@ const AIHome = ({ onSend, recentTopics = [] }: Props) => {
                 </p>
               </div>
             </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
               <Metric

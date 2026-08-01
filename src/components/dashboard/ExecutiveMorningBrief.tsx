@@ -11,7 +11,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Sun, Sunrise, Moon, Volume2, RefreshCw, Sparkles, AlertTriangle, Target, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { useExecutiveBrief, type Finding } from "@/hooks/useExecutiveBrief";
-import { HealthScoreCard } from "./executive/HealthScoreCard";
+import { CompanyHealthCard } from "@/components/companyHealth/CompanyHealthCard";
+import { useCompanyHealth } from "@/hooks/useCompanyHealth";
 import { ActionCard } from "./executive/ActionCard";
 import { useUser } from "@/contexts/UserContext";
 import { useDisplayName } from "@/hooks/useDisplayName";
@@ -46,13 +47,17 @@ function useGreeting(name?: string) {
 function buildSpokenBrief(args: {
   greeting: string;
   name?: string;
-  score: number;
+  score: number | null;
   priorities: Finding[];
   opportunities: string[];
 }): string {
   const { greeting, name, score, priorities, opportunities } = args;
   const parts: string[] = [];
-  parts.push(`${greeting}${name ? " " + name : ""}. Şirket sağlık skoru bugün ${score} üzerinden 100.`);
+  parts.push(
+    score === null
+      ? `${greeting}${name ? " " + name : ""}.`
+      : `${greeting}${name ? " " + name : ""}. Şirket sağlık skoru bugün ${score} üzerinden 100.`,
+  );
   if (priorities.length === 0) {
     parts.push("Bugün için kritik bir konu görünmüyor, şantiye sakin.");
   } else {
@@ -71,6 +76,9 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
   void user;
   const greeting = useGreeting(firstName);
   const { loading, findings, insights, kpis, refresh } = useExecutiveBrief();
+  // Company health is management-only; without permission the score is never
+  // spoken, narrated into the canvas or pushed into the voice session.
+  const { denied: healthDenied } = useCompanyHealth();
   const [expanded, setExpanded] = useState(false);
 
   // Priorities = top 5 findings, already sorted critical → important → info
@@ -104,7 +112,7 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
       speech: buildSpokenBrief({
         greeting: greeting.text,
         name: firstName,
-        score: kpis.healthScore,
+        score: healthDenied ? null : kpis.healthScore,
         priorities,
         opportunities,
       }),
@@ -113,7 +121,9 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
           type: "kpi_cards",
           title: "Bugünün Özeti",
           cards: [
-            { label: "Sağlık Skoru", value: `${kpis.healthScore}/100`, tone: kpis.healthScore >= 80 ? "positive" : kpis.healthScore >= 60 ? "warning" : "danger" },
+            ...(healthDenied
+              ? []
+              : [{ label: "Sağlık Skoru", value: `${kpis.healthScore}/100`, tone: kpis.healthScore >= 80 ? "positive" : kpis.healthScore >= 60 ? "warning" : "danger" }]),
             { label: "Kritik Risk", value: String(kpis.criticalRisks), tone: kpis.criticalRisks > 0 ? "danger" : "positive" },
             { label: "Bekleyen Ödeme", value: String(kpis.pendingPayments), tone: kpis.pendingPayments > 0 ? "warning" : "neutral" },
             { label: "Bugün Görev", value: String(kpis.tasksDueToday), tone: kpis.tasksDueToday > 0 ? "warning" : "neutral" },
@@ -151,13 +161,13 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
         ],
       },
     });
-  }, [loading, kpis, priorities, opportunities, insights.length, findings.length, greeting.text, firstName]);
+  }, [loading, kpis, healthDenied, priorities, opportunities, insights.length, findings.length, greeting.text, firstName]);
 
   const narrate = () => {
     const text = buildSpokenBrief({
       greeting: greeting.text,
       name: firstName,
-      score: kpis.healthScore,
+      score: healthDenied ? null : kpis.healthScore,
       priorities,
       opportunities,
     }).trim();
@@ -174,15 +184,17 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
     // Voice ekranında Live Panel'in ilk saniyeden dolu görünmesi için
     // brifing kartlarını önden hazırla (Sprint 15.3 — Voice Fix #3).
     const preCards = [
-      {
-        id: "brief-summary",
-        type: "kpi" as const,
-        title: "Sağlık Skoru",
-        value: `${kpis.healthScore}/100`,
-        detail: "Bugünün genel şirket sağlık göstergesi.",
-        tone: (kpis.healthScore >= 80 ? "positive" : kpis.healthScore >= 60 ? "warning" : "danger") as
-          "positive" | "warning" | "danger",
-      },
+      ...(healthDenied
+        ? []
+        : [{
+            id: "brief-summary",
+            type: "kpi" as const,
+            title: "Sağlık Skoru",
+            value: `${kpis.healthScore}/100`,
+            detail: "Bugünün genel şirket sağlık göstergesi.",
+            tone: (kpis.healthScore >= 80 ? "positive" : kpis.healthScore >= 60 ? "warning" : "danger") as
+              "positive" | "warning" | "danger",
+          }]),
       ...(priorities.length
         ? [{
             id: "brief-priorities",
@@ -332,7 +344,7 @@ export function ExecutiveMorningBrief({ onTabChange, onProjectSelect, voiceEnabl
       {/* ── Snapshot row: score + counts (hidden in compact) ── */}
       {!compact && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <HealthScoreCard score={kpis.healthScore} />
+          <CompanyHealthCard showDeniedNotice={false} />
           <SnapshotTile
             icon={AlertTriangle}
             label="Kritik Risk"
