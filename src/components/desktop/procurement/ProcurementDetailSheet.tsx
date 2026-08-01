@@ -138,6 +138,41 @@ export const ProcurementDetailSheet = ({
             </div>
           </div>
 
+          {(req.submittedForApprovalAt || req.approverName) && (
+            <div>
+              <div className="text-fs-xs uppercase text-muted-foreground mb-1.5">Onay</div>
+              <div className="space-y-1">
+                <Row label="Gönderen" value={req.submittedForApprovalBy ?? req.requester} />
+                <Row label="Gönderim Tarihi" value={fmtDate(req.submittedForApprovalAt)} />
+                <Row
+                  label="Onaylayıcı"
+                  value={
+                    req.approverName
+                      ? `${req.approverName}${req.approverRole ? ` · ${req.approverRole}` : ""}`
+                      : req.approverRole ?? "—"
+                  }
+                />
+                <Row
+                  label="Onay Durumu"
+                  value={approvalStatusLabel({
+                    status: req.status,
+                    approverName: req.approverName,
+                    approverRoleLabel: req.approverRole,
+                  })}
+                />
+                <Row
+                  label="Son Tarih"
+                  value={
+                    req.approvalDueAt
+                      ? new Date(req.approvalDueAt).toLocaleDateString("tr-TR")
+                      : "—"
+                  }
+                />
+                <Row label="Not" value={req.approvalNote ?? "—"} />
+              </div>
+            </div>
+          )}
+
           {(req.approvedAt || req.rejectedAt) && (
             <div className="space-y-1">
               {req.approvedAt && (
