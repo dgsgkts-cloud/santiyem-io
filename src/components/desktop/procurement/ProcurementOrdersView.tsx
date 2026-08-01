@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { Building2, Calendar, FileText, Plus, Search, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EmptyState, ResponsiveGrid } from "@/components/ui/responsive";
+import { ResponsiveGrid } from "@/components/ui/responsive";
+import EmptyState from "@/components/desktop/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ import {
   summarizeOrder,
   type OrderAction,
   type PurchaseOrder,
-} from "./orderModel";
+} from "./orders/orderModel";
 import {
   DeliveryStatusPill,
   InvoiceStatusPill,
@@ -29,9 +30,9 @@ import {
   OrderStatusPill,
   PaymentProgress,
   PaymentStatusPill,
-} from "./orderUi";
-import { OrderActionBar } from "./OrderActionBar";
-import type { OrderWorkflow } from "./usePurchaseOrders";
+} from "./orders/orderUi";
+import { OrderActionBar } from "./orders/OrderActionBar";
+import type { OrderWorkflow } from "./orders/usePurchaseOrders";
 
 interface Props {
   workflow: OrderWorkflow;
@@ -56,7 +57,10 @@ export const ProcurementOrdersView = ({
   const [supplier, setSupplier] = useState(ALL);
 
   const supplierOptions = useMemo(
-    () => Array.from(new Set(workflow.orders.map((o) => o.supplier_name))).sort(),
+    () =>
+      Array.from(new Set(workflow.orders.map((o) => o.supplier_name))).sort((a, b) =>
+        a.localeCompare(b, "tr")
+      ),
     [workflow.orders]
   );
 
@@ -219,7 +223,7 @@ export const ProcurementOrdersView = ({
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          icon="📦"
           title={
             workflow.orders.length === 0
               ? "Henüz sipariş oluşturulmadı"
@@ -230,21 +234,26 @@ export const ProcurementOrdersView = ({
               ? "Onaylanan taleplerden sipariş oluşturun veya doğrudan yeni sipariş girin."
               : "Arama ve filtreleri temizleyerek tekrar deneyin."
           }
-          action={
+          firstStep={
             workflow.orders.length === 0
-              ? { label: "Yeni Sipariş", onClick: onCreate }
-              : {
-                  label: "Filtreleri Temizle",
-                  onClick: () => {
-                    setQuery("");
-                    setOrderStatus(ALL);
-                    setPaymentStatus(ALL);
-                    setDeliveryStatus(ALL);
-                    setProject(ALL);
-                    setSupplier(ALL);
-                  },
-                }
+              ? "Tedarikçi, kalemler ve teslim tarihini girerek ilk siparişi oluşturun."
+              : undefined
           }
+          buttonText={
+            workflow.orders.length === 0 ? "Yeni Sipariş" : "Filtreleri Temizle"
+          }
+          onButtonClick={() => {
+            if (workflow.orders.length === 0) {
+              onCreate();
+              return;
+            }
+            setQuery("");
+            setOrderStatus(ALL);
+            setPaymentStatus(ALL);
+            setDeliveryStatus(ALL);
+            setProject(ALL);
+            setSupplier(ALL);
+          }}
         />
       ) : (
         <ResponsiveGrid variant="auto" minItemWidth={340} className="gap-3">
