@@ -91,6 +91,14 @@ export type Request = {
   items?: RequestItem[];
   notes?: string;
   deliveryLocation?: string;
+  /** approval routing (set when the request is submitted for approval) */
+  approverUserId?: string | null;
+  approverName?: string | null;
+  approverRole?: string | null;
+  submittedForApprovalAt?: string;
+  submittedForApprovalBy?: string;
+  approvalDueAt?: string;
+  approvalNote?: string;
   approvedBy?: string;
   approvedAt?: string;
   rejectedBy?: string;
