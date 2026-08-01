@@ -35,7 +35,14 @@ import { useRequestApprovers } from "./procurement/useRequestApprovers";
 import { SubmitForApprovalDialog } from "./procurement/SubmitForApprovalDialog";
 import { notifyApprover } from "./procurement/approvalNotifications";
 import { useRequestWorkflow } from "./procurement/useRequestWorkflow";
-import { PERMISSION_MESSAGE, type WorkflowAction } from "./procurement/procurementWorkflow";
+import { PurchaseRequestForm } from "./procurement/PurchaseRequestForm";
+import { WithdrawApprovalDialog } from "./procurement/RequestEditDialogs";
+import {
+  NOT_EDITABLE_MESSAGE,
+  PERMISSION_MESSAGE,
+  isEditableStatus,
+  type WorkflowAction,
+} from "./procurement/procurementWorkflow";
 import type { Request } from "./procurement/procurementConstants";
 
 const ProcurementCEOView = lazy(() =>
@@ -58,10 +65,16 @@ export default function ProcurementPage() {
   const [rfqTarget, setRfqTarget] = useState<Request | null>(null);
   const [submitTarget, setSubmitTarget] = useState<Request | null>(null);
   const [planBlocked, setPlanBlocked] = useState(false);
+  const [withdrawTarget, setWithdrawTarget] = useState<Request | null>(null);
+  const [requestQuery, setRequestQuery] = useState("");
+  const [requestStatusFilter, setRequestStatusFilter] = useState("all");
   const { user } = useUser();
   const approverResolution = useRequestApprovers(submitTarget);
+  const actorName =
+    user?.user_metadata?.full_name || user?.email || "Yetkili Kullanıcı";
 
   const detailId = params.get("talep");
+  const editId = params.get("duzenle");
   const planAllows = license.hasFeature("purchasing");
 
   // Deep-link / refresh / browser-back support for the request detail view.
@@ -95,6 +108,24 @@ export default function ProcurementPage() {
       next.delete("talep");
       setParams(next, { replace: true });
     }
+  }, [params, setParams]);
+
+  const openEdit = useCallback(
+    (id: string) => {
+      const next = new URLSearchParams(params);
+      next.delete("talep");
+      next.set("duzenle", id);
+      setParams(next, { replace: false });
+      setDetail(null);
+    },
+    [params, setParams]
+  );
+
+  const closeEdit = useCallback(() => {
+    const next = new URLSearchParams(params);
+    next.delete("duzenle");
+    setParams(next, { replace: false });
+    setTab("requests");
   }, [params, setParams]);
 
   const handleAction = useCallback(
@@ -163,16 +194,27 @@ export default function ProcurementPage() {
             toast.error("Kopyalama yapılamadı.");
           }
           return;
-        case "edit":
-          toast.info(
-            "Talep düzenleme ekranı henüz kullanıma açılmadı. Şimdilik yeni talep oluşturabilirsiniz."
-          );
+        case "edit": {
+          if (!isEditableStatus(request.status)) {
+            toast.error(NOT_EDITABLE_MESSAGE);
+            return;
+          }
+          openEdit(request.id);
           return;
+        }
+        case "withdraw":
+          setWithdrawTarget(request);
+          return;
+        case "revision": {
+          const revision = await workflow.createRevision(request.id, actorName);
+          if (revision) openEdit(revision.id);
+          return;
+        }
         default:
           return;
       }
     },
-    [openDetail, planAllows, workflow]
+    [openDetail, openEdit, planAllows, workflow, actorName]
   );
 
   const detailRequest = useMemo(
@@ -201,7 +243,25 @@ export default function ProcurementPage() {
         />
       }
     >
-      {ceoMode ? (
+      {editId ? (
+        <PurchaseRequestForm
+          mode="edit"
+          request={workflow.find(editId) ?? null}
+          loading={workflow.requests.length === 0}
+          workflow={workflow}
+          projectNames={data.projNames}
+          actor={actorName}
+          onClose={closeEdit}
+          onSaved={(saved) => {
+            closeEdit();
+            const next = new URLSearchParams(params);
+            next.delete("duzenle");
+            next.set("talep", saved.id);
+            setParams(next, { replace: false });
+          }}
+          onDeleted={closeEdit}
+        />
+      ) : ceoMode ? (
         <Suspense fallback={null}>
           <ProcurementCEOView data={data} />
         </Suspense>
@@ -211,7 +271,14 @@ export default function ProcurementPage() {
 
           {tab === "dashboard" && <ProcurementDashboardView data={data} />}
           {tab === "requests" && (
-            <ProcurementRequestsView workflow={workflow} onAction={handleAction} />
+            <ProcurementRequestsView
+              workflow={workflow}
+              onAction={handleAction}
+              query={requestQuery}
+              onQueryChange={setRequestQuery}
+              statusFilter={requestStatusFilter}
+              onStatusFilterChange={setRequestStatusFilter}
+            />
           )}
           {tab === "rfq" && (
             <ProcurementRFQView
@@ -239,7 +306,29 @@ export default function ProcurementPage() {
         </>
       )}
 
-      <ProcurementQuickCreateFAB />
+      {!editId && <ProcurementQuickCreateFAB />}
+      <WithdrawApprovalDialog
+        open={!!withdrawTarget}
+        approverName={withdrawTarget?.approverName}
+        loading={!!withdrawTarget && workflow.isPending(withdrawTarget.id, "withdraw")}
+        onCancel={() => setWithdrawTarget(null)}
+        onConfirm={async () => {
+          if (!withdrawTarget) return;
+          const target = withdrawTarget;
+          const ok = await workflow.withdraw(target.id, actorName);
+          if (ok) {
+            setWithdrawTarget(null);
+            if (target.approverUserId) {
+              await notifyApprover({
+                request: { ...target, status: "Taslak" },
+                approverUserId: target.approverUserId,
+                approverName: target.approverName ?? "",
+                withdrawn: true,
+              });
+            }
+          }
+        }}
+      />
       <ProcurementDetailSheet
         detail={shownDetail}
         onClose={closeDetail}
