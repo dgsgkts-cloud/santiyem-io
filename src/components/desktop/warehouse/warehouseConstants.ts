@@ -38,10 +38,24 @@ export type Stock = {
   current: number; reserved: number; min: number; avgCost: number; supplier: string;
   lastPurchase: number; state: StockState;
 };
+/**
+ * Canonical movement types. `reason` is a separate free field so a type is never
+ * overloaded to carry a reason (see the movement model in inventoryTruth).
+ */
+export type MovementKind =
+  | "in" | "out" | "transfer_out" | "transfer_in"
+  | "return_in" | "supplier_return" | "count_up" | "count_down"
+  | "scrap" | "assignment" | "assignment_return" | "reversal"
+  | "transfer" | "adjust" | "consume" | "return";
 export type Movement = {
-  id: string; kind: "in" | "out" | "transfer" | "adjust" | "consume" | "return";
+  id: string; kind: MovementKind;
   material: string; qty: number; unit: string; warehouse: string; project: string;
-  actor: string; whenDays: number; reason: string;
+  actor: string;
+  /** ISO date of the posted movement. */
+  date: string;
+  reason: string;
+  unitCost?: number | null;
+  document?: string | null;
 };
 export type Transfer = {
   id: string; from: string; to: string; material: string; qty: number; unit: string;
