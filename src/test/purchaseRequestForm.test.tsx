@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { PurchaseRequestForm } from "@/components/desktop/procurement/PurchaseRequestForm";
 import type { Request } from "@/components/desktop/procurement/procurementConstants";
 import type { RequestWorkflow } from "@/components/desktop/procurement/useRequestWorkflow";
+import {
+  DeleteDraftDialog,
+  WithdrawApprovalDialog,
+} from "@/components/desktop/procurement/RequestEditDialogs";
 
 const draft: Request = {
   id: "req-1",
@@ -151,14 +155,32 @@ describe("PurchaseRequestForm", () => {
     expect(screen.getByText("Güncel Veriyi Yükle")).toBeTruthy();
   });
 
-  it("offers draft deletion with confirmation copy", async () => {
-    const remove = vi.fn(async () => true);
+  it("offers draft deletion with the required confirmation copy", () => {
+    render(<PurchaseRequestForm {...baseProps} request={draft} workflow={makeWorkflow()} />);
+    expect(screen.getByLabelText("Diğer işlemler")).toBeTruthy();
+    const onConfirm = vi.fn();
     render(
-      <PurchaseRequestForm {...baseProps} request={draft} workflow={makeWorkflow({ remove })} />
+      <DeleteDraftDialog open loading={false} onCancel={vi.fn()} onConfirm={onConfirm} />
     );
-    fireEvent.click(screen.getByLabelText("Diğer işlemler"));
-    fireEvent.click(await screen.findByText("Talebi Sil"));
     expect(screen.getByText("Bu taslak talep silinsin mi?")).toBeTruthy();
     expect(screen.getByText("Bu işlem geri alınamaz.")).toBeTruthy();
+    fireEvent.click(screen.getByText("Talebi Sil"));
+    expect(onConfirm).toHaveBeenCalled();
+  });
+
+  it("confirms withdrawal from approval before changing status", () => {
+    const onConfirm = vi.fn();
+    render(
+      <WithdrawApprovalDialog
+        open
+        approverName="Doğuş Göktaş"
+        loading={false}
+        onCancel={vi.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+    expect(screen.getByText("Talep onay sürecinden geri çekilsin mi?")).toBeTruthy();
+    fireEvent.click(screen.getByText("Onaydan Geri Çek"));
+    expect(onConfirm).toHaveBeenCalled();
   });
 });
