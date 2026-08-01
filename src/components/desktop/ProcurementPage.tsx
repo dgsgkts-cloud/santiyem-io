@@ -225,6 +225,75 @@ export default function ProcurementPage() {
     supplierNames: data.suppliers.map((s) => s.name),
   });
 
+  /* ── Deliveries workspace ──────────────────────────────── */
+  const [deliveryFilters, setDeliveryFilters] = useState<DeliveryFilterState>(
+    emptyDeliveryFilters
+  );
+
+  const handleDeliveryAction = useCallback(
+    async (action: DeliveryAction, row: DeliveryRow) => {
+      if (!canManageDeliveries(license.role) && action !== "detail" && action !== "open_order") {
+        toast.error(DELIVERY_PERMISSION_MESSAGE);
+        return;
+      }
+      switch (action) {
+        case "detail":
+        case "receipt_detail":
+          if (row.deliveryId) setParams(withParam(params, "teslimat", row.deliveryId));
+          else orderActions.perform("detail", row.order);
+          return;
+        case "open_order":
+          orderActions.perform("detail", row.order);
+          return;
+        case "plan":
+        case "edit_shipment":
+        case "update_eta":
+        case "track_remaining":
+          orderActions.perform("add_delivery", row.order);
+          return;
+        case "goods_receipt":
+          orderActions.openReceipt(row.order, row.deliveryId ?? undefined);
+          return;
+        case "mark_ready":
+        case "mark_dispatched":
+        case "mark_arrived": {
+          if (!row.deliveryId) {
+            toast.error("Önce teslimatı planlayın.");
+            return;
+          }
+          const status =
+            action === "mark_ready"
+              ? "Sevke Hazır"
+              : action === "mark_dispatched"
+              ? "Yolda"
+              : "Şantiyeye Ulaştı";
+          await orderWorkflow.setShipmentStage(row.order, row.deliveryId, status);
+          return;
+        }
+        case "stock_entry":
+          setTab("orders");
+          toast.info("Depo girişleri Malzeme modülünde kayıtlı.");
+          return;
+        case "match_invoice":
+          orderActions.perform("add_invoice", row.order);
+          return;
+        case "discrepancy":
+        case "return": {
+          if (!row.deliveryId) {
+            toast.error("Bu sipariş için sevkiyat kaydı yok.");
+            return;
+          }
+          setDeliveryNoteTarget({ row, kind: action });
+          return;
+        }
+        default:
+          return;
+      }
+    },
+    [license.role, orderActions, orderWorkflow, params, setParams]
+  );
+
+
   const detailRequest = useMemo(
     () =>
       detail?.kind === "request" && detail.item
