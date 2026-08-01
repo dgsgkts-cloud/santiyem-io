@@ -587,11 +587,11 @@ export function VoiceSessionOverlay({
 
             <div className="flex flex-col items-center gap-2 text-center">
               <p
-                key={PHASE_LABEL[phase]}
+                key={statusLabel}
                 aria-live="polite"
                 className="animate-fade-in text-[17px] font-medium tracking-tight text-white/90"
               >
-                {PHASE_LABEL[phase]}
+                {statusLabel}
               </p>
               {showOpeningHint && (
                 <p className="max-w-[300px] animate-fade-in text-[13.5px] leading-relaxed text-white/40">
