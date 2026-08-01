@@ -1,80 +1,102 @@
-// Sprint M1.5 — Analytics: adaptive 2-col responsive analytics blocks.
+// DEPO — Analitik: only metrics with real posted movements behind them.
 import { ResponsiveGrid, SectionCard } from "@/components/ui/responsive";
-import { fmtTRY } from "../warehouseConstants";
 import type { WarehouseData } from "../useWarehouseData";
+import { InsufficientData } from "../warehouseUi";
+import { TRUTH_COPY, fmtQty, fmtMoney, fmtDate } from "../inventoryTruth";
 
-export const AnalyticsView = ({ data }: { data: WarehouseData }) => (
-  <ResponsiveGrid variant="auto" minItemWidth={320} className="gap-4">
-    <SectionCard title="Hızlı Dönen Malzemeler">
-      <div className="space-y-2">
-        {data.stocks.slice(0, 6).map((s, i) => {
-          const val = 90 - i * 12;
-          return (
-            <div key={s.id} className="flex items-center gap-3">
-              <span className="text-fs-xs text-foreground/70 w-32 sm:w-40 truncate">{s.name}</span>
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-emerald-500/70 to-emerald-500/30" style={{ width: `${val}%` }} />
+export const AnalyticsView = ({ data }: { data: WarehouseData }) => {
+  // Turnover proxy from real records: issue movement count and last activity.
+  const ranked = [...data.stockItems]
+    .filter((s) => s.exitCount > 0)
+    .sort((a, b) => b.exitCount - a.exitCount);
+  const fast = ranked.slice(0, 6);
+  const maxExits = fast[0]?.exitCount ?? 0;
+
+  // Idle stock: has balance but no issue movement recorded.
+  const idle = data.stockItems.filter((s) => s.onHand > 0 && s.exitCount === 0).slice(0, 6);
+
+  const valued = [...data.stockItems]
+    .filter((s) => s.stockValue !== null && s.stockValue > 0)
+    .sort((a, b) => (b.stockValue ?? 0) - (a.stockValue ?? 0))
+    .slice(0, 6);
+  const maxValue = valued[0]?.stockValue ?? 0;
+
+  return (
+    <ResponsiveGrid variant="auto" minItemWidth={320} className="gap-4">
+      <SectionCard title="En Çok Hareket Gören Malzemeler" subtitle="Kayıtlı çıkış hareketi sayısına göre">
+        {fast.length === 0 ? (
+          <InsufficientData title={TRUTH_COPY.noAnalytics} />
+        ) : (
+          <div className="space-y-2">
+            {fast.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 min-w-0">
+                <span className="ds-caption text-foreground/70 w-28 sm:w-40 truncate">{s.name}</span>
+                <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500/70 to-emerald-500/30"
+                    style={{ width: `${maxExits ? Math.max(6, (s.exitCount / maxExits) * 100) : 0}%` }}
+                  />
+                </div>
+                <span className="ds-caption text-muted-foreground w-16 text-right ds-numeric shrink-0">
+                  {s.exitCount} çıkış
+                </span>
               </div>
-              <span className="text-fs-xs text-muted-foreground w-10 text-right tabular-nums">{val}%</span>
-            </div>
-          );
-        })}
-      </div>
-    </SectionCard>
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
-    <SectionCard title="Yavaş & Ölü Stok">
-      <div className="space-y-2">
-        {data.stocks.slice(6, 12).map((s, i) => {
-          const dead = i > 3;
-          return (
-            <div key={s.id} className="flex items-center gap-3">
-              <span className="text-fs-xs text-foreground/70 w-32 sm:w-40 truncate">{s.name}</span>
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div className={`h-full rounded-full ${dead ? "bg-red-500/50" : "bg-amber-500/50"}`} style={{ width: `${20 + i * 8}%` }} />
+      <SectionCard title="Hareketsiz Stok" subtitle="Bakiyesi olup çıkış kaydı bulunmayan kalemler">
+        {idle.length === 0 ? (
+          <InsufficientData title="Hareketsiz stok kalemi bulunmuyor." />
+        ) : (
+          <div className="space-y-2">
+            {idle.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-3 min-w-0">
+                <span className="ds-caption text-foreground/70 truncate">{s.name}</span>
+                <span className="ds-caption text-muted-foreground shrink-0 ds-numeric">
+                  {fmtQty(s.onHand)} {s.rawUnit} · son hareket {fmtDate(s.lastMovementAt)}
+                </span>
               </div>
-              <span className={`text-fs-xs w-16 text-right ${dead ? "text-red-400" : "text-amber-400"}`}>
-                {dead ? "Dead stock" : "Yavaş"}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </SectionCard>
-
-    <SectionCard title="Depo Karşılaştırma">
-      <div className="space-y-3">
-        {data.warehouses.map(w => (
-          <div key={w.id}>
-            <div className="flex justify-between text-fs-xs mb-1 gap-2">
-              <span className="text-foreground/70 truncate">{w.name}</span>
-              <span className="text-muted-foreground tabular-nums">{fmtTRY(w.value)}</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#FF6B2B]/70 to-[#FF6B2B]/30"
-                   style={{ width: `${(w.value / 5_000_000) * 100}%` }} />
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </SectionCard>
+        )}
+      </SectionCard>
 
-    <SectionCard title="Sipariş → Teslimat (Satın Alma)" subtitle="Satın alma modülünden görsel senkronizasyon">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {[
-          { label: "Bekliyor", value: 6, color: "bg-amber-500/40" },
-          { label: "Kısmi", value: 3, color: "bg-blue-500/40" },
-          { label: "Alındı", value: 12, color: "bg-emerald-500/40" },
-          { label: "Teslim", value: 9, color: "bg-cyan-500/40" },
-        ].map(b => (
-          <div key={b.label} className="rounded-lg border border-border bg-background/40 p-3">
-            <div className={`w-full h-14 rounded ${b.color} mb-2`} />
-            <div className="text-foreground font-semibold text-fs-sm tabular-nums">{b.value}</div>
-            <div className="text-muted-foreground text-fs-xs">{b.label}</div>
+      <SectionCard title="Stok Değeri Dağılımı" subtitle="Ağırlıklı ortalama maliyetli kalemler">
+        {valued.length === 0 ? (
+          <InsufficientData
+            title="Stok değeri hesaplanamıyor."
+            hint="Birim fiyatlı mal kabulü girildiğinde stok değeri oluşur."
+          />
+        ) : (
+          <div className="space-y-3">
+            {valued.map((s) => (
+              <div key={s.id}>
+                <div className="flex justify-between ds-caption mb-1 gap-2">
+                  <span className="text-foreground/70 truncate">{s.name}</span>
+                  <span className="text-muted-foreground ds-numeric shrink-0">{fmtMoney(s.stockValue)}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#FF6B2B]/70 to-[#FF6B2B]/30"
+                    style={{ width: `${maxValue ? Math.max(4, ((s.stockValue ?? 0) / maxValue) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </SectionCard>
-  </ResponsiveGrid>
-);
+        )}
+      </SectionCard>
+
+      <SectionCard title="Sipariş → Teslimat" subtitle="Satın alma modülünden">
+        <InsufficientData
+          title="Bu dönem için sipariş veya teslimat kaydı bulunmuyor."
+          hint="Satın alma siparişi oluşturulduğunda tedarik akışı burada özetlenir."
+        />
+      </SectionCard>
+    </ResponsiveGrid>
+  );
+};
 
 export default AnalyticsView;
