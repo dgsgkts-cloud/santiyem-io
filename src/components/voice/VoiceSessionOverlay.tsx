@@ -472,6 +472,8 @@ export function VoiceSessionOverlay({
     );
   }
 
+  const isMac =
+    typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
   const statusLabel = muted && phase !== "error" ? "Mikrofon kapalı" : PHASE_LABEL[phase];
 
   const showOpeningHint =
