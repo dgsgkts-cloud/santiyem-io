@@ -72,7 +72,9 @@ export default function WarehousePage() {
       </PageShell>
 
       <StockSheet stock={openStock} onClose={() => setOpenStock(null)} data={data} />
-      <QuickActionFAB />
+      <StockActionDialog kind={action} onClose={() => setAction(null)} data={data} />
+      <QuickActionFAB onAction={setAction} />
     </>
   );
 }
+
