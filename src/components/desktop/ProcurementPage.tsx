@@ -45,6 +45,15 @@ import {
   type WorkflowAction,
 } from "./procurement/procurementWorkflow";
 import type { Request } from "./procurement/procurementConstants";
+import {
+  DELIVERY_PERMISSION_MESSAGE,
+  canManageDeliveries,
+  emptyDeliveryFilters,
+  type DeliveryAction,
+  type DeliveryFilterState,
+  type DeliveryRow,
+} from "./procurement/deliveries/deliveryModel";
+import { DeliveryNoteDialog } from "./procurement/deliveries/DeliveryNoteDialog";
 
 const ProcurementCEOView = lazy(() =>
   import("./procurement/ProcurementCEOView").then((m) => ({
@@ -229,6 +238,10 @@ export default function ProcurementPage() {
   const [deliveryFilters, setDeliveryFilters] = useState<DeliveryFilterState>(
     emptyDeliveryFilters
   );
+  const [deliveryNoteTarget, setDeliveryNoteTarget] = useState<{
+    row: DeliveryRow;
+    kind: "discrepancy" | "return";
+  } | null>(null);
 
   const handleDeliveryAction = useCallback(
     async (action: DeliveryAction, row: DeliveryRow) => {
@@ -239,7 +252,11 @@ export default function ProcurementPage() {
       switch (action) {
         case "detail":
         case "receipt_detail":
-          if (row.deliveryId) setParams(withParam(params, "teslimat", row.deliveryId));
+          if (row.deliveryId) {
+            const next = new URLSearchParams(params);
+            next.set("teslimat", row.deliveryId);
+            setParams(next, { replace: false });
+          }
           else orderActions.perform("detail", row.order);
           return;
         case "open_order":
@@ -410,6 +427,21 @@ export default function ProcurementPage() {
       )}
 
       {orderActions.dialogs}
+      <DeliveryNoteDialog
+        open={!!deliveryNoteTarget}
+        kind={deliveryNoteTarget?.kind ?? "discrepancy"}
+        deliveryNo={deliveryNoteTarget?.row.deliveryNo ?? ""}
+        onCancel={() => setDeliveryNoteTarget(null)}
+        onConfirm={async (note) => {
+          if (!deliveryNoteTarget?.row.deliveryId) return;
+          const { row, kind } = deliveryNoteTarget;
+          const ok =
+            kind === "discrepancy"
+              ? await orderWorkflow.reportDiscrepancy(row.order, row.deliveryId!, note)
+              : await orderWorkflow.startReturn(row.order, row.deliveryId!, note);
+          if (ok) setDeliveryNoteTarget(null);
+        }}
+      />
       <WithdrawApprovalDialog
         open={!!withdrawTarget}
         approverName={withdrawTarget?.approverName}
