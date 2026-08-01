@@ -66,7 +66,7 @@ describe("PurchaseRequestForm", () => {
   });
 
   it("saves an unchanged draft and calls the edit mutation once", async () => {
-    const saveEdit = vi.fn(async () => ({ ok: true, request: draft }));
+    const saveEdit = vi.fn(async (input: any) => ({ ok: true, request: draft }));
     render(
       <PurchaseRequestForm {...baseProps} request={draft} workflow={makeWorkflow({ saveEdit })} />
     );
