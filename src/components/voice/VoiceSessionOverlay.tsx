@@ -423,11 +423,24 @@ export function VoiceSessionOverlay({
   const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
   const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
 
+  // Mute toggle: subtle mobile haptic + a short visual confirmation.
+  const micToastTimer = useRef<number | null>(null);
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
     if (next) voice.mute(); else voice.unmute();
+    voiceHaptic(next ? "mute" : "unmute");
+    setMicToast(next ? "Mikrofon kapatıldı" : "Mikrofon açıldı");
+    if (micToastTimer.current) window.clearTimeout(micToastTimer.current);
+    micToastTimer.current = window.setTimeout(() => setMicToast(null), 1600);
   };
+
+  useEffect(
+    () => () => {
+      if (micToastTimer.current) window.clearTimeout(micToastTimer.current);
+    },
+    [],
+  );
 
   // ---- overlay-scoped keyboard shortcuts ------------------------------
   // Space = mute/unmute · Escape = end session · Ctrl/Cmd+Enter = text mode.
