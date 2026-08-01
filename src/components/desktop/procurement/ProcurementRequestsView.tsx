@@ -168,12 +168,8 @@ export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
                 </div>
               </div>
             </div>
-            <ApprovalTimeline stage={r.approvalStage} />
-            {r.rejectionReason && (
-              <div className="mt-2 text-fs-xs text-red-400">
-                Red nedeni: {r.rejectionReason}
-              </div>
-            )}
+            <ApprovalSummary request={r} />
+
             {r.rfq && (
               <div className="mt-2 text-fs-xs text-muted-foreground">
                 {r.rfq.no} · {r.rfq.sentAt ? "tedarikçilere iletildi" : "hazırlandı"}
