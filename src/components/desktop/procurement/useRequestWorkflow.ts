@@ -7,6 +7,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLicense } from "@/lib/licenseStore";
+import { submitSuccessCopy } from "./approvalPolicy";
 import type { Request, RequestAuditEntry, RequestRFQ } from "./procurementConstants";
 import {
   ACTION_LABELS,
