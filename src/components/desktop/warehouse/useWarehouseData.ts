@@ -1,40 +1,105 @@
-// DEPO FOUNDATION — Phase 0: real-record warehouse data hook.
+// DEPO FAZ 1 — gerçek kayıt tabanlı depo verisi.
 //
-// Replaces the previous seeded demo generator. Every value returned here comes
-// from public.materials / material_entries / material_exits via useMaterials,
-// routed through the single canonical calculation in ./inventoryTruth.
+// Tek gerçek kaynak zinciri:
+//   public.warehouses  → depo ana kaydı
+//   public.stock_movements → değiştirilemez hareket defteri (tüm bakiyeler)
+//   public.materials → malzeme ana kaydı (stok tipi, birim, min/sipariş noktası)
 //
-// Collections without a backing table (warehouses, transfers, assignments,
-// count sessions) are returned EMPTY rather than fabricated. The UI shows the
-// truthful empty state for those until the foundation migration lands.
+// Hiçbir bakiye, kapasite veya tahmin uydurulmaz. Arkasında kayıt olmayan
+// modüller (transfer, zimmet, sayım) Faz 2'ye kadar boş döner.
 
 import { useMemo } from "react";
 import { useMaterials } from "@/hooks/useMaterials";
+import { useInventoryLedger, type StockMovementRow, type WarehouseRow } from "@/hooks/useInventoryLedger";
 import {
   buildInventory, auditInventory, forecastDepletion,
   type InventoryItem, type DataQualityIssue, type Forecast,
 } from "./inventoryTruth";
-import type { Movement, Transfer, Assignment, Count, Warehouse_ } from "./warehouseConstants";
+import type { Movement, MovementKind, Transfer, Assignment, Count } from "./warehouseConstants";
+
+/** Depo ana kaydı + hareket defterinden hesaplanan gerçek doluluk. */
+export interface WarehouseSummary {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  manager: string | null;
+  location: string | null;
+  projectId: string | null;
+  isActive: boolean;
+  /** Bu depoda bakiyesi olan stok kalemi sayısı. */
+  itemCount: number;
+  /** Ağırlıklı ortalama maliyetle hesaplanabilen stok değeri. */
+  stockValue: number;
+  /** Değeri hesaplanamayan kalem sayısı (maliyet esası yok). */
+  valueUnknownCount: number;
+  movementCount: number;
+  lastMovementDate: string | null;
+  capacityType: string | null;
+  capacityValue: number | null;
+  capacityUnit: string | null;
+  /** Kapasite girilmediyse null — doluluk oranı uydurulmaz. */
+  occupancyRatio: number | null;
+}
+
+export interface WarehouseStockRow {
+  warehouseId: string;
+  materialId: string;
+  onHand: number;
+  avgCost: number | null;
+  stockValue: number | null;
+  lastMovementDate: string | null;
+  movementCount: number;
+}
+
+const LEDGER_KIND: Record<string, MovementKind> = {
+  goods_receipt: "in",
+  manual_entry: "in",
+  project_issue: "out",
+  consumption: "consume",
+  transfer_out: "transfer_out",
+  transfer_in: "transfer_in",
+  return_in: "return_in",
+  supplier_return: "supplier_return",
+  count_increase: "count_up",
+  count_decrease: "count_down",
+  scrap: "scrap",
+  assignment_out: "assignment",
+  assignment_return: "assignment_return",
+  reversal: "reversal",
+};
+
+const REASON_LABEL: Record<string, string> = {
+  goods_receipt: "Mal kabulü",
+  manual_entry: "Manuel giriş",
+  project_issue: "Malzeme çıkışı",
+  consumption: "Tüketim",
+  supplier_return: "Tedarikçiye iade",
+  scrap: "Hurda / zayi",
+  assignment_out: "Zimmet çıkışı",
+  assignment_return: "Zimmet iadesi",
+  reversal: "Ters kayıt",
+};
 
 export interface WarehouseData {
   loading: boolean;
-  /** Canonical inventory — the only stock source for every depot view. */
   items: InventoryItem[];
-  /** Stockable items only (ready-mix concrete and other non-stock excluded). */
   stockItems: InventoryItem[];
   nonStockItems: InventoryItem[];
-  /** Real posted movements derived from entry/exit records. */
+  /** Hareket defterinden gelen gerçek kayıtlar (yeni → eski). */
   movements: Movement[];
-  /** Sum of stock value where a real weighted-average cost exists. */
+  ledger: StockMovementRow[];
   totalStockValue: number;
-  /** Number of stockable items whose value could not be computed. */
   valueUnknownCount: number;
   monthlyConsumptionCost: number;
   monthlyConsumptionKnown: boolean;
   dataQuality: DataQualityIssue[];
   forecastFor: (item: InventoryItem) => Forecast;
-  /** No backing tables yet — intentionally empty, never seeded. */
-  warehouses: Warehouse_[];
+  /** Gerçek depo ana kaydı. */
+  warehouses: WarehouseSummary[];
+  /** Depo × malzeme bakiyeleri. */
+  warehouseStock: WarehouseStockRow[];
+  /** Faz 2 kapsamı — kayıt yok, uydurulmuyor. */
   transfers: Transfer[];
   assignments: Assignment[];
   counts: Count[];
@@ -42,92 +107,185 @@ export interface WarehouseData {
 }
 
 export const useWarehouseData = (projectId?: string): WarehouseData => {
-  const { materials, entries, exits, isLoading } = useMaterials(projectId) as any;
+  const { materials, isLoading } = useMaterials(projectId) as any;
+  const { warehouses: whRows, movements: ledger, isLoading: ledgerLoading } = useInventoryLedger(projectId);
 
   return useMemo(() => {
     const mats: any[] = materials ?? [];
-    const ins: any[] = entries ?? [];
-    const outs: any[] = exits ?? [];
+    const rows: WarehouseRow[] = whRows ?? [];
+    // Terslenmiş hareketler ve ters kayıtlar bakiye dışında tutulur.
+    const posted = (ledger ?? []).filter((m) => !m.reversed_by && m.movement_type !== "reversal");
 
-    const items = buildInventory(mats, ins, outs);
+    // Hareket defterini kanonik hesaplayıcının beklediği giriş/çıkış şekline
+    // uyarlıyoruz — böylece tek bir stok hesabı korunur.
+    const pseudoEntries = posted
+      .filter((m) => m.direction === 1)
+      .map((m) => ({
+        id: m.id,
+        user_id: m.user_id,
+        material_id: m.material_id,
+        entry_date: m.transaction_date,
+        quantity: Number(m.quantity) || 0,
+        unit_price: Number(m.unit_cost) || 0,
+        total_amount: Number(m.total_cost) || 0,
+        supplier: m.supplier ?? "",
+        waybill_no: m.source_document,
+        waybill_photo_url: null,
+        note: m.notes,
+        created_at: m.posted_at,
+        source_type: m.source_type,
+        source_id: m.source_id,
+      }));
+
+    const pseudoExits = posted
+      .filter((m) => m.direction === -1)
+      .map((m) => ({
+        id: m.id,
+        user_id: m.user_id,
+        material_id: m.material_id,
+        exit_date: m.transaction_date,
+        quantity: Number(m.quantity) || 0,
+        contract_item_id: null,
+        location: m.reason,
+        note: m.notes,
+        created_at: m.posted_at,
+        source_type: m.source_type,
+        source_id: m.source_id,
+      }));
+
+    const dbNonStock = new Set(
+      mats.filter((m: any) => m.stock_type && m.stock_type !== "stockable").map((m: any) => m.id),
+    );
+
+    // Kanonik hesap: veritabanındaki stok tipi sınıflandırmayı ezer.
+    const items = buildInventory(mats as any, pseudoEntries as any, pseudoExits as any).map((i) =>
+      dbNonStock.has(i.id) && i.stockable
+        ? { ...i, stockable: false, onHand: 0, available: 0, stockValue: null, status: "non_stock" as const }
+        : i,
+    );
     const stockItems = items.filter((i) => i.stockable);
     const nonStockItems = items.filter((i) => !i.stockable);
 
-    const nameById = new Map<string, any>(mats.map((m: any) => [m.id, m]));
+    const matById = new Map<string, any>(mats.map((m: any) => [m.id, m]));
+    const whById = new Map<string, WarehouseRow>(rows.map((w) => [w.id, w]));
 
-    // Posted movements ledger: real receipts and issues, newest first.
-    const movements: Movement[] = [
-      ...ins.map((e: any) => {
-        const m = nameById.get(e.material_id);
-        return {
-          id: `entry-${e.id}`,
-          kind: "in" as const,
-          material: m?.name ?? "—",
-          qty: Number(e.quantity) || 0,
-          unit: m?.unit ?? "",
-          warehouse: "",
-          project: m?.project_id ?? "",
-          actor: "",
-          date: e.entry_date,
-          reason: e.supplier ? `Mal kabulü · ${e.supplier}` : "Mal kabulü",
-          unitCost: Number(e.unit_price) || null,
-          document: e.waybill_no || null,
-        };
-      }),
-      ...outs.map((x: any) => {
-        const m = nameById.get(x.material_id);
-        return {
-          id: `exit-${x.id}`,
-          kind: "out" as const,
-          material: m?.name ?? "—",
-          qty: Number(x.quantity) || 0,
-          unit: m?.unit ?? "",
-          warehouse: "",
-          project: m?.project_id ?? "",
-          actor: "",
-          date: x.exit_date,
-          reason: x.location ? `Malzeme çıkışı · ${x.location}` : "Malzeme çıkışı",
-          unitCost: null,
-          document: null,
-        };
-      }),
-    ].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    const movements: Movement[] = (ledger ?? []).map((m) => {
+      const mat = matById.get(m.material_id);
+      const wh = whById.get(m.warehouse_id);
+      const label = REASON_LABEL[m.movement_type] ?? "Hareket";
+      return {
+        id: m.id,
+        kind: LEDGER_KIND[m.movement_type] ?? "adjust",
+        material: mat?.name ?? "—",
+        qty: Number(m.quantity) || 0,
+        unit: m.unit || mat?.unit || "",
+        warehouse: wh?.name ?? "",
+        project: m.project_id ?? mat?.project_id ?? "",
+        actor: m.person ?? "",
+        date: m.transaction_date,
+        reason: m.reason ? `${label} · ${m.reason}` : label,
+        unitCost: m.unit_cost === null ? null : Number(m.unit_cost),
+        document: m.source_document ?? m.movement_no,
+      };
+    });
+
+    // Depo × malzeme bakiyeleri — hareket defterinden.
+    const key = (w: string, mt: string) => `${w}::${mt}`;
+    const acc = new Map<string, {
+      onHand: number; costQty: number; costSum: number;
+      last: string | null; count: number;
+    }>();
+    for (const m of posted) {
+      if (dbNonStock.has(m.material_id)) continue;
+      const k = key(m.warehouse_id, m.material_id);
+      const cur = acc.get(k) ?? { onHand: 0, costQty: 0, costSum: 0, last: null, count: 0 };
+      const qty = Number(m.quantity) || 0;
+      cur.onHand += m.direction * qty;
+      if (m.direction === 1 && m.unit_cost !== null && Number(m.unit_cost) > 0) {
+        cur.costQty += qty;
+        cur.costSum += qty * Number(m.unit_cost);
+      }
+      cur.count += 1;
+      if (!cur.last || m.transaction_date > cur.last) cur.last = m.transaction_date;
+      acc.set(k, cur);
+    }
+
+    const warehouseStock: WarehouseStockRow[] = Array.from(acc.entries()).map(([k, v]) => {
+      const [warehouseId, materialId] = k.split("::");
+      const avgCost = v.costQty > 0 ? v.costSum / v.costQty : null;
+      return {
+        warehouseId,
+        materialId,
+        onHand: v.onHand,
+        avgCost,
+        stockValue: avgCost === null ? null : avgCost * v.onHand,
+        lastMovementDate: v.last,
+        movementCount: v.count,
+      };
+    });
+
+    const warehouses: WarehouseSummary[] = rows.map((w) => {
+      const mine = warehouseStock.filter((s) => s.warehouseId === w.id && s.onHand > 0);
+      const stockValue = mine.reduce((s, r) => s + (r.stockValue ?? 0), 0);
+      const dates = mine.map((r) => r.lastMovementDate).filter(Boolean).sort() as string[];
+      return {
+        id: w.id,
+        code: w.code,
+        name: w.name,
+        type: w.warehouse_type,
+        manager: w.manager_name,
+        location: w.location,
+        projectId: w.project_id,
+        isActive: w.is_active,
+        itemCount: mine.length,
+        stockValue,
+        valueUnknownCount: mine.filter((r) => r.stockValue === null).length,
+        movementCount: mine.reduce((s, r) => s + r.movementCount, 0),
+        lastMovementDate: dates.length ? dates[dates.length - 1] : null,
+        capacityType: w.capacity_type,
+        capacityValue: w.capacity_value === null ? null : Number(w.capacity_value),
+        capacityUnit: w.capacity_unit,
+        occupancyRatio: null, // kapasite ölçüm modeli tanımlanmadıkça oran gösterilmez
+      };
+    });
 
     const totalStockValue = stockItems.reduce((s, i) => s + (i.stockValue ?? 0), 0);
     const valueUnknownCount = stockItems.filter((i) => i.stockValue === null && i.onHand > 0).length;
 
-    // Monthly consumption COST: issued qty × weighted-average cost, last 30 days.
+    // Son 30 gün tüketim maliyeti: çıkış miktarı × ağırlıklı ortalama maliyet.
     const since = new Date();
     since.setDate(since.getDate() - 30);
     const sinceIso = since.toISOString().slice(0, 10);
     const costById = new Map(items.map((i) => [i.id, i.avgCost]));
     let monthlyConsumptionCost = 0;
     let costedAny = false;
-    for (const x of outs) {
+    for (const x of pseudoExits) {
       if ((x.exit_date ?? "") < sinceIso) continue;
       const c = costById.get(x.material_id);
       if (c === null || c === undefined) continue;
-      monthlyConsumptionCost += (Number(x.quantity) || 0) * c;
+      monthlyConsumptionCost += x.quantity * c;
       costedAny = true;
     }
 
     return {
-      loading: !!isLoading,
+      loading: !!isLoading || ledgerLoading,
       items,
       stockItems,
       nonStockItems,
       movements,
+      ledger: ledger ?? [],
       totalStockValue,
       valueUnknownCount,
       monthlyConsumptionCost,
       monthlyConsumptionKnown: costedAny,
-      dataQuality: auditInventory(items, mats, ins, outs),
-      forecastFor: (item: InventoryItem) => forecastDepletion(item, outs),
-      warehouses: [],
+      dataQuality: auditInventory(items, mats as any, pseudoEntries as any, pseudoExits as any),
+      forecastFor: (item: InventoryItem) => forecastDepletion(item, pseudoExits as any),
+      warehouses,
+      warehouseStock,
       transfers: [],
       assignments: [],
       counts: [],
       lastUpdated: new Date(),
     };
-  }, [materials, entries, exits, isLoading]);
+  }, [materials, whRows, ledger, isLoading, ledgerLoading]);
 };
