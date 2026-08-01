@@ -56,7 +56,22 @@ export type RequestItem = {
   qty: number;
   unit: string;
   spec?: string;
+  category?: string;
+  unitPrice?: number;
+  brand?: string;
+  altAllowed?: boolean;
+  deliveryLocation?: string;
 };
+
+export type RequestAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  /** in-session object URL (no storage bucket for procurement yet) */
+  url?: string;
+};
+
 
 export type RequestRFQ = {
   no: string;
