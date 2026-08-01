@@ -113,7 +113,42 @@ export const ProcurementDetailSheet = ({
               value={req.needBy < 0 ? `${-req.needBy}g gecikme` : daysFromNow(req.needBy)}
             />
             <Row label="Teslim Yeri" value={req.deliveryLocation ?? "—"} />
+            <Row label="Departman / Masraf Yeri" value={req.department ?? "—"} />
+            <Row label="Açıklama" value={req.description ?? "—"} />
             <Row label="Notlar" value={req.notes ?? "—"} />
+            {req.revisionOfNo && (
+              <Row label="Kaynak Talep" value={`${req.revisionOfNo} · R${req.revisionNo}`} />
+            )}
+            {req.updatedAt && (
+              <Row
+                label="Son Güncelleme"
+                value={`${fmtDate(req.updatedAt)}${req.updatedBy ? ` · ${req.updatedBy}` : ""}`}
+              />
+            )}
+            {!!req.attachments?.length && (
+              <Row
+                label="Ekler"
+                value={
+                  <span className="flex flex-col items-end gap-0.5">
+                    {req.attachments.map((a) =>
+                      a.url ? (
+                        <a
+                          key={a.id}
+                          href={a.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:text-[#FF6B2B]"
+                        >
+                          {a.name}
+                        </a>
+                      ) : (
+                        <span key={a.id}>{a.name}</span>
+                      )
+                    )}
+                  </span>
+                }
+              />
+            )}
           </div>
 
           <div>
@@ -169,6 +204,14 @@ export const ProcurementDetailSheet = ({
                   }
                 />
                 <Row label="Not" value={req.approvalNote ?? "—"} />
+                {req.approvalWithdrawnAt && (
+                  <Row
+                    label="Onaydan Geri Çekildi"
+                    value={`${fmtDate(req.approvalWithdrawnAt)}${
+                      req.approvalWithdrawnBy ? ` · ${req.approvalWithdrawnBy}` : ""
+                    }`}
+                  />
+                )}
               </div>
             </div>
           )}
