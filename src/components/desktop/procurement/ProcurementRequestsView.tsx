@@ -17,38 +17,8 @@ interface Props {
   onAction: (action: WorkflowAction, request: Request) => void;
 }
 
-const ApprovalTimeline = ({ stage }: { stage: number }) => {
-  const steps = ["Talep", "Yönetici", "Finans", "Direktör", "Onay"];
-  return (
-    <div className="flex items-center gap-1 mt-3">
-      {steps.map((s, i) => (
-        <div key={s} className="flex items-center gap-1 flex-1 min-w-0">
-          <div
-            className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center text-fs-xs font-semibold shrink-0",
-              i <= stage
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                : "bg-muted/40 text-muted-foreground border border-border"
-            )}
-          >
-            {i <= stage ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
-          </div>
-          <span className="text-fs-xs text-muted-foreground hidden md:inline truncate">
-            {s}
-          </span>
-          {i < steps.length - 1 && (
-            <div
-              className={cn(
-                "flex-1 h-px",
-                i < stage ? "bg-emerald-500/40" : "bg-border"
-              )}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+
+
 
 export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
   const [q, setQ] = useState("");
