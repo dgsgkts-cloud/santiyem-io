@@ -247,6 +247,42 @@ export default function ProcurementPage() {
         workflow={workflow}
       />
 
+      <SubmitForApprovalDialog
+        request={submitTarget}
+        resolution={approverResolution}
+        loading={!!submitTarget && workflow.isPending(submitTarget.id, "submit")}
+        onCancel={() => setSubmitTarget(null)}
+        onManagePermissions={() => {
+          setSubmitTarget(null);
+          window.dispatchEvent(
+            new CustomEvent("navigate-tab", { detail: { tab: "team" } })
+          );
+        }}
+        onConfirm={async ({ approver, dueDate, note }) => {
+          if (!submitTarget || !approver) return;
+          const target = submitTarget;
+          const ok = await workflow.submit({
+            id: target.id,
+            approverUserId: approver.userId,
+            approverName: approver.name,
+            approverRole: approver.roleLabel,
+            approvalDueAt: dueDate,
+            approvalNote: note,
+            submittedBy: user?.user_metadata?.full_name || target.requester,
+          });
+          if (ok) {
+            setSubmitTarget(null);
+            await notifyApprover({
+              request: target,
+              approverUserId: approver.userId,
+              approverName: approver.name,
+              dueDate,
+              note,
+            });
+          }
+        }}
+      />
+
       <ApproveRequestDialog
         request={approveTarget}
         loading={!!approveTarget && workflow.isPending(approveTarget.id, "approve")}
