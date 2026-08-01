@@ -290,6 +290,18 @@ export type Forecast =
       evidence: ForecastEvidence[];
     };
 
+export const FORECAST_REASON: Record<
+  Extract<Forecast, { eligible: false }>["reason"],
+  string
+> = {
+  non_stock: "Bu malzeme depoda stoklanmaz; tüketimi teslimat kayıtlarından izlenir.",
+  unit_invalid: "Malzemenin birimi doğrulanmadığı için tahmin hesaplanamıyor.",
+  no_consumption_history: "Kayıtlı malzeme çıkışı bulunmuyor.",
+  history_too_short: `Anlamlı tahmin için en az ${FORECAST_MIN_HISTORY_DAYS} günlük hareket geçmişi gerekir.`,
+  too_few_movements: `Anlamlı tahmin için en az ${FORECAST_MIN_ISSUE_MOVEMENTS} çıkış hareketi gerekir.`,
+  no_consumption_rate: "Kayıtlı çıkışlardan pozitif bir tüketim hızı hesaplanamadı.",
+};
+
 const dayDiff = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
 

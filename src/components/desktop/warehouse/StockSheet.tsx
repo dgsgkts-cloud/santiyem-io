@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { WarehouseData } from "./useWarehouseData";
 import { MoveBadge, StatePill, ConfidencePill, InsufficientData, NEGATIVE_KINDS } from "./warehouseUi";
 import {
-  TRUTH_COPY, fmtQty, fmtMoney, fmtDate, type InventoryItem,
+  TRUTH_COPY, FORECAST_REASON, fmtQty, fmtMoney, fmtDate, type InventoryItem,
 } from "./inventoryTruth";
 
 interface Props {
@@ -105,10 +105,10 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
           {/* 4 — forecast, gated on real evidence */}
           <section>
             <h4 className="ds-label mb-2">Tükenme Tahmini</h4>
-            {!forecast || !forecast.eligible ? (
+            {forecast === null || forecast.eligible === false ? (
               <InsufficientData
                 title={TRUTH_COPY.noForecast}
-                hint={forecast && !forecast.eligible ? FORECAST_REASON[forecast.reason] : TRUTH_COPY.noForecastHint}
+                hint={forecast === null ? TRUTH_COPY.noForecastHint : FORECAST_REASON[forecast.reason]}
               />
             ) : (
 
