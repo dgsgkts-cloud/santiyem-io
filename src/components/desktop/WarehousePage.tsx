@@ -21,12 +21,15 @@ import { AnalyticsView } from "./warehouse/views/AnalyticsView";
 import { CEOView } from "./warehouse/views/CEOView";
 import { StockSheet } from "./warehouse/StockSheet";
 import { QuickActionFAB } from "./warehouse/QuickActionFAB";
+import { StockActionDialog, type StockActionKind } from "./warehouse/StockActionDialogs";
 
 export default function WarehousePage() {
   const data = useWarehouseData();
   const [tab, setTab] = useState<SubTab>("overview");
   const [ceoMode, setCeoMode] = useState(false);
   const [openStock, setOpenStock] = useState<InventoryItem | null>(null);
+  const [action, setAction] = useState<StockActionKind>(null);
+
 
   // Purchase-request handoff for a low/critical item, routed through the
   // existing assistant follow-up channel (no fabricated procurement records).
@@ -69,7 +72,9 @@ export default function WarehousePage() {
       </PageShell>
 
       <StockSheet stock={openStock} onClose={() => setOpenStock(null)} data={data} />
-      <QuickActionFAB />
+      <StockActionDialog kind={action} onClose={() => setAction(null)} data={data} />
+      <QuickActionFAB onAction={setAction} />
     </>
   );
 }
+

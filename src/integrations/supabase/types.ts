@@ -1509,6 +1509,51 @@ export type Database = {
           },
         ]
       }
+      inventory_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+          source_id: string | null
+          source_type: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -1806,36 +1851,77 @@ export type Database = {
       }
       materials: {
         Row: {
+          allowed_units: string[]
+          category: string | null
+          code: string | null
           created_at: string
+          data_review_reason: string | null
+          data_review_required: boolean
+          default_supplier: string | null
+          default_warehouse_id: string | null
           id: string
+          is_active: boolean
           min_stock: number
           name: string
           project_id: string
+          reorder_point: number | null
+          safety_stock: number | null
+          stock_type: string
           unit: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          allowed_units?: string[]
+          category?: string | null
+          code?: string | null
           created_at?: string
+          data_review_reason?: string | null
+          data_review_required?: boolean
+          default_supplier?: string | null
+          default_warehouse_id?: string | null
           id?: string
+          is_active?: boolean
           min_stock?: number
           name?: string
           project_id: string
+          reorder_point?: number | null
+          safety_stock?: number | null
+          stock_type?: string
           unit?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          allowed_units?: string[]
+          category?: string | null
+          code?: string | null
           created_at?: string
+          data_review_reason?: string | null
+          data_review_required?: boolean
+          default_supplier?: string | null
+          default_warehouse_id?: string | null
           id?: string
+          is_active?: boolean
           min_stock?: number
           name?: string
           project_id?: string
+          reorder_point?: number | null
+          safety_stock?: number | null
+          stock_type?: string
           unit?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "materials_default_warehouse_id_fkey"
+            columns: ["default_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meeting_action_items: {
         Row: {
@@ -4133,6 +4219,125 @@ export type Database = {
           },
         ]
       }
+      stock_movements: {
+        Row: {
+          actor_id: string
+          cost_code: string | null
+          counter_warehouse_id: string | null
+          created_at: string
+          direction: number
+          id: string
+          material_id: string
+          movement_no: string
+          movement_type: string
+          notes: string | null
+          person: string | null
+          posted_at: string
+          project_id: string | null
+          quantity: number
+          reason: string | null
+          reversal_of: string | null
+          reversed_by: string | null
+          source_document: string | null
+          source_id: string | null
+          source_type: string | null
+          supplier: string | null
+          total_cost: number | null
+          transaction_date: string
+          unit: string
+          unit_cost: number | null
+          user_id: string
+          warehouse_id: string
+        }
+        Insert: {
+          actor_id: string
+          cost_code?: string | null
+          counter_warehouse_id?: string | null
+          created_at?: string
+          direction: number
+          id?: string
+          material_id: string
+          movement_no?: string
+          movement_type: string
+          notes?: string | null
+          person?: string | null
+          posted_at?: string
+          project_id?: string | null
+          quantity: number
+          reason?: string | null
+          reversal_of?: string | null
+          reversed_by?: string | null
+          source_document?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          supplier?: string | null
+          total_cost?: number | null
+          transaction_date?: string
+          unit: string
+          unit_cost?: number | null
+          user_id: string
+          warehouse_id: string
+        }
+        Update: {
+          actor_id?: string
+          cost_code?: string | null
+          counter_warehouse_id?: string | null
+          created_at?: string
+          direction?: number
+          id?: string
+          material_id?: string
+          movement_no?: string
+          movement_type?: string
+          notes?: string | null
+          person?: string | null
+          posted_at?: string
+          project_id?: string | null
+          quantity?: number
+          reason?: string | null
+          reversal_of?: string | null
+          reversed_by?: string | null
+          source_document?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          supplier?: string | null
+          total_cost?: number | null
+          transaction_date?: string
+          unit?: string
+          unit_cost?: number | null
+          user_id?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_counter_warehouse_id_fkey"
+            columns: ["counter_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcontractor_payments: {
         Row: {
           account_no: string | null
@@ -4360,6 +4565,27 @@ export type Database = {
           email_normalized?: string
           id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      unit_dimensions: {
+        Row: {
+          base_unit: string
+          dimension: string
+          to_base: number
+          unit: string
+        }
+        Insert: {
+          base_unit: string
+          dimension: string
+          to_base?: number
+          unit: string
+        }
+        Update: {
+          base_unit?: string
+          dimension?: string
+          to_base?: number
+          unit?: string
         }
         Relationships: []
       }
@@ -4657,6 +4883,60 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouses: {
+        Row: {
+          capacity_type: string | null
+          capacity_unit: string | null
+          capacity_value: number | null
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          manager_name: string | null
+          name: string
+          notes: string | null
+          project_id: string | null
+          updated_at: string
+          user_id: string
+          warehouse_type: string
+        }
+        Insert: {
+          capacity_type?: string | null
+          capacity_unit?: string | null
+          capacity_value?: number | null
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          manager_name?: string | null
+          name: string
+          notes?: string | null
+          project_id?: string | null
+          updated_at?: string
+          user_id: string
+          warehouse_type?: string
+        }
+        Update: {
+          capacity_type?: string | null
+          capacity_unit?: string | null
+          capacity_value?: number | null
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          manager_name?: string | null
+          name?: string
+          notes?: string | null
+          project_id?: string | null
+          updated_at?: string
+          user_id?: string
+          warehouse_type?: string
+        }
+        Relationships: []
+      }
       worker_attendance: {
         Row: {
           check_in: string
@@ -4721,6 +5001,35 @@ export type Database = {
       }
     }
     Views: {
+      inventory_balances: {
+        Row: {
+          avg_cost: number | null
+          last_movement_date: string | null
+          material_id: string | null
+          movement_count: number | null
+          on_hand: number | null
+          total_in: number | null
+          total_out: number | null
+          user_id: string | null
+          warehouse_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string | null
@@ -4864,6 +5173,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_default_warehouse: { Args: never; Returns: string }
       expire_trials: { Args: never; Returns: number }
       get_account_usage: { Args: never; Returns: Json }
       get_company_health: { Args: never; Returns: Json }
@@ -5031,6 +5341,44 @@ export type Database = {
         Returns: number
       }
       normalize_phone: { Args: { _p: string }; Returns: string }
+      post_goods_receipt: {
+        Args: {
+          _manual?: boolean
+          _material_id: string
+          _notes?: string
+          _project_id?: string
+          _quantity: number
+          _reason?: string
+          _source_document?: string
+          _source_id?: string
+          _source_type?: string
+          _supplier?: string
+          _transaction_date?: string
+          _unit: string
+          _unit_cost?: number
+          _warehouse_id: string
+        }
+        Returns: string
+      }
+      post_stock_issue: {
+        Args: {
+          _cost_code?: string
+          _material_id: string
+          _movement_type?: string
+          _notes?: string
+          _person?: string
+          _project_id?: string
+          _quantity: number
+          _reason?: string
+          _source_document?: string
+          _source_id?: string
+          _source_type?: string
+          _transaction_date?: string
+          _unit: string
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -5067,6 +5415,10 @@ export type Database = {
           public_plan: string
           team_id: string
         }[]
+      }
+      reverse_stock_movement: {
+        Args: { _movement_id: string; _reason: string }
+        Returns: string
       }
       role_default_permission: {
         Args: {
