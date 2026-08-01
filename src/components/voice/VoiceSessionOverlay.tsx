@@ -239,17 +239,30 @@ export function VoiceSessionOverlay({
 
   );
 
-  // Escape closes; body scroll is locked while the overlay owns the screen.
+  // Continue in text mode: keep the conversation snapshot so the chat can
+  // resume with context, then hand focus to the composer.
+  const continueWithText = useCallback(() => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    voiceHaptic("end");
+    void voice.disconnect().finally(() => {
+      onSessionEnd?.("user");
+      onClose();
+      window.setTimeout(() => {
+        document.querySelector<HTMLTextAreaElement>("main textarea, textarea")?.focus();
+      }, 120);
+    });
+  }, [voice, onSessionEnd, onClose]);
+
+  // Body scroll is locked while the overlay owns the screen.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") end("user"); };
-    window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [end]);
+  }, []);
+
 
   // ---- wake-session auto close (unchanged behaviour) ------------------
   useEffect(() => {
@@ -405,7 +418,52 @@ export function VoiceSessionOverlay({
     if (next) voice.mute(); else voice.unmute();
   };
 
+  // ---- overlay-scoped keyboard shortcuts ------------------------------
+  // Space = mute/unmute · Escape = end session · Ctrl/Cmd+Enter = text mode.
+  // Listeners live and die with this overlay; nothing is registered globally.
+  const shortcutRef = useRef({ toggleMute, end, continueWithText });
+  shortcutRef.current = { toggleMute, end, continueWithText };
+
+  useEffect(() => {
+    const isTyping = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      if (!el) return false;
+      const tag = el.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        el.isContentEditable === true
+      );
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        shortcutRef.current.end("user");
+        return;
+      }
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        shortcutRef.current.continueWithText();
+        return;
+      }
+      if ((e.code === "Space" || e.key === " ") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        // Stop the page from scrolling / re-triggering a focused button.
+        e.preventDefault();
+        if (e.repeat) return;
+        shortcutRef.current.toggleMute();
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (micBlocked) {
+
     return (
       <MicPermissionScreen
         onRetry={() => { void start(true); }}
@@ -413,6 +471,10 @@ export function VoiceSessionOverlay({
       />
     );
   }
+
+  const isMac =
+    typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+  const statusLabel = muted && phase !== "error" ? "Mikrofon kapalı" : PHASE_LABEL[phase];
 
   const showOpeningHint =
     transcripts.length === 0 && (phase === "listening" || phase === "ready");
@@ -514,7 +576,7 @@ export function VoiceSessionOverlay({
               </button>
               <button
                 type="button"
-                onClick={() => end("user")}
+                onClick={continueWithText}
                 className="flex items-center justify-center rounded-full border border-white/12 text-[14.5px] font-medium text-white/80 transition hover:bg-white/5 active:scale-[0.98]"
                 style={{ height: 48 }}
               >
@@ -529,11 +591,11 @@ export function VoiceSessionOverlay({
 
             <div className="flex flex-col items-center gap-2 text-center">
               <p
-                key={PHASE_LABEL[phase]}
+                key={statusLabel}
                 aria-live="polite"
                 className="animate-fade-in text-[17px] font-medium tracking-tight text-white/90"
               >
-                {PHASE_LABEL[phase]}
+                {statusLabel}
               </p>
               {showOpeningHint && (
                 <p className="max-w-[300px] animate-fade-in text-[13.5px] leading-relaxed text-white/40">
@@ -605,7 +667,15 @@ export function VoiceSessionOverlay({
               <PhoneOff className="h-6 w-6" />
             </button>
           </div>
+
+          {/* Desktop-only, non-intrusive shortcut hint */}
+          <p className="hidden text-[11.5px] tracking-wide text-white/30 md:block">
+            Sessize almak için <span className="text-white/50">Boşluk</span> · bitirmek için{" "}
+            <span className="text-white/50">Esc</span> · yazmaya geçmek için{" "}
+            <span className="text-white/50">{isMac ? "⌘" : "Ctrl"} + Enter</span>
+          </p>
         </div>
+
       )}
     </div>
   );
