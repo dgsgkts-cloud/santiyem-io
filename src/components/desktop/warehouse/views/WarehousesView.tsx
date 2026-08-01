@@ -1,54 +1,44 @@
-// Sprint M1.5 — Warehouses view: adaptive card grid.
-import { Warehouse, User, MapPin } from "lucide-react";
-import { ResponsiveGrid, SectionCard } from "@/components/ui/responsive";
-import { fmtNum, fmtTRY } from "../warehouseConstants";
+// DEPO — Depolar. No warehouse master table exists yet, so no location, capacity
+// or occupancy figure is invented; the module states plainly what is missing.
+import { Warehouse } from "lucide-react";
+import { SectionCard } from "@/components/ui/responsive";
 import type { WarehouseData } from "../useWarehouseData";
+import { InsufficientData } from "../warehouseUi";
+import { TRUTH_COPY, fmtMoney } from "../inventoryTruth";
 
-export const WarehousesView = ({ data }: { data: WarehouseData }) => (
-  <ResponsiveGrid variant="auto" minItemWidth={280} className="gap-3">
-    {data.warehouses.map(w => {
-      const pct = Math.round((w.occupied / w.capacity) * 100);
-      const color = pct > 85 ? "text-red-400" : pct > 65 ? "text-amber-400" : "text-emerald-400";
-      const bar = pct > 85 ? "bg-red-400" : pct > 65 ? "bg-amber-400" : "bg-emerald-400";
-      return (
-        <SectionCard key={w.id}>
-          <div className="flex items-start justify-between mb-3 gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-10 h-10 rounded-lg bg-[#FF6B2B]/15 border border-[#FF6B2B]/25 flex items-center justify-center shrink-0">
-                <Warehouse className="w-4 h-4 text-[#FF6B2B]" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-foreground font-semibold text-fs-sm truncate">{w.name}</div>
-                <div className="text-fs-xs text-muted-foreground truncate">{w.type}</div>
-              </div>
-            </div>
-            <span className={`text-fs-lg font-semibold tabular-nums shrink-0 ${color}`}>%{pct}</span>
+export const WarehousesView = ({ data }: { data: WarehouseData }) => {
+  if (data.warehouses.length === 0)
+    return (
+      <div className="space-y-3">
+        <InsufficientData
+          icon={Warehouse}
+          title="Tanımlı depo bulunmuyor."
+          hint={`Depo lokasyonu tanımlandığında stok kalemleri depolara göre ayrıştırılır. ${TRUTH_COPY.noCapacity}`}
+        />
+        <SectionCard title="Ayrıştırılmamış Envanter" subtitle="Depo ataması yapılmamış tüm stok kalemleri">
+          <div className="flex items-center justify-between gap-2">
+            <span className="ds-body text-foreground/80">{data.stockItems.length} stok kalemi</span>
+            <span className="ds-body ds-numeric text-foreground/85">{fmtMoney(data.totalStockValue)}</span>
           </div>
-          <div className="space-y-1.5 text-fs-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5 truncate"><User className="w-3 h-3 shrink-0" /> {w.manager}</div>
-            <div className="flex items-center gap-1.5 truncate"><MapPin className="w-3 h-3 shrink-0" /> {w.location}</div>
-          </div>
-          <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
-          </div>
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/60 text-center">
-            <div>
-              <div className="text-fs-xs text-muted-foreground uppercase">Kapasite</div>
-              <div className="text-fs-sm text-foreground tabular-nums">{fmtNum(w.capacity)}</div>
-            </div>
-            <div>
-              <div className="text-fs-xs text-muted-foreground uppercase">Ürün</div>
-              <div className="text-fs-sm text-foreground tabular-nums">{w.items}</div>
-            </div>
-            <div>
-              <div className="text-fs-xs text-muted-foreground uppercase">Değer</div>
-              <div className="text-fs-sm text-foreground tabular-nums">{fmtTRY(w.value)}</div>
-            </div>
-          </div>
+          <p className="ds-caption text-muted-foreground mt-2">
+            Kapasite ve doluluk oranı, depo kapasitesi girilmediği için gösterilmiyor.
+          </p>
         </SectionCard>
-      );
-    })}
-  </ResponsiveGrid>
-);
+      </div>
+    );
+
+  return (
+    <SectionCard title="Depolar">
+      <div className="space-y-2">
+        {data.warehouses.map((w) => (
+          <div key={w.id} className="flex items-center justify-between gap-2 p-2 rounded-card border border-border/60 bg-background/40">
+            <span className="ds-body text-foreground truncate">{w.name}</span>
+            <span className="ds-caption text-muted-foreground shrink-0">{w.location || "Lokasyon tanımsız"}</span>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+};
 
 export default WarehousesView;

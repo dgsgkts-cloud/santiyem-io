@@ -1,24 +1,29 @@
-// Sprint M1.5 — Stock detail sheet (ResponsiveSheet — right on desktop, bottom on mobile).
-// SPRINT 38D — Grouped for less scrolling: stock status → quick actions →
-// recent movements → supplier & purchase history.
-import { Boxes, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Truck } from "lucide-react";
+// DEPO — stock detail sheet. Every figure comes from the canonical inventory
+// item; unavailable evidence renders an explicit truthful state, never a guess.
+import { Boxes, ArrowDownToLine, ArrowUpFromLine, Truck, ShieldAlert } from "lucide-react";
 import { ResponsiveSheet } from "@/components/ui/responsive";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fmtNum, fmtTRY, STATE_META, type Stock } from "./warehouseConstants";
 import type { WarehouseData } from "./useWarehouseData";
-import { MoveBadge } from "./warehouseUi";
+import { MoveBadge, StatePill, ConfidencePill, InsufficientData, NEGATIVE_KINDS } from "./warehouseUi";
+import {
+  TRUTH_COPY, FORECAST_REASON, fmtQty, fmtMoney, fmtDate, type InventoryItem, type Forecast,
+} from "./inventoryTruth";
 
 interface Props {
-  stock: Stock | null;
+  stock: InventoryItem | null;
   onClose: () => void;
   data: WarehouseData;
 }
 
 export const StockSheet = ({ stock, onClose, data }: Props) => {
-  const history = stock ? data.movements.filter(m => m.material === stock.name).slice(0, 5) : [];
-  const meta = stock ? STATE_META[stock.state] : null;
-  const available = stock ? stock.current - stock.reserved : 0;
+  const history = stock ? data.movements.filter((m) => m.material === stock.name).slice(0, 6) : [];
+  const forecast = stock ? data.forecastFor(stock) : null;
+  const forecastReady = forecast !== null && forecast.eligible ? forecast : null;
+  const forecastBlocked =
+    forecast !== null && forecast.eligible === false
+      ? (forecast as Extract<Forecast, { eligible: false }>)
+      : null;
 
   const ask = (text: string) =>
     window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
@@ -28,98 +33,173 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
       open={!!stock}
       onOpenChange={(o) => { if (!o) onClose(); }}
       title={stock?.name}
-      description={stock ? `${stock.category} · ${stock.warehouse}` : undefined}
+      description={stock ? `Birim: ${stock.rawUnit || "tanımsız"}` : undefined}
       size="md"
     >
-      {stock && meta && (
+      {stock && (
         <div className="space-y-4">
-          {/* 1 — Current stock */}
+          {/* 1 — canonical balance */}
           <div className="rounded-card border border-border/80 bg-card p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="ds-label">Mevcut Stok</div>
                 <div className="ds-numeric font-semibold text-foreground mt-0.5" style={{ fontSize: 28, lineHeight: "34px" }}>
-                  {fmtNum(stock.current)} <span className="ds-body text-muted-foreground">{stock.unit}</span>
+                  {stock.stockable ? (
+                    <>{fmtQty(stock.onHand)} <span className="ds-body text-muted-foreground">{stock.rawUnit}</span></>
+                  ) : (
+                    <span className="ds-body text-muted-foreground">Depo bakiyesi tutulmaz</span>
+                  )}
                 </div>
               </div>
-              <span className={cn("ds-caption px-2 py-1 rounded-full border shrink-0", meta.color)}>{meta.label}</span>
+              <StatePill status={stock.status} />
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/60">
-              <div>
-                <div className="ds-label">Rezerve</div>
-                <div className="ds-body ds-numeric text-foreground/80">{fmtNum(stock.reserved)}</div>
-              </div>
-              <div>
-                <div className="ds-label">Müsait</div>
-                <div className={cn("ds-body ds-numeric", available <= 0 ? "text-rose-300/90" : "text-emerald-300/90")}>{fmtNum(available)}</div>
-              </div>
-              <div>
-                <div className="ds-label">Min.</div>
-                <div className="ds-body ds-numeric text-foreground/80">{fmtNum(stock.min)}</div>
-              </div>
-            </div>
-          </div>
 
-          {/* 2 — Quick actions */}
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" onClick={() => ask(`${stock.name} için mal kabul kaydı oluştur.`)}>
-              <ArrowDownToLine className="w-4 h-4 mr-1.5" /> Giriş
-            </Button>
-            <Button variant="outline" onClick={() => ask(`${stock.name} için malzeme çıkışı kaydı oluştur.`)}>
-              <ArrowUpFromLine className="w-4 h-4 mr-1.5" /> Çıkış
-            </Button>
-            <Button variant="outline" onClick={() => ask(`${stock.name} için depolar arası transfer başlat.`)}>
-              <ArrowLeftRight className="w-4 h-4 mr-1.5" /> Transfer
-            </Button>
-          </div>
-
-          {/* 3 — Recent movements */}
-          <section>
-            <h4 className="ds-label mb-2">Son Hareketler</h4>
-            {history.length === 0 ? (
-              <p className="ds-caption text-muted-foreground">Bu kalem için hareket kaydı yok.</p>
-            ) : (
-              <div className="rounded-card border border-border/80 bg-card divide-y divide-border/60">
-                {history.map(m => (
-                  <div key={m.id} className="flex items-center justify-between gap-2 px-3 py-2 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <MoveBadge kind={m.kind} />
-                      <span className="ds-caption text-foreground/70 truncate">{m.actor}</span>
-                    </div>
-                    <span className="ds-caption text-muted-foreground ds-numeric shrink-0">{fmtNum(m.qty)} {m.unit}</span>
+            {stock.stockable && (
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/60">
+                <div>
+                  <div className="ds-label">Rezerve</div>
+                  <div className="ds-body ds-numeric text-foreground/80">{fmtQty(stock.reserved)}</div>
+                </div>
+                <div>
+                  <div className="ds-label">Kullanılabilir</div>
+                  <div className={cn("ds-body ds-numeric", stock.available <= 0 ? "text-rose-300/90" : "text-emerald-300/90")}>
+                    {fmtQty(stock.available)}
                   </div>
-                ))}
+                </div>
+                <div>
+                  <div className="ds-label">Min.</div>
+                  <div className="ds-body ds-numeric text-foreground/80">
+                    {stock.minStock > 0 ? fmtQty(stock.minStock) : "—"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <p className="ds-caption text-muted-foreground mt-3">
+              {stock.stockable
+                ? "Hesaplama: mal kabulü − malzeme çıkışı (kayıtlı hareketler)."
+                : "Bu malzeme doğrudan teslim edilir; tüketim döküm programı ve teslimat kayıtlarından izlenir."}
+            </p>
+          </div>
+
+          {/* 2 — unit integrity warning */}
+          {!stock.unitVerdict.ok && (
+            <InsufficientData
+              icon={ShieldAlert}
+              title={TRUTH_COPY.needsValidation}
+              hint={
+                stock.unitVerdict.reason === "unknown_unit"
+                  ? `"${stock.rawUnit || "boş"}" birimi tanımlı değil. Geçerli birimler: ${stock.unitVerdict.allowed?.join(", ") ?? "—"}`
+                  : `"${stock.rawUnit}" bu malzeme sınıfı için geçersiz. Geçerli birimler: ${stock.unitVerdict.allowed?.join(", ") ?? "—"}`
+              }
+            />
+          )}
+
+          {/* 3 — actions with correct terminology */}
+          {stock.stockable && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="min-h-[48px]" onClick={() => ask(`${stock.name} için mal kabulü kaydı oluştur.`)}>
+                <ArrowDownToLine className="w-4 h-4 mr-1.5" /> Mal Kabulü
+              </Button>
+              <Button variant="outline" className="min-h-[48px]" onClick={() => ask(`${stock.name} için malzeme çıkışı kaydı oluştur.`)}>
+                <ArrowUpFromLine className="w-4 h-4 mr-1.5" /> Malzeme Çıkışı
+              </Button>
+            </div>
+          )}
+
+          {/* 4 — forecast, gated on real evidence */}
+          <section>
+            <h4 className="ds-label mb-2">Tükenme Tahmini</h4>
+            {!forecastReady ? (
+              <InsufficientData
+                title={TRUTH_COPY.noForecast}
+                hint={forecastBlocked ? FORECAST_REASON[forecastBlocked.reason] : TRUTH_COPY.noForecastHint}
+              />
+            ) : (
+
+
+              <div className="rounded-card border border-border/80 bg-card p-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="ds-body text-foreground">
+                    Yaklaşık {forecastReady.daysToMinimum} gün içinde minimum seviyenin altına düşebilir.
+                  </span>
+                  <ConfidencePill confidence={forecastReady.confidence} />
+                </div>
+                <dl className="mt-2 space-y-1">
+                  {forecastReady.evidence.map((e) => (
+                    <div key={e.label} className="flex justify-between gap-2 ds-caption">
+                      <dt className="text-muted-foreground truncate">{e.label}</dt>
+                      <dd className="text-foreground/80 shrink-0">{e.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="ds-caption text-muted-foreground mt-2">
+                  Veri dönemi: son {forecastReady.windowDays} gün
+                </p>
               </div>
             )}
           </section>
 
-          {/* 4 — Supplier & purchase history */}
+          {/* 5 — real movement history */}
           <section>
-            <h4 className="ds-label mb-2">Tedarikçi & Alım</h4>
+            <h4 className="ds-label mb-2">Son Hareketler</h4>
+            {history.length === 0 ? (
+              <InsufficientData title={TRUTH_COPY.noMovements} />
+            ) : (
+              <div className="rounded-card border border-border/80 bg-card divide-y divide-border/60">
+                {history.map((m) => {
+                  const negative = NEGATIVE_KINDS.includes(m.kind);
+                  return (
+                    <div key={m.id} className="flex items-center justify-between gap-2 px-3 py-2.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MoveBadge kind={m.kind} />
+                        <span className="ds-caption text-muted-foreground truncate">{fmtDate(m.date)}</span>
+                      </div>
+                      <span className={cn("ds-caption ds-numeric shrink-0", negative ? "text-rose-300/90" : "text-emerald-300/90")}>
+                        {negative ? "−" : "+"}{fmtQty(m.qty)} {m.unit}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* 6 — cost basis & suppliers from entry records */}
+          <section>
+            <h4 className="ds-label mb-2">Maliyet & Tedarikçi</h4>
             <div className="rounded-card border border-border/80 bg-card p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className="flex items-center gap-2 ds-caption text-muted-foreground min-w-0">
-                  <Truck className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{stock.supplier}</span>
+              <div className="flex items-center justify-between gap-2 ds-caption">
+                <span className="text-muted-foreground">Ağırlıklı ortalama maliyet</span>
+                <span className="text-foreground/85 ds-numeric">
+                  {stock.avgCost === null ? "Maliyet esası bulunmuyor" : `${fmtMoney(stock.avgCost)}/${stock.rawUnit}`}
                 </span>
-                <span className="ds-body ds-numeric text-foreground/80 shrink-0">{fmtTRY(stock.avgCost)}/{stock.unit}</span>
               </div>
-              <div className="flex items-center justify-between ds-caption text-muted-foreground">
-                <span>Son alım</span>
-                <span>{-stock.lastPurchase}g önce</span>
+              <div className="flex items-center justify-between gap-2 ds-caption">
+                <span className="text-muted-foreground">Stok değeri</span>
+                <span className="text-foreground/85 ds-numeric">
+                  {stock.stockValue === null ? "—" : fmtMoney(stock.stockValue)}
+                </span>
               </div>
-              <div>
-                <div className="ds-caption text-muted-foreground mb-1.5">Fiyat geçmişi</div>
-                <div className="flex items-end gap-1.5 h-14">
-                  {[70, 85, 78, 92, 88, 100].map((h, i) => (
-                    <div key={i} className="flex-1 rounded-t bg-[#FF6B2B]/35 border border-[#FF6B2B]/25" style={{ height: `${h}%` }} />
-                  ))}
-                </div>
+              <div className="flex items-start justify-between gap-2 ds-caption min-w-0">
+                <span className="flex items-center gap-1.5 text-muted-foreground shrink-0">
+                  <Truck className="w-3.5 h-3.5" /> Tedarikçiler
+                </span>
+                <span className="text-foreground/80 text-right min-w-0 truncate">
+                  {stock.suppliers.length ? stock.suppliers.join(", ") : "Kayıt bulunmuyor"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 ds-caption">
+                <span className="text-muted-foreground">Kayıtlı hareket</span>
+                <span className="text-foreground/80">
+                  {stock.entryCount} giriş · {stock.exitCount} çıkış
+                </span>
               </div>
             </div>
           </section>
 
           <div className="flex items-center gap-2 ds-caption text-muted-foreground">
-            <Boxes className="w-3.5 h-3.5" /> Depo: {stock.warehouse}
+            <Boxes className="w-3.5 h-3.5" /> Depo lokasyonu henüz tanımlanmadı
           </div>
         </div>
       )}

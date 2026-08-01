@@ -1,12 +1,13 @@
-// Sprint M1.5 — Warehouse & Inventory composition shell.
-// Frontend-only responsive migration. No backend/schema/hook/business logic
-// changes. All views live under ./warehouse/* and use the M1 responsive DS.
+// DEPO & ENVANTER — composition shell.
+// Every tab reads from the canonical inventory hook; modules without a backing
+// table render an explicit truthful state instead of demo content.
 
 import { useState } from "react";
 import { Warehouse } from "lucide-react";
 import { PageShell } from "@/components/ui/responsive";
 import { useWarehouseData } from "./warehouse/useWarehouseData";
-import type { SubTab, Stock } from "./warehouse/warehouseConstants";
+import type { SubTab } from "./warehouse/warehouseConstants";
+import type { InventoryItem } from "./warehouse/inventoryTruth";
 import { WarehouseHeaderActions } from "./warehouse/WarehouseHeaderActions";
 import { WarehouseTabs } from "./warehouse/WarehouseTabs";
 import { OverviewView } from "./warehouse/views/OverviewView";
@@ -25,7 +26,18 @@ export default function WarehousePage() {
   const data = useWarehouseData();
   const [tab, setTab] = useState<SubTab>("overview");
   const [ceoMode, setCeoMode] = useState(false);
-  const [openStock, setOpenStock] = useState<Stock | null>(null);
+  const [openStock, setOpenStock] = useState<InventoryItem | null>(null);
+
+  // Purchase-request handoff for a low/critical item, routed through the
+  // existing assistant follow-up channel (no fabricated procurement records).
+  const requestPurchase = (item: InventoryItem) =>
+    window.dispatchEvent(
+      new CustomEvent("canvas-followup", {
+        detail: {
+          text: `${item.name} için satın alma talebi oluştur. Mevcut kullanılabilir stok ${item.available} ${item.rawUnit}, minimum seviye ${item.minStock} ${item.rawUnit}.`,
+        },
+      }),
+    );
 
   return (
     <>
@@ -37,16 +49,14 @@ export default function WarehousePage() {
           </span>
         }
         subtitle="Depo & Envanter"
-        actions={
-          <WarehouseHeaderActions ceoMode={ceoMode} onToggleCeo={() => setCeoMode(v => !v)} />
-        }
+        actions={<WarehouseHeaderActions ceoMode={ceoMode} onToggleCeo={() => setCeoMode((v) => !v)} />}
       >
         {ceoMode ? (
-          <CEOView data={data} />
+          <CEOView data={data} onCreateRequest={requestPurchase} />
         ) : (
           <div className="space-y-4 lg:space-y-5">
             <WarehouseTabs active={tab} onChange={setTab} />
-            {tab === "overview" && <OverviewView data={data} />}
+            {tab === "overview" && <OverviewView data={data} onCreateRequest={requestPurchase} />}
             {tab === "stocks" && <StocksView data={data} onOpen={setOpenStock} />}
             {tab === "warehouses" && <WarehousesView data={data} />}
             {tab === "movements" && <MovementsView data={data} />}
