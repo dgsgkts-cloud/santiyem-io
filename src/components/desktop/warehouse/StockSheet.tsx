@@ -108,9 +108,10 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
             {!forecast || !forecast.eligible ? (
               <InsufficientData
                 title={TRUTH_COPY.noForecast}
-                hint={forecast && !forecast.eligible ? forecast.reasonText : TRUTH_COPY.noForecastHint}
+                hint={forecast && !forecast.eligible ? FORECAST_REASON[forecast.reason] : TRUTH_COPY.noForecastHint}
               />
             ) : (
+
               <div className="rounded-card border border-border/80 bg-card p-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="ds-body text-foreground">
