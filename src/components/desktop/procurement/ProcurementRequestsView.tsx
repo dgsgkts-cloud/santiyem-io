@@ -124,7 +124,15 @@ export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
                   <PriorityDot p={r.priority} /> {r.category}
                 </div>
               </button>
-              <StatusPill status={r.status} />
+              <StatusPill
+                status={r.status}
+                label={approvalStatusLabel({
+                  status: r.status,
+                  approverName: r.approverName,
+                  approverRoleLabel: r.approverRole,
+                })}
+              />
+
             </div>
             <div className="flex items-center gap-2 text-fs-xs text-muted-foreground mb-2 min-w-0">
               <Building2 className="w-3 h-3 shrink-0" />
