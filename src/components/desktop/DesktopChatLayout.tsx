@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Search, Trash2, MessageSquare, BookOpen } from "lucide-react";
+import { Plus, Search, Trash2, PanelLeftClose, PanelLeftOpen, Layers } from "lucide-react";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput, { Attachment } from "@/components/ChatInput";
-import AIHome from "@/components/ai/AIHome";
+import DesktopAIWorkspace from "@/components/ai/DesktopAIWorkspace";
 import AIThinkingStages from "@/components/ai/AIThinkingStages";
 import AIResponseActions from "@/components/ai/AIResponseActions";
 import UsageLimitBanner from "@/components/UsageLimitBanner";
@@ -14,8 +14,10 @@ import { streamChat } from "@/lib/streamChat";
 import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
 import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
 import { AICanvas } from "@/components/canvas/AICanvas";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { canvasStore } from "@/hooks/useCanvasTurns";
 import { toast } from "sonner";
+
 
 interface DesktopChatLayoutProps {
   // Keep backward compat but use internal state when logged in
