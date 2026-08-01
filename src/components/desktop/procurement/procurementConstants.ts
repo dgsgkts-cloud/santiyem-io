@@ -123,6 +123,24 @@ export type Request = {
   rfq?: RequestRFQ;
   orderNo?: string;
   audit?: RequestAuditEntry[];
+  /** editable general / financial fields (shared create + edit form) */
+  department?: string;
+  description?: string;
+  currency?: "TRY" | "USD" | "EUR";
+  budgetCode?: string;
+  costCenter?: string;
+  attachments?: RequestAttachment[];
+  /** edit metadata & optimistic-concurrency guard */
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  version?: number;
+  /** revision linkage */
+  revisionOf?: string;
+  revisionOfNo?: string;
+  revisionNo?: number;
+
 };
 
 export type Order = {
