@@ -418,7 +418,52 @@ export function VoiceSessionOverlay({
     if (next) voice.mute(); else voice.unmute();
   };
 
+  // ---- overlay-scoped keyboard shortcuts ------------------------------
+  // Space = mute/unmute · Escape = end session · Ctrl/Cmd+Enter = text mode.
+  // Listeners live and die with this overlay; nothing is registered globally.
+  const shortcutRef = useRef({ toggleMute, end, continueWithText });
+  shortcutRef.current = { toggleMute, end, continueWithText };
+
+  useEffect(() => {
+    const isTyping = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      if (!el) return false;
+      const tag = el.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        el.isContentEditable === true
+      );
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        shortcutRef.current.end("user");
+        return;
+      }
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        shortcutRef.current.continueWithText();
+        return;
+      }
+      if ((e.code === "Space" || e.key === " ") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        // Stop the page from scrolling / re-triggering a focused button.
+        e.preventDefault();
+        if (e.repeat) return;
+        shortcutRef.current.toggleMute();
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (micBlocked) {
+
     return (
       <MicPermissionScreen
         onRetry={() => { void start(true); }}
