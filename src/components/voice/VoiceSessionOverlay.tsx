@@ -422,7 +422,7 @@ export function VoiceSessionOverlay({
       role="dialog"
       aria-modal="true"
       aria-label="Şantiyem AI sesli görüşme"
-      className="fixed inset-0 z-[70] flex flex-col bg-[#080B10] animate-in fade-in duration-300"
+      className="fixed inset-0 z-[70] flex flex-col bg-[#070B14] animate-in fade-in duration-300"
       style={{
         paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)",
