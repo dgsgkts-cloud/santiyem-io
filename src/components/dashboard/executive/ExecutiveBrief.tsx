@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, AlertTriangle, AlertCircle, Info, Activity, Wallet, TrendingUp, TrendingDown, Building2, Users, Package, ListChecks } from "lucide-react";
 import { useExecutiveBrief, Finding, Severity } from "@/hooks/useExecutiveBrief";
-import { HealthScoreCard } from "./HealthScoreCard";
+import { CompanyHealthCard } from "@/components/companyHealth/CompanyHealthCard";
 import { KpiTile } from "./KpiTile";
 import { InsightList } from "./InsightList";
 import { ActionCard } from "./ActionCard";
@@ -137,7 +137,7 @@ export function ExecutiveBrief({ onTabChange, onProjectSelect }: ExecutiveBriefP
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-        <HealthScoreCard score={kpis.healthScore} />
+        <CompanyHealthCard showDeniedNotice={false} />
         <KpiTile
           icon={AlertTriangle}
           label="Kritik Risk"

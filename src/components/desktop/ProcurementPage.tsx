@@ -127,13 +127,13 @@ export default function ProcurementPage() {
   useEffect(() => {
     setVoicePageContext(
       "procurement",
-      buildVoiceContext(analytics.result, {
+      buildVoiceContext(analytics.result, analyticsFilters, {
         tab: ceoMode ? "CEO Modu" : tab,
         masked: !analytics.canViewFinancials,
       })
     );
     return () => clearVoicePageContext("procurement");
-  }, [analytics.result, analytics.canViewFinancials, tab, ceoMode]);
+  }, [analytics.result, analytics.canViewFinancials, analyticsFilters, tab, ceoMode]);
 
   const detailId = params.get("talep");
   const editId = params.get("duzenle");

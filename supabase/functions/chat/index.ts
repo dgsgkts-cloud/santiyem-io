@@ -195,6 +195,24 @@ serve(async (req) => {
 
         if (userQuery && userQuery.length >= 3) {
           const uid = user.id;
+          // Company-health answers (score, cash vs debt, company-wide briefing)
+          // are management-only. The permission is resolved by the database
+          // under the caller's own identity — never inferred here.
+          const userScopedClient = createClient(supabaseUrl, anonKey, {
+            global: { headers: { Authorization: `Bearer ${token}` } },
+          });
+          let companyHealthAllowed: boolean | null = null;
+          const canViewCompanyHealth = async () => {
+            if (companyHealthAllowed === null) {
+              const { data } = await userScopedClient.rpc("company_health_access");
+              companyHealthAllowed = Boolean((data as any)?.can_view);
+            }
+            return companyHealthAllowed;
+          };
+          const COMPANY_HEALTH_DENIED =
+            "\n\n=== KULLANICI PROJE VERİSİ ===\nSonuç: yetki yok.\n" +
+            "AÇIKLAMA: Kullanıcının firma sağlığı / şirket geneli finansal özet verilerine erişim yetkisi yok.\n" +
+            "KURAL: Skor, nakit, borç veya bütçe rakamı paylaşma. Yetkinin şirket yönetiminde olduğunu kibarca söyle ve kendi yetkili olduğu konularda (görevler, saha, puantaj) yardım öner.\n";
           const normQ = normalizeQuery(userQuery);
 
           // 0) Cache: exact query dedupe (per user + mode)
@@ -898,6 +916,10 @@ serve(async (req) => {
               lines.push(`- ${s.p.name} · ilerleme: %${s.p.progress} · süre kullanımı: ${s.timeUsed !== null ? Math.round(s.timeUsed * 100) + "%" : "-"} · fark: ${gapPct} · ${status}`);
             });
           } else if (intent === "PROJECT_HEALTH" || intent === "PROJECT_RISKS") {
+            if (intent === "PROJECT_HEALTH" && !(await canViewCompanyHealth())) {
+              projectDataContext = COMPANY_HEALTH_DENIED;
+              throw new Error("__CACHE_HIT__");
+            }
             const today = now.toISOString().slice(0, 10);
             const in14 = new Date(now); in14.setDate(in14.getDate() + 14);
             const in14s = in14.toISOString().slice(0, 10);
@@ -965,6 +987,11 @@ serve(async (req) => {
               if (allRisks.length === 0) lines.push(`- Şu anda ölçülebilir kritik risk yok. Sağlık skorları normal aralıkta.`);
             }
           } else if (intent === "EXECUTIVE_BRIEFING") {
+            if (!(await canViewCompanyHealth())) {
+              projectDataContext = COMPANY_HEALTH_DENIED;
+              throw new Error("__CACHE_HIT__");
+            }
+
 
             const today = now.toISOString().slice(0, 10);
             const [projs, tasksOverdue, tasksToday, checksSoon, hakedisPending] = await Promise.all([

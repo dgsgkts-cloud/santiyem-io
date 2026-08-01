@@ -226,8 +226,9 @@ export function VoiceOrb() {
       <VoiceExperience
         onClose={() => closeSession("user")}
         access={access}
-        initialContext={pending.initialContext}
-        n={getVoicePageContext() ?? undefined}
+        initialContext={[pending.initialContext, getVoicePageContext()]
+          .filter(Boolean)
+          .join("\n\n")}
         initialCards={pending.initialCards}
         autoSpeak={pending.autoSpeak}
         autoStart={pending.autoSpeak || sessionMode === "wake"}
