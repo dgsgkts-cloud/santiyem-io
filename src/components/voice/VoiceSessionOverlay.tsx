@@ -520,14 +520,8 @@ export function VoiceSessionOverlay({
               >
                 Yazarak Devam Et
               </button>
-              <button
-                type="button"
-                onClick={() => end("user")}
-                className="flex min-h-[44px] items-center justify-center text-[14px] text-white/45 transition hover:text-white/70"
-              >
-                Kapat
-              </button>
             </div>
+
           </div>
         ) : (
           <>
