@@ -90,7 +90,19 @@ export const ProcurementDetailSheet = ({
       {req && (
         <div className="space-y-4">
           <div className="space-y-1">
-            <Row label="Durum" value={<StatusPill status={req.status} />} />
+            <Row
+              label="Durum"
+              value={
+                <StatusPill
+                  status={req.status}
+                  label={approvalStatusLabel({
+                    status: req.status,
+                    approverName: req.approverName,
+                    approverRoleLabel: req.approverRole,
+                  })}
+                />
+              }
+            />
             <Row label="Proje" value={req.project} />
             <Row label="Talep Eden" value={req.requester} />
             <Row label="Öncelik" value={req.priority} />
