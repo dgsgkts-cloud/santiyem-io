@@ -226,16 +226,21 @@ export function VoiceSessionOverlay({
   }, [greeting, voice, resumeChunks.length]);
 
   // ---- end session ---------------------------------------------------
+  // The overlay fades out on its own timeline so closing never feels abrupt;
+  // the connection teardown below is untouched.
+  const CLOSE_MS = 260;
+
   const end = useCallback(
     (reason: "silence" | "turn-complete" | "user") => {
       if (endedRef.current) return;
       endedRef.current = true;
       voiceHaptic("end");
+      setClosing(true);
       // Deliberate end → the conversation is finished, drop the snapshot.
       clearVoiceTranscript();
       void voice.disconnect().finally(() => {
         onSessionEnd?.(reason);
-        onClose();
+        window.setTimeout(() => onClose(), CLOSE_MS);
       });
     },
     [voice, onSessionEnd, onClose],
@@ -248,12 +253,15 @@ export function VoiceSessionOverlay({
     if (endedRef.current) return;
     endedRef.current = true;
     voiceHaptic("end");
+    setClosing(true);
     void voice.disconnect().finally(() => {
       onSessionEnd?.("user");
-      onClose();
       window.setTimeout(() => {
-        document.querySelector<HTMLTextAreaElement>("main textarea, textarea")?.focus();
-      }, 120);
+        onClose();
+        window.setTimeout(() => {
+          document.querySelector<HTMLTextAreaElement>("main textarea, textarea")?.focus();
+        }, 120);
+      }, CLOSE_MS);
     });
   }, [voice, onSessionEnd, onClose]);
 
