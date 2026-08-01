@@ -1,8 +1,8 @@
 // ============================================================
-// Sprint 42 — Live subtitle area for the voice overlay.
-// Sits above the controls, never over the orb and never behind
-// them: the region has its own bounded height, scrolls internally
-// and keeps following the newest line unless the user scrolls up.
+// Live transcript for the voice overlay — deliberately NOT a chat.
+// Only the current exchange is shown (your last line + the assistant's
+// last line), fading in smoothly as speech is recognised. Sits above
+// the controls in its own bounded, internally scrolling region.
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -45,30 +45,24 @@ export function VoiceCaptions({ transcripts }: Props) {
         ref={ref}
         onScroll={onScroll}
         aria-live="polite"
-        className="w-full overflow-y-auto overscroll-contain bg-black/35 px-4 py-3 backdrop-blur-md [-webkit-overflow-scrolling:touch]"
-        style={{
-          maxHeight: "min(32vh, 240px)",
-          borderRadius: "var(--radius-card, 16px)",
-          scrollbarWidth: "thin",
-        }}
+        className="w-full overflow-y-auto overscroll-contain px-1 py-1 text-center [-webkit-overflow-scrolling:touch]"
+        style={{ maxHeight: "min(30vh, 220px)", scrollbarWidth: "none" }}
       >
         {lastUser && (
-          <div className="mb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Siz</p>
-            <p className="whitespace-pre-wrap break-words text-[15px] leading-snug text-white">
-              {lastUser.text}
-            </p>
-          </div>
+          <p
+            key={lastUser.id}
+            className="animate-fade-in whitespace-pre-wrap break-words text-[15px] leading-snug text-white/45"
+          >
+            {lastUser.text}
+          </p>
         )}
         {lastAI && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
-              Şantiyem AI
-            </p>
-            <p className="whitespace-pre-wrap break-words text-[15px] leading-snug text-white/90">
-              {lastAI.text}
-            </p>
-          </div>
+          <p
+            key={lastAI.id}
+            className="mt-2 animate-fade-in whitespace-pre-wrap break-words text-[17px] font-medium leading-snug tracking-tight text-white"
+          >
+            {lastAI.text}
+          </p>
         )}
       </div>
 
@@ -78,11 +72,11 @@ export function VoiceCaptions({ transcripts }: Props) {
         <>
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-6 rounded-t-[16px] bg-gradient-to-b from-[#0B0F14] to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-[#080B10] to-transparent"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-[16px] bg-gradient-to-t from-[#0B0F14] to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-[#080B10] to-transparent"
           />
         </>
       )}
