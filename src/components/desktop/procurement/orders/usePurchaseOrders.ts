@@ -1333,8 +1333,13 @@ export const usePurchaseOrders = () => {
     savePaymentPlan,
     recordPayment,
     createDelivery,
+    updateDelivery,
     updateDeliveryStatus,
+    setShipmentStage,
+    reportDiscrepancy,
+    startReturn,
     receiveGoods,
+
     addInvoice,
   };
 };
