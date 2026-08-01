@@ -22,8 +22,26 @@ import {
   type OrderInstallment,
   type PurchaseOrder,
 } from "./orderModel";
+import {
+  remainingForItem,
+  validateReceiptLine,
+} from "../deliveries/deliveryModel";
+import {
+  deliveryLink,
+  notifyDelivery,
+  type DeliveryNotificationEvent,
+} from "../deliveries/deliveryNotifications";
 
 const db = supabase as any;
+
+type DeliveryNotifyOption = {
+  event: DeliveryNotificationEvent;
+  title: string;
+  detail?: string;
+  assignedTo?: string | null;
+  date?: string;
+};
+
 
 const ORDER_SELECT = `
   *,
@@ -108,13 +126,23 @@ export interface DeliveryInput {
   carrier?: string;
   vehicle_plate?: string;
   driver_name?: string;
+  driver_phone?: string;
+  contact_name?: string;
+  contact_phone?: string;
+  destination?: string;
   waybill_no?: string;
   dispatch_date?: string;
   expected_arrival?: string;
+  expected_arrival_time?: string;
   warehouse_name?: string;
-  status?: "Hazırlanıyor" | "Yolda" | "Şantiyede";
+  status?: OrderDeliveryStatus;
   notes?: string;
-  lines: { order_item_id: string; delivered_quantity: number }[];
+  lines: {
+    order_item_id: string;
+    delivered_quantity: number;
+    batch_no?: string;
+    warehouse_name?: string;
+  }[];
 }
 
 export interface ReceiptInput {
@@ -123,14 +151,20 @@ export interface ReceiptInput {
   warehouse_name?: string;
   received_by?: string;
   discrepancy_note?: string;
+  attachment_url?: string;
+  photos?: string[];
+  accepted_at?: string;
   lines: {
     order_item_id: string;
     accepted_quantity: number;
     rejected_quantity: number;
     damaged_quantity?: number;
+    batch_no?: string;
+    warehouse_name?: string;
     note?: string;
   }[];
 }
+
 
 export interface InvoiceInput {
   orderId: string;
@@ -751,12 +785,40 @@ export const usePurchaseOrders = () => {
 
   /* ── Deliveries & goods receipt ────────────────────────── */
 
+  const nextDeliveryNo = useCallback(
+    (order: PurchaseOrder) => {
+      const year = new Date().getFullYear();
+      const prefix = `DV-${year}-`;
+      const seq =
+        orders
+          .flatMap((o) => o.deliveries.map((d) => d.delivery_no))
+          .filter((n) => n?.startsWith(prefix))
+          .map((n) => parseInt(n.split("-")[2] ?? "0", 10) || 0)
+          .reduce((a, b) => Math.max(a, b), 0) + 1;
+      return `${prefix}${String(seq).padStart(4, "0")}`;
+    },
+    [orders]
+  );
+
   const createDelivery = (order: PurchaseOrder, input: DeliveryInput) =>
     run(
       order.id,
       "add_delivery",
       async () => {
-        const deliveryNo = `SVK-${String(order.deliveries.length + 1).padStart(2, "0")}`;
+        // Quantity guard — a shipment can never exceed the open quantity.
+        for (const line of input.lines) {
+          const remaining = remainingForItem(order, line.order_item_id);
+          if (line.delivered_quantity > remaining + 0.001) {
+            const item = order.items.find((i) => i.id === line.order_item_id);
+            throw new Error(
+              `${item?.name ?? "Kalem"} için kalan miktar ${remaining} ${
+                item?.unit ?? ""
+              }. Daha fazla sevk edilemez.`
+            );
+          }
+        }
+
+        const deliveryNo = nextDeliveryNo(order);
         const { data, error } = await db
           .from("purchase_order_deliveries")
           .insert({
@@ -765,16 +827,23 @@ export const usePurchaseOrders = () => {
             carrier: input.carrier ?? null,
             vehicle_plate: input.vehicle_plate ?? null,
             driver_name: input.driver_name ?? null,
+            driver_phone: input.driver_phone ?? null,
+            contact_name: input.contact_name ?? null,
+            contact_phone: input.contact_phone ?? null,
+            destination: input.destination ?? order.delivery_address ?? null,
             waybill_no: input.waybill_no ?? null,
             dispatch_date: input.dispatch_date ?? null,
             expected_arrival: input.expected_arrival ?? null,
+            expected_arrival_time: input.expected_arrival_time ?? null,
             project_id: order.project_id,
             warehouse_name: input.warehouse_name ?? null,
             status: input.status || "Hazırlanıyor",
             notes: input.notes ?? null,
+            dispatched_at:
+              input.status === "Yolda" ? new Date().toISOString() : null,
             created_by: actor,
           })
-          .select("id")
+          .select("id, delivery_no")
           .single();
         if (error) throw error;
 
@@ -785,6 +854,8 @@ export const usePurchaseOrders = () => {
               delivery_id: data.id,
               order_item_id: l.order_item_id,
               delivered_quantity: l.delivered_quantity,
+              batch_no: l.batch_no ?? null,
+              warehouse_name: l.warehouse_name ?? input.warehouse_name ?? null,
             }))
           );
 
@@ -794,37 +865,146 @@ export const usePurchaseOrders = () => {
           refId: data.id,
         });
         await syncStatuses(order.id);
+        await notifyDelivery({
+          event: input.status === "Yolda" ? "dispatched" : "planned",
+          deliveryId: data.id,
+          orderId: order.id,
+          title:
+            input.status === "Yolda"
+              ? `${deliveryNo} sevkiyatı yola çıktı`
+              : `${deliveryNo} sevkiyatı planlandı`,
+          detail: `${order.order_no} · ${order.supplier_name}`,
+          link: deliveryLink(data.id),
+          date: input.expected_arrival ?? undefined,
+        });
         return true;
       },
       { success: "Sevkiyat kaydı oluşturuldu." }
     );
 
-  const updateDeliveryStatus = (
+  /** Shipment info / ETA edit. Keeps ETA history for delay reporting. */
+  const updateDelivery = (
     order: PurchaseOrder,
     deliveryId: string,
-    status: OrderDeliveryStatus
+    patch: Record<string, unknown>,
+    options?: { event?: string; success?: string; notify?: DeliveryNotifyOption }
   ) =>
     run(
       order.id,
       "add_delivery",
       async () => {
+        const delivery = order.deliveries.find((d) => d.id === deliveryId);
+        if (!delivery) throw new Error("Sevkiyat kaydı bulunamadı.");
+        const etaChanged =
+          "expected_arrival" in patch &&
+          patch.expected_arrival !== delivery.expected_arrival;
         const { error } = await db
           .from("purchase_order_deliveries")
           .update({
-            status,
-            actual_arrival:
-              status === "Şantiyede" ? new Date().toISOString().slice(0, 10) : undefined,
+            ...patch,
+            ...(etaChanged
+              ? {
+                  previous_expected_arrival: delivery.expected_arrival,
+                  eta_changed_at: new Date().toISOString(),
+                }
+              : {}),
           })
           .eq("id", deliveryId);
         if (error) throw error;
-        await logEvent(order.id, `Sevkiyat durumu: ${status}`, {
-          refTable: "purchase_order_deliveries",
-          refId: deliveryId,
-        });
+        await logEvent(
+          order.id,
+          options?.event ?? `Sevkiyat güncellendi (${delivery.delivery_no})`,
+          { refTable: "purchase_order_deliveries", refId: deliveryId }
+        );
         await syncStatuses(order.id);
+        if (etaChanged)
+          await notifyDelivery({
+            event: "eta_changed",
+            deliveryId,
+            orderId: order.id,
+            title: `${delivery.delivery_no} tahmini varış tarihi güncellendi`,
+            detail: `${order.order_no} · yeni tarih ${String(
+              patch.expected_arrival ?? ""
+            ).slice(0, 10)}`,
+            link: deliveryLink(deliveryId),
+          });
+        if (options?.notify)
+          await notifyDelivery({
+            ...options.notify,
+            deliveryId,
+            orderId: order.id,
+            link: deliveryLink(deliveryId),
+          });
         return true;
       },
-      { success: `Sevkiyat durumu "${status}" olarak güncellendi.` }
+      { success: options?.success ?? "Sevkiyat bilgileri güncellendi." }
+    );
+
+  const setShipmentStage = (
+    order: PurchaseOrder,
+    deliveryId: string,
+    status: OrderDeliveryStatus
+  ) => {
+    const delivery = order.deliveries.find((d) => d.id === deliveryId);
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { status };
+    if (status === "Yolda") patch.dispatched_at = now;
+    if (status === "Şantiyeye Ulaştı" || status === "Şantiyede") {
+      patch.actual_arrival = now.slice(0, 10);
+      patch.arrived_at = now;
+    }
+    return updateDelivery(order, deliveryId, patch, {
+      event: `Sevkiyat durumu: ${status}`,
+      success: `Sevkiyat durumu "${status}" olarak güncellendi.`,
+      notify:
+        status === "Yolda"
+          ? {
+              event: "dispatched",
+              title: `${delivery?.delivery_no ?? "Sevkiyat"} yola çıktı`,
+              detail: `${order.order_no} · ${order.supplier_name}`,
+            }
+          : status === "Şantiyeye Ulaştı" || status === "Şantiyede"
+          ? {
+              event: "arrived",
+              title: `${delivery?.delivery_no ?? "Sevkiyat"} şantiyeye ulaştı — mal kabulü bekliyor`,
+              detail: `${order.order_no} · ${order.project_name ?? "Proje atanmadı"}`,
+            }
+          : undefined,
+    });
+  };
+
+  /** Backwards-compatible alias used by the orders dialogs. */
+  const updateDeliveryStatus = setShipmentStage;
+
+  const reportDiscrepancy = (
+    order: PurchaseOrder,
+    deliveryId: string,
+    note: string
+  ) =>
+    updateDelivery(
+      order,
+      deliveryId,
+      { status: "Hasarlı / Uyuşmazlık", discrepancy_note: note },
+      {
+        event: "Uyuşmazlık bildirildi",
+        success: "Uyuşmazlık kaydedildi ve ilgililere bildirildi.",
+        notify: {
+          event: "damaged",
+          title: `${order.order_no} teslimatında uyuşmazlık bildirildi`,
+          detail: note,
+        },
+      }
+    );
+
+  const startReturn = (order: PurchaseOrder, deliveryId: string, note: string) =>
+    updateDelivery(
+      order,
+      deliveryId,
+      { status: "İade Sürecinde", return_note: note },
+      {
+        event: "İade süreci başlatıldı",
+        success: "İade süreci başlatıldı.",
+      }
     );
 
   const receiveGoods = (order: PurchaseOrder, input: ReceiptInput) =>
@@ -838,6 +1018,23 @@ export const usePurchaseOrders = () => {
         if (order.receipts.some((r) => r.delivery_id === delivery.id))
           throw new Error("Bu sevkiyat için mal kabulü daha önce yapılmış.");
 
+        // Line-level validation before anything is written.
+        for (const line of input.lines) {
+          const shipped =
+            delivery.items.find((l) => l.order_item_id === line.order_item_id)
+              ?.delivered_quantity ?? 0;
+          const err = validateReceiptLine(
+            Number(shipped),
+            line.accepted_quantity || 0,
+            line.rejected_quantity || 0,
+            line.damaged_quantity || 0
+          );
+          if (err) {
+            const item = order.items.find((i) => i.id === line.order_item_id);
+            throw new Error(`${item?.name ?? "Kalem"}: ${err}`);
+          }
+        }
+
         const receiptNo = `MK-${order.order_no.split("-").slice(-1)[0]}-${String(
           order.receipts.length + 1
         ).padStart(2, "0")}`;
@@ -850,6 +1047,9 @@ export const usePurchaseOrders = () => {
             received_by: input.received_by || actor,
             warehouse_name: input.warehouse_name ?? delivery.warehouse_name,
             discrepancy_note: input.discrepancy_note ?? null,
+            attachment_url: input.attachment_url ?? null,
+            photos: input.photos ?? null,
+            accepted_at: input.accepted_at ?? new Date().toISOString(),
             created_by: actor,
           })
           .select("id")
@@ -857,16 +1057,23 @@ export const usePurchaseOrders = () => {
         if (recErr) throw recErr;
 
         let stockPosted = false;
+        let totalAccepted = 0;
+        let totalRejected = 0;
+        let acceptedValue = 0;
         for (const line of input.lines) {
           const item = order.items.find((i) => i.id === line.order_item_id);
           if (!item) continue;
           const accepted = Math.max(line.accepted_quantity || 0, 0);
           const rejected = Math.max(line.rejected_quantity || 0, 0);
+          const damaged = Math.max(line.damaged_quantity || 0, 0);
+          totalAccepted += accepted;
+          totalRejected += rejected + damaged;
+          acceptedValue += accepted * Number(item.unit_price || 0);
           const delivered = Math.min(
             item.quantity,
             Math.max(
               item.delivered_quantity,
-              item.delivered_quantity + accepted + rejected
+              item.delivered_quantity + accepted + rejected + damaged
             )
           );
 
@@ -875,7 +1082,9 @@ export const usePurchaseOrders = () => {
             .update({
               accepted_quantity: accepted,
               rejected_quantity: rejected,
-              damaged_quantity: line.damaged_quantity || 0,
+              damaged_quantity: damaged,
+              batch_no: line.batch_no ?? null,
+              warehouse_name: line.warehouse_name ?? input.warehouse_name ?? null,
               note: line.note ?? null,
             })
             .eq("delivery_id", delivery.id)
@@ -889,11 +1098,11 @@ export const usePurchaseOrders = () => {
                 item.quantity,
                 item.accepted_quantity + accepted
               ),
-              rejected_quantity: item.rejected_quantity + rejected,
+              rejected_quantity: item.rejected_quantity + rejected + damaged,
             })
             .eq("id", item.id);
 
-          // Stock effect — accepted material quantities enter the warehouse.
+          // Stock effect — only accepted stock materials enter the warehouse.
           if (accepted > 0 && item.item_type === "malzeme") {
             let materialId = item.material_id;
             if (!materialId) {
@@ -934,7 +1143,9 @@ export const usePurchaseOrders = () => {
                 total_amount: Math.round(accepted * item.unit_price * 100) / 100,
                 supplier: order.supplier_name,
                 waybill_no: delivery.waybill_no,
-                note: `${order.order_no} · ${receiptNo}`,
+                note: `${order.order_no} · ${receiptNo}${
+                  line.batch_no ? ` · Parti ${line.batch_no}` : ""
+                }`,
                 source_type: "purchase_order_receipt",
                 source_id: receipt.id,
               });
@@ -951,13 +1162,51 @@ export const usePurchaseOrders = () => {
           })
           .eq("id", receipt.id);
 
+        // Truthful shipment status: arrival alone never means "completed".
+        const shipped = delivery.items.reduce(
+          (t, l) => t + Number(l.delivered_quantity || 0),
+          0
+        );
+        const shipmentStatus =
+          totalRejected > 0
+            ? "Hasarlı / Uyuşmazlık"
+            : totalAccepted >= shipped - 0.001 && shipped > 0
+            ? "Tam Kabul"
+            : "Kısmi Kabul";
         await db
           .from("purchase_order_deliveries")
           .update({
-            status: "Teslim Edildi",
-            actual_arrival: new Date().toISOString().slice(0, 10),
+            status: shipmentStatus,
+            actual_arrival:
+              delivery.actual_arrival ?? new Date().toISOString().slice(0, 10),
+            arrived_at: delivery.arrived_at ?? new Date().toISOString(),
+            discrepancy_note: input.discrepancy_note ?? delivery.discrepancy_note,
           })
           .eq("id", delivery.id);
+
+        // Non-stock services post a project cost record instead of stock.
+        if (!stockPosted && acceptedValue > 0 && order.project_id)
+          await db.from("project_expenses").insert({
+            user_id: user.id,
+            project_id: order.project_id,
+            category: "Hizmet / Satın Alma",
+            description: `${order.order_no} · ${receiptNo} hizmet tamamlandı`,
+            amount: Math.round(acceptedValue * 100) / 100,
+            expense_date: new Date().toISOString().slice(0, 10),
+            source: "purchase_order_receipt",
+          });
+
+        // Delivery-conditional installments become eligible — never auto-paid.
+        const conditional = order.installments.filter(
+          (i) =>
+            (i.payment_type === "Teslimatta" || i.payment_type === "Mal Kabulünde") &&
+            i.status === "Planlandı"
+        );
+        for (const inst of conditional)
+          await db
+            .from("purchase_order_installments")
+            .update({ status: "Bekliyor" })
+            .eq("id", inst.id);
 
         await logEvent(order.id, `Mal kabulü yapıldı (${receiptNo})`, {
           detail: stockPosted ? "Stok girişi oluşturuldu" : "Stok girişi yok",
@@ -965,10 +1214,41 @@ export const usePurchaseOrders = () => {
           refId: receipt.id,
         });
         await syncStatuses(order.id);
+
+        await notifyDelivery({
+          event: totalRejected > 0 ? "damaged" : "partial_accepted",
+          deliveryId: delivery.id,
+          orderId: order.id,
+          title:
+            totalRejected > 0
+              ? `${delivery.delivery_no} mal kabulünde red/hasar kaydedildi`
+              : `${delivery.delivery_no} mal kabulü tamamlandı (${shipmentStatus})`,
+          detail: `${order.order_no} · ${order.supplier_name}`,
+          link: deliveryLink(delivery.id),
+        });
+        if (stockPosted)
+          await notifyDelivery({
+            event: "stock_entry",
+            deliveryId: delivery.id,
+            orderId: order.id,
+            title: `${order.order_no} için depo girişi oluşturuldu`,
+            detail: input.warehouse_name ?? delivery.warehouse_name ?? "Şantiye deposu",
+            link: deliveryLink(delivery.id),
+          });
+        if (conditional.length)
+          await notifyDelivery({
+            event: "payment_due",
+            deliveryId: delivery.id,
+            orderId: order.id,
+            title: `${order.order_no} teslimata bağlı ödeme tahsile hazır`,
+            detail: `${conditional.length} taksit mal kabulü sonrası ödenebilir`,
+            link: deliveryLink(delivery.id),
+          });
         return true;
       },
-      { success: "Mal kabulü tamamlandı, stok güncellendi." }
+      { success: "Mal kabulü tamamlandı, stok ve ödeme durumu güncellendi." }
     );
+
 
   /* ── Supplier invoice ──────────────────────────────────── */
 

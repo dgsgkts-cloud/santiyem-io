@@ -130,8 +130,30 @@ export interface OrderDeliveryItem {
   accepted_quantity: number;
   rejected_quantity: number;
   damaged_quantity: number;
+  batch_no: string | null;
+  warehouse_name: string | null;
   note: string | null;
 }
+
+/** Persisted shipment statuses (mirrors the database check constraint). */
+export const SHIPMENT_STATUSES = [
+  "Planlanmadı",
+  "Hazırlanıyor",
+  "Sevke Hazır",
+  "Yolda",
+  "Şantiyeye Ulaştı",
+  "Şantiyede",
+  "Mal Kabulü Bekliyor",
+  "Kısmi Kabul",
+  "Kısmi Teslim",
+  "Tam Kabul",
+  "Teslim Edildi",
+  "Hasarlı / Uyuşmazlık",
+  "İade Sürecinde",
+  "İade",
+  "Tamamlandı",
+  "İptal",
+] as const;
 
 export interface OrderDelivery {
   id: string;
@@ -140,17 +162,32 @@ export interface OrderDelivery {
   carrier: string | null;
   vehicle_plate: string | null;
   driver_name: string | null;
+  driver_phone: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  destination: string | null;
   waybill_no: string | null;
+  waybill_url: string | null;
+  waybill_name: string | null;
   dispatch_date: string | null;
+  dispatched_at: string | null;
   expected_arrival: string | null;
+  expected_arrival_time: string | null;
+  previous_expected_arrival: string | null;
+  eta_changed_at: string | null;
   actual_arrival: string | null;
+  arrived_at: string | null;
   project_id: string | null;
   warehouse_name: string | null;
-  status: "Hazırlanıyor" | "Yolda" | "Şantiyede" | "Kısmi Teslim" | "Teslim Edildi" | "İade" | "İptal";
+  status: (typeof SHIPMENT_STATUSES)[number];
   notes: string | null;
+  discrepancy_note: string | null;
+  return_note: string | null;
+  photos: string[] | null;
   items: OrderDeliveryItem[];
   created_at: string;
 }
+
 
 export interface OrderReceipt {
   id: string;

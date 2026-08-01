@@ -3174,63 +3174,102 @@ export type Database = {
       purchase_order_deliveries: {
         Row: {
           actual_arrival: string | null
+          arrived_at: string | null
           carrier: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           created_by: string | null
           delivery_no: string
+          destination: string | null
+          discrepancy_note: string | null
           dispatch_date: string | null
+          dispatched_at: string | null
           driver_name: string | null
+          driver_phone: string | null
+          eta_changed_at: string | null
           expected_arrival: string | null
+          expected_arrival_time: string | null
           id: string
           notes: string | null
           order_id: string
           photos: Json
+          previous_expected_arrival: string | null
           project_id: string | null
+          return_note: string | null
           status: string
           updated_at: string
           vehicle_plate: string | null
           warehouse_name: string | null
+          waybill_name: string | null
           waybill_no: string | null
+          waybill_url: string | null
         }
         Insert: {
           actual_arrival?: string | null
+          arrived_at?: string | null
           carrier?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           delivery_no: string
+          destination?: string | null
+          discrepancy_note?: string | null
           dispatch_date?: string | null
+          dispatched_at?: string | null
           driver_name?: string | null
+          driver_phone?: string | null
+          eta_changed_at?: string | null
           expected_arrival?: string | null
+          expected_arrival_time?: string | null
           id?: string
           notes?: string | null
           order_id: string
           photos?: Json
+          previous_expected_arrival?: string | null
           project_id?: string | null
+          return_note?: string | null
           status?: string
           updated_at?: string
           vehicle_plate?: string | null
           warehouse_name?: string | null
+          waybill_name?: string | null
           waybill_no?: string | null
+          waybill_url?: string | null
         }
         Update: {
           actual_arrival?: string | null
+          arrived_at?: string | null
           carrier?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           created_by?: string | null
           delivery_no?: string
+          destination?: string | null
+          discrepancy_note?: string | null
           dispatch_date?: string | null
+          dispatched_at?: string | null
           driver_name?: string | null
+          driver_phone?: string | null
+          eta_changed_at?: string | null
           expected_arrival?: string | null
+          expected_arrival_time?: string | null
           id?: string
           notes?: string | null
           order_id?: string
           photos?: Json
+          previous_expected_arrival?: string | null
           project_id?: string | null
+          return_note?: string | null
           status?: string
           updated_at?: string
           vehicle_plate?: string | null
           warehouse_name?: string | null
+          waybill_name?: string | null
           waybill_no?: string | null
+          waybill_url?: string | null
         }
         Relationships: [
           {
@@ -3245,6 +3284,7 @@ export type Database = {
       purchase_order_delivery_items: {
         Row: {
           accepted_quantity: number
+          batch_no: string | null
           created_at: string
           damaged_quantity: number
           delivered_quantity: number
@@ -3253,9 +3293,11 @@ export type Database = {
           note: string | null
           order_item_id: string
           rejected_quantity: number
+          warehouse_name: string | null
         }
         Insert: {
           accepted_quantity?: number
+          batch_no?: string | null
           created_at?: string
           damaged_quantity?: number
           delivered_quantity?: number
@@ -3264,9 +3306,11 @@ export type Database = {
           note?: string | null
           order_item_id: string
           rejected_quantity?: number
+          warehouse_name?: string | null
         }
         Update: {
           accepted_quantity?: number
+          batch_no?: string | null
           created_at?: string
           damaged_quantity?: number
           delivered_quantity?: number
@@ -3275,6 +3319,7 @@ export type Database = {
           note?: string | null
           order_item_id?: string
           rejected_quantity?: number
+          warehouse_name?: string | null
         }
         Relationships: [
           {
