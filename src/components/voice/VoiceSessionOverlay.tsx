@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Mic, MicOff, Captions, CaptionsOff, ChevronLeft, PhoneOff, Keyboard, Hand } from "lucide-react";
+import { Mic, MicOff, Captions, CaptionsOff, ChevronLeft, PhoneOff, Hand } from "lucide-react";
 import { useVoiceEngine } from "@/hooks/useVoiceEngine";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { voiceHaptic } from "@/lib/voice/haptics";
