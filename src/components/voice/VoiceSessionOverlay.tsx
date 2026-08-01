@@ -107,6 +107,9 @@ export function VoiceSessionOverlay({
 
   const [muted, setMuted] = useState(false);
   const [captionsOn, setCaptionsOn] = useState(true);
+  // Premium closing transition + transient mic-state confirmation.
+  const [closing, setClosing] = useState(false);
+  const [micToast, setMicToast] = useState<string | null>(null);
 
   const [micBlocked, setMicBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
