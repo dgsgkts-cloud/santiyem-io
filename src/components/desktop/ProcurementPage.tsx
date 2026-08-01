@@ -282,10 +282,22 @@ export default function ProcurementPage() {
           )}
           {tab === "rfq" && (
             <ProcurementRFQView
-              data={data}
-              activeRequest={rfqRequest}
-              onSelect={() => {
-                /* preserves existing no-op selection behavior */
+              requests={workflow.requests}
+              suppliers={data.suppliers}
+              loading={workflow.requests.length === 0}
+              activeRequestId={rfqRequest?.id ?? null}
+              onActiveRequestChange={(id) =>
+                setRfqRequest(workflow.requests.find((r) => r.id === id) ?? null)
+              }
+              actor={actorName}
+              onOpenOrder={(order) => {
+                setTab("orders");
+                if (order) setDetail({ kind: "order", item: order });
+              }}
+              onTrackDelivery={() => setTab("deliveries")}
+              onOpenRequest={(id) => {
+                const found = workflow.requests.find((r) => r.id === id);
+                if (found) openDetail(found);
               }}
             />
           )}
