@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Mic, MicOff, Captions, CaptionsOff, X, Keyboard, Hand } from "lucide-react";
+import { Mic, MicOff, Captions, CaptionsOff, ChevronLeft, PhoneOff, Keyboard, Hand } from "lucide-react";
 import { useVoiceEngine } from "@/hooks/useVoiceEngine";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { voiceHaptic } from "@/lib/voice/haptics";
@@ -40,19 +40,22 @@ interface Props {
  * ONLINE/OFFLINE, and never two contradictory labels on one screen.
  */
 const PHASE_LABEL: Record<VoicePhase, string> = {
-  idle: "Hazır",
+  idle: "AI hazırlanıyor...",
   requesting_permission: "Mikrofon izni bekleniyor",
-  mic_setup: "Mikrofon hazırlanıyor...",
+  mic_setup: "AI hazırlanıyor...",
   connecting: "OpenAI'ya bağlanılıyor...",
-  ready: "Hazır",
+  ready: "AI hazırlanıyor...",
   listening: "Dinliyorum",
   user_finished: "Anlıyorum",
   thinking: "Düşünüyorum...",
-  speaking: "Yanıtlıyor...",
+  speaking: "Yanıtlıyorum...",
   interrupted: "Dinliyorum",
   ending: "Görüşme kapatılıyor",
   error: "Bağlantı kesildi",
 };
+
+/** Short personality line, shown only before the first exchange. */
+const OPENING_HINT = "Merhaba. Hazırım. Projenizle ilgili ne öğrenmek istersiniz?";
 
 /** Session states that mean the transport is genuinely alive. */
 const LIVE_STATES = ["ready", "listening", "speaking", "thinking"] as const;
@@ -411,161 +414,193 @@ export function VoiceSessionOverlay({
     );
   }
 
-  const ctrl =
-    "flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-95";
+  const showOpeningHint =
+    transcripts.length === 0 && (phase === "listening" || phase === "ready");
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Şantiyem AI sesli mod"
-      className="fixed inset-0 z-[70] flex flex-col bg-[#0B0F14] animate-in fade-in duration-200"
+      aria-label="Şantiyem AI sesli görüşme"
+      className="fixed inset-0 z-[70] flex flex-col bg-[#080B10] animate-in fade-in duration-300"
       style={{
-        paddingTop: "max(env(safe-area-inset-top, 0px), 12px)",
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)",
+        paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)",
         minHeight: "100dvh",
       }}
     >
-      {/* Top — compact close only. */}
-      <div className="flex shrink-0 items-center justify-end px-4">
+      {/* Ambient depth — keeps the screen from feeling like a flat page. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 70% at 50% 8%, hsl(var(--primary) / 0.10) 0%, transparent 60%), radial-gradient(90% 60% at 50% 110%, hsl(var(--primary) / 0.07) 0%, transparent 65%)",
+        }}
+      />
+
+      {/* ── Minimal header: back · Şantiyem AI · captions ── */}
+      <header className="relative z-10 flex h-14 shrink-0 items-center justify-between px-2">
         <button
           type="button"
           onClick={() => end("user")}
-          aria-label="Sesli modu kapat"
-          className="flex h-11 w-11 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/10 hover:text-white"
+          aria-label="Geri dön"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
         >
-          <X className="h-5 w-5" />
+          <ChevronLeft className="h-6 w-6" />
         </button>
-      </div>
 
-      {/* Center — orb + single state label. */}
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-5">
-        <VoiceReactiveOrb phase={phase} level={level} fallbackMotion={noAnalyser} />
+        <div className="flex flex-col items-center">
+          <span className="text-[15px] font-semibold tracking-tight text-white">
+            Şantiyem AI
+          </span>
+          <span className="text-[11px] font-medium tracking-wide text-white/40">
+            Sesli Asistan
+          </span>
+        </div>
 
+        <button
+          type="button"
+          onClick={() => setCaptionsOn((v) => !v)}
+          aria-label={captionsOn ? "Altyazıyı kapat" : "Altyazıyı aç"}
+          aria-pressed={captionsOn}
+          className={`flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95 ${
+            captionsOn ? "text-white/80 hover:bg-white/10" : "text-white/35 hover:bg-white/10"
+          }`}
+        >
+          {captionsOn ? <Captions className="h-5 w-5" /> : <CaptionsOff className="h-5 w-5" />}
+        </button>
+      </header>
+
+      {/* ── Center: orb + state, or a premium recovery state ── */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-7 px-6">
         {phase === "error" ? (
-          <div className="w-full max-w-xs text-center">
-            <p className="text-[15px] font-medium text-white/90">{errorCopy.title}</p>
-            <p aria-live="polite" className="mt-1 text-[13px] text-white/55">
+          <div className="w-full max-w-sm text-center">
+            <VoiceReactiveOrb phase="error" level={0} />
+            <p className="mt-6 text-[19px] font-semibold tracking-tight text-white">
+              {errorCopy.title}
+            </p>
+            <p aria-live="polite" className="mt-2 text-[14px] leading-relaxed text-white/55">
               {retryIn !== null
-                ? `Ses durduruldu. ${retryIn} saniye içinde yeniden bağlanıyor…`
+                ? `Bağlantı yeniden kuruluyor… ${retryIn}`
                 : errorCopy.body}
             </p>
 
             {/* The conversation is kept — show where we left off. */}
             {(lastUserLine || lastAssistantLine) && (
-              <div className="mt-4 rounded-[14px] border border-white/10 bg-white/[0.04] p-3 text-left">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
+              <div className="mt-5 rounded-[18px] border border-white/[0.07] bg-white/[0.03] p-4 text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
                   Konuşma korundu
                 </p>
                 {lastUserLine && (
-                  <p className="mt-2 line-clamp-2 text-[13px] text-white/75">
-                    <span className="text-white/45">Siz: </span>{lastUserLine}
-                  </p>
+                  <p className="mt-2 line-clamp-2 text-[13.5px] text-white/60">{lastUserLine}</p>
                 )}
                 {lastAssistantLine && (
-                  <p className="mt-1 line-clamp-2 text-[13px] text-white/75">
-                    <span className="text-white/45">Şantiyem AI: </span>{lastAssistantLine}
+                  <p className="mt-1.5 line-clamp-2 text-[13.5px] text-white/85">
+                    {lastAssistantLine}
                   </p>
                 )}
-                <p className="mt-2 text-[12px] text-white/45">
-                  Yeniden bağlanınca kaldığınız yerden devam edeceksiniz.
-                </p>
               </div>
             )}
 
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-6 flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={reconnect}
-                className="flex items-center justify-center rounded-[16px] bg-primary text-[15px] font-semibold text-primary-foreground"
-                style={{ height: 48 }}
+                className="flex items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-primary-foreground transition active:scale-[0.98]"
+                style={{ height: 52 }}
               >
                 {retryIn !== null ? "Şimdi Yeniden Bağlan" : "Tekrar Dene"}
               </button>
-
-
               <button
                 type="button"
                 onClick={() => end("user")}
-                className="flex items-center justify-center rounded-[14px] border border-white/15 text-[14px] font-medium text-white/85"
-                style={{ height: 44 }}
+                className="flex items-center justify-center rounded-full border border-white/12 text-[14.5px] font-medium text-white/80 transition hover:bg-white/5 active:scale-[0.98]"
+                style={{ height: 48 }}
               >
                 Yazarak Devam Et
               </button>
               <button
                 type="button"
                 onClick={() => end("user")}
-                className="flex min-h-[44px] items-center justify-center text-[14px] text-white/55"
+                className="flex min-h-[44px] items-center justify-center text-[14px] text-white/45 transition hover:text-white/70"
               >
                 Kapat
               </button>
             </div>
           </div>
         ) : (
-          <p aria-live="polite" className="text-[15px] font-medium tracking-tight text-white/80">
-            {PHASE_LABEL[phase]}
-          </p>
-        )}
+          <>
+            <VoiceReactiveOrb phase={phase} level={level} fallbackMotion={noAnalyser} />
 
-        {/* Barge-in only while the assistant is actually speaking. */}
-        {isSpeaking && !conversationMode && (
-          <button
-            type="button"
-            onClick={() => voice.interrupt()}
-            className="flex min-h-[44px] items-center gap-2 rounded-[14px] border border-white/15 px-4 text-[14px] font-medium text-white/85"
-          >
-            <Hand className="h-4 w-4" /> Sözünü Kes
-          </button>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p
+                key={PHASE_LABEL[phase]}
+                aria-live="polite"
+                className="animate-fade-in text-[17px] font-medium tracking-tight text-white/90"
+              >
+                {PHASE_LABEL[phase]}
+              </p>
+              {showOpeningHint && (
+                <p className="max-w-[300px] animate-fade-in text-[13.5px] leading-relaxed text-white/40">
+                  {OPENING_HINT}
+                </p>
+              )}
+            </div>
+
+            {/* Barge-in only while the assistant is actually speaking. */}
+            {isSpeaking && !conversationMode && (
+              <button
+                type="button"
+                onClick={() => voice.interrupt()}
+                className="flex min-h-[44px] items-center gap-2 rounded-full border border-white/12 px-5 text-[13.5px] font-medium text-white/80 transition hover:bg-white/5 active:scale-95"
+              >
+                <Hand className="h-4 w-4" /> Sözünü Kes
+              </button>
+            )}
+          </>
         )}
       </div>
 
-      {/* Captions — own region, never behind the controls. Kept visible
-          while disconnected so the transcript is not lost from view. */}
-      {captionsOn && transcripts.length > 0 && (
-        <div className="shrink-0 px-5">
+      {/* ── Live transcript: only the current exchange ── */}
+      {phase !== "error" && captionsOn && transcripts.length > 0 && (
+        <div className="relative z-10 shrink-0 px-6 pb-2">
           <VoiceCaptions transcripts={transcripts} />
         </div>
       )}
 
-
-      {/* Controls — three essentials + optional text hand-off. */}
+      {/* ── Bottom controls: mute · end ── */}
       {phase !== "error" && (
-        <div className="mt-5 flex shrink-0 flex-col items-center gap-3 px-5">
-          <div className="flex items-center justify-center gap-5">
+        <div className="relative z-10 mt-6 flex shrink-0 flex-col items-center gap-4 px-6">
+          <div className="flex items-center justify-center gap-8">
             <button
               type="button"
               onClick={toggleMute}
               aria-label={muted ? "Mikrofonu aç" : "Mikrofonu kapat"}
               aria-pressed={muted}
-              className={`${ctrl} ${muted ? "border-white/20 bg-white/15 text-white" : "border-white/10 bg-white/5 text-white/80"}`}
+              className={`flex h-16 w-16 items-center justify-center rounded-full border transition active:scale-95 ${
+                muted
+                  ? "border-white/25 bg-white/[0.14] text-white"
+                  : "border-white/[0.08] bg-white/[0.06] text-white/85 hover:bg-white/[0.1]"
+              }`}
             >
-              {muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCaptionsOn((v) => !v)}
-              aria-label={captionsOn ? "Altyazıyı kapat" : "Altyazıyı aç"}
-              aria-pressed={captionsOn}
-              className={`${ctrl} ${captionsOn ? "border-white/20 bg-white/15 text-white" : "border-white/10 bg-white/5 text-white/80"}`}
-            >
-              {captionsOn ? <Captions className="h-5 w-5" /> : <CaptionsOff className="h-5 w-5" />}
+              {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
             </button>
 
             <button
               type="button"
               onClick={() => end("user")}
               aria-label="Görüşmeyi bitir"
-              className={`${ctrl} border-transparent bg-destructive text-destructive-foreground`}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-[0_10px_30px_-8px_hsl(var(--destructive)/0.7)] transition hover:opacity-90 active:scale-95"
             >
-              <X className="h-6 w-6" />
+              <PhoneOff className="h-6 w-6" />
             </button>
           </div>
 
           <button
             type="button"
             onClick={() => end("user")}
-            className="flex min-h-[44px] items-center gap-2 rounded-[14px] px-3 text-[13px] text-white/55"
+            className="flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[13px] text-white/40 transition hover:text-white/70"
             aria-label="Yazarak devam et"
           >
             <Keyboard className="h-4 w-4" /> Yazarak Devam Et
