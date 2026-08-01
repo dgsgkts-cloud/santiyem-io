@@ -1,12 +1,13 @@
 // Sprint M1.4 — Purchase Requests: search + status filter + responsive grid.
 // Actions are status-based and wired to the workflow mutation layer.
 import { useState } from "react";
-import { Building2, Building2 as Bldg, CheckCircle2, Search } from "lucide-react";
+import { Building2, Building2 as Bldg, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResponsiveGrid } from "@/components/ui/responsive";
 import { STATUSES, daysFromNow, fmtTRY, type Request } from "./procurementConstants";
 import { PriorityDot, StatusPill } from "./procurementUi";
 import { approvalStatusLabel } from "./approvalPolicy";
+import { ApprovalSummary } from "./ApprovalSummary";
 import { RequestActionBar } from "./RequestActionBar";
 import type { WorkflowAction } from "./procurementWorkflow";
 import type { RequestWorkflow } from "./useRequestWorkflow";
