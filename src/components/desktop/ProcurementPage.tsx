@@ -18,7 +18,6 @@ import { ProcurementOrdersView } from "./procurement/ProcurementOrdersView";
 import { ProcurementDeliveriesView } from "./procurement/ProcurementDeliveriesView";
 import { ProcurementSuppliersView } from "./procurement/ProcurementSuppliersView";
 import { ProcurementAnalyticsView } from "./procurement/ProcurementAnalyticsView";
-import { ProcurementQuickCreateFAB } from "./procurement/ProcurementQuickCreateFAB";
 import {
   ProcurementDetailSheet,
   type ProcurementDetail,
@@ -30,6 +29,8 @@ import {
   RfqPrepareDialog,
 } from "./procurement/RequestActionDialogs";
 import { useProcurementDemoData } from "./procurement/useProcurementDemoData";
+import { usePurchaseOrders } from "./procurement/orders/usePurchaseOrders";
+import { useOrderActions } from "./procurement/orders/useOrderActions";
 import { useUser } from "@/contexts/UserContext";
 import { useRequestApprovers } from "./procurement/useRequestApprovers";
 import { SubmitForApprovalDialog } from "./procurement/SubmitForApprovalDialog";
@@ -55,6 +56,7 @@ export default function ProcurementPage() {
   const data = useProcurementDemoData();
   const license = useLicense();
   const workflow = useRequestWorkflow(data.requests);
+  const orderWorkflow = usePurchaseOrders();
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<ProcurementSubTab>("dashboard");
   const [ceoMode, setCeoMode] = useState(false);
@@ -217,6 +219,12 @@ export default function ProcurementPage() {
     [openDetail, openEdit, planAllows, workflow, actorName]
   );
 
+  const orderActions = useOrderActions({
+    workflow: orderWorkflow,
+    projectNames: data.projNames,
+    supplierNames: data.suppliers.map((s) => s.name),
+  });
+
   const detailRequest = useMemo(
     () =>
       detail?.kind === "request" && detail.item
@@ -303,8 +311,10 @@ export default function ProcurementPage() {
           )}
           {tab === "orders" && (
             <ProcurementOrdersView
-              data={data}
-              onOpen={(o) => setDetail({ kind: "order", item: o })}
+              workflow={orderWorkflow}
+              onAction={orderActions.perform}
+              onCreate={orderActions.openCreate}
+              projectNames={data.projNames}
             />
           )}
           {tab === "deliveries" && <ProcurementDeliveriesView data={data} />}
@@ -318,7 +328,7 @@ export default function ProcurementPage() {
         </>
       )}
 
-      {!editId && <ProcurementQuickCreateFAB />}
+      {orderActions.dialogs}
       <WithdrawApprovalDialog
         open={!!withdrawTarget}
         approverName={withdrawTarget?.approverName}
