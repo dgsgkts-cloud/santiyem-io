@@ -471,11 +471,16 @@ export default function ProcurementPage() {
               analytics={analytics}
               onOpenOrder={(orderId) => {
                 const order = orderWorkflow.orders.find((o) => o.id === orderId);
-                if (order) setDetail({ kind: "order", item: order });
-                else toast.error("Sipariş kaydı bulunamadı.");
+                if (!order) {
+                  toast.error("Sipariş kaydı bulunamadı. Listeyi yenileyin.");
+                  return;
+                }
+                setTab("orders");
+                orderActions.perform("detail", order);
               }}
             />
           )}
+
         </>
       )}
 
