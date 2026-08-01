@@ -115,7 +115,7 @@ export interface VoiceEngineConfig {
   /** Executes a tool call and returns a JSON-serialisable result. */
   onToolCall?: (call: VoiceToolCall) => Promise<VoiceToolResult>;
   voice?: string;
-  model?: string;
+  /** No model field: the Realtime model is resolved server-side only. */
   /** 0..1 output volume. */
   volume?: number;
   language?: string;

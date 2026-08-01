@@ -25,10 +25,17 @@ export function isVoiceDebugEnabled(): boolean {
 
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
+/**
+ * NON-AUTHORITATIVE model label. The Realtime model is resolved server-side
+ * from the OPENAI_REALTIME_MODEL environment variable and returned by the
+ * edge function; this constant exists only for typing/diagnostics display
+ * before the server response arrives. It is never sent to the server and
+ * never used to open a session.
+ */
+export const REALTIME_MODEL_DISPLAY_FALLBACK = "gpt-realtime";
+
 export const OPENAI_REALTIME = {
   tokenEndpoint: `${SUPABASE_URL}/functions/v1/openai-realtime-token`,
-  /** Overridden by whatever the edge function mints. */
-  model: "gpt-realtime",
   voice: "cedar",
 };
 

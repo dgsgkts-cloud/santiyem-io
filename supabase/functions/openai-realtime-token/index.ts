@@ -5,8 +5,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
 import { VOICE_SYSTEM_PROMPT } from "../_shared/voicePrompt.ts";
-
-const DEFAULT_MODEL = "gpt-realtime";
+import { resolveRealtimeModel } from "../_shared/realtimeModel.ts";
 /** Structured failure envelope — no provider internals ever reach the client. */
 function fail(stage: string, status: number, code: string, httpStatus = status) {
   console.error(`[openai-realtime-token] ${stage} failed: ${code} (${status})`);
@@ -35,7 +34,10 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const model = String(body?.model || DEFAULT_MODEL);
+    // The model is authoritative here — a browser-supplied value is ignored.
+    const { model, source } = resolveRealtimeModel((k) => Deno.env.get(k));
+    if (!model.trim()) return fail("session_create", 500, "realtime_model_not_configured", 500);
+    console.log(`[voice:rt] resolved config ${JSON.stringify({ model, source })}`);
     const voice = String(body?.voice || DEFAULT_VOICE);
     const suffix = String(body?.instructions || "").slice(0, 6000);
     const tools = Array.isArray(body?.tools) ? body.tools : [];
@@ -85,6 +87,7 @@ Deno.serve(async (req) => {
       ok: true,
       client_secret: secret,
       model,
+      model_source: source,
       voice,
       expires_at: data?.expires_at ?? null,
       base_url: "https://api.openai.com/v1/realtime/calls",
