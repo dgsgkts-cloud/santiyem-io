@@ -19,6 +19,8 @@ interface Props {
 export const StockSheet = ({ stock, onClose, data }: Props) => {
   const history = stock ? data.movements.filter((m) => m.material === stock.name).slice(0, 6) : [];
   const forecast = stock ? data.forecastFor(stock) : null;
+  const forecastReady = forecast !== null && forecast.eligible ? forecast : null;
+  const forecastBlocked = forecast !== null && !forecast.eligible ? forecast : null;
 
   const ask = (text: string) =>
     window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
@@ -105,10 +107,10 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
           {/* 4 — forecast, gated on real evidence */}
           <section>
             <h4 className="ds-label mb-2">Tükenme Tahmini</h4>
-            {!forecast?.eligible ? (
+            {!forecastReady ? (
               <InsufficientData
                 title={TRUTH_COPY.noForecast}
-                hint={forecast ? FORECAST_REASON[forecast.reason] : TRUTH_COPY.noForecastHint}
+                hint={forecastBlocked ? FORECAST_REASON[forecastBlocked.reason] : TRUTH_COPY.noForecastHint}
               />
             ) : (
 
@@ -116,12 +118,12 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
               <div className="rounded-card border border-border/80 bg-card p-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="ds-body text-foreground">
-                    Yaklaşık {forecast.daysToMinimum} gün içinde minimum seviyenin altına düşebilir.
+                    Yaklaşık {forecastReady.daysToMinimum} gün içinde minimum seviyenin altına düşebilir.
                   </span>
-                  <ConfidencePill confidence={forecast.confidence} />
+                  <ConfidencePill confidence={forecastReady.confidence} />
                 </div>
                 <dl className="mt-2 space-y-1">
-                  {forecast.evidence.map((e) => (
+                  {forecastReady.evidence.map((e) => (
                     <div key={e.label} className="flex justify-between gap-2 ds-caption">
                       <dt className="text-muted-foreground truncate">{e.label}</dt>
                       <dd className="text-foreground/80 shrink-0">{e.value}</dd>
@@ -129,7 +131,7 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
                   ))}
                 </dl>
                 <p className="ds-caption text-muted-foreground mt-2">
-                  Veri dönemi: son {forecast.windowDays} gün
+                  Veri dönemi: son {forecastReady.windowDays} gün
                 </p>
               </div>
             )}
