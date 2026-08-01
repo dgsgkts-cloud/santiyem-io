@@ -36,7 +36,18 @@ const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutPro
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(() => {
+    try { return localStorage.getItem("ai_history_collapsed") !== "1"; } catch { return true; }
+  });
+  const [helperOpen, setHelperOpen] = useState(false);
+  const toggleHistory = () => {
+    setHistoryOpen((prev) => {
+      try { localStorage.setItem("ai_history_collapsed", prev ? "1" : "0"); } catch { /* noop */ }
+      return !prev;
+    });
+  };
   const memoryExtractor = useMemoryExtractor();
+
 
   // Use persistent data when logged in, fallback props when not
   const messages = user ? conv.messages : (fallbackProps.messages || localMessages);
