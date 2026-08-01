@@ -5,6 +5,7 @@
 
 import { VoiceEmitter } from "./voiceEvents";
 import type {
+import { setVoiceDiagnostics } from "./voiceDiagnostics";
   TranscriptChunk,
   VoiceErrorKind,
   VoiceEngine,
@@ -24,6 +25,7 @@ export abstract class BaseVoiceEngine implements VoiceEngine {
   protected setState(s: VoiceState) {
     if (this.state === s) return;
     this.state = s;
+    setVoiceDiagnostics({ sessionState: s });
     this.emitter.emit("state", s);
   }
 
@@ -36,6 +38,7 @@ export abstract class BaseVoiceEngine implements VoiceEngine {
    */
   protected emitError(code: string, message: string, fatal = false, kind?: VoiceErrorKind) {
     console.error(`[voice:${this.provider}] ${code}: ${message}`);
+    setVoiceDiagnostics({ lastErrorCode: code });
     this.emitter.emit("error", { code, message, fatal, kind: kind ?? classifyVoiceError(code) });
     if (fatal) this.setState("error");
   }

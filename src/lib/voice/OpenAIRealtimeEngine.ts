@@ -244,6 +244,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.dc = dc;
     dc.onopen = () => {
       rtLog(`data channel OPEN (oai-events, readyState=${dc.readyState})`);
+      setVoiceDiagnostics({ dataChannelState: dc.readyState });
       logger.debug("[voice:openai] data channel open");
       this.metrics.markConnected();
       // NOT "listening" yet — we wait for session.created from OpenAI.
@@ -265,6 +266,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     dc.onerror = (e) => rtLog("data channel ERROR", e);
     dc.onclose = () => {
       rtLog("data channel CLOSED");
+      setVoiceDiagnostics({ dataChannelState: "closed" });
       if (!this.closing) void this.retryOrFail("data_channel_closed", "connection_lost");
     };
 
