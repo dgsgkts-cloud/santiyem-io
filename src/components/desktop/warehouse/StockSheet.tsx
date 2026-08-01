@@ -105,12 +105,13 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
           {/* 4 — forecast, gated on real evidence */}
           <section>
             <h4 className="ds-label mb-2">Tükenme Tahmini</h4>
-            {forecast === null || forecast.eligible === false ? (
+            {!forecast?.eligible ? (
               <InsufficientData
                 title={TRUTH_COPY.noForecast}
-                hint={forecast === null ? TRUTH_COPY.noForecastHint : FORECAST_REASON[forecast.reason]}
+                hint={forecast ? FORECAST_REASON[forecast.reason] : TRUTH_COPY.noForecastHint}
               />
             ) : (
+
 
               <div className="rounded-card border border-border/80 bg-card p-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
