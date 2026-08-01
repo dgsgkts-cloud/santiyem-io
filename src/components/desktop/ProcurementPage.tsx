@@ -317,7 +317,19 @@ export default function ProcurementPage() {
               projectNames={data.projNames}
             />
           )}
-          {tab === "deliveries" && <ProcurementDeliveriesView data={data} />}
+          {tab === "deliveries" && (
+            <ProcurementDeliveriesView
+              workflow={orderWorkflow}
+              filters={deliveryFilters}
+              onFiltersChange={(patch) =>
+                setDeliveryFilters((prev) => ({ ...prev, ...patch }))
+              }
+              onAction={handleDeliveryAction}
+              role={license.role}
+              projectNames={data.projNames}
+            />
+          )}
+
           {tab === "suppliers" && (
             <ProcurementSuppliersView
               data={data}
