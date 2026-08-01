@@ -9,7 +9,6 @@ import UsageLimitBanner from "@/components/UsageLimitBanner";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useConversations, Conversation } from "@/hooks/useConversations";
 import { useUser } from "@/contexts/UserContext";
-import { useDocuments } from "@/hooks/useDocuments";
 import { streamChat } from "@/lib/streamChat";
 import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
 import { MemorySuggestionBanner } from "@/components/memory/MemorySuggestionBanner";
@@ -31,7 +30,6 @@ interface DesktopChatLayoutProps {
 const DesktopChatLayout = ({ scrollRef, ...fallbackProps }: DesktopChatLayoutProps) => {
   const { user, incrementUsage, canUse } = useUser();
   const conv = useConversations();
-  const { activeCount: docCount } = useDocuments();
   const [searchQuery, setSearchQuery] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [localTyping, setLocalTyping] = useState(false);

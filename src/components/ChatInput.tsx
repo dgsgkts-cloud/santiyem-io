@@ -193,7 +193,7 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         )}
 
         {/* [attachment] [text] [mic] [send] */}
-        <div className="flex items-end gap-1.5 rounded-[14px] border border-input bg-background px-1.5 py-1.5">
+        <div className="flex items-end gap-1.5 rounded-[17px] border border-input bg-background px-1.5 py-1.5">
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
@@ -220,7 +220,7 @@ const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
                 handleSubmit();
               }
             }}
-            placeholder={isMobile ? "Şantiyem AI'ya sorun" : "Sorunuzu yazın… (Shift+Enter ile yeni satır)"}
+            placeholder="Şantiyem AI'ya sorun…"
             rows={1}
             disabled={disabled}
             className="flex-1 min-w-0 resize-none bg-transparent border-0 px-1 py-3 text-base md:text-sm leading-5 placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
