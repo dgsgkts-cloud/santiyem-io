@@ -653,7 +653,17 @@ export function VoiceSessionOverlay({
 
       {/* ── Bottom controls: mute · end ── */}
       {phase !== "error" && (
-        <div className="relative z-10 mt-6 flex shrink-0 flex-col items-center gap-4 px-6">
+        <div className="relative z-10 mt-6 flex shrink-0 flex-col items-center gap-3 px-6">
+          {/* Transient mic-state confirmation */}
+          <p
+            aria-live="polite"
+            className={`text-[12.5px] font-medium tracking-wide transition-all duration-300 ${
+              micToast ? "translate-y-0 text-white/60 opacity-100" : "translate-y-1 opacity-0"
+            }`}
+          >
+            {micToast ?? "\u00A0"}
+          </p>
+
           <div className="flex items-center justify-center gap-8">
             <div className="relative flex items-center justify-center">
               {/* Subtle mic activity indicator */}
@@ -674,13 +684,23 @@ export function VoiceSessionOverlay({
                 onClick={toggleMute}
                 aria-label={muted ? "Mikrofonu aç" : "Mikrofonu kapat"}
                 aria-pressed={muted}
-                className={`relative flex h-16 w-16 items-center justify-center rounded-full border transition active:scale-95 ${
+                className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border transition-[background-color,border-color,color,transform] duration-200 ease-out active:scale-[0.94] ${
                   muted
                     ? "border-white/25 bg-white/[0.14] text-white"
                     : "border-white/[0.08] bg-white/[0.06] text-white/85 hover:bg-white/[0.1]"
                 }`}
               >
-                {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                {/* Cross-fading icons keep the state change readable but calm. */}
+                <MicOff
+                  className={`absolute h-6 w-6 transition-all duration-200 ease-out ${
+                    muted ? "scale-100 opacity-100" : "scale-90 opacity-0"
+                  }`}
+                />
+                <Mic
+                  className={`absolute h-6 w-6 transition-all duration-200 ease-out ${
+                    muted ? "scale-90 opacity-0" : "scale-100 opacity-100"
+                  }`}
+                />
               </button>
             </div>
 
@@ -688,11 +708,13 @@ export function VoiceSessionOverlay({
               type="button"
               onClick={() => end("user")}
               aria-label="Görüşmeyi bitir"
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-[0_10px_30px_-8px_hsl(var(--destructive)/0.7)] transition hover:opacity-90 active:scale-95"
+              disabled={closing}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-[0_10px_30px_-8px_hsl(var(--destructive)/0.7)] transition-[transform,opacity,box-shadow] duration-200 ease-out hover:opacity-90 active:scale-[0.9] active:shadow-[0_4px_14px_-6px_hsl(var(--destructive)/0.7)] disabled:opacity-60"
             >
               <PhoneOff className="h-6 w-6" />
             </button>
           </div>
+
 
           {/* Desktop-only, non-intrusive shortcut hint */}
           <p className="hidden text-[11.5px] tracking-wide text-white/30 md:block">
