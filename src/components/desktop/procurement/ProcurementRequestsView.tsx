@@ -15,14 +15,30 @@ import type { RequestWorkflow } from "./useRequestWorkflow";
 interface Props {
   workflow: RequestWorkflow;
   onAction: (action: WorkflowAction, request: Request) => void;
+  /** filter state is owned by the page so it survives edit navigation */
+  query?: string;
+  onQueryChange?: (v: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (v: string) => void;
 }
 
 
 
 
-export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
-  const [q, setQ] = useState("");
-  const [status, setStatus] = useState<string>("all");
+export const ProcurementRequestsView = ({
+  workflow,
+  onAction,
+  query,
+  onQueryChange,
+  statusFilter,
+  onStatusFilterChange,
+}: Props) => {
+  const [localQ, setLocalQ] = useState("");
+  const [localStatus, setLocalStatus] = useState<string>("all");
+  const q = query ?? localQ;
+  const setQ = onQueryChange ?? setLocalQ;
+  const status = statusFilter ?? localStatus;
+  const setStatus = onStatusFilterChange ?? setLocalStatus;
   const requests = workflow.requests;
   const matchesQuery = (r: Request) =>
     q === "" ||

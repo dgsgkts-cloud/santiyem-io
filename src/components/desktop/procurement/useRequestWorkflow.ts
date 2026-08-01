@@ -418,7 +418,7 @@ export function useRequestWorkflow(seedRequests: Request[]): RequestWorkflow {
       setOverrides((prev) => ({ ...prev, [id]: "deleted" }));
       inflight.current.delete(key);
       setPending((p) => (p === key ? null : p));
-      toast.success("Talep silindi.");
+      toast.success("Taslak talep silindi.");
       return true;
     },
     [license.role, requests]
