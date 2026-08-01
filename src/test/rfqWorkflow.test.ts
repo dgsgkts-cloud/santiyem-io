@@ -57,6 +57,7 @@ const record = (over: Partial<RfqRecord> = {}): RfqRecord => ({
   requester: "Talep Eden",
   owner: "Satın Alma",
   suppliers: [],
+  createdAt: new Date().toISOString(),
   audit: [],
   version: 0,
   ...over,
@@ -81,8 +82,8 @@ describe("rfq status machine", () => {
   });
 
   it("restricts privileged actions by role", () => {
-    expect(canRunRfqAction("worker", "confirm_selection")).toBe(false);
-    expect(canRunRfqAction("worker", "export_comparison")).toBe(true);
+    expect(canRunRfqAction("viewer", "confirm_selection")).toBe(false);
+    expect(canRunRfqAction("viewer", "export_comparison")).toBe(true);
     expect(canRunRfqAction("procurement", "record_quotation")).toBe(true);
   });
 });
