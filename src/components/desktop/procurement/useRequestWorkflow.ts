@@ -176,16 +176,43 @@ export function useRequestWorkflow(seedRequests: Request[]): RequestWorkflow {
   const stamp = () => new Date().toISOString();
 
   const submit = useCallback(
-    async (id: string) =>
-      !!(await run("submit", id, {
+    async (input: SubmitInput) => {
+      // A request may never enter the approval state without a resolved
+      // approver (a named person or an explicit approving role).
+      if (!input.approverUserId && !input.approverRole) {
+        toast.error("Bu talep için uygun bir onaylayıcı bulunamadı.");
+        return false;
+      }
+      return !!(await run("submit", input.id, {
         expect: ["Taslak"],
         to: "Onay Bekliyor",
-        patch: () => ({ status: "Onay Bekliyor", approvalStage: 1 }),
-        audit: (c) => ({ at: stamp(), actor: actorName, event: "Onaya gönderildi", from: c.status, to: "Onay Bekliyor" }),
-        success: "Talep onaya gönderildi.",
-      })),
-    [run, actorName]
+        patch: () => ({
+          status: "Onay Bekliyor" as const,
+          approvalStage: 1,
+          approverUserId: input.approverUserId,
+          approverName: input.approverName,
+          approverRole: input.approverRole,
+          submittedForApprovalAt: stamp(),
+          submittedForApprovalBy: input.submittedBy,
+          approvalDueAt: input.approvalDueAt,
+          approvalNote: input.approvalNote,
+        }),
+        audit: (c) => ({
+          at: stamp(),
+          actor: input.submittedBy,
+          event: input.approverName
+            ? `Onaya gönderildi · ${input.approverName}`
+            : `Onaya gönderildi · ${input.approverRole ?? "Yönetici"}`,
+          from: c.status,
+          to: "Onay Bekliyor",
+          reason: input.approvalNote || undefined,
+        }),
+        success: submitSuccessCopy(input.approverName, input.approverRole),
+      }));
+    },
+    [run]
   );
+
 
   const approve = useCallback(
     async ({ id }: ApproveInput) =>
