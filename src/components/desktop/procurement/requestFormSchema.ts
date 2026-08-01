@@ -274,10 +274,28 @@ export interface FieldChange {
   to?: string;
 }
 
+/** Canonical item shape so cosmetic default-filling never looks like an edit. */
+const canonItem = (it: RequestItem, fallbackCategory: string) =>
+  JSON.stringify({
+    name: it.name.trim(),
+    category: (it.category ?? fallbackCategory).trim(),
+    qty: Number(it.qty),
+    unit: it.unit,
+    unitPrice: Number(it.unitPrice ?? 0),
+    spec: it.spec?.trim() || "",
+    brand: it.brand?.trim() || "",
+    altAllowed: it.altAllowed ?? true,
+    deliveryLocation: it.deliveryLocation?.trim() || "",
+  });
+
 export const diffRequest = (before: Request, patch: Partial<Request>) => {
   const changes: FieldChange[] = [];
+  const beforeWithDefaults: Record<string, unknown> = {
+    ...before,
+    currency: before.currency ?? "TRY",
+  };
   for (const key of Object.keys(LABELS)) {
-    const a = (before as Record<string, unknown>)[key];
+    const a = beforeWithDefaults[key];
     const b = (patch as Record<string, unknown>)[key];
     const norm = (x: unknown) => (x === undefined || x === null || x === "" ? "" : String(x));
     if (norm(a) !== norm(b)) {
@@ -288,10 +306,10 @@ export const diffRequest = (before: Request, patch: Partial<Request>) => {
   const afterItems = patch.items ?? [];
   const added = afterItems.filter((it) => !beforeItems.some((b) => b.name === it.name)).length;
   const removed = beforeItems.filter((it) => !afterItems.some((b) => b.name === it.name)).length;
+  const canonBefore = beforeItems.map((it) => canonItem(it, before.category));
+  const canonAfter = afterItems.map((it) => canonItem(it, String(patch.category ?? before.category)));
   const changedItems =
-    added === 0 &&
-    removed === 0 &&
-    JSON.stringify(beforeItems) !== JSON.stringify(afterItems);
+    added === 0 && removed === 0 && JSON.stringify(canonBefore) !== JSON.stringify(canonAfter);
   return { changes, itemsAdded: added, itemsRemoved: removed, itemsChanged: changedItems };
 };
 
