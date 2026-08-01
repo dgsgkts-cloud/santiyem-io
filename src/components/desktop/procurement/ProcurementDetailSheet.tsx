@@ -10,6 +10,7 @@ import {
   type Supplier,
 } from "./procurementConstants";
 import { StatusPill } from "./procurementUi";
+import { approvalStatusLabel } from "./approvalPolicy";
 import { RequestActionBar } from "./RequestActionBar";
 import type { WorkflowAction } from "./procurementWorkflow";
 import type { RequestWorkflow } from "./useRequestWorkflow";
