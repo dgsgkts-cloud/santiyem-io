@@ -24,8 +24,8 @@ import {
   INVOICE_STATUSES,
   ORDER_STATUSES,
   PAYMENT_STATUSES,
-} from "../orders/orderModel";
-import { AnalyticsFilters } from "./AnalyticsFilters";
+} from "./orders/orderModel";
+import { AnalyticsFilters } from "./analytics/AnalyticsFilters";
 import {
   AGING_TONE,
   ANALYTICS_PERMISSION_MESSAGE,
@@ -39,8 +39,8 @@ import {
   type CriticalAction,
   type KpiValue,
   type OpenLiabilityRow,
-} from "./analyticsModel";
-import type { ProcurementAnalytics } from "./useProcurementAnalytics";
+} from "./analytics/analyticsModel";
+import type { ProcurementAnalytics } from "./analytics/useProcurementAnalytics";
 
 interface Props {
   analytics: ProcurementAnalytics;
