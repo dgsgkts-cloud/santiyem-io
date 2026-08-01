@@ -20,6 +20,8 @@ export type WorkflowAction =
   | "track_delivery"
   | "detail"
   | "reopen"
+  | "withdraw"
+  | "revision"
   | "copy";
 
 export const ACTION_LABELS: Record<WorkflowAction, string> = {
@@ -35,13 +37,15 @@ export const ACTION_LABELS: Record<WorkflowAction, string> = {
   track_delivery: "Teslimatı Takip Et",
   detail: "Detay",
   reopen: "Yeniden Aç",
+  withdraw: "Onaydan Geri Çek",
+  revision: "Revizyon Oluştur",
   copy: "Kopyala",
 };
 
 /** Valid status transitions (source of truth for guards). */
 const TRANSITIONS: Record<RequestStatus, RequestStatus[]> = {
   Taslak: ["Onay Bekliyor", "İptal"],
-  "Onay Bekliyor": ["Onaylandı", "İptal"],
+  "Onay Bekliyor": ["Onaylandı", "İptal", "Taslak"],
   Onaylandı: ["Sipariş Verildi", "İptal"],
   "Sipariş Verildi": [],
   İptal: ["Taslak"],
@@ -67,6 +71,8 @@ const ACTION_ROLES: Record<WorkflowAction, LicenseRole[] | "all"> = {
   open_order: "all",
   track_delivery: "all",
   reopen: ["super_admin", "company_admin", "project_manager", "procurement"],
+  withdraw: ["super_admin", "company_admin", "project_manager", "procurement", "engineer", "site_chief"],
+  revision: ["super_admin", "company_admin", "project_manager", "procurement"],
 };
 
 export function canRunAction(role: LicenseRole, action: WorkflowAction): boolean {
@@ -88,19 +94,30 @@ export function actionsForRequest(r: Request): ActionPlan {
     case "Taslak":
       return { primary: "submit", secondary: "edit", tertiary: "detail", overflow: ["delete"] };
     case "Onay Bekliyor":
-      return { primary: "approve", secondary: "reject", tertiary: "detail", overflow: [] };
+      return { primary: "approve", secondary: "reject", tertiary: "detail", overflow: ["withdraw"] };
     case "Onaylandı":
       return r.rfq && !r.rfq.sentAt
-        ? { primary: "send_rfq", secondary: "to_order", tertiary: "detail", overflow: ["copy"] }
-        : { primary: "rfq", secondary: "to_order", tertiary: "detail", overflow: ["copy"] };
+        ? { primary: "send_rfq", secondary: "to_order", tertiary: "detail", overflow: ["revision", "copy"] }
+        : { primary: "rfq", secondary: "to_order", tertiary: "detail", overflow: ["revision", "copy"] };
     case "Sipariş Verildi":
-      return { primary: "open_order", secondary: "track_delivery", tertiary: "detail", overflow: ["copy"] };
+      return { primary: "open_order", secondary: "track_delivery", tertiary: "detail", overflow: ["revision", "copy"] };
     case "İptal":
       return { primary: "detail", secondary: "reopen", tertiary: undefined, overflow: ["copy"] };
     default:
       return { primary: "detail", overflow: [] };
   }
 }
+
+/** Only drafts may be edited in place. Rejected/cancelled requests go through
+ *  "Yeniden Aç" (back to Taslak) first; approved and later states must use
+ *  "Revizyon Oluştur" so the approved record is never silently modified. */
+export function isEditableStatus(status: RequestStatus): boolean {
+  return status === "Taslak";
+}
+
+export const EDIT_PERMISSION_MESSAGE = "Bu talebi düzenleme yetkiniz bulunmuyor.";
+export const NOT_EDITABLE_MESSAGE =
+  "Bu talep mevcut durumunda düzenlenemez. Onay sürecinden geri çekin veya revizyon oluşturun.";
 
 export const PERMISSION_MESSAGE = "Bu işlem için yetkiniz bulunmuyor.";
 export const PLAN_MESSAGE = "Bu özellik mevcut paketinizde kullanılamıyor.";

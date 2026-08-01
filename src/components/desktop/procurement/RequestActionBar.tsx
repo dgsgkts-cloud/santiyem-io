@@ -4,6 +4,8 @@
 import { Loader2, MoreHorizontal } from "lucide-react";
 import {
   CheckCircle2,
+  GitBranch,
+  Undo2,
   ChevronRight,
   Copy,
   ExternalLink,
@@ -45,6 +47,8 @@ const ICONS: Partial<Record<WorkflowAction, React.ComponentType<{ className?: st
   open_order: ExternalLink,
   track_delivery: Truck,
   reopen: RotateCcw,
+  withdraw: Undo2,
+  revision: GitBranch,
   copy: Copy,
   detail: ChevronRight,
 };

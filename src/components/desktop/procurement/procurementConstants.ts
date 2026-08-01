@@ -56,7 +56,22 @@ export type RequestItem = {
   qty: number;
   unit: string;
   spec?: string;
+  category?: string;
+  unitPrice?: number;
+  brand?: string;
+  altAllowed?: boolean;
+  deliveryLocation?: string;
 };
+
+export type RequestAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  /** in-session object URL (no storage bucket for procurement yet) */
+  url?: string;
+};
+
 
 export type RequestRFQ = {
   no: string;
@@ -99,6 +114,8 @@ export type Request = {
   submittedForApprovalBy?: string;
   approvalDueAt?: string;
   approvalNote?: string;
+  approvalWithdrawnAt?: string;
+  approvalWithdrawnBy?: string;
   approvedBy?: string;
   approvedAt?: string;
   rejectedBy?: string;
@@ -108,6 +125,24 @@ export type Request = {
   rfq?: RequestRFQ;
   orderNo?: string;
   audit?: RequestAuditEntry[];
+  /** editable general / financial fields (shared create + edit form) */
+  department?: string;
+  description?: string;
+  currency?: "TRY" | "USD" | "EUR";
+  budgetCode?: string;
+  costCenter?: string;
+  attachments?: RequestAttachment[];
+  /** edit metadata & optimistic-concurrency guard */
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  version?: number;
+  /** revision linkage */
+  revisionOf?: string;
+  revisionOfNo?: string;
+  revisionNo?: number;
+
 };
 
 export type Order = {

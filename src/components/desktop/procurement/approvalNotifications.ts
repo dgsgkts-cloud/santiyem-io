@@ -15,6 +15,8 @@ export async function notifyApprover(opts: {
   approverName: string | null;
   dueDate?: string;
   note?: string;
+  /** true when the requester pulled the request back out of approval */
+  withdrawn?: boolean;
 }): Promise<boolean> {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;
@@ -31,7 +33,9 @@ export async function notifyApprover(opts: {
 
   const { error } = await supabase.from("reminders").insert({
     user_id: uid,
-    title: APPROVAL_NOTIFICATION_TITLE,
+    title: opts.withdrawn
+      ? "Satın alma talebi onay sürecinden geri çekildi."
+      : APPROVAL_NOTIFICATION_TITLE,
     reminder_date: opts.dueDate || new Date().toISOString().slice(0, 10),
     note: parts.join("\n"),
     assigned_to: opts.approverUserId,
