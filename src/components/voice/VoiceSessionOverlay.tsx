@@ -572,7 +572,7 @@ export function VoiceSessionOverlay({
               </button>
               <button
                 type="button"
-                onClick={() => end("user")}
+                onClick={continueWithText}
                 className="flex items-center justify-center rounded-full border border-white/12 text-[14.5px] font-medium text-white/80 transition hover:bg-white/5 active:scale-[0.98]"
                 style={{ height: 48 }}
               >
