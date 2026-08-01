@@ -52,7 +52,10 @@ export default function ProcurementPage() {
   const [approveTarget, setApproveTarget] = useState<Request | null>(null);
   const [rejectTarget, setRejectTarget] = useState<Request | null>(null);
   const [rfqTarget, setRfqTarget] = useState<Request | null>(null);
+  const [submitTarget, setSubmitTarget] = useState<Request | null>(null);
   const [planBlocked, setPlanBlocked] = useState(false);
+  const { user } = useUser();
+  const approverResolution = useRequestApprovers(submitTarget);
 
   const detailId = params.get("talep");
   const planAllows = license.hasFeature("purchasing");
