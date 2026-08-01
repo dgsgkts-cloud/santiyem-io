@@ -665,7 +665,15 @@ export function VoiceSessionOverlay({
               <PhoneOff className="h-6 w-6" />
             </button>
           </div>
+
+          {/* Desktop-only, non-intrusive shortcut hint */}
+          <p className="hidden text-[11.5px] tracking-wide text-white/30 md:block">
+            Sessize almak için <span className="text-white/50">Boşluk</span> · bitirmek için{" "}
+            <span className="text-white/50">Esc</span> · yazmaya geçmek için{" "}
+            <span className="text-white/50">{isMac ? "⌘" : "Ctrl"} + Enter</span>
+          </p>
         </div>
+
       )}
     </div>
   );
