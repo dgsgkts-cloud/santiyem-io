@@ -7,6 +7,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLicense } from "@/lib/licenseStore";
+import { submitSuccessCopy } from "./approvalPolicy";
 import type { Request, RequestAuditEntry, RequestRFQ } from "./procurementConstants";
 import {
   ACTION_LABELS,
@@ -22,13 +23,22 @@ export type MutationKey = `${string}:${WorkflowAction}`;
 interface ApproveInput { id: string }
 interface RejectInput { id: string; reason: string; note?: string }
 interface RfqInput { id: string; suppliers: string[]; deadline: string; notes?: string }
+export interface SubmitInput {
+  id: string;
+  approverUserId: string | null;
+  approverName: string | null;
+  approverRole: string | null;
+  approvalDueAt?: string;
+  approvalNote?: string;
+  submittedBy: string;
+}
 
 export interface RequestWorkflow {
   requests: Request[];
   pending: MutationKey | null;
   isPending: (id: string, action: WorkflowAction) => boolean;
   can: (action: WorkflowAction) => boolean;
-  submit: (id: string) => Promise<boolean>;
+  submit: (input: SubmitInput) => Promise<boolean>;
   approve: (input: ApproveInput) => Promise<boolean>;
   reject: (input: RejectInput) => Promise<boolean>;
   createRfq: (input: RfqInput) => Promise<RequestRFQ | null>;
@@ -40,11 +50,43 @@ export interface RequestWorkflow {
 
 const wait = (ms = 420) => new Promise((r) => setTimeout(r, ms));
 
+/** Overrides are persisted locally so an assigned approver survives refresh
+ *  until a real purchase_requests table exists. */
+const STORE_KEY = "santiyem_pr_workflow_overrides";
+type OverrideMap = Record<string, Partial<Request> | "deleted">;
+
+const readStore = (): OverrideMap => {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? (JSON.parse(raw) as OverrideMap) : {};
+  } catch {
+    return {};
+  }
+};
+const writeStore = (map: OverrideMap) => {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(map));
+  } catch {
+    /* storage unavailable — in-memory state still applies */
+  }
+};
+
 export function useRequestWorkflow(seedRequests: Request[]): RequestWorkflow {
   const license = useLicense();
-  const [overrides, setOverrides] = useState<Record<string, Partial<Request> | "deleted">>({});
+  const [overrides, setOverridesRaw] = useState<OverrideMap>(() => readStore());
   const [pending, setPending] = useState<MutationKey | null>(null);
   const inflight = useRef<Set<string>>(new Set());
+
+  const setOverrides = useCallback(
+    (updater: (prev: OverrideMap) => OverrideMap) =>
+      setOverridesRaw((prev) => {
+        const next = updater(prev);
+        writeStore(next);
+        return next;
+      }),
+    []
+  );
+
 
   const requests = useMemo(
     () =>
@@ -135,16 +177,43 @@ export function useRequestWorkflow(seedRequests: Request[]): RequestWorkflow {
   const stamp = () => new Date().toISOString();
 
   const submit = useCallback(
-    async (id: string) =>
-      !!(await run("submit", id, {
+    async (input: SubmitInput) => {
+      // A request may never enter the approval state without a resolved
+      // approver (a named person or an explicit approving role).
+      if (!input.approverUserId && !input.approverRole) {
+        toast.error("Bu talep için uygun bir onaylayıcı bulunamadı.");
+        return false;
+      }
+      return !!(await run("submit", input.id, {
         expect: ["Taslak"],
         to: "Onay Bekliyor",
-        patch: () => ({ status: "Onay Bekliyor", approvalStage: 1 }),
-        audit: (c) => ({ at: stamp(), actor: actorName, event: "Onaya gönderildi", from: c.status, to: "Onay Bekliyor" }),
-        success: "Talep onaya gönderildi.",
-      })),
-    [run, actorName]
+        patch: () => ({
+          status: "Onay Bekliyor" as const,
+          approvalStage: 1,
+          approverUserId: input.approverUserId,
+          approverName: input.approverName,
+          approverRole: input.approverRole,
+          submittedForApprovalAt: stamp(),
+          submittedForApprovalBy: input.submittedBy,
+          approvalDueAt: input.approvalDueAt,
+          approvalNote: input.approvalNote,
+        }),
+        audit: (c) => ({
+          at: stamp(),
+          actor: input.submittedBy,
+          event: input.approverName
+            ? `Onaya gönderildi · ${input.approverName}`
+            : `Onaya gönderildi · ${input.approverRole ?? "Yönetici"}`,
+          from: c.status,
+          to: "Onay Bekliyor",
+          reason: input.approvalNote || undefined,
+        }),
+        success: submitSuccessCopy(input.approverName, input.approverRole),
+      }));
+    },
+    [run]
   );
+
 
   const approve = useCallback(
     async ({ id }: ApproveInput) =>

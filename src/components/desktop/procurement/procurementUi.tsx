@@ -19,17 +19,25 @@ const STATUS_CLASS: Record<string, string> = {
   Gecikti: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
-export const StatusPill = ({ status }: { status: string }) => (
+export const StatusPill = ({
+  status,
+  label,
+}: {
+  status: string;
+  /** optional display override (e.g. "Doğuş Göktaş'ın Onayında") */
+  label?: string;
+}) => (
   <span
     className={cn(
-      "text-fs-xs px-2 py-0.5 rounded-full border",
+      "text-fs-xs px-2 py-0.5 rounded-full border whitespace-nowrap",
       STATUS_CLASS[status] ||
         "bg-muted/60 text-muted-foreground border-border"
     )}
   >
-    {status}
+    {label || status}
   </span>
 );
+
 
 export const PriorityDot = ({ p }: { p: string }) => {
   const color =

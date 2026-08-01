@@ -10,6 +10,7 @@ import {
   type Supplier,
 } from "./procurementConstants";
 import { StatusPill } from "./procurementUi";
+import { approvalStatusLabel } from "./approvalPolicy";
 import { RequestActionBar } from "./RequestActionBar";
 import type { WorkflowAction } from "./procurementWorkflow";
 import type { RequestWorkflow } from "./useRequestWorkflow";
@@ -90,7 +91,19 @@ export const ProcurementDetailSheet = ({
       {req && (
         <div className="space-y-4">
           <div className="space-y-1">
-            <Row label="Durum" value={<StatusPill status={req.status} />} />
+            <Row
+              label="Durum"
+              value={
+                <StatusPill
+                  status={req.status}
+                  label={approvalStatusLabel({
+                    status: req.status,
+                    approverName: req.approverName,
+                    approverRoleLabel: req.approverRole,
+                  })}
+                />
+              }
+            />
             <Row label="Proje" value={req.project} />
             <Row label="Talep Eden" value={req.requester} />
             <Row label="Öncelik" value={req.priority} />
@@ -124,6 +137,41 @@ export const ProcurementDetailSheet = ({
               )}
             </div>
           </div>
+
+          {(req.submittedForApprovalAt || req.approverName) && (
+            <div>
+              <div className="text-fs-xs uppercase text-muted-foreground mb-1.5">Onay</div>
+              <div className="space-y-1">
+                <Row label="Gönderen" value={req.submittedForApprovalBy ?? req.requester} />
+                <Row label="Gönderim Tarihi" value={fmtDate(req.submittedForApprovalAt)} />
+                <Row
+                  label="Onaylayıcı"
+                  value={
+                    req.approverName
+                      ? `${req.approverName}${req.approverRole ? ` · ${req.approverRole}` : ""}`
+                      : req.approverRole ?? "—"
+                  }
+                />
+                <Row
+                  label="Onay Durumu"
+                  value={approvalStatusLabel({
+                    status: req.status,
+                    approverName: req.approverName,
+                    approverRoleLabel: req.approverRole,
+                  })}
+                />
+                <Row
+                  label="Son Tarih"
+                  value={
+                    req.approvalDueAt
+                      ? new Date(req.approvalDueAt).toLocaleDateString("tr-TR")
+                      : "—"
+                  }
+                />
+                <Row label="Not" value={req.approvalNote ?? "—"} />
+              </div>
+            </div>
+          )}
 
           {(req.approvedAt || req.rejectedAt) && (
             <div className="space-y-1">

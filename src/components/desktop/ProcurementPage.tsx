@@ -30,6 +30,10 @@ import {
   RfqPrepareDialog,
 } from "./procurement/RequestActionDialogs";
 import { useProcurementDemoData } from "./procurement/useProcurementDemoData";
+import { useUser } from "@/contexts/UserContext";
+import { useRequestApprovers } from "./procurement/useRequestApprovers";
+import { SubmitForApprovalDialog } from "./procurement/SubmitForApprovalDialog";
+import { notifyApprover } from "./procurement/approvalNotifications";
 import { useRequestWorkflow } from "./procurement/useRequestWorkflow";
 import { PERMISSION_MESSAGE, type WorkflowAction } from "./procurement/procurementWorkflow";
 import type { Request } from "./procurement/procurementConstants";
@@ -52,7 +56,10 @@ export default function ProcurementPage() {
   const [approveTarget, setApproveTarget] = useState<Request | null>(null);
   const [rejectTarget, setRejectTarget] = useState<Request | null>(null);
   const [rfqTarget, setRfqTarget] = useState<Request | null>(null);
+  const [submitTarget, setSubmitTarget] = useState<Request | null>(null);
   const [planBlocked, setPlanBlocked] = useState(false);
+  const { user } = useUser();
+  const approverResolution = useRequestApprovers(submitTarget);
 
   const detailId = params.get("talep");
   const planAllows = license.hasFeature("purchasing");
@@ -127,7 +134,8 @@ export default function ProcurementPage() {
           return;
         }
         case "submit":
-          await workflow.submit(request.id);
+          // Never submits blindly — the approver dialog resolves the approver first.
+          setSubmitTarget(request);
           return;
         case "to_order": {
           const ok = await workflow.toOrder(request.id);
@@ -237,6 +245,42 @@ export default function ProcurementPage() {
         onClose={closeDetail}
         onAction={handleAction}
         workflow={workflow}
+      />
+
+      <SubmitForApprovalDialog
+        request={submitTarget}
+        resolution={approverResolution}
+        loading={!!submitTarget && workflow.isPending(submitTarget.id, "submit")}
+        onCancel={() => setSubmitTarget(null)}
+        onManagePermissions={() => {
+          setSubmitTarget(null);
+          window.dispatchEvent(
+            new CustomEvent("navigate-tab", { detail: { tab: "team" } })
+          );
+        }}
+        onConfirm={async ({ approver, dueDate, note }) => {
+          if (!submitTarget || !approver) return;
+          const target = submitTarget;
+          const ok = await workflow.submit({
+            id: target.id,
+            approverUserId: approver.userId,
+            approverName: approver.name,
+            approverRole: approver.roleLabel,
+            approvalDueAt: dueDate,
+            approvalNote: note,
+            submittedBy: user?.user_metadata?.full_name || target.requester,
+          });
+          if (ok) {
+            setSubmitTarget(null);
+            await notifyApprover({
+              request: target,
+              approverUserId: approver.userId,
+              approverName: approver.name,
+              dueDate,
+              note,
+            });
+          }
+        }}
       />
 
       <ApproveRequestDialog
