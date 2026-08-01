@@ -435,7 +435,7 @@ export function VoiceSessionOverlay({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(120% 70% at 50% 8%, hsl(var(--primary) / 0.10) 0%, transparent 60%), radial-gradient(90% 60% at 50% 110%, hsl(var(--primary) / 0.07) 0%, transparent 65%)",
+            "radial-gradient(120% 70% at 50% 6%, hsl(var(--primary) / 0.10) 0%, transparent 60%), radial-gradient(100% 65% at 50% 112%, hsl(220 70% 40% / 0.16) 0%, transparent 68%)",
         }}
       />
 
