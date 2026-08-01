@@ -244,7 +244,9 @@ export const PurchaseRequestForm = ({
     if (!result.ok) {
       setErrors(result.errors);
       toast.error("Lütfen işaretli alanları düzeltin.");
-      firstErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (typeof firstErrorRef.current?.scrollIntoView === "function") {
+        firstErrorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
     setErrors({});
