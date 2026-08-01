@@ -127,7 +127,8 @@ export default function ProcurementPage() {
           return;
         }
         case "submit":
-          await workflow.submit(request.id);
+          // Never submits blindly — the approver dialog resolves the approver first.
+          setSubmitTarget(request);
           return;
         case "to_order": {
           const ok = await workflow.toOrder(request.id);
