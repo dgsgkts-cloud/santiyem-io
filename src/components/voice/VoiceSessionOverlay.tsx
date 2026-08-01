@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Mic, MicOff, Captions, CaptionsOff, ChevronLeft, PhoneOff, Keyboard, Hand } from "lucide-react";
+import { Mic, MicOff, Captions, CaptionsOff, ChevronLeft, PhoneOff, Hand } from "lucide-react";
 import { useVoiceEngine } from "@/hooks/useVoiceEngine";
 import { CONVERSATION_SILENCE_MS, SINGLE_TURN_GRACE_MS } from "@/lib/voice/voiceSettings";
 import { voiceHaptic } from "@/lib/voice/haptics";
@@ -422,7 +422,7 @@ export function VoiceSessionOverlay({
       role="dialog"
       aria-modal="true"
       aria-label="Şantiyem AI sesli görüşme"
-      className="fixed inset-0 z-[70] flex flex-col bg-[#080B10] animate-in fade-in duration-300"
+      className="fixed inset-0 z-[70] flex flex-col bg-[#070B14] animate-in fade-in duration-300"
       style={{
         paddingTop: "max(env(safe-area-inset-top, 0px), 8px)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)",
@@ -435,7 +435,7 @@ export function VoiceSessionOverlay({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(120% 70% at 50% 8%, hsl(var(--primary) / 0.10) 0%, transparent 60%), radial-gradient(90% 60% at 50% 110%, hsl(var(--primary) / 0.07) 0%, transparent 65%)",
+            "radial-gradient(120% 70% at 50% 6%, hsl(var(--primary) / 0.10) 0%, transparent 60%), radial-gradient(100% 65% at 50% 112%, hsl(220 70% 40% / 0.16) 0%, transparent 68%)",
         }}
       />
 
@@ -520,14 +520,8 @@ export function VoiceSessionOverlay({
               >
                 Yazarak Devam Et
               </button>
-              <button
-                type="button"
-                onClick={() => end("user")}
-                className="flex min-h-[44px] items-center justify-center text-[14px] text-white/45 transition hover:text-white/70"
-              >
-                Kapat
-              </button>
             </div>
+
           </div>
         ) : (
           <>
@@ -573,19 +567,34 @@ export function VoiceSessionOverlay({
       {phase !== "error" && (
         <div className="relative z-10 mt-6 flex shrink-0 flex-col items-center gap-4 px-6">
           <div className="flex items-center justify-center gap-8">
-            <button
-              type="button"
-              onClick={toggleMute}
-              aria-label={muted ? "Mikrofonu aç" : "Mikrofonu kapat"}
-              aria-pressed={muted}
-              className={`flex h-16 w-16 items-center justify-center rounded-full border transition active:scale-95 ${
-                muted
-                  ? "border-white/25 bg-white/[0.14] text-white"
-                  : "border-white/[0.08] bg-white/[0.06] text-white/85 hover:bg-white/[0.1]"
-              }`}
-            >
-              {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-            </button>
+            <div className="relative flex items-center justify-center">
+              {/* Subtle mic activity indicator */}
+              {!muted && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute rounded-full border border-primary/40 transition-[transform,opacity] duration-200"
+                  style={{
+                    height: 64,
+                    width: 64,
+                    transform: `scale(${1 + Math.min(level, 1) * 0.28})`,
+                    opacity: 0.15 + Math.min(level, 1) * 0.55,
+                  }}
+                />
+              )}
+              <button
+                type="button"
+                onClick={toggleMute}
+                aria-label={muted ? "Mikrofonu aç" : "Mikrofonu kapat"}
+                aria-pressed={muted}
+                className={`relative flex h-16 w-16 items-center justify-center rounded-full border transition active:scale-95 ${
+                  muted
+                    ? "border-white/25 bg-white/[0.14] text-white"
+                    : "border-white/[0.08] bg-white/[0.06] text-white/85 hover:bg-white/[0.1]"
+                }`}
+              >
+                {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              </button>
+            </div>
 
             <button
               type="button"
@@ -596,15 +605,6 @@ export function VoiceSessionOverlay({
               <PhoneOff className="h-6 w-6" />
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => end("user")}
-            className="flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[13px] text-white/40 transition hover:text-white/70"
-            aria-label="Yazarak devam et"
-          >
-            <Keyboard className="h-4 w-4" /> Yazarak Devam Et
-          </button>
         </div>
       )}
     </div>
