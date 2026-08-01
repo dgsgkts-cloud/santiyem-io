@@ -239,17 +239,30 @@ export function VoiceSessionOverlay({
 
   );
 
-  // Escape closes; body scroll is locked while the overlay owns the screen.
+  // Continue in text mode: keep the conversation snapshot so the chat can
+  // resume with context, then hand focus to the composer.
+  const continueWithText = useCallback(() => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    voiceHaptic("end");
+    void voice.disconnect().finally(() => {
+      onSessionEnd?.("user");
+      onClose();
+      window.setTimeout(() => {
+        document.querySelector<HTMLTextAreaElement>("main textarea, textarea")?.focus();
+      }, 120);
+    });
+  }, [voice, onSessionEnd, onClose]);
+
+  // Body scroll is locked while the overlay owns the screen.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") end("user"); };
-    window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [end]);
+  }, []);
+
 
   // ---- wake-session auto close (unchanged behaviour) ------------------
   useEffect(() => {
