@@ -264,7 +264,7 @@ export const PurchaseRequestForm = ({
         actor,
       });
       setSaving(false);
-      if (res.ok) {
+      if (res.ok && res.request) {
         baselineRef.current = JSON.stringify(values);
         openedVersion.current = res.request.version;
         openedUpdatedAt.current = res.request.updatedAt;
@@ -623,7 +623,7 @@ export const PurchaseRequestForm = ({
                         step="any"
                         inputMode="decimal"
                         value={String(it.qty ?? "")}
-                        onChange={(e) => setItem(idx, { qty: e.target.value as unknown as number })}
+                        onChange={(e) => setItem(idx, { qty: e.target.value })}
                         aria-invalid={!!errors[`items.${idx}.qty`]}
                         className="min-h-[44px] text-fs-sm"
                       />
@@ -662,7 +662,7 @@ export const PurchaseRequestForm = ({
                       inputMode="decimal"
                       value={String(it.unitPrice ?? 0)}
                       onChange={(e) =>
-                        setItem(idx, { unitPrice: e.target.value as unknown as number })
+                        setItem(idx, { unitPrice: e.target.value })
                       }
                       aria-invalid={!!errors[`items.${idx}.unitPrice`]}
                       className="min-h-[44px] text-fs-sm"
@@ -743,7 +743,7 @@ export const PurchaseRequestForm = ({
                 step="any"
                 inputMode="decimal"
                 value={String(values.budget ?? 0)}
-                onChange={(e) => set("budget", e.target.value as unknown as number)}
+                onChange={(e) => set("budget", e.target.value)}
                 aria-invalid={!!errors.budget}
                 className="min-h-[44px] text-fs-sm"
               />
@@ -751,7 +751,7 @@ export const PurchaseRequestForm = ({
               {total > 0 && Number(values.budget) !== total && (
                 <button
                   type="button"
-                  onClick={() => set("budget", total as unknown as number)}
+                  onClick={() => set("budget", total)}
                   className="mt-1 text-fs-xs text-[#FF6B2B] hover:underline min-h-[32px]"
                 >
                   Kalem toplamını uygula ({fmtTRY(total)})

@@ -34,9 +34,11 @@ export interface SaveEditInput {
   baseUpdatedAt?: string;
   actor: string;
 }
-export type SaveEditResult =
-  | { ok: true; request: Request }
-  | { ok: false; reason: "stale" | "permission" | "status" | "missing" | "error" };
+export interface SaveEditResult {
+  ok: boolean;
+  request?: Request;
+  reason?: "stale" | "permission" | "status" | "missing" | "error";
+}
 
 interface RfqInput { id: string; suppliers: string[]; deadline: string; notes?: string }
 export interface SubmitInput {

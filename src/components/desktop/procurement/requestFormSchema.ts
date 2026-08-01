@@ -60,7 +60,45 @@ export const requestFormSchema = z.object({
   attachments: z.array(attachmentSchema),
 });
 
-export type RequestFormValues = z.input<typeof requestFormSchema>;
+export interface RequestFormItem {
+  key: string;
+  name: string;
+  category: string;
+  qty: number | string;
+  unit: string;
+  unitPrice?: number | string;
+  spec?: string;
+  brand?: string;
+  altAllowed?: boolean;
+  deliveryLocation?: string;
+}
+
+export interface RequestFormAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url?: string;
+}
+
+export interface RequestFormValues {
+  no: string;
+  project: string;
+  requester: string;
+  department?: string;
+  needByDate: string;
+  priority: (typeof PRIORITIES)[number];
+  category: string;
+  description?: string;
+  notes?: string;
+  deliveryLocation?: string;
+  items: RequestFormItem[];
+  budget: number | string;
+  currency: (typeof CURRENCIES)[number];
+  budgetCode?: string;
+  costCenter?: string;
+  attachments: RequestFormAttachment[];
+}
 export type RequestFormErrors = Partial<Record<string, string>>;
 
 export const emptyItem = (): RequestFormValues["items"][number] => ({
