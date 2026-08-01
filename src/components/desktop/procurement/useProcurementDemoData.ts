@@ -84,18 +84,44 @@ export const useProcurementDemoData = (): ProcurementData => {
         "Sipariş Verildi": 4,
         İptal: 0,
       };
+      const cat = CATS[i % CATS.length];
+      const unit = ["m³", "ton", "adet", "m²", "kg"][i % 5];
+      const requester = ["Ahmet Y.", "Merve K.", "Kerem D.", "Selin A."][i % 4];
       return {
         id: `req-${i}`,
         no: `PR-2026-${String(1024 + i).padStart(4, "0")}`,
         project: proj,
         projectId: projMatch?.id,
-        category: CATS[i % CATS.length],
-        requester: ["Ahmet Y.", "Merve K.", "Kerem D.", "Selin A."][i % 4],
+        category: cat,
+        requester,
         priority: PRIORITIES[i % 3],
         budget: Math.round((50000 + seed(i + 11) * 950000) / 500) * 500,
         needBy: Math.round(seed(i + 12) * 25) - 3,
         status: st,
         approvalStage: stageMap[st] ?? 0,
+        items: [
+          {
+            name: `${cat} — ana kalem`,
+            qty: 10 + Math.round(seed(i + 13) * 90),
+            unit,
+            spec: `${cat} teknik şartnamesine uygun`,
+          },
+          {
+            name: `${cat} — yardımcı malzeme`,
+            qty: 5 + Math.round(seed(i + 14) * 40),
+            unit,
+          },
+        ],
+        deliveryLocation: `${proj} şantiye deposu`,
+        notes: "Teslimat saha vardiya saatleri içinde yapılmalıdır.",
+        audit: [
+          {
+            at: new Date(Date.now() - (i + 2) * 86400000).toISOString(),
+            actor: requester,
+            event: "Talep oluşturuldu",
+            to: "Taslak",
+          },
+        ],
       };
     });
 

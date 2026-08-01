@@ -1,23 +1,18 @@
 // Sprint M1.4 — Purchase Requests: search + status filter + responsive grid.
+// Actions are status-based and wired to the workflow mutation layer.
 import { useState } from "react";
-import {
-  Building2,
-  CheckCircle2,
-  ChevronRight,
-  Search,
-  Send,
-  XCircle,
-} from "lucide-react";
+import { Building2, Building2 as Bldg, CheckCircle2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResponsiveGrid } from "@/components/ui/responsive";
 import { STATUSES, daysFromNow, fmtTRY, type Request } from "./procurementConstants";
-import type { ProcurementData } from "./useProcurementDemoData";
 import { PriorityDot, StatusPill } from "./procurementUi";
+import { RequestActionBar } from "./RequestActionBar";
+import type { WorkflowAction } from "./procurementWorkflow";
+import type { RequestWorkflow } from "./useRequestWorkflow";
 
 interface Props {
-  data: ProcurementData;
-  onRFQ: (r: Request) => void;
-  onOpen: (r: Request) => void;
+  workflow: RequestWorkflow;
+  onAction: (action: WorkflowAction, request: Request) => void;
 }
 
 const ApprovalTimeline = ({ stage }: { stage: number }) => {
@@ -53,16 +48,19 @@ const ApprovalTimeline = ({ stage }: { stage: number }) => {
   );
 };
 
-export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
+export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
-  const filtered = data.requests.filter(
-    (r) =>
-      (status === "all" || r.status === status) &&
-      (q === "" ||
-        r.no.toLowerCase().includes(q.toLowerCase()) ||
-        r.project.toLowerCase().includes(q.toLowerCase()))
+  const requests = workflow.requests;
+  const matchesQuery = (r: Request) =>
+    q === "" ||
+    r.no.toLowerCase().includes(q.toLowerCase()) ||
+    r.project.toLowerCase().includes(q.toLowerCase());
+  const filtered = requests.filter(
+    (r) => (status === "all" || r.status === status) && matchesQuery(r)
   );
+  const countFor = (s: string) =>
+    requests.filter((r) => (s === "all" || r.status === s) && matchesQuery(r)).length;
 
   return (
     <div className="space-y-4">
@@ -73,6 +71,7 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Talep ara…"
+            aria-label="Talep ara"
             className="w-full min-h-[40px] pl-9 pr-3 py-2 text-fs-sm rounded-lg bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#FF6B2B]/50"
           />
         </div>
@@ -81,6 +80,7 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
             <button
               key={s}
               onClick={() => setStatus(s)}
+              aria-pressed={status === s}
               className={cn(
                 "min-h-[32px] px-2.5 py-1 text-fs-xs rounded-md transition-colors whitespace-nowrap",
                 status === s
@@ -89,10 +89,21 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
               )}
             >
               {s === "all" ? "Tümü" : s}
+              <span className="ml-1 text-muted-foreground">{countFor(s)}</span>
             </button>
           ))}
         </div>
       </div>
+
+      {filtered.length === 0 && (
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <Bldg className="w-5 h-5 mx-auto text-muted-foreground mb-2" />
+          <div className="text-fs-sm text-foreground">Bu filtreye uygun talep yok</div>
+          <div className="text-fs-xs text-muted-foreground mt-1">
+            Filtreyi değiştirin veya yeni bir satın alma talebi oluşturun.
+          </div>
+        </div>
+      )}
 
       <ResponsiveGrid variant="auto" minItemWidth={280} className="gap-3">
         {filtered.map((r) => (
@@ -102,8 +113,9 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
           >
             <div className="flex items-start justify-between mb-2 gap-2">
               <button
-                onClick={() => onOpen(r)}
+                onClick={() => onAction("detail", r)}
                 className="text-left min-w-0 flex-1"
+                aria-label={`${r.no} detayını aç`}
               >
                 <div className="flex items-center gap-2 text-fs-xs text-muted-foreground font-mono truncate">
                   {r.no}
@@ -120,17 +132,13 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
             </div>
             <div className="grid grid-cols-3 gap-2 py-2 border-y border-border">
               <div className="min-w-0">
-                <div className="text-fs-xs text-muted-foreground uppercase">
-                  Bütçe
-                </div>
+                <div className="text-fs-xs text-muted-foreground uppercase">Bütçe</div>
                 <div className="text-fs-xs text-foreground font-medium truncate">
                   {fmtTRY(r.budget)}
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="text-fs-xs text-muted-foreground uppercase">
-                  İhtiyaç
-                </div>
+                <div className="text-fs-xs text-muted-foreground uppercase">İhtiyaç</div>
                 <div
                   className={cn(
                     "text-fs-xs font-medium truncate",
@@ -141,41 +149,28 @@ export const ProcurementRequestsView = ({ data, onRFQ, onOpen }: Props) => {
                       : "text-foreground"
                   )}
                 >
-                  {r.needBy < 0
-                    ? `${-r.needBy}g gecikme`
-                    : daysFromNow(r.needBy)}
+                  {r.needBy < 0 ? `${-r.needBy}g gecikme` : daysFromNow(r.needBy)}
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="text-fs-xs text-muted-foreground uppercase">
-                  Talep
-                </div>
+                <div className="text-fs-xs text-muted-foreground uppercase">Talep</div>
                 <div className="text-fs-xs text-foreground font-medium truncate">
                   {r.requester}
                 </div>
               </div>
             </div>
             <ApprovalTimeline stage={r.approvalStage} />
-            <div className="flex items-center gap-1 mt-3">
-              <button className="flex-1 min-h-[32px] px-2 py-1.5 text-fs-xs rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Onayla
-              </button>
-              <button className="flex-1 min-h-[32px] px-2 py-1.5 text-fs-xs rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center gap-1">
-                <XCircle className="w-3 h-3" /> Reddet
-              </button>
-              <button
-                onClick={() => onRFQ(r)}
-                className="flex-1 min-h-[32px] px-2 py-1.5 text-fs-xs rounded-md bg-[#FF6B2B]/15 text-[#FF6B2B] hover:bg-[#FF6B2B]/25 border border-[#FF6B2B]/30 flex items-center justify-center gap-1"
-              >
-                <Send className="w-3 h-3" /> RFQ
-              </button>
-            </div>
-            <button
-              onClick={() => onOpen(r)}
-              className="mt-2 w-full text-fs-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
-            >
-              Detay <ChevronRight className="w-3 h-3" />
-            </button>
+            {r.rejectionReason && (
+              <div className="mt-2 text-fs-xs text-red-400">
+                Red nedeni: {r.rejectionReason}
+              </div>
+            )}
+            {r.rfq && (
+              <div className="mt-2 text-fs-xs text-muted-foreground">
+                {r.rfq.no} · {r.rfq.sentAt ? "tedarikçilere iletildi" : "hazırlandı"}
+              </div>
+            )}
+            <RequestActionBar request={r} workflow={workflow} onAction={onAction} />
           </div>
         ))}
       </ResponsiveGrid>
