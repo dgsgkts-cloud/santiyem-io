@@ -1,17 +1,19 @@
 // ============================================================
 // src/lib/voice/haptics.ts
 // Sprint 32.3 — mobile-only, deliberately sparse haptic feedback.
-// Three moments only: wake detected, conversation started, ended.
+// Moments: wake detected, conversation started/ended, mic toggled.
 // ============================================================
 
 import { Capacitor } from "@capacitor/core";
 
-type HapticMoment = "wake" | "start" | "end";
+type HapticMoment = "wake" | "start" | "end" | "mute" | "unmute";
 
 const PATTERN: Record<HapticMoment, number | number[]> = {
   wake: 14,
   start: 10,
   end: [8, 40, 8],
+  mute: 12,
+  unmute: 8,
 };
 
 function isMobile(): boolean {
