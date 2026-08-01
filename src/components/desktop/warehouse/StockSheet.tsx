@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { WarehouseData } from "./useWarehouseData";
 import { MoveBadge, StatePill, ConfidencePill, InsufficientData, NEGATIVE_KINDS } from "./warehouseUi";
 import {
-  TRUTH_COPY, FORECAST_REASON, fmtQty, fmtMoney, fmtDate, type InventoryItem,
+  TRUTH_COPY, FORECAST_REASON, fmtQty, fmtMoney, fmtDate, type InventoryItem, type Forecast,
 } from "./inventoryTruth";
 
 interface Props {
@@ -20,7 +20,10 @@ export const StockSheet = ({ stock, onClose, data }: Props) => {
   const history = stock ? data.movements.filter((m) => m.material === stock.name).slice(0, 6) : [];
   const forecast = stock ? data.forecastFor(stock) : null;
   const forecastReady = forecast !== null && forecast.eligible ? forecast : null;
-  const forecastBlocked = forecast !== null && !forecast.eligible ? forecast : null;
+  const forecastBlocked =
+    forecast !== null && forecast.eligible === false
+      ? (forecast as Extract<Forecast, { eligible: false }>)
+      : null;
 
   const ask = (text: string) =>
     window.dispatchEvent(new CustomEvent("canvas-followup", { detail: { text } }));
