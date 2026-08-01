@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { getVoicePageContext } from "@/lib/voice/pageContext";
 import { useVoiceAccess } from "@/hooks/useVoiceAccess";
 import { useVoiceSettings } from "@/hooks/useVoiceSettings";
 import { useWakeWordEngine } from "@/hooks/useWakeWordEngine";
@@ -226,6 +227,7 @@ export function VoiceOrb() {
         onClose={() => closeSession("user")}
         access={access}
         initialContext={pending.initialContext}
+        n={getVoicePageContext() ?? undefined}
         initialCards={pending.initialCards}
         autoSpeak={pending.autoSpeak}
         autoStart={pending.autoSpeak || sessionMode === "wake"}

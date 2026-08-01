@@ -46,6 +46,9 @@ const writeStore = (map: StoreMap) => {
   }
 };
 
+/** Read-only snapshot of the persisted RFQ store (used by analytics/CEO mode). */
+export const loadRfqRecords = (): RfqRecord[] => Object.values(readStore());
+
 export type RfqMutationKey = `${string}:${RfqAction}`;
 
 export interface AddSuppliersInput {
