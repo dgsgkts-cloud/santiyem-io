@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { BaseVoiceEngine } from "./BaseVoiceEngine";
 import { OPENAI_REALTIME } from "./voiceConfig";
+import { setVoiceDiagnostics } from "./voiceDiagnostics";
 import { VoiceMetricsTracker } from "./voiceMetrics";
 import { isVoiceErrorRetryable } from "./voiceTypes";
 import type { VoiceEngineConfig, VoiceErrorKind, VoiceProviderId, VoiceToolCall } from "./voiceTypes";
@@ -167,7 +168,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         instructions: this.config.instructionsSuffix ?? "",
         tools: this.config.tools ?? [],
         voice: this.config.voice ?? OPENAI_REALTIME.voice,
-        model: this.config.model ?? OPENAI_REALTIME.model,
+        // No model is sent: the edge function is the single source of truth.
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -185,8 +186,21 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     if (!json?.client_secret) {
       throw new VoiceFailure("missing_client_secret", "config", false);
     }
-    rtLog("token/session success", { model: json.model, voice: json.voice, expiresAt: json.expires_at ?? null });
-    return json as SessionInfo;
+    // The server owns the model; an empty/missing value is a configuration error.
+    const resolvedModel = typeof json?.model === "string" ? json.model.trim() : "";
+    if (!resolvedModel) throw new VoiceFailure("realtime_model_not_configured", "config", false);
+    setVoiceDiagnostics({
+      model: resolvedModel,
+      modelSource: typeof json?.model_source === "string" ? json.model_source : null,
+      connectionMethod: "webrtc",
+      lastErrorCode: null,
+    });
+    // Structured, once-per-session config log (never repeated on audio events).
+    logger.debug(`[voice:rt] resolved config ${JSON.stringify({
+      model: resolvedModel, source: json?.model_source ?? "unknown",
+    })}`);
+    rtLog("token/session success", { model: resolvedModel, voice: json.voice, expiresAt: json.expires_at ?? null });
+    return { ...(json as SessionInfo), model: resolvedModel };
   }
 
 
@@ -271,7 +285,15 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     rtLog("local description set");
 
     const base = session.base_url ?? "https://api.openai.com/v1/realtime/calls";
-    const sdpUrl = `${base}?model=${encodeURIComponent(session.model)}`;
+    // The call must open with the exact model the client secret was minted for.
+    const callModel = session.model;
+    if (!callModel || callModel !== session.model) {
+      rtLog("model mismatch between client secret and realtime call", {
+        secretModel: session.model, callModel,
+      });
+      throw new VoiceFailure("realtime_model_mismatch", "config", false);
+    }
+    const sdpUrl = `${base}?model=${encodeURIComponent(callModel)}`;
     const t0 = performance.now();
     let sdpRes: Response;
     try {
@@ -295,7 +317,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     }
     const answer = await sdpRes.text();
     rtLog(`SDP exchange → ${sdpRes.status} in ${Math.round(performance.now() - t0)}ms`, {
-      url: sdpUrl, model: session.model, preview: answer.slice(0, 60),
+      url: sdpUrl, model: callModel, preview: answer.slice(0, 60),
     });
     if (!sdpRes.ok) {
       // Surface the provider's machine-readable code (never the raw body to users).
