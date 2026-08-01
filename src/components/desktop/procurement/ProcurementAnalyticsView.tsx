@@ -130,44 +130,41 @@ export const ProcurementAnalyticsView = ({ analytics, onOpenOrder }: Props) => {
     });
 
   const runAction = (a: CriticalAction) => {
-    if (a.target.kind === "aging") {
-      const bucket = r.aging.find((b) => b.key === a.target.kind && true);
-      const found = r.aging.find(
-        (b) => a.target.kind === "aging" && b.key === a.target.bucket
-      );
-      if (found) openBucketDrill(found ?? bucket!);
+    const t = a.target;
+    if (t.kind === "aging") {
+      const found = r.aging.find((b) => b.key === t.bucket);
+      if (found) openBucketDrill(found);
+      else setDrill({ title: a.title, note: a.reason, rows: [] });
       return;
     }
-    if (a.target.kind === "supplier") {
-      const name = a.target.name;
+    if (t.kind === "supplier") {
       setDrill({
-        title: name,
+        title: t.name,
         note: "Açık tedarikçi borcu",
-        rows: r.openLiabilities.filter((row) => row.supplier === name),
+        rows: r.openLiabilities.filter((row) => row.supplier === t.name),
       });
       return;
     }
-    if (a.target.kind === "project") {
-      const name = a.target.name;
+    if (t.kind === "project") {
       setDrill({
-        title: name,
+        title: t.name,
         note: "Proje açık borcu",
-        rows: r.openLiabilities.filter((row) => row.project === name),
+        rows: r.openLiabilities.filter((row) => row.project === t.name),
       });
       return;
     }
-    if (a.target.kind === "invoice") {
-      analytics.setFilters({});
-      const risk = r.invoiceRisks.find((x) => x.key === a.target.kind);
+    if (t.kind === "invoice") {
+      const risk = r.invoiceRisks.find((x) => x.key === t.risk);
       setDrill({
         title: a.title,
-        note: risk ? `${risk.count} sipariş` : undefined,
+        note: risk ? `${risk.count} sipariş · ${a.reason}` : a.reason,
         rows: [],
       });
       return;
     }
     setDrill({ title: a.title, note: a.reason, rows: [] });
   };
+
 
   return (
     <div className="space-y-4">
