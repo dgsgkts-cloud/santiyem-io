@@ -1509,6 +1509,345 @@ export type Database = {
           },
         ]
       }
+      inventory_asset_issues: {
+        Row: {
+          asset_id: string
+          assignment_id: string | null
+          created_at: string
+          description: string
+          document_url: string | null
+          estimated_cost: number | null
+          id: string
+          issue_no: string
+          issue_type: string
+          occurred_on: string
+          person_name: string | null
+          photo_url: string | null
+          project_id: string | null
+          reported_by: string
+          resolution_note: string | null
+          reviewer_id: string | null
+          reviewer_name: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          assignment_id?: string | null
+          created_at?: string
+          description: string
+          document_url?: string | null
+          estimated_cost?: number | null
+          id?: string
+          issue_no?: string
+          issue_type: string
+          occurred_on?: string
+          person_name?: string | null
+          photo_url?: string | null
+          project_id?: string | null
+          reported_by: string
+          resolution_note?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          assignment_id?: string | null
+          created_at?: string
+          description?: string
+          document_url?: string | null
+          estimated_cost?: number | null
+          id?: string
+          issue_no?: string
+          issue_type?: string
+          occurred_on?: string
+          person_name?: string | null
+          photo_url?: string | null
+          project_id?: string | null
+          reported_by?: string
+          resolution_note?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_asset_issues_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_asset_issues_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_assets: {
+        Row: {
+          accessories: string[]
+          asset_code: string
+          brand: string | null
+          category: string | null
+          condition: string | null
+          created_at: string
+          equipment_ref: string | null
+          id: string
+          is_active: boolean
+          model: string | null
+          name: string
+          notes: string | null
+          photo_url: string | null
+          purchase_date: string | null
+          purchase_value: number | null
+          serial_number: string | null
+          status: string
+          unit: string
+          updated_at: string
+          user_id: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          accessories?: string[]
+          asset_code?: string
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          equipment_ref?: string | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name: string
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          serial_number?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+          user_id: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          accessories?: string[]
+          asset_code?: string
+          brand?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          equipment_ref?: string | null
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          name?: string
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          purchase_value?: number | null
+          serial_number?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_assets_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_assignment_events: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_name: string | null
+          assignment_id: string
+          created_at: string
+          id: string
+          note: string | null
+          payload: Json | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_name?: string | null
+          assignment_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          payload?: Json | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_name?: string | null
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          payload?: Json | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_assignment_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_assignments: {
+        Row: {
+          accessories: string[]
+          asset_id: string
+          assignment_no: string
+          condition_at_issue: string | null
+          created_at: string
+          damage_note: string | null
+          department: string | null
+          document_url: string | null
+          expected_return_at: string
+          extension_count: number
+          id: string
+          issued_at: string
+          issued_by: string
+          missing_accessories: string[]
+          notes: string | null
+          original_expected_return_at: string | null
+          person_name: string
+          personnel_id: string | null
+          photo_url: string | null
+          project_id: string | null
+          received_by: string | null
+          return_condition: string | null
+          return_notes: string | null
+          return_photo_url: string | null
+          return_warehouse_id: string | null
+          returned_at: string | null
+          source_warehouse_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accessories?: string[]
+          asset_id: string
+          assignment_no?: string
+          condition_at_issue?: string | null
+          created_at?: string
+          damage_note?: string | null
+          department?: string | null
+          document_url?: string | null
+          expected_return_at: string
+          extension_count?: number
+          id?: string
+          issued_at?: string
+          issued_by: string
+          missing_accessories?: string[]
+          notes?: string | null
+          original_expected_return_at?: string | null
+          person_name: string
+          personnel_id?: string | null
+          photo_url?: string | null
+          project_id?: string | null
+          received_by?: string | null
+          return_condition?: string | null
+          return_notes?: string | null
+          return_photo_url?: string | null
+          return_warehouse_id?: string | null
+          returned_at?: string | null
+          source_warehouse_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accessories?: string[]
+          asset_id?: string
+          assignment_no?: string
+          condition_at_issue?: string | null
+          created_at?: string
+          damage_note?: string | null
+          department?: string | null
+          document_url?: string | null
+          expected_return_at?: string
+          extension_count?: number
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          missing_accessories?: string[]
+          notes?: string | null
+          original_expected_return_at?: string | null
+          person_name?: string
+          personnel_id?: string | null
+          photo_url?: string | null
+          project_id?: string | null
+          received_by?: string | null
+          return_condition?: string | null
+          return_notes?: string | null
+          return_photo_url?: string | null
+          return_warehouse_id?: string | null
+          returned_at?: string | null
+          source_warehouse_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_assignments_personnel_id_fkey"
+            columns: ["personnel_id"]
+            isOneToOne: false
+            referencedRelation: "personnel"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_assignments_return_warehouse_id_fkey"
+            columns: ["return_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_assignments_source_warehouse_id_fkey"
+            columns: ["source_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_audit_log: {
         Row: {
           action: string
@@ -1553,6 +1892,385 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      inventory_count_lines: {
+        Row: {
+          adjustment_movement_id: string | null
+          applied_at: string | null
+          counted_at: string | null
+          counted_quantity: number | null
+          counter_name: string | null
+          created_at: string
+          expected_quantity: number
+          explanation: string | null
+          id: string
+          location: string | null
+          material_code: string | null
+          material_id: string
+          material_name: string
+          photo_url: string | null
+          quantity_after: number | null
+          recount_required: boolean
+          session_id: string
+          unit: string
+          unit_cost: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adjustment_movement_id?: string | null
+          applied_at?: string | null
+          counted_at?: string | null
+          counted_quantity?: number | null
+          counter_name?: string | null
+          created_at?: string
+          expected_quantity: number
+          explanation?: string | null
+          id?: string
+          location?: string | null
+          material_code?: string | null
+          material_id: string
+          material_name: string
+          photo_url?: string | null
+          quantity_after?: number | null
+          recount_required?: boolean
+          session_id: string
+          unit: string
+          unit_cost?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adjustment_movement_id?: string | null
+          applied_at?: string | null
+          counted_at?: string | null
+          counted_quantity?: number | null
+          counter_name?: string | null
+          created_at?: string
+          expected_quantity?: number
+          explanation?: string | null
+          id?: string
+          location?: string | null
+          material_code?: string | null
+          material_id?: string
+          material_name?: string
+          photo_url?: string | null
+          quantity_after?: number | null
+          recount_required?: boolean
+          session_id?: string
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_count_lines_adjustment_movement_id_fkey"
+            columns: ["adjustment_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_lines_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_lines_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_count_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_count_sessions: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          approved_at: string | null
+          approver_id: string | null
+          approver_name: string | null
+          blind_count: boolean
+          cancelled_at: string | null
+          count_no: string
+          count_type: string
+          counters: string[]
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          planned_date: string
+          review_note: string | null
+          scope_kind: string
+          scope_value: string | null
+          snapshot_at: string | null
+          started_at: string | null
+          started_by: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          variance_threshold_pct: number
+          warehouse_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
+          approver_name?: string | null
+          blind_count?: boolean
+          cancelled_at?: string | null
+          count_no?: string
+          count_type?: string
+          counters?: string[]
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          planned_date?: string
+          review_note?: string | null
+          scope_kind?: string
+          scope_value?: string | null
+          snapshot_at?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          variance_threshold_pct?: number
+          warehouse_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
+          approver_name?: string | null
+          blind_count?: boolean
+          cancelled_at?: string | null
+          count_no?: string
+          count_type?: string
+          counters?: string[]
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          planned_date?: string
+          review_note?: string | null
+          scope_kind?: string
+          scope_value?: string | null
+          snapshot_at?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          variance_threshold_pct?: number
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_count_sessions_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transfer_events: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_name: string | null
+          created_at: string
+          id: string
+          note: string | null
+          payload: Json | null
+          status: string
+          transfer_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          payload?: Json | null
+          status: string
+          transfer_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_name?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          payload?: Json | null
+          status?: string
+          transfer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfer_events_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transfers: {
+        Row: {
+          approved_at: string | null
+          approver_id: string | null
+          created_at: string
+          damaged_quantity: number
+          dest_warehouse_id: string
+          discrepancy_note: string | null
+          dispatch_movement_id: string | null
+          dispatched_at: string | null
+          dispatched_quantity: number
+          dispatcher_id: string | null
+          expected_arrival: string | null
+          id: string
+          in_transit_quantity: number
+          material_id: string
+          missing_quantity: number
+          notes: string | null
+          project_id: string | null
+          reason: string | null
+          received_at: string | null
+          received_quantity: number
+          receiver_id: string | null
+          rejection_reason: string | null
+          requested_at: string
+          requested_quantity: number
+          requester_id: string
+          required_date: string | null
+          revision_note: string | null
+          source_warehouse_id: string
+          status: string
+          transfer_no: string
+          unit: string
+          unit_cost: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approver_id?: string | null
+          created_at?: string
+          damaged_quantity?: number
+          dest_warehouse_id: string
+          discrepancy_note?: string | null
+          dispatch_movement_id?: string | null
+          dispatched_at?: string | null
+          dispatched_quantity?: number
+          dispatcher_id?: string | null
+          expected_arrival?: string | null
+          id?: string
+          in_transit_quantity?: number
+          material_id: string
+          missing_quantity?: number
+          notes?: string | null
+          project_id?: string | null
+          reason?: string | null
+          received_at?: string | null
+          received_quantity?: number
+          receiver_id?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_quantity: number
+          requester_id: string
+          required_date?: string | null
+          revision_note?: string | null
+          source_warehouse_id: string
+          status?: string
+          transfer_no?: string
+          unit: string
+          unit_cost?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approver_id?: string | null
+          created_at?: string
+          damaged_quantity?: number
+          dest_warehouse_id?: string
+          discrepancy_note?: string | null
+          dispatch_movement_id?: string | null
+          dispatched_at?: string | null
+          dispatched_quantity?: number
+          dispatcher_id?: string | null
+          expected_arrival?: string | null
+          id?: string
+          in_transit_quantity?: number
+          material_id?: string
+          missing_quantity?: number
+          notes?: string | null
+          project_id?: string | null
+          reason?: string | null
+          received_at?: string | null
+          received_quantity?: number
+          receiver_id?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_quantity?: number
+          requester_id?: string
+          required_date?: string | null
+          revision_note?: string | null
+          source_warehouse_id?: string
+          status?: string
+          transfer_no?: string
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfers_dest_warehouse_id_fkey"
+            columns: ["dest_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_source_warehouse_id_fkey"
+            columns: ["source_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoices: {
         Row: {
@@ -5030,6 +5748,16 @@ export type Database = {
           },
         ]
       }
+      inventory_transit_balances: {
+        Row: {
+          direction: string | null
+          material_id: string | null
+          quantity: number | null
+          transfer_count: number | null
+          warehouse_id: string | null
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           created_at: string | null
@@ -5090,6 +5818,7 @@ export type Database = {
     Functions: {
       accept_project_invitation: { Args: { _token: string }; Returns: string }
       add_voice_usage_seconds: { Args: { _seconds: number }; Returns: number }
+      assert_depot_permission: { Args: { _key: string }; Returns: undefined }
       bulk_upsert_attendance: { Args: { _records: Json }; Returns: number }
       can_access_project: {
         Args: { _project: string; _user: string }
@@ -5168,6 +5897,7 @@ export type Database = {
         Args: { _payment_id: string }
         Returns: undefined
       }
+      depot_permission: { Args: { _key: string }; Returns: boolean }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
