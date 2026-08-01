@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ResponsiveGrid } from "@/components/ui/responsive";
 import { STATUSES, daysFromNow, fmtTRY, type Request } from "./procurementConstants";
 import { PriorityDot, StatusPill } from "./procurementUi";
+import { approvalStatusLabel } from "./approvalPolicy";
 import { RequestActionBar } from "./RequestActionBar";
 import type { WorkflowAction } from "./procurementWorkflow";
 import type { RequestWorkflow } from "./useRequestWorkflow";
