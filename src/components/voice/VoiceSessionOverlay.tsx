@@ -472,6 +472,8 @@ export function VoiceSessionOverlay({
     );
   }
 
+  const statusLabel = muted && phase !== "error" ? "Mikrofon kapalı" : PHASE_LABEL[phase];
+
   const showOpeningHint =
     transcripts.length === 0 && (phase === "listening" || phase === "ready");
 
