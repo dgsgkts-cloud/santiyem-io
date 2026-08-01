@@ -2,12 +2,11 @@
 import { useMemo } from "react";
 import {
   AlertTriangle,
-  Building2,
   ChevronRight,
   MapPin,
+  MoreHorizontal,
   Package,
   Search,
-  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import EmptyState from "@/components/desktop/EmptyState";
 import { OrderCardSkeleton } from "./orders/orderUi";
 import { fmtMoney } from "./orders/orderModel";
@@ -420,13 +418,13 @@ export const ProcurementDeliveriesView = ({
       {filtered.length === 0 ? (
         rows.length === 0 ? (
           <EmptyState
-            icon={Truck}
+            icon="🚚"
             title="Henüz teslimat kaydı yok"
             description="Sipariş oluşturduğunuzda teslimatları buradan planlayabilir, sevkiyat ve mal kabulünü takip edebilirsiniz."
           />
         ) : (
           <EmptyState
-            icon={Building2}
+            icon="🔍"
             title="Filtreye uyan teslimat bulunamadı"
             description="Arama veya filtreleri değiştirerek tekrar deneyin."
           />
