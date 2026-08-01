@@ -1,12 +1,13 @@
 // Sprint M1.4 — Purchase Requests: search + status filter + responsive grid.
 // Actions are status-based and wired to the workflow mutation layer.
 import { useState } from "react";
-import { Building2, Building2 as Bldg, CheckCircle2, Search } from "lucide-react";
+import { Building2, Building2 as Bldg, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResponsiveGrid } from "@/components/ui/responsive";
 import { STATUSES, daysFromNow, fmtTRY, type Request } from "./procurementConstants";
 import { PriorityDot, StatusPill } from "./procurementUi";
 import { approvalStatusLabel } from "./approvalPolicy";
+import { ApprovalSummary } from "./ApprovalSummary";
 import { RequestActionBar } from "./RequestActionBar";
 import type { WorkflowAction } from "./procurementWorkflow";
 import type { RequestWorkflow } from "./useRequestWorkflow";
@@ -16,38 +17,8 @@ interface Props {
   onAction: (action: WorkflowAction, request: Request) => void;
 }
 
-const ApprovalTimeline = ({ stage }: { stage: number }) => {
-  const steps = ["Talep", "Yönetici", "Finans", "Direktör", "Onay"];
-  return (
-    <div className="flex items-center gap-1 mt-3">
-      {steps.map((s, i) => (
-        <div key={s} className="flex items-center gap-1 flex-1 min-w-0">
-          <div
-            className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center text-fs-xs font-semibold shrink-0",
-              i <= stage
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                : "bg-muted/40 text-muted-foreground border border-border"
-            )}
-          >
-            {i <= stage ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
-          </div>
-          <span className="text-fs-xs text-muted-foreground hidden md:inline truncate">
-            {s}
-          </span>
-          {i < steps.length - 1 && (
-            <div
-              className={cn(
-                "flex-1 h-px",
-                i < stage ? "bg-emerald-500/40" : "bg-border"
-              )}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+
+
 
 export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
   const [q, setQ] = useState("");
@@ -168,12 +139,8 @@ export const ProcurementRequestsView = ({ workflow, onAction }: Props) => {
                 </div>
               </div>
             </div>
-            <ApprovalTimeline stage={r.approvalStage} />
-            {r.rejectionReason && (
-              <div className="mt-2 text-fs-xs text-red-400">
-                Red nedeni: {r.rejectionReason}
-              </div>
-            )}
+            <ApprovalSummary request={r} />
+
             {r.rfq && (
               <div className="mt-2 text-fs-xs text-muted-foreground">
                 {r.rfq.no} · {r.rfq.sentAt ? "tedarikçilere iletildi" : "hazırlandı"}
