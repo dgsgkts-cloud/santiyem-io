@@ -29,6 +29,13 @@ import {
   RfqPrepareDialog,
 } from "./procurement/RequestActionDialogs";
 import { useProcurementDemoData } from "./procurement/useProcurementDemoData";
+import { useProcurementAnalytics } from "./procurement/analytics/useProcurementAnalytics";
+import {
+  filtersFromParams,
+  filtersToParams,
+  buildVoiceContext,
+  type AnalyticsFilters as AnalyticsFilterState,
+} from "./procurement/analytics/analyticsModel";
 import { usePurchaseOrders } from "./procurement/orders/usePurchaseOrders";
 import { useOrderActions } from "./procurement/orders/useOrderActions";
 import { useUser } from "@/contexts/UserContext";
@@ -83,6 +90,33 @@ export default function ProcurementPage() {
   const approverResolution = useRequestApprovers(submitTarget);
   const actorName =
     user?.user_metadata?.full_name || user?.email || "Yetkili Kullanıcı";
+
+  // Analitik + CEO Modu share one filter state, encoded in the URL so a
+  // drill-down survives refresh, browser back and cross-tab navigation.
+  const analyticsFilters = useMemo(
+    () => filtersFromParams((k) => params.get(k)),
+    [params]
+  );
+  const setAnalyticsFilters = useCallback(
+    (next: AnalyticsFilterState) => {
+      const nextParams = new URLSearchParams(params);
+      ["d", "df", "dt", "pr", "sp", "ct", "os", "ps", "ds", "is"].forEach((k) =>
+        nextParams.delete(k)
+      );
+      Object.entries(filtersToParams(next)).forEach(([k, v]) =>
+        nextParams.set(k, v)
+      );
+      setParams(nextParams, { replace: true });
+    },
+    [params, setParams]
+  );
+
+  const analytics = useProcurementAnalytics({
+    orderWorkflow,
+    requests: workflow.requests,
+    filters: analyticsFilters,
+    onFiltersChange: setAnalyticsFilters,
+  });
 
   const detailId = params.get("talep");
   const editId = params.get("duzenle");
@@ -357,7 +391,17 @@ export default function ProcurementPage() {
         />
       ) : ceoMode ? (
         <Suspense fallback={null}>
-          <ProcurementCEOView data={data} />
+          <ProcurementCEOView
+            analytics={analytics}
+            onDrillDown={() => {
+              setCeoMode(false);
+              setTab("analytics");
+            }}
+            onOpenDeliveries={() => {
+              setCeoMode(false);
+              setTab("deliveries");
+            }}
+          />
         </Suspense>
       ) : (
         <>
@@ -422,7 +466,16 @@ export default function ProcurementPage() {
               onOpen={(s) => setDetail({ kind: "supplier", item: s })}
             />
           )}
-          {tab === "analytics" && <ProcurementAnalyticsView data={data} />}
+          {tab === "analytics" && (
+            <ProcurementAnalyticsView
+              analytics={analytics}
+              onOpenOrder={(orderId) => {
+                const order = orderWorkflow.orders.find((o) => o.id === orderId);
+                if (order) setDetail({ kind: "order", item: order });
+                else toast.error("Sipariş kaydı bulunamadı.");
+              }}
+            />
+          )}
         </>
       )}
 
