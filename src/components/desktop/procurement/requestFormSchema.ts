@@ -183,7 +183,14 @@ export const formToRequestPatch = (
     currency: v.currency,
     budgetCode: v.budgetCode ? String(v.budgetCode).trim() : undefined,
     costCenter: v.costCenter ? String(v.costCenter).trim() : undefined,
-    attachments: v.attachments.map((a) => ({ ...a })),
+    attachments: v.attachments.map((a) => ({
+      id: String(a.id),
+      name: String(a.name),
+      size: Number(a.size) || 0,
+      type: String(a.type ?? ""),
+      url: a.url,
+    })),
+
   };
 };
 
