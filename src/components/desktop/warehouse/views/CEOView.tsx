@@ -1,52 +1,111 @@
-// Sprint M1.5 — CEO Mode view (responsive across every device).
-import { ArrowUpRight } from "lucide-react";
+// DEPO — CEO Modu: management summary strictly from canonical inventory.
+import { Layers, TrendingDown, ShieldAlert } from "lucide-react";
 import { KpiCard, ResponsiveGrid, SectionCard } from "@/components/ui/responsive";
-import { fmtTRY } from "../warehouseConstants";
 import type { WarehouseData } from "../useWarehouseData";
-import { AIInsightsCard } from "../warehouseUi";
+import { AIInsightsCard, InsufficientData, StatePill } from "../warehouseUi";
+import { TRUTH_COPY, fmtMoney, fmtQty, issueLabel, type InventoryItem } from "../inventoryTruth";
 
-export const CEOView = ({ data }: { data: WarehouseData }) => {
-  const totalValue = data.warehouses.reduce((s, w) => s + w.value, 0);
-  const critical = data.stocks.filter(s => s.state === "critical" || s.state === "out").length;
+interface Props {
+  data: WarehouseData;
+  onCreateRequest?: (item: InventoryItem) => void;
+}
+
+export const CEOView = ({ data, onCreateRequest }: Props) => {
+  const critical = data.stockItems.filter((s) => s.status === "critical" || s.status === "out");
+  const topValue = [...data.stockItems]
+    .filter((s) => s.stockValue !== null && s.stockValue > 0)
+    .sort((a, b) => (b.stockValue ?? 0) - (a.stockValue ?? 0))
+    .slice(0, 5);
+
   return (
     <div className="space-y-4">
       <ResponsiveGrid variant="auto" minItemWidth={240} className="gap-3">
         <KpiCard
+          icon={Layers}
           label="Envanter Değeri"
-          value={fmtTRY(totalValue)}
-          hint={<span className="flex items-center gap-1 text-emerald-400"><ArrowUpRight className="w-3 h-3" /> +6% önceki aya göre</span>}
+          value={fmtMoney(data.totalStockValue)}
+          hint={
+            data.valueUnknownCount > 0
+              ? `${data.valueUnknownCount} kalemde maliyet esası yok`
+              : "Ağırlıklı ortalama maliyet"
+          }
         />
         <KpiCard
+          icon={TrendingDown}
           label="Kritik Stok Kalemleri"
-          value={<span className="text-red-400">{critical}</span>}
-          hint="Bu hafta içinde sipariş şart"
+          value={critical.length}
+          hint={critical.length > 0 ? "Tedarik aksiyonu gerekiyor" : "Kritik kalem yok"}
         />
         <KpiCard
-          label="Aylık Tüketim"
-          value={fmtTRY(1_240_000)}
-          hint="4 aktif şantiye"
+          icon={ShieldAlert}
+          label="Aylık Tüketim Maliyeti"
+          value={data.monthlyConsumptionKnown ? fmtMoney(data.monthlyConsumptionCost) : "—"}
+          hint={data.monthlyConsumptionKnown ? "Son 30 gün" : TRUTH_COPY.noAnalytics}
         />
       </ResponsiveGrid>
 
-      <AIInsightsCard />
+      <AIInsightsCard data={data} onCreateRequest={onCreateRequest} />
 
-      <SectionCard title="Depo Sağlığı">
-        <div className="space-y-2">
-          {data.warehouses.map(w => {
-            const pct = Math.round((w.occupied / w.capacity) * 100);
-            const health = pct > 90 ? "Riskli" : pct > 70 ? "Yoğun" : "Sağlıklı";
-            const color = pct > 90 ? "text-red-400" : pct > 70 ? "text-amber-400" : "text-emerald-400";
-            return (
-              <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-background/40 border border-border/60 gap-2">
+      <SectionCard title="En Yüksek Stok Değeri" subtitle="Bağlanan sermayeye göre ilk 5 kalem">
+        {topValue.length === 0 ? (
+          <InsufficientData title="Stok değeri hesaplanabilir kalem bulunmuyor." />
+        ) : (
+          <div className="space-y-2">
+            {topValue.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between gap-2 p-2 rounded-card bg-background/40 border border-border/60 min-w-0"
+              >
                 <div className="min-w-0">
-                  <div className="text-foreground text-fs-sm truncate">{w.name}</div>
-                  <div className="text-fs-xs text-muted-foreground truncate">{w.manager} · %{pct} dolu</div>
+                  <div className="ds-body text-foreground truncate">{s.name}</div>
+                  <div className="ds-caption text-muted-foreground truncate">
+                    {fmtQty(s.onHand)} {s.rawUnit} · ort. {fmtMoney(s.avgCost)}/{s.rawUnit}
+                  </div>
                 </div>
-                <span className={`text-fs-xs font-medium shrink-0 ${color}`}>{health}</span>
+                <span className="ds-body ds-numeric text-foreground/85 shrink-0">{fmtMoney(s.stockValue)}</span>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Kritik Kalemler" subtitle="Minimum seviyenin altındaki ve tükenen stoklar">
+        {critical.length === 0 ? (
+          <InsufficientData title="Kritik seviyede kalem bulunmuyor." />
+        ) : (
+          <div className="space-y-2">
+            {critical.slice(0, 6).map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between gap-2 p-2 rounded-card bg-background/40 border border-border/60 min-w-0"
+              >
+                <div className="min-w-0">
+                  <div className="ds-body text-foreground truncate">{s.name}</div>
+                  <div className="ds-caption text-muted-foreground">
+                    {fmtQty(s.available)} {s.rawUnit} kullanılabilir · min.{" "}
+                    {s.minStock > 0 ? `${fmtQty(s.minStock)} ${s.rawUnit}` : "tanımsız"}
+                  </div>
+                </div>
+                <StatePill status={s.status} />
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Veri Doğrulama Listesi" subtitle="Yönetim raporunu etkileyen kayıt sorunları">
+        {data.dataQuality.length === 0 ? (
+          <InsufficientData title="Veri kalitesi sorunu bulunmuyor." />
+        ) : (
+          <div className="space-y-2">
+            {data.dataQuality.slice(0, 8).map((i, idx) => (
+              <div key={`${i.itemId}-${i.kind}-${idx}`} className="flex items-start justify-between gap-2 min-w-0">
+                <span className="ds-caption text-foreground/75 truncate">{i.itemName}</span>
+                <span className="ds-caption text-muted-foreground shrink-0">{issueLabel(i.kind)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </SectionCard>
     </div>
   );
