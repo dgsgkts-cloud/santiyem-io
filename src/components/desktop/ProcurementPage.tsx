@@ -36,6 +36,10 @@ import {
   buildVoiceContext,
   type AnalyticsFilters as AnalyticsFilterState,
 } from "./procurement/analytics/analyticsModel";
+import {
+  setVoicePageContext,
+  clearVoicePageContext,
+} from "@/lib/voice/pageContext";
 import { usePurchaseOrders } from "./procurement/orders/usePurchaseOrders";
 import { useOrderActions } from "./procurement/orders/useOrderActions";
 import { useUser } from "@/contexts/UserContext";
@@ -117,6 +121,19 @@ export default function ProcurementPage() {
     filters: analyticsFilters,
     onFiltersChange: setAnalyticsFilters,
   });
+
+  // Publish the current procurement view to the single global Voice AI mic so
+  // "kalan borç ne?" is answered from the same filtered records on screen.
+  useEffect(() => {
+    setVoicePageContext(
+      "procurement",
+      buildVoiceContext(analytics.result, {
+        tab: ceoMode ? "CEO Modu" : tab,
+        masked: !analytics.canViewFinancials,
+      })
+    );
+    return () => clearVoicePageContext("procurement");
+  }, [analytics.result, analytics.canViewFinancials, tab, ceoMode]);
 
   const detailId = params.get("talep");
   const editId = params.get("duzenle");
