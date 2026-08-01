@@ -51,6 +51,31 @@ export type Supplier = {
   totalSpend: number;
 };
 
+export type RequestItem = {
+  name: string;
+  qty: number;
+  unit: string;
+  spec?: string;
+};
+
+export type RequestRFQ = {
+  no: string;
+  suppliers: string[];
+  deadline: string;
+  notes?: string;
+  createdAt: string;
+  sentAt?: string;
+};
+
+export type RequestAuditEntry = {
+  at: string;
+  actor: string;
+  event: string;
+  from?: string;
+  to?: string;
+  reason?: string;
+};
+
 export type Request = {
   id: string;
   no: string;
@@ -63,6 +88,18 @@ export type Request = {
   needBy: number;
   status: (typeof STATUSES)[number];
   approvalStage: number;
+  items?: RequestItem[];
+  notes?: string;
+  deliveryLocation?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  rejectionNote?: string;
+  rfq?: RequestRFQ;
+  orderNo?: string;
+  audit?: RequestAuditEntry[];
 };
 
 export type Order = {
