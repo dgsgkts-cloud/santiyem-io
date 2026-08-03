@@ -170,10 +170,9 @@ describe("forecast uses only canonical consumption", () => {
     );
     const f = forecastFromConsumption(item, events, { hasUnknownMovementTypes: true });
     expect(f.eligible).toBe(false);
-    if (!f.eligible) {
-      expect(f.reason).toBe("unverified_consumption_data");
-      expect(FORECAST_REASON[f.reason]).toBe(UNVERIFIED_CONSUMPTION_COPY);
-    }
+    const bad = f as Extract<typeof f, { eligible: false }>;
+    expect(bad.reason).toBe("unverified_consumption_data");
+    expect(FORECAST_REASON[bad.reason]).toBe(UNVERIFIED_CONSUMPTION_COPY);
   });
 
   it("refuses a forecast when only non-consumption movements exist", () => {
@@ -185,6 +184,6 @@ describe("forecast uses only canonical consumption", () => {
     ]);
     const f = forecastFromConsumption(item, events, { today: new Date("2026-07-01") });
     expect(f.eligible).toBe(false);
-    if (!f.eligible) expect(f.reason).toBe("no_consumption_history");
+    expect((f as Extract<typeof f, { eligible: false }>).reason).toBe("no_consumption_history");
   });
 });
