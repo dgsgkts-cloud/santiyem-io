@@ -86,7 +86,8 @@ export default function ContractSignUpload() {
       });
       if (rpcErr) throw rpcErr;
 
-      // Notify owner via email
+      // Notify owner via email with a time-limited signed download link
+      const downloadUrl = await createSignedStorageUrl("signed-contracts", path, 60 * 60 * 24 * 7);
       await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "signature-uploaded",
@@ -97,7 +98,7 @@ export default function ContractSignUpload() {
             signerName: signerName.trim(),
             signerTitle: signerTitle.trim(),
             uploadDate: new Date().toLocaleDateString("tr-TR"),
-            downloadUrl: urlData.publicUrl,
+            downloadUrl: downloadUrl || "",
           },
         },
       });
