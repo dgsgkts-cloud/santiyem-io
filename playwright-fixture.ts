@@ -1,3 +1,6 @@
-// Re-export the base fixture from the package
-// Override or extend test/expect here if needed
-export { test, expect } from "lovable-agent-playwright-config/fixture";
+// Depo E2E — ortak test fixture'ı.
+//
+// Harici pakete bağımlılık yoktur. Test dosyaları bu modülden import eder,
+// böylece ileride ortak fixture eklemek tek noktadan yapılır.
+
+export { test, expect } from "@playwright/test";
