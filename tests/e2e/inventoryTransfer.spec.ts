@@ -120,3 +120,65 @@ test.describe("Depo → Transferler yaşam döngüsü", () => {
     }
   });
 });
+
+test.describe("Depo → Transferler sunucu tarafı sayfalama", () => {
+  test.skip(!AUTHED, "Önizleme oturumu yok (LOVABLE_BROWSER_AUTH_STATUS !== injected).");
+
+  test.beforeEach(async ({ page }) => {
+    await restoreSession(page);
+  });
+
+  test("toplam kayıt sayısı ve sayfa göstergesi sunucudan gelir", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler`);
+    const summary = page.getByText(/kayıt · sayfa \d+ \/ \d+/);
+    test.skip((await summary.count()) === 0, "Transfer kaydı yok.");
+    await expect(summary.first()).toBeVisible();
+  });
+
+  test("sayfa değişimi URL'e yazılır ve yenilemeden sonra korunur", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler`);
+    const next = page.getByRole("button", { name: "Sonraki" });
+    test.skip((await next.count()) === 0, "Tek sayfalık veri kümesi.");
+    await next.click();
+    await expect(page).toHaveURL(/sf=2/);
+    await page.reload();
+    await expect(page).toHaveURL(/sf=2/);
+    await expect(page.getByText(/sayfa 2 \//)).toBeVisible();
+  });
+
+  test("filtre değişimi sayfayı 1'e döndürür", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler&sf=2`);
+    await page.getByRole("button", { name: "Yolda" }).click();
+    await expect(page).not.toHaveURL(/sf=2/);
+  });
+
+  test("aralık dışı sayfa numarası son geçerli sayfaya normalize edilir", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler&sf=9999`);
+    await expect(page).not.toHaveURL(/sf=9999/);
+  });
+
+  test("geçersiz sayfa parametresi ilk sayfayı gösterir", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler&sf=abc`);
+    await expect(page.getByPlaceholder("Transfer no, malzeme veya depo ara")).toBeVisible();
+  });
+
+  test("detaydan geri dönüşte sayfa ve filtreler korunur", async ({ page }) => {
+    await page.goto(`${APP}/depo?sekme=transferler&sf=2`);
+    const detail = page.getByRole("button", { name: "Detayı Aç" }).first();
+    test.skip((await detail.count()) === 0, "Kayıt yok.");
+    await detail.click();
+    await page.getByRole("button", { name: /Geri|Listeye/ }).first().click();
+    await expect(page).toHaveURL(/sf=2/);
+  });
+
+  test("mobilde belge işlemleri hover olmadan erişilebilir", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${APP}/depo?sekme=transferler`);
+    const detail = page.getByRole("button", { name: "Detayı Aç" }).first();
+    test.skip((await detail.count()) === 0, "Kayıt yok.");
+    await detail.click();
+    const download = page.getByLabel("Belgeyi indir").first();
+    test.skip((await download.count()) === 0, "Yüklenmiş belge yok.");
+    await expect(download).toBeVisible();
+  });
+});
