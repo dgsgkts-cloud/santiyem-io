@@ -66,7 +66,8 @@ export default function TransferDetailPage() {
   const { user, loading: userLoading } = useUser();
   const navigate = useNavigate();
   const [sp] = useSearchParams();
-  const { transfers, isLoading, eventsFor } = useInventoryTransfers();
+  const { eventsFor } = useInventoryTransfers();
+  const { transfer, isLoading } = useTransfer(transferId);
   const { permissions, isLoading: permsLoading } = useDepotPermissions();
   const data = useWarehouseData();
   const [action, setAction] = useState<TransferAction | null>(null);
@@ -77,10 +78,6 @@ export default function TransferDetailPage() {
     return "/depo?sekme=transferler";
   }, [sp]);
 
-  const transfer: TransferRow | null = useMemo(
-    () => transfers.find((t) => t.id === transferId) ?? null,
-    [transfers, transferId],
-  );
 
   useEffect(() => {
     if (transfer) document.title = `${transfer.transfer_no} · Transfer Detayı | Şantiyem`;
