@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 import { redirectWithStatus } from "./redirect.ts"
+import { basketMatchesTransaction, verifyCallbackSignature } from "../_shared/callbackSignature.ts"
 
 const IYZICO_API_KEY = Deno.env.get('IYZICO_API_KEY')!
 const IYZICO_SECRET_KEY = Deno.env.get('IYZICO_SECRET_KEY')!
@@ -119,8 +120,8 @@ Deno.serve(async (req) => {
           })
         } catch (_) { /* ignore */ }
 
-        // Determine subscription type from URL params
-        const subType = url.searchParams.get('subType') || 'monthly'
+        // Subscription type comes from the signed query params
+        const subType = subTypeParam
         const nextPayment = subType === 'yearly'
           ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
