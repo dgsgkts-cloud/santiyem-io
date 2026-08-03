@@ -2,7 +2,8 @@
 // Every tab reads from the canonical inventory hook; modules without a backing
 // table render an explicit truthful state instead of demo content.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Warehouse } from "lucide-react";
 import { PageShell } from "@/components/ui/responsive";
 import { useWarehouseData } from "./warehouse/useWarehouseData";
@@ -23,10 +24,37 @@ import { StockSheet } from "./warehouse/StockSheet";
 import { QuickActionFAB } from "./warehouse/QuickActionFAB";
 import { StockActionDialog, type StockActionKind } from "./warehouse/StockActionDialogs";
 
+// URL slug ↔ sekme eşlemesi. Transfer detayından listeye dönüşte doğru sekme açılır.
+const SLUG_TO_TAB: Record<string, SubTab> = {
+  ozet: "overview", overview: "overview",
+  stoklar: "stocks", stocks: "stocks",
+  depolar: "warehouses", warehouses: "warehouses",
+  hareketler: "movements", movements: "movements",
+  transferler: "transfers", transfers: "transfers",
+  zimmet: "assignments", assignments: "assignments",
+  sayimlar: "counts", counts: "counts",
+  analitik: "analytics", analytics: "analytics",
+};
+const TAB_TO_SLUG: Record<SubTab, string> = {
+  overview: "ozet", stocks: "stoklar", warehouses: "depolar", movements: "hareketler",
+  transfers: "transferler", assignments: "zimmet", counts: "sayimlar", analytics: "analitik",
+};
+
 export default function WarehousePage() {
   const data = useWarehouseData();
-  const [tab, setTab] = useState<SubTab>("overview");
-  const [ceoMode, setCeoMode] = useState(false);
+  const [sp, setSp] = useSearchParams();
+  const tab = useMemo<SubTab>(() => SLUG_TO_TAB[sp.get("sekme") ?? ""] ?? "overview", [sp]);
+  const setTab = (t: SubTab) => {
+    const next = new URLSearchParams(sp);
+    next.set("sekme", TAB_TO_SLUG[t]);
+    setSp(next, { replace: true });
+  };
+  const ceoMode = sp.get("ceo") === "1";
+  const setCeoMode = (v: boolean) => {
+    const next = new URLSearchParams(sp);
+    if (v) next.set("ceo", "1"); else next.delete("ceo");
+    setSp(next, { replace: true });
+  };
   const [openStock, setOpenStock] = useState<InventoryItem | null>(null);
   const [action, setAction] = useState<StockActionKind>(null);
 
@@ -52,7 +80,7 @@ export default function WarehousePage() {
           </span>
         }
         subtitle="Depo & Envanter"
-        actions={<WarehouseHeaderActions ceoMode={ceoMode} onToggleCeo={() => setCeoMode((v) => !v)} />}
+        actions={<WarehouseHeaderActions ceoMode={ceoMode} onToggleCeo={() => setCeoMode(!ceoMode)} />}
       >
         {ceoMode ? (
           <CEOView data={data} onCreateRequest={requestPurchase} />

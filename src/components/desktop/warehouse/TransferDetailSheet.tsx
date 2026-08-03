@@ -32,7 +32,7 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const TransferDetailSheet = ({
-  transfer, onClose, actor, materialName, sourceName, destName, onAction,
+  transfer, onClose, actor, materialName, sourceName, destName, onAction, onOpenFull,
 }: {
   transfer: TransferRow | null;
   onClose: () => void;
@@ -41,6 +41,8 @@ export const TransferDetailSheet = ({
   sourceName: string;
   destName: string;
   onAction: (a: TransferAction, t: TransferRow) => void;
+  /** Kanonik detay sayfasını açar — panel yalnızca hızlı önizlemedir. */
+  onOpenFull?: (t: TransferRow) => void;
 }) => {
   const { eventsFor } = useInventoryTransfers();
   const history = transfer ? eventsFor(transfer.id) : [];
@@ -128,6 +130,16 @@ export const TransferDetailSheet = ({
               </ol>
             )}
           </section>
+
+          {onOpenFull && (
+            <Button
+              variant="outline"
+              className="min-h-[44px] w-full sm:w-auto"
+              onClick={() => onOpenFull(transfer)}
+            >
+              Tüm detayları aç
+            </Button>
+          )}
 
           {actions.length > 0 && (
             <div className="flex flex-wrap gap-2">
