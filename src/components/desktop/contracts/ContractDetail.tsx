@@ -15,6 +15,18 @@ import {
   formatCurrency, formatDate, getTimeProgress, ForceMajeure
 } from "./ContractTypes";
 import SendForSignatureModal from "./SendForSignatureModal";
+import { openSignedStorageUrl } from "@/lib/storage/signedUrls";
+import { toast } from "sonner";
+
+async function openContractDoc(value: string) {
+  const ok = await openSignedStorageUrl("project-files", value);
+  if (!ok) toast.error("Dosya açılamadı");
+}
+
+async function openSignedDoc(value: string) {
+  const ok = await openSignedStorageUrl("signed-contracts", value);
+  if (!ok) toast.error("Dosya açılamadı");
+}
 
 interface Props {
   contract: Contract;

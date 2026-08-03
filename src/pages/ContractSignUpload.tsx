@@ -4,6 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Download, CheckCircle2, AlertTriangle, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openSignedStorageUrl } from "@/lib/storage/signedUrls";
+
+async function openContractFile(value: string) {
+  const ok = await openSignedStorageUrl("project-files", value);
+  if (!ok) toast.error("Sözleşme dosyası açılamadı.");
+}
+
+async function openSignedFile(value: string) {
+  const ok = await openSignedStorageUrl("signed-contracts", value);
+  if (!ok) toast.error("Dosya açılamadı.");
+}
 
 export default function ContractSignUpload() {
   const { token } = useParams<{ token: string }>();

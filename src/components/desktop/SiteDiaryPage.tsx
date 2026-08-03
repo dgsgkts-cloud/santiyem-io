@@ -854,7 +854,7 @@ const SiteDiaryPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {ep.map(photo => (
                 <div key={photo.id} className="relative group rounded-lg overflow-hidden">
-                  <img src={photo.photo_url} alt={photo.description || ""} className="w-full aspect-square object-cover cursor-pointer" onClick={() => window.open(photo.photo_url, "_blank")} />
+                  <PrivateImage bucket="site-diary-photos" value={photo.photo_url} alt={photo.description || ""} className="w-full aspect-square object-cover cursor-pointer" openOnClick />
                   {photo.description && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
                       <p className="text-[10px] text-white truncate">{photo.description}</p>
@@ -1047,7 +1047,7 @@ const SiteDiaryPage = () => {
           <div className="grid grid-cols-4 gap-2 mb-3">
             {entryPhotos(editingEntry.id).map(photo => (
               <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-square">
-                <img src={photo.photo_url} alt={photo.description || ""} className="w-full h-full object-cover" />
+                <PrivateImage bucket="site-diary-photos" value={photo.photo_url} alt={photo.description || ""} className="w-full h-full object-cover" />
                 <button
                   onClick={async () => {
                     if (confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) {
