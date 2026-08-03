@@ -2099,6 +2099,62 @@ export type Database = {
           },
         ]
       }
+      inventory_transfer_documents: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          doc_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          transfer_id: string
+          updated_at: string
+          uploaded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          doc_type?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          transfer_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          doc_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          transfer_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfer_documents_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_transfer_events: {
         Row: {
           action: string
@@ -6097,6 +6153,10 @@ export type Database = {
         Args: { _payment_id: string }
         Returns: undefined
       }
+      delete_transfer_document: {
+        Args: { _document_id: string; _reason?: string }
+        Returns: boolean
+      }
       depot_permission: { Args: { _key: string }; Returns: boolean }
       dispatch_stock_transfer: {
         Args: {
@@ -6389,6 +6449,17 @@ export type Database = {
       recover_stale_communications: {
         Args: { _older_than_minutes?: number }
         Returns: number
+      }
+      register_transfer_document: {
+        Args: {
+          _doc_type?: string
+          _file_name: string
+          _file_path: string
+          _file_size: number
+          _mime_type: string
+          _transfer_id: string
+        }
+        Returns: string
       }
       remove_project_member: {
         Args: { _project: string; _user: string }
