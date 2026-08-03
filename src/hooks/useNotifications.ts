@@ -5,13 +5,15 @@ import { toast } from "sonner";
 
 export interface AppNotification {
   id: string;
-  type: "reminder" | "milestone";
+  type: "reminder" | "milestone" | "record";
   title: string;
   message: string;
   daysLeft: number; // negative = overdue
   completed: boolean;
   targetTab: string;
   targetProjectId?: string;
+  /** Kanonik uygulama içi hedef (örn. /depo/transferler/:id). Varsa sekme yerine bu kullanılır. */
+  link?: string;
   sourceDate: string;
 }
 
@@ -27,6 +29,8 @@ interface Snapshot {
   reminders: any[];
   milestones: any[];
   projects: any[];
+  /** notification_history kayıtları — kalıcı, click_url taşıyan bildirimler. */
+  records: any[];
   readKeys: string[];
   loading: boolean;
   /** keys with an in-flight read mutation — used to block duplicate writes */
@@ -39,6 +43,7 @@ let snapshot: Snapshot = {
   reminders: [],
   milestones: [],
   projects: [],
+  records: [],
   readKeys: [],
   loading: true,
   pending: [],
@@ -61,16 +66,23 @@ let loadPromise: Promise<void> | null = null;
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 
 async function loadAll(userId: string) {
-  const [r, m, p, reads] = await Promise.all([
+  const [r, m, p, reads, hist] = await Promise.all([
     supabase.from("reminders").select("*").eq("user_id", userId),
     supabase.from("project_milestones").select("*").eq("user_id", userId),
     supabase.from("projects").select("id, name").eq("user_id", userId),
     supabase.from("notification_reads").select("notification_key").eq("user_id", userId),
+    supabase
+      .from("notification_history")
+      .select("id, title, body, notification_type, click_url, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
   setState({
     reminders: r.data || [],
     milestones: m.data || [],
     projects: p.data || [],
+    records: hist.data || [],
     readKeys: (reads.data || []).map((x: any) => x.notification_key),
     loading: false,
   });
@@ -93,7 +105,7 @@ function ensureStore(userId: string | null) {
     if (snapshot.userId !== null) {
       loadPromise = null;
       if (realtimeChannel) { supabase.removeChannel(realtimeChannel); realtimeChannel = null; }
-      setState({ userId: null, reminders: [], milestones: [], projects: [], readKeys: [], loading: false, pending: [], bulkRunning: false });
+      setState({ userId: null, reminders: [], milestones: [], projects: [], records: [], readKeys: [], loading: false, pending: [], bulkRunning: false });
     } else if (snapshot.loading) {
       setState({ loading: false });
     }
@@ -137,7 +149,7 @@ export function useNotifications() {
     ensureStore(user?.id ?? null);
   }, [user?.id]);
 
-  const { reminders, milestones, projects, readKeys, loading, pending, bulkRunning } = state;
+  const { reminders, milestones, projects, records, readKeys, loading, pending, bulkRunning } = state;
 
   const notifications = useMemo<AppNotification[]>(() => {
     const today = new Date();
@@ -170,6 +182,22 @@ export function useNotifications() {
         completed: r.done,
         targetTab: "reminders",
         sourceDate: r.reminder_date,
+      });
+    }
+
+    // Kalıcı kayıt bildirimleri (transfer, sipariş vb.) — click_url ile gelir.
+    for (const h of records) {
+      if (!h.click_url) continue;
+      result.push({
+        id: `nh-${h.id}`,
+        type: "record",
+        title: h.title || "Bildirim",
+        message: h.body || "",
+        daysLeft: 0,
+        completed: false,
+        targetTab: "warehouse",
+        link: h.click_url,
+        sourceDate: h.created_at,
       });
     }
 
@@ -281,6 +309,7 @@ export function useNotifications() {
   /** Does the notification still point at an existing record? */
   const hasValidDestination = useCallback(
     (n: AppNotification) => {
+      if (n.link) return true;
       if (n.targetProjectId) return projects.some((p: any) => p.id === n.targetProjectId);
       return Boolean(n.targetTab);
     },
