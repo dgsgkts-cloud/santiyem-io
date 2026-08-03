@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { signCallbackParams } from '../_shared/callbackSignature.ts'
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,6 +60,7 @@ Deno.serve(async (req) => {
       })
     }
 
+    const body = await req.json()
     const { planKey, yearly, native } = body
     const subType = yearly ? 'yearly' : 'monthly'
     const isNative = native === true || native === 1 || native === '1'
@@ -128,7 +131,12 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Bind the callback query params to THIS checkout — otherwise the public
+    // callback URL would accept any txnId/subId supplied by the payer.
+    const callbackSig = await signCallbackParams([txn.id, sub.id, monthlyPrice])
+
     const buyerId = user.id.replace(/-/g, '').substring(0, 20)
+
     const fullName = (user.user_metadata?.full_name || 'User').replace(/[^\x00-\x7F]/g, 'x')
     const firstName = fullName.split(' ')[0] || 'User'
     const lastName = fullName.split(' ').slice(1).join(' ') || 'App'
@@ -142,7 +150,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}${isNative ? '&native=1' : ''}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}&sig=${callbackSig}${isNative ? '&native=1' : ''}`,
       enabledInstallments: [1],
       // Enable card storage so iyzico returns cardUserKey & cardToken
       enabledCardStorage: 1,

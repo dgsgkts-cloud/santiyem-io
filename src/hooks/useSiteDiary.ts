@@ -153,16 +153,16 @@ export function useSiteDiary(projectId?: string) {
       toast.error("Fotoğraf yüklenirken hata oluştu.");
       return null;
     }
-    const { data: urlData } = supabase.storage.from("site-diary-photos").getPublicUrl(path);
+    // Bucket is private: store the object path, sign it when rendering.
     const { error: dbError } = await supabase.from("site_diary_photos").insert({
       user_id: user!.id,
       diary_entry_id: entryId,
-      photo_url: urlData.publicUrl,
+      photo_url: path,
       description,
     } as any);
     if (dbError) throw dbError;
     qc.invalidateQueries({ queryKey: ["site-diary-photos"] });
-    return urlData.publicUrl;
+    return path;
   };
 
   const deletePhoto = async (id: string) => {

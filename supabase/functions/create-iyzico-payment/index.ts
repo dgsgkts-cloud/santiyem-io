@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { signCallbackParams } from '../_shared/callbackSignature.ts'
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -86,7 +88,12 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Bind the callback query params to THIS checkout so a payer cannot point a
+    // successful payment at somebody else's (or a pricier) pending transaction.
+    const callbackSig = await signCallbackParams([txn.id, subType])
+
     const buyerId = user.id.replace(/-/g, '').substring(0, 20)
+
     const fullName = (user.user_metadata?.full_name || 'User').replace(/[^\x00-\x7F]/g, 'x')
     const firstName = fullName.split(' ')[0] || 'User'
     const lastName = fullName.split(' ').slice(1).join(' ') || 'App'
@@ -100,7 +107,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}&subType=${subType}${isNative ? '&native=1' : ''}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/iyzico-callback?txnId=${txn.id}&subType=${subType}&sig=${callbackSig}${isNative ? '&native=1' : ''}`,
       enabledInstallments: [1],
       enabledCardStorage: 1,
       buyer: {

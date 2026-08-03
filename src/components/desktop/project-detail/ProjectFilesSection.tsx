@@ -2,6 +2,8 @@ import { RefObject } from "react";
 import { Upload, FileText, FileDown, Trash2 } from "lucide-react";
 import { SectionCard } from "@/components/ui/responsive";
 import { SmartDocumentsFolders } from "../ProjectCockpit";
+import { openSignedStorageUrl } from "@/lib/storage/signedUrls";
+import { toast } from "sonner";
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return bytes + " B";
@@ -27,6 +29,11 @@ interface Props {
   onRequestDelete: (id: string, name: string, url: string) => void;
 }
 
+async function openFile(url: string) {
+  const ok = await openSignedStorageUrl("project-files", url);
+  if (!ok) toast.error("Dosya açılamadı");
+}
+
 export default function ProjectFilesSection(p: Props) {
   return (
     <SectionCard
@@ -48,7 +55,7 @@ export default function ProjectFilesSection(p: Props) {
       }
     >
       <div className="mb-4">
-        <SmartDocumentsFolders files={p.files as any} onOpen={(f) => window.open(f.file_url, "_blank")} />
+        <SmartDocumentsFolders files={p.files as any} onOpen={(f) => openFile(f.file_url)} />
       </div>
 
       {p.loading ? (
@@ -75,14 +82,13 @@ export default function ProjectFilesSection(p: Props) {
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <a
-                  href={f.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => openFile(f.file_url)}
+                  aria-label="İndir"
                   className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground"
                 >
                   <FileDown className="w-3.5 h-3.5" />
-                </a>
+                </button>
                 {p.canEdit && (
                   <button
                     onClick={() => p.onRequestDelete(f.id, f.file_name, f.file_url)}
