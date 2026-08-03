@@ -11,6 +11,10 @@
 // yet, so their collections are intentionally empty (not faked).
 
 import type { Material, MaterialEntry, MaterialExit } from "@/hooks/useMaterials";
+import {
+  UNVERIFIED_CONSUMPTION_COPY,
+  type ConsumptionEvent,
+} from "@/lib/inventory/consumption";
 
 /* ────────────────────────────── truthful copy ─────────────────────────────── */
 
