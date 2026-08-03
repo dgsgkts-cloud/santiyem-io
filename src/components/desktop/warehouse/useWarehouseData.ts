@@ -257,34 +257,47 @@ export const useWarehouseData = (projectId?: string): WarehouseData => {
     const totalStockValue = stockItems.reduce((s, i) => s + (i.stockValue ?? 0), 0);
     const valueUnknownCount = stockItems.filter((i) => i.stockValue === null && i.onHand > 0).length;
 
-    // Son 30 gün tüketim maliyeti: çıkış miktarı × ağırlıklı ortalama maliyet.
+    // KANONİK TÜKETİM — yalnızca project_issue / consumption hareketleri.
+    // Transfer, sayım düzeltmesi, zimmet, iade, hurda ve ters kayıtlar hariç.
+    // Sunucu görünümü (inventory_consumption) varsa o kullanılır; yoksa aynı
+    // sınıflandırma defter satırlarına uygulanır — ikinci bir hesap yoktur.
+    const consumptionEvents: ConsumptionEvent[] =
+      (serverConsumption?.length ?? 0) > 0 ? serverConsumption : toConsumptionEvents(ledger ?? []);
+    const unknownTypes = unknownMovementTypes(ledger ?? []);
+
+    // Son 30 gün tüketim maliyeti: tüketim miktarı × ağırlıklı ortalama maliyet.
     const since = new Date();
     since.setDate(since.getDate() - 30);
     const sinceIso = since.toISOString().slice(0, 10);
     const costById = new Map(items.map((i) => [i.id, i.avgCost]));
     let monthlyConsumptionCost = 0;
     let costedAny = false;
-    for (const x of pseudoExits) {
-      if ((x.exit_date ?? "") < sinceIso) continue;
-      const c = costById.get(x.material_id);
-      if (c === null || c === undefined) continue;
-      monthlyConsumptionCost += x.quantity * c;
+    for (const c of consumptionEvents) {
+      if ((c.movement_date ?? "") < sinceIso) continue;
+      const cost = costById.get(c.material_id);
+      if (cost === null || cost === undefined) continue;
+      monthlyConsumptionCost += c.consumption_quantity * cost;
       costedAny = true;
     }
 
     return {
-      loading: !!isLoading || ledgerLoading,
+      loading: !!isLoading || ledgerLoading || consumptionLoading,
       items,
       stockItems,
       nonStockItems,
       movements,
       ledger: ledger ?? [],
+      consumption: consumptionEvents,
+      unknownMovementTypes: unknownTypes,
       totalStockValue,
       valueUnknownCount,
       monthlyConsumptionCost,
       monthlyConsumptionKnown: costedAny,
       dataQuality: auditInventory(items, mats as any, pseudoEntries as any, pseudoExits as any),
-      forecastFor: (item: InventoryItem) => forecastDepletion(item, pseudoExits as any),
+      forecastFor: (item: InventoryItem) =>
+        forecastFromConsumption(item, consumptionEvents, {
+          hasUnknownMovementTypes: unknownTypes.length > 0,
+        }),
       warehouses,
       warehouseStock,
       transfers: [],
@@ -292,5 +305,5 @@ export const useWarehouseData = (projectId?: string): WarehouseData => {
       counts: [],
       lastUpdated: new Date(),
     };
-  }, [materials, whRows, ledger, isLoading, ledgerLoading]);
+  }, [materials, whRows, ledger, serverConsumption, isLoading, ledgerLoading, consumptionLoading]);
 };
