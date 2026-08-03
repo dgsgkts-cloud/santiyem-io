@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { extractStoragePath } from "@/lib/storage/signedUrls";
 
 export interface ProjectFile {
   id: string;
@@ -42,13 +43,12 @@ export function useProjectFiles(projectId: string) {
       .upload(filePath, file);
     if (uploadError) { toast.error("Dosya yüklenemedi"); setUploading(false); return; }
 
-    const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(filePath);
-
+    // Bucket is private: persist the object path and sign it on demand.
     const { error: dbError } = await supabase.from("project_files").insert({
       user_id: user.id,
       project_id: projectId,
       file_name: file.name,
-      file_url: urlData.publicUrl,
+      file_url: filePath,
       file_size: file.size,
       file_type: file.type || "application/octet-stream",
     });
@@ -59,10 +59,9 @@ export function useProjectFiles(projectId: string) {
   };
 
   const deleteFile = async (fileId: string, fileUrl: string) => {
-    // Extract path from URL
-    const urlParts = fileUrl.split("/project-files/");
-    if (urlParts[1]) {
-      await supabase.storage.from("project-files").remove([decodeURIComponent(urlParts[1])]);
+    const path = extractStoragePath("project-files", fileUrl);
+    if (path) {
+      await supabase.storage.from("project-files").remove([path]);
     }
     const { error } = await supabase.from("project_files").delete().eq("id", fileId);
     if (error) { toast.error("Dosya silinemedi"); return; }

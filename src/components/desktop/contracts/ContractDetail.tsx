@@ -111,11 +111,9 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
             <Edit2 className="w-3 h-3 mr-1" /> Düzenle
           </Button>
           {contract.file_url && (
-            <a href={contract.file_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <Download className="w-3 h-3 mr-1" /> PDF
-              </Button>
-            </a>
+            <Button onClick={() => openContractDoc(contract.file_url!)} variant="outline" size="sm" className="h-8 text-xs">
+              <Download className="w-3 h-3 mr-1" /> PDF
+            </Button>
           )}
           <Button onClick={onDelete} variant="outline" size="sm" className="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10">
             <Trash2 className="w-3 h-3 mr-1" /> Sil
@@ -189,11 +187,9 @@ export default function ContractDetail({ contract, onBack, onEdit, onDelete, onR
                         </p>
                         <p className="text-[10px] text-muted-foreground">{new Date(u.created_at).toLocaleString("tr-TR")}</p>
                       </div>
-                      <a href={u.file_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] text-blue-500">
-                          <Download className="w-3 h-3 mr-1" /> İndir
-                        </Button>
-                      </a>
+                      <Button onClick={() => openSignedDoc(u.file_url)} variant="outline" size="sm" className="h-7 text-[10px] text-blue-500">
+                        <Download className="w-3 h-3 mr-1" /> İndir
+                      </Button>
                     </div>
                   ))}
                 </div>

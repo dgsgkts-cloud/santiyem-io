@@ -95,8 +95,8 @@ export default function ContractWizard({ contract, onSave, onCancel }: Props) {
         setAnalyzing(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(path);
-      setForm(f => ({ ...f, file_url: urlData.publicUrl, file_name: file.name }));
+      // Private bucket: keep the object path, sign it when the file is opened.
+      setForm(f => ({ ...f, file_url: path, file_name: file.name }));
 
       const text = await file.text();
       if (text.length < 50) {

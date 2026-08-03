@@ -65,13 +65,11 @@ export default function ContractSignUpload() {
 
       if (uploadErr) throw uploadErr;
 
-      const { data: urlData } = supabase.storage.from("signed-contracts").getPublicUrl(path);
-
       const { error: rpcErr } = await (supabase as any).rpc("record_signed_upload", {
         _token: token,
         _signer_name: signerName.trim(),
         _signer_title: signerTitle.trim() || null,
-        _file_url: urlData.publicUrl,
+        _file_url: path,
         _file_name: file.name,
         _file_size: file.size,
       });
@@ -165,7 +163,7 @@ export default function ContractSignUpload() {
           <>
             {/* Download button */}
             {contract?.file_url && (
-              <a href={contract.file_url} target="_blank" rel="noopener noreferrer" className="block">
+              <button type="button" onClick={() => openContractFile(contract.file_url!)} className="block w-full text-left">
                 <div className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-[#3B82F6] transition-colors"
                   style={{ backgroundColor: "#161C23", border: "1px solid #1E2732" }}>
                   <Download className="w-6 h-6" style={{ color: "#3B82F6" }} />
@@ -174,7 +172,7 @@ export default function ContractSignUpload() {
                     <p className="text-[10px]" style={{ color: "#64748B" }}>{contract.file_name || "Sözleşme PDF"}</p>
                   </div>
                 </div>
-              </a>
+              </button>
             )}
 
             {/* Info box */}
@@ -248,7 +246,7 @@ export default function ContractSignUpload() {
                 {existingUploads.map(u => (
                   <div key={u.id} className="flex items-center justify-between text-xs">
                     <span style={{ color: "#F1F5F9" }}>{u.file_name} — {u.signer_name}</span>
-                    <a href={u.file_url} target="_blank" rel="noopener noreferrer" className="text-[10px]" style={{ color: "#3B82F6" }}>İndir</a>
+                    <button type="button" onClick={() => openSignedFile(u.file_url)} className="text-[10px]" style={{ color: "#3B82F6" }}>İndir</button>
                   </div>
                 ))}
               </div>
