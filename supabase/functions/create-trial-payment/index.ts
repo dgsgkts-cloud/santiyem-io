@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       })
     }
 
+    const body = await req.json()
     const { planKey, yearly, native } = body
     const subType = yearly ? 'yearly' : 'monthly'
     const isNative = native === true || native === 1 || native === '1'
