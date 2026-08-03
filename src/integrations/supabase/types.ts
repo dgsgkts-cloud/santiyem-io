@@ -2153,6 +2153,13 @@ export type Database = {
             referencedRelation: "inventory_transfers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inventory_transfer_documents_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_transfers_list"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inventory_transfer_events: {
@@ -2198,6 +2205,13 @@ export type Database = {
             columns: ["transfer_id"]
             isOneToOne: false
             referencedRelation: "inventory_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfer_events_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_transfers_list"
             referencedColumns: ["id"]
           },
         ]
@@ -5975,6 +5989,100 @@ export type Database = {
           {
             foreignKeyName: "stock_movements_warehouse_id_fkey"
             columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transfers_list: {
+        Row: {
+          approved_at: string | null
+          approver_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string | null
+          damaged_quantity: number | null
+          dest_warehouse_id: string | null
+          dest_warehouse_name: string | null
+          discrepancy_note: string | null
+          discrepancy_quantity: number | null
+          dispatch_movement_id: string | null
+          dispatch_reference: string | null
+          dispatched_at: string | null
+          dispatched_quantity: number | null
+          dispatcher_id: string | null
+          expected_arrival: string | null
+          expected_arrival_at: string | null
+          id: string | null
+          in_transit_quantity: number | null
+          material_id: string | null
+          material_name: string | null
+          missing_quantity: number | null
+          notes: string | null
+          overdue_reference_at: string | null
+          project_id: string | null
+          reason: string | null
+          received_at: string | null
+          received_quantity: number | null
+          receiver_id: string | null
+          rejected_quantity: number | null
+          rejection_reason: string | null
+          requested_at: string | null
+          requested_quantity: number | null
+          requester_id: string | null
+          required_date: string | null
+          revision_note: string | null
+          search_text: string | null
+          source_warehouse_id: string | null
+          source_warehouse_name: string | null
+          status: string | null
+          transfer_no: string | null
+          unit: string | null
+          unit_cost: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfers_dest_warehouse_id_fkey"
+            columns: ["dest_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_consumption"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_source_warehouse_id_fkey"
+            columns: ["source_warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
