@@ -18,6 +18,7 @@ import { useInventoryTransfers, type TransferRow } from "@/hooks/useInventoryTra
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import { useWarehouseData } from "@/components/desktop/warehouse/useWarehouseData";
 import { TransferActionDialog } from "@/components/desktop/warehouse/TransferDialogs";
+import { TransferDocumentsCard } from "@/components/desktop/warehouse/TransferDocumentsCard";
 import { fmtQty, fmtDateTime } from "@/components/desktop/warehouse/inventoryTruth";
 import {
   TRANSFER_STATUS_LABEL, TRANSFER_STATUS_TONE, TRANSFER_ACTION_LABEL,
