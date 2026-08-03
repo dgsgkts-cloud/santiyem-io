@@ -18,6 +18,7 @@ import { useInventoryTransfers, type TransferRow } from "@/hooks/useInventoryTra
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import { useWarehouseData } from "@/components/desktop/warehouse/useWarehouseData";
 import { TransferActionDialog } from "@/components/desktop/warehouse/TransferDialogs";
+import { TransferDocumentsCard } from "@/components/desktop/warehouse/TransferDocumentsCard";
 import { fmtQty, fmtDateTime } from "@/components/desktop/warehouse/inventoryTruth";
 import {
   TRANSFER_STATUS_LABEL, TRANSFER_STATUS_TONE, TRANSFER_ACTION_LABEL,
@@ -38,6 +39,8 @@ const EVENT_LABEL_TR: Record<string, string> = {
   receive: "Teslim alındı",
   cancel: "İptal edildi",
   return: "Transit sevkiyat kaynağa geri alındı",
+  document_uploaded: "Belge yüklendi",
+  document_deleted: "Belge silindi",
 };
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
@@ -385,21 +388,15 @@ export default function TransferDetailPage() {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {/* Belgeler */}
-            <SectionCard title="Belgeler">
-              {documents.length === 0 ? (
-                <Empty text="Bu transfere bağlı belge numarası girilmemiş. Transfer modülünde dosya yükleme henüz bulunmuyor." />
-              ) : (
-                <ul className="space-y-1.5">
-                  {documents.map((d, i) => (
-                    <li key={`${d.label}-${i}`} className="flex items-center gap-2 min-w-0">
-                      <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <span className="ds-caption text-muted-foreground shrink-0">{d.label}:</span>
-                      <span className="ds-body text-foreground truncate">{d.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </SectionCard>
+            <TransferDocumentsCard
+              transferId={transfer.id}
+              ownerId={transfer.user_id}
+              references={documents}
+              canManage={
+                permissions.create_transfer || permissions.dispatch_transfer ||
+                permissions.receive_transfer || permissions.approve_transfer
+              }
+            />
 
             {/* Bağlantılı Kayıtlar */}
             <SectionCard title="Bağlantılı Kayıtlar">
