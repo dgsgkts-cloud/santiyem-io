@@ -11,7 +11,7 @@ import {
   TRANSFER_LIST_VIEW,
 } from "@/lib/inventory/transferQuery";
 import {
-  DEFAULT_TRANSFER_FILTERS, PAGE_SIZE, parseTransferFilters, serializeTransferFilters,
+  DEFAULT_TRANSFER_FILTERS, PAGE_SIZE, parseTransferFilters, serializeTransferFilters, pageParamPatch,
   type TransferFilterState,
 } from "@/lib/inventory/transferFilters";
 import {
@@ -194,6 +194,55 @@ describe("URL durumu", () => {
     expect(opsOf(calls, "eq")).toEqual([["status", "in_transit"], ["source_warehouse_id", "w1"]]);
   });
 });
+
+// ---- sayfa parametresi normalizasyonu ----------------------------------
+describe("sayfa parametresi normalizasyonu (URL)", () => {
+  const patchOf = (qs: string, resolved: number) => {
+    const sp = new URLSearchParams(qs);
+    const next = pageParamPatch(sp, resolved);
+    return next === null ? null : next.toString();
+  };
+
+  it("geçerli sayfada URL değiştirilmez (döngü yok)", () => {
+    expect(patchOf("sekme=transferler&sf=2", 2)).toBeNull();
+    expect(patchOf("sekme=transferler", 1)).toBeNull();
+  });
+
+  it("sıfır, negatif ve sayısal olmayan değerler 1'e indirilir", () => {
+    for (const raw of ["sf=0", "sf=-3", "sf=abc"]) {
+      const out = patchOf(`sekme=transferler&${raw}`, normalizePage(parseTransferFilters(new URLSearchParams(raw)).page, 1500));
+      expect(out).toBe("sekme=transferler");
+    }
+  });
+
+  it("aralık dışı çok büyük sayfa son geçerli sayfaya normalize edilir", () => {
+    const total = 1510;
+    const last = pageCountOf(total);
+    expect(patchOf("sekme=transferler&sf=9999", normalizePage(9999, total))).toBe(
+      `sekme=transferler&sf=${last}`,
+    );
+  });
+
+  it("ilgisiz tüm filtre parametreleri korunur", () => {
+    const out = patchOf("sekme=transferler&q=çimento&kova=transit&sir=oldest&gec=1&sf=9999", 3);
+    expect(out).toBe("sekme=transferler&q=%C3%A7imento&kova=transit&sir=oldest&gec=1&sf=3");
+  });
+
+  it("sonuç kümesi boşsa sayfa 1 olur ve sf kaldırılır", () => {
+    expect(patchOf("q=ZZZ&sf=5", normalizePage(5, 0))).toBe("q=ZZZ");
+  });
+
+  it("filtre sonrası son sayfa ve mutasyonla küçülen sayfa sayısı", () => {
+    // 1510 kayıt → 76 sayfa; filtre 25 kayda düşürür → 2 sayfa
+    expect(normalizePage(76, 25)).toBe(pageCountOf(25));
+    expect(patchOf("sf=76", normalizePage(76, 25))).toBe(`sf=${pageCountOf(25)}`);
+    // son sayfadaki tek kayıt silinir → bir önceki sayfaya iner
+    const before = PAGE_SIZE * 3 + 1;
+    expect(normalizePage(4, before)).toBe(4);
+    expect(patchOf("sf=4", normalizePage(4, before - 1))).toBe("sf=3");
+  });
+});
+
 
 // ---- belge güvenliği ----------------------------------------------------
 const file = (name: string, type: string, size: number) => {
