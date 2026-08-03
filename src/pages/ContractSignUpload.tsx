@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Download, CheckCircle2, AlertTriangle, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { openSignedStorageUrl } from "@/lib/storage/signedUrls";
+import { createSignedStorageUrl, openSignedStorageUrl } from "@/lib/storage/signedUrls";
 
 async function openContractFile(value: string) {
   const ok = await openSignedStorageUrl("project-files", value);
