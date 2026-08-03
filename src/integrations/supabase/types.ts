@@ -1968,6 +1968,20 @@ export type Database = {
             foreignKeyName: "inventory_count_lines_adjustment_movement_id_fkey"
             columns: ["adjustment_movement_id"]
             isOneToOne: false
+            referencedRelation: "inventory_consumption"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "inventory_count_lines_adjustment_movement_id_fkey"
+            columns: ["adjustment_movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "inventory_count_lines_adjustment_movement_id_fkey"
+            columns: ["adjustment_movement_id"]
+            isOneToOne: false
             referencedRelation: "stock_movements"
             referencedColumns: ["id"]
           },
@@ -2248,6 +2262,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "warehouses"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_consumption"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
+            columns: ["dispatch_movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["source_movement_id"]
           },
           {
             foreignKeyName: "inventory_transfers_dispatch_movement_id_fkey"
@@ -5044,6 +5072,20 @@ export type Database = {
             foreignKeyName: "stock_movements_reversal_of_fkey"
             columns: ["reversal_of"]
             isOneToOne: false
+            referencedRelation: "inventory_consumption"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["source_movement_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
             referencedRelation: "stock_movements"
             referencedColumns: ["id"]
           },
@@ -5730,6 +5772,123 @@ export type Database = {
           total_out: number | null
           user_id: string | null
           warehouse_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_consumption: {
+        Row: {
+          base_unit: string | null
+          company_id: string | null
+          consumption_quantity: number | null
+          consumption_type: string | null
+          cost_code: string | null
+          material_id: string | null
+          movement_date: string | null
+          person: string | null
+          project_id: string | null
+          source_movement_id: string | null
+          unit_cost: number | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          base_unit?: string | null
+          company_id?: string | null
+          consumption_quantity?: number | null
+          consumption_type?: string | null
+          cost_code?: string | null
+          material_id?: string | null
+          movement_date?: string | null
+          person?: string | null
+          project_id?: string | null
+          source_movement_id?: string | null
+          unit_cost?: number | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          base_unit?: string | null
+          company_id?: string | null
+          consumption_quantity?: number | null
+          consumption_type?: string | null
+          cost_code?: string | null
+          material_id?: string | null
+          movement_date?: string | null
+          person?: string | null
+          project_id?: string | null
+          source_movement_id?: string | null
+          unit_cost?: number | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_scrap: {
+        Row: {
+          base_unit: string | null
+          company_id: string | null
+          material_id: string | null
+          movement_date: string | null
+          project_id: string | null
+          reason: string | null
+          scrap_quantity: number | null
+          scrap_type: string | null
+          source_movement_id: string | null
+          unit_cost: number | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          base_unit?: string | null
+          company_id?: string | null
+          material_id?: string | null
+          movement_date?: string | null
+          project_id?: string | null
+          reason?: string | null
+          scrap_quantity?: number | null
+          scrap_type?: string | null
+          source_movement_id?: string | null
+          unit_cost?: number | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          base_unit?: string | null
+          company_id?: string | null
+          material_id?: string | null
+          movement_date?: string | null
+          project_id?: string | null
+          reason?: string | null
+          scrap_quantity?: number | null
+          scrap_type?: string | null
+          source_movement_id?: string | null
+          unit_cost?: number | null
+          warehouse_id?: string | null
         }
         Relationships: [
           {

@@ -105,6 +105,7 @@ export const useInventoryLedger = (projectId?: string) => {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["warehouses"] });
     qc.invalidateQueries({ queryKey: ["stock_movements"] });
+    qc.invalidateQueries({ queryKey: ["inventory_consumption"] });
     qc.invalidateQueries({ queryKey: ["materials"] });
   };
 

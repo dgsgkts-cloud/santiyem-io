@@ -11,6 +11,10 @@
 // yet, so their collections are intentionally empty (not faked).
 
 import type { Material, MaterialEntry, MaterialExit } from "@/hooks/useMaterials";
+import {
+  UNVERIFIED_CONSUMPTION_COPY,
+  type ConsumptionEvent,
+} from "@/lib/inventory/consumption";
 
 /* ────────────────────────────── truthful copy ─────────────────────────────── */
 
@@ -276,7 +280,8 @@ export type Forecast =
         | "no_consumption_history"
         | "history_too_short"
         | "too_few_movements"
-        | "no_consumption_rate";
+        | "no_consumption_rate"
+        | "unverified_consumption_data";
       confidence: "insufficient";
       evidence: ForecastEvidence[];
     }
@@ -296,10 +301,11 @@ export const FORECAST_REASON: Record<
 > = {
   non_stock: "Bu malzeme depoda stoklanmaz; tüketimi teslimat kayıtlarından izlenir.",
   unit_invalid: "Malzemenin birimi doğrulanmadığı için tahmin hesaplanamıyor.",
-  no_consumption_history: "Kayıtlı malzeme çıkışı bulunmuyor.",
-  history_too_short: `Anlamlı tahmin için en az ${FORECAST_MIN_HISTORY_DAYS} günlük hareket geçmişi gerekir.`,
-  too_few_movements: `Anlamlı tahmin için en az ${FORECAST_MIN_ISSUE_MOVEMENTS} çıkış hareketi gerekir.`,
-  no_consumption_rate: "Kayıtlı çıkışlardan pozitif bir tüketim hızı hesaplanamadı.",
+  no_consumption_history: "Kayıtlı malzeme tüketimi bulunmuyor.",
+  history_too_short: `Anlamlı tahmin için en az ${FORECAST_MIN_HISTORY_DAYS} günlük tüketim geçmişi gerekir.`,
+  too_few_movements: `Anlamlı tahmin için en az ${FORECAST_MIN_ISSUE_MOVEMENTS} tüketim hareketi gerekir.`,
+  no_consumption_rate: "Kayıtlı tüketimden pozitif bir tüketim hızı hesaplanamadı.",
+  unverified_consumption_data: UNVERIFIED_CONSUMPTION_COPY,
 };
 
 const dayDiff = (a: string, b: string) =>
@@ -403,6 +409,49 @@ export const forecastDepletion = (
     ],
   };
 };
+
+/**
+ * CANONICAL forecast entry point.
+ *
+ * Takes ONLY canonical consumption events (public.inventory_consumption /
+ * toConsumptionEvents). Transfers, count adjustments, zimmet issues, returns,
+ * scrap and reversals never reach this function, so they can no longer inflate
+ * the consumption rate.
+ *
+ * When the ledger contains movement labels that cannot be classified, the
+ * forecast is suppressed with `unverified_consumption_data` instead of guessing.
+ */
+export const forecastFromConsumption = (
+  item: InventoryItem,
+  events: ConsumptionEvent[],
+  options: { hasUnknownMovementTypes?: boolean; today?: Date } = {},
+): Forecast => {
+  const { hasUnknownMovementTypes = false, today = new Date() } = options;
+
+
+
+  if (item.stockable && item.unitVerdict.ok && hasUnknownMovementTypes)
+    return {
+      eligible: false,
+      reason: "unverified_consumption_data",
+      confidence: "insufficient",
+      evidence: [
+        { label: "Hareket sınıflandırması", value: "Tanımsız hareket tipi bulundu" },
+      ],
+    };
+
+  const mapped = events
+    .filter((e) => e.material_id === item.id)
+    .map((e) => ({
+      material_id: e.material_id,
+      quantity: e.consumption_quantity,
+      exit_date: e.movement_date,
+    })) as unknown as MaterialExit[];
+
+  return forecastDepletion(item, mapped, today);
+};
+
+
 
 /* ──────────────────────────────── formatters ──────────────────────────────── */
 
