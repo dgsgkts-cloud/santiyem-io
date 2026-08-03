@@ -410,6 +410,51 @@ export const forecastDepletion = (
   };
 };
 
+/**
+ * CANONICAL forecast entry point.
+ *
+ * Takes ONLY canonical consumption events (public.inventory_consumption /
+ * toConsumptionEvents). Transfers, count adjustments, zimmet issues, returns,
+ * scrap and reversals never reach this function, so they can no longer inflate
+ * the consumption rate.
+ *
+ * When the ledger contains movement labels that cannot be classified, the
+ * forecast is suppressed with `unverified_consumption_data` instead of guessing.
+ */
+export const forecastFromConsumption = (
+  item: InventoryItem,
+  events: ConsumptionEvent[],
+  options: { hasUnknownMovementTypes?: boolean; today?: Date } = {},
+): Forecast => {
+  const { hasUnknownMovementTypes = false, today = new Date() } = options;
+
+  if (hasUnknownMovementTypes && !item.stockable === false) {
+    // fall through only for stockable items — handled below
+  }
+
+  if (item.stockable && item.unitVerdict.ok && hasUnknownMovementTypes)
+    return {
+      eligible: false,
+      reason: "unverified_consumption_data",
+      confidence: "insufficient",
+      evidence: [
+        { label: "Hareket sınıflandırması", value: "Tanımsız hareket tipi bulundu" },
+      ],
+    };
+
+  const mapped = events
+    .filter((e) => e.material_id === item.id)
+    .map((e) => ({
+      material_id: e.material_id,
+      quantity: e.consumption_quantity,
+      exit_date: e.movement_date,
+    })) as unknown as MaterialExit[];
+
+  return forecastDepletion(item, mapped, today);
+};
+
+
+
 /* ──────────────────────────────── formatters ──────────────────────────────── */
 
 export const fmtQty = (n: number) =>
