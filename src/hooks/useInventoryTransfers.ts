@@ -6,10 +6,15 @@
 //        INSERT/UPDATE/DELETE yetkisi yoktur, bu yüzden birim, stok, yetki ve
 //        mükerrer belge kontrolleri atlanamaz.
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { SERVER_DECISION, type TransferStatus } from "@/lib/inventory/transferModel";
+import {
+  buildTransferListQuery, normalizePage, pageCountOf,
+} from "@/lib/inventory/transferQuery";
+import { PAGE_SIZE, type TransferFilterState } from "@/lib/inventory/transferFilters";
+
 
 export interface TransferRow {
   id: string;
