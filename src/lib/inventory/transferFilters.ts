@@ -69,6 +69,29 @@ export const serializeTransferFilters = (f: TransferFilterState): URLSearchParam
   return sp;
 };
 
+/**
+ * Sayfa parametresi normalizasyonu.
+ *
+ * `resolvedPage` sunucudan gelen geçerli sayfadır. Dönen değer yalnızca `sf`
+ * parametresini düzeltir; diğer tüm arama parametreleri (filtreler, panel
+ * durumları, sekme) korunur. Değişiklik gerekmiyorsa `null` döner — bu sayede
+ * yönlendirme döngüsü oluşmaz (fonksiyon idempotenttir).
+ */
+export const pageParamPatch = (
+  sp: URLSearchParams,
+  resolvedPage: number,
+): URLSearchParams | null => {
+  const raw = sp.get(KEYS.page);
+  const safe = Number.isFinite(resolvedPage) ? Math.max(1, Math.floor(resolvedPage)) : 1;
+  const want = safe > 1 ? String(safe) : null;
+  if (raw === want) return null;
+  const next = new URLSearchParams(sp);
+  if (want === null) next.delete(KEYS.page);
+  else next.set(KEYS.page, want);
+  return next;
+};
+
+
 /** Listeye dönüş bağlantısı — filtreler korunur. */
 export const transferListPath = (f: TransferFilterState) => {
   const qs = serializeTransferFilters(f).toString();

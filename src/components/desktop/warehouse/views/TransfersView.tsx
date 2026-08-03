@@ -24,7 +24,7 @@ import {
 } from "@/lib/inventory/transferModel";
 import {
   DEFAULT_TRANSFER_FILTERS, TRANSFER_SORT_LABEL,
-  parseTransferFilters, serializeTransferFilters,
+  parseTransferFilters, serializeTransferFilters, pageParamPatch,
   type TransferFilterState, type TransferSort,
 } from "@/lib/inventory/transferFilters";
 import type { WarehouseData } from "../useWarehouseData";
@@ -99,10 +99,18 @@ export const TransfersView = ({ data }: Props) => {
   const nameOfMaterial = (id: string) => data.items.find((i) => i.id === id)?.name ?? "—";
   const nameOfWarehouse = (id: string) => data.warehouses.find((w) => w.id === id)?.name ?? "—";
 
-  /** Sayfa numarası aralık dışına düşerse URL son geçerli sayfaya normalize edilir. */
+  /**
+   * Sayfa parametresi normalizasyonu — sunucudan gelen geçerli sayfa ile URL
+   * daima aynıdır. Geçersiz (sf=abc), sıfır/negatif veya aralık dışı (sf=9999)
+   * değerler geçmişe yeni kayıt eklenmeden (replace) düzeltilir; diğer filtre
+   * parametreleri korunur ve fonksiyon idempotent olduğu için döngü oluşmaz.
+   */
   useEffect(() => {
-    if (!isLoading && filters.page !== page) patch({ page });
-  }, [isLoading, page, filters.page]);
+    if (isLoading || isFetching) return;
+    const next = pageParamPatch(sp, page);
+    if (next) setSp(next, { replace: true });
+  }, [isLoading, isFetching, page, sp, setSp]);
+
 
   /** Detaya giderken mevcut liste adresi "geri" parametresinde taşınır. */
   const openDetail = (t: TransferRow) => {
