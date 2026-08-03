@@ -100,16 +100,10 @@ export const TransfersView = ({ data }: Props) => {
   const nameOfMaterial = (id: string) => data.items.find((i) => i.id === id)?.name ?? "—";
   const nameOfWarehouse = (id: string) => data.warehouses.find((w) => w.id === id)?.name ?? "—";
 
-  const filtered = useMemo(
-    () => applyTransferFilters(transfers, filters, (t) =>
-      [t.transfer_no, nameOfMaterial(t.material_id), nameOfWarehouse(t.source_warehouse_id),
-        nameOfWarehouse(t.dest_warehouse_id)].join(" ")),
-    [transfers, filters, data.items, data.warehouses],
-  );
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const page = Math.min(filters.page, pageCount);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  /** Sayfa numarası aralık dışına düşerse URL son geçerli sayfaya normalize edilir. */
+  useEffect(() => {
+    if (!isLoading && filters.page !== page) patch({ page });
+  }, [isLoading, page, filters.page]);
 
   /** Detaya giderken mevcut liste adresi "geri" parametresinde taşınır. */
   const openDetail = (t: TransferRow) => {
@@ -119,8 +113,12 @@ export const TransfersView = ({ data }: Props) => {
   };
 
   const activeWarehouses = data.warehouses;
-  const quick = quickId ? transfers.find((t) => t.id === quickId) ?? null : null;
-  const actionTransfer = actionId ? transfers.find((t) => t.id === actionId) ?? null : null;
+  const quick = quickId ? rows.find((t) => t.id === quickId) ?? null : null;
+  const actionTransfer = actionId ? rows.find((t) => t.id === actionId) ?? null : null;
+  const hasActiveFilters =
+    !!filters.q || filters.bucket !== "all" || !!filters.status || !!filters.source ||
+    !!filters.dest || !!filters.from || !!filters.to || filters.overdue || filters.discrepancy;
+
 
   const header = (
     <div className="space-y-2">
