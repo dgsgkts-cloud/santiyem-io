@@ -94,6 +94,10 @@ export interface WarehouseData {
   /** Hareket defterinden gelen gerçek kayıtlar (yeni → eski). */
   movements: Movement[];
   ledger: StockMovementRow[];
+  /** Kanonik tüketim kayıtları (yalnızca gerçek malzeme kullanımı). */
+  consumption: ConsumptionEvent[];
+  /** Sınıflandırılamayan hareket tipleri — tahmin bunlarla üretilmez. */
+  unknownMovementTypes: string[];
   totalStockValue: number;
   valueUnknownCount: number;
   monthlyConsumptionCost: number;
@@ -114,6 +118,8 @@ export interface WarehouseData {
 export const useWarehouseData = (projectId?: string): WarehouseData => {
   const { materials, isLoading } = useMaterials(projectId) as any;
   const { warehouses: whRows, movements: ledger, isLoading: ledgerLoading } = useInventoryLedger(projectId);
+  const { consumption: serverConsumption, isLoading: consumptionLoading } =
+    useInventoryConsumption(projectId);
 
   return useMemo(() => {
     const mats: any[] = materials ?? [];
