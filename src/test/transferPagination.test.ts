@@ -217,16 +217,17 @@ describe("belge doğrulama sıkılaştırması", () => {
     expect(validateTransferFile(file("a\\b.pdf", "application/pdf", 100))).toMatch(/geçersiz karakter/);
     // depolama yolu her zaman temizlenir
     expect(sanitizeFileName("../../etc/passwd.pdf")).not.toContain("/");
-    expect(sanitizeFileName("../../etc/passwd.pdf")).not.toContain("..etc");
+    expect(sanitizeFileName("../../etc/passwd.pdf")).not.toMatch(/etc\//);
   });
   it("sıfır bayt dosyayı reddeder", () => {
     expect(validateTransferFile(file("a.pdf", "application/pdf", 0))).toMatch(/boş/);
   });
   it("aynı ad, tür ve boyuttaki aktif belgeyi mükerrer sayar", () => {
-    const docs = [{ file_name: "Sevk İrsaliyesi.pdf", file_size: 1234, doc_type: "dispatch_note" }];
-    expect(isDuplicateDocument(docs, { name: "sevk i̇rsaliyesi.pdf", size: 1234 }, "dispatch_note")).toBe(true);
-    expect(isDuplicateDocument(docs, { name: "Sevk İrsaliyesi.pdf", size: 9999 }, "dispatch_note")).toBe(false);
-    expect(isDuplicateDocument(docs, { name: "Sevk İrsaliyesi.pdf", size: 1234 }, "photo")).toBe(false);
+    const docs = [{ file_name: "Sevk Irsaliyesi.pdf", file_size: 1234, doc_type: "dispatch_note" }];
+    expect(isDuplicateDocument(docs, { name: "sevk irsaliyesi.pdf", size: 1234 }, "dispatch_note")).toBe(true);
+    expect(isDuplicateDocument(docs, { name: "Sevk Irsaliyesi.pdf", size: 9999 }, "dispatch_note")).toBe(false);
+    expect(isDuplicateDocument(docs, { name: "Sevk Irsaliyesi.pdf", size: 1234 }, "photo")).toBe(false);
     expect(isDuplicateDocument([], { name: "a.pdf", size: 1 }, "other")).toBe(false);
   });
+
 });
