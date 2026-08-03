@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       currency: 'TRY',
       basketId: txn.id,
       paymentGroup: 'PRODUCT',
-      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}${isNative ? '&native=1' : ''}`,
+      callbackUrl: `${Deno.env.get('SUPABASE_URL')}/functions/v1/trial-callback?txnId=${txn.id}&subId=${sub.id}&planAmount=${monthlyPrice}&sig=${callbackSig}${isNative ? '&native=1' : ''}`,
       enabledInstallments: [1],
       // Enable card storage so iyzico returns cardUserKey & cardToken
       enabledCardStorage: 1,
