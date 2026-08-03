@@ -4,7 +4,7 @@
 // yapılır. Kayıt işlemleri sunucu fonksiyonları üzerinden yürür.
 
 import { useRef, useState } from "react";
-import { FileText, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { Download, FileText, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/ui/responsive";
 import { Button } from "@/components/ui/button";
@@ -123,17 +123,30 @@ export const TransferDocumentsCard = ({ transferId, ownerId, references, canMana
                   {TRANSFER_DOC_TYPE_LABEL[d.doc_type] ?? d.doc_type} · {fmtFileSize(d.file_size)}
                 </p>
               </button>
-              {canManage && (
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Mobilde hover yok: indirme ve silme her zaman erişilebilir. */}
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label="Belgeyi sil"
-                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity min-h-[40px] min-w-[40px]"
-                  onClick={() => setPending(d)}
+                  aria-label="Belgeyi indir"
+                  className="min-h-[44px] min-w-[44px]"
+                  onClick={() => open(d).then((ok) => { if (!ok) toast.error("Belge bağlantısı oluşturulamadı."); })}
                 >
-                  <Trash2 className="w-4 h-4 text-rose-400" />
+                  <Download className="w-4 h-4 text-muted-foreground" />
                 </Button>
-              )}
+                {canManage && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Belgeyi sil"
+                    className="min-h-[44px] min-w-[44px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100 transition-opacity"
+                    onClick={() => setPending(d)}
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400" />
+                  </Button>
+                )}
+              </div>
+
             </li>
           ))}
         </ul>

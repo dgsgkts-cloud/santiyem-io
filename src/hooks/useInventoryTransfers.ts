@@ -6,10 +6,15 @@
 //        INSERT/UPDATE/DELETE yetkisi yoktur, bu yüzden birim, stok, yetki ve
 //        mükerrer belge kontrolleri atlanamaz.
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { SERVER_DECISION, type TransferStatus } from "@/lib/inventory/transferModel";
+import {
+  buildTransferListQuery, normalizePage, pageCountOf,
+} from "@/lib/inventory/transferQuery";
+import { PAGE_SIZE, type TransferFilterState } from "@/lib/inventory/transferFilters";
+
 
 export interface TransferRow {
   id: string;
@@ -98,12 +103,97 @@ export interface CreateTransferInput {
   allowSafetyBreach?: boolean;
 }
 
-export const useInventoryTransfers = () => {
+export interface TransferListRow extends TransferRow {
+  material_name: string | null;
+  source_warehouse_name: string | null;
+  dest_warehouse_name: string | null;
+  discrepancy_quantity: number;
+  overdue_reference_at: string | null;
+}
+
+export interface TransferPageResult {
+  rows: TransferListRow[];
+  total: number;
+  pageCount: number;
+  page: number;
+}
+
+/**
+ * Sunucu tarafı sayfalama — filtreler, arama ve sıralama veritabanında
+ * uygulanır; sonuç sayfası ve doğru toplam kayıt sayısı birlikte döner.
+ * Hiçbir sorgu 1000 kayıtta kırpılmaz.
+ */
+export const useTransferPage = (filters: TransferFilterState) => {
+  const { user } = useUser();
+
+  const query = useQuery({
+    queryKey: ["inventory_transfers_page", filters],
+    queryFn: async (): Promise<TransferPageResult> => {
+      const run = async (page: number) => {
+        const q = buildTransferListQuery(db, filters, { page });
+        const { data, error, count } = await (q as any);
+        if (error) throw error;
+        return { data: (data ?? []) as any[], count: Number(count) || 0 };
+      };
+
+      let res = await run(filters.page);
+      const total = res.count;
+      const normalizedPage = normalizePage(filters.page, total);
+      // Kayıt silindiğinde / durum değiştiğinde boşalan sayfa son sayfaya iner.
+      if (normalizedPage !== filters.page) res = await run(normalizedPage);
+
+      return {
+        rows: res.data.map((r) => ({
+          ...normalize(r),
+          discrepancy_quantity: num(r.discrepancy_quantity),
+        })) as TransferListRow[],
+        total,
+        pageCount: pageCountOf(total),
+        page: normalizedPage,
+      };
+    },
+    enabled: !!user,
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    rows: query.data?.rows ?? [],
+    total: query.data?.total ?? 0,
+    pageCount: query.data?.pageCount ?? 1,
+    page: query.data?.page ?? filters.page,
+    pageSize: PAGE_SIZE,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+  };
+};
+
+/** Tek transfer kaydı — detay sayfası listeyi çekmek zorunda kalmaz. */
+export const useTransfer = (transferId: string | undefined) => {
+  const { user } = useUser();
+  const { data, isLoading } = useQuery({
+    queryKey: ["inventory_transfer", transferId],
+    queryFn: async (): Promise<TransferRow | null> => {
+      const { data, error } = await db
+        .from("inventory_transfers")
+        .select("*")
+        .eq("id", transferId)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? normalize(data) : null;
+    },
+    enabled: !!user && !!transferId,
+  });
+  return { transfer: data ?? null, isLoading };
+};
+
+export const useInventoryTransfers = (options: { list?: boolean } = {}) => {
   const { user } = useUser();
   const qc = useQueryClient();
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["inventory_transfers"] });
+    qc.invalidateQueries({ queryKey: ["inventory_transfers_page"] });
+    qc.invalidateQueries({ queryKey: ["inventory_transfer"] });
     qc.invalidateQueries({ queryKey: ["inventory_transfer_events"] });
     qc.invalidateQueries({ queryKey: ["inventory_transit_balances"] });
     qc.invalidateQueries({ queryKey: ["stock_movements"] });
@@ -117,12 +207,14 @@ export const useInventoryTransfers = () => {
         .from("inventory_transfers")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .order("id", { ascending: false })
+        .limit(PAGE_SIZE);
       if (error) throw error;
       return (data ?? []).map(normalize);
     },
-    enabled: !!user,
+    enabled: !!user && options.list === true,
   });
+
 
   const { data: events = [] } = useQuery({
     queryKey: ["inventory_transfer_events"],

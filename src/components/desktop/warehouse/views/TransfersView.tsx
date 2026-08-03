@@ -3,7 +3,7 @@
 // Filtreler URL arama parametrelerinde tutulur (bkz. transferFilters.ts), bu
 // yüzden detay sayfasına gidip geri dönüldüğünde veya sayfa yenilendiğinde
 // arama/durum/depo/tarih/sıralama seçimleri korunur.
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Eye, Plus, Search } from "lucide-react";
 import { SectionCard } from "@/components/ui/responsive";
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { useInventoryTransfers, type TransferRow } from "@/hooks/useInventoryTransfers";
+import { useTransferPage, type TransferRow } from "@/hooks/useInventoryTransfers";
+
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import {
   TRANSFER_STAGES, TRANSFER_STATUS_LABEL, TRANSFER_STATUS_TONE, TRANSFER_ACTION_LABEL,
@@ -22,7 +23,7 @@ import {
   type TransferAction, type TransferActor, type TransferStatus,
 } from "@/lib/inventory/transferModel";
 import {
-  DEFAULT_TRANSFER_FILTERS, PAGE_SIZE, TRANSFER_SORT_LABEL, applyTransferFilters,
+  DEFAULT_TRANSFER_FILTERS, TRANSFER_SORT_LABEL,
   parseTransferFilters, serializeTransferFilters,
   type TransferFilterState, type TransferSort,
 } from "@/lib/inventory/transferFilters";
@@ -31,6 +32,7 @@ import { InsufficientData } from "../warehouseUi";
 import { TRUTH_COPY, fmtQty } from "../inventoryTruth";
 import { CreateTransferDialog, TransferActionDialog } from "../TransferDialogs";
 import { TransferDetailSheet } from "../TransferDetailSheet";
+
 
 interface Props { data: WarehouseData }
 
@@ -48,10 +50,11 @@ export const TransfersView = ({ data }: Props) => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
-  const { transfers, isLoading } = useInventoryTransfers();
   const { permissions } = useDepotPermissions();
 
   const filters = useMemo(() => parseTransferFilters(sp), [sp]);
+  const { rows, total, pageCount, page, isLoading, isFetching } = useTransferPage(filters);
+
   const createOpen = sp.get("yeni") === "1";
   const quickId = sp.get("onizleme");
   const actionParam = sp.get("islem") as TransferAction | null;
@@ -96,16 +99,10 @@ export const TransfersView = ({ data }: Props) => {
   const nameOfMaterial = (id: string) => data.items.find((i) => i.id === id)?.name ?? "—";
   const nameOfWarehouse = (id: string) => data.warehouses.find((w) => w.id === id)?.name ?? "—";
 
-  const filtered = useMemo(
-    () => applyTransferFilters(transfers, filters, (t) =>
-      [t.transfer_no, nameOfMaterial(t.material_id), nameOfWarehouse(t.source_warehouse_id),
-        nameOfWarehouse(t.dest_warehouse_id)].join(" ")),
-    [transfers, filters, data.items, data.warehouses],
-  );
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const page = Math.min(filters.page, pageCount);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  /** Sayfa numarası aralık dışına düşerse URL son geçerli sayfaya normalize edilir. */
+  useEffect(() => {
+    if (!isLoading && filters.page !== page) patch({ page });
+  }, [isLoading, page, filters.page]);
 
   /** Detaya giderken mevcut liste adresi "geri" parametresinde taşınır. */
   const openDetail = (t: TransferRow) => {
@@ -115,8 +112,12 @@ export const TransfersView = ({ data }: Props) => {
   };
 
   const activeWarehouses = data.warehouses;
-  const quick = quickId ? transfers.find((t) => t.id === quickId) ?? null : null;
-  const actionTransfer = actionId ? transfers.find((t) => t.id === actionId) ?? null : null;
+  const quick = quickId ? rows.find((t) => t.id === quickId) ?? null : null;
+  const actionTransfer = actionId ? rows.find((t) => t.id === actionId) ?? null : null;
+  const hasActiveFilters =
+    !!filters.q || filters.bucket !== "all" || !!filters.status || !!filters.source ||
+    !!filters.dest || !!filters.from || !!filters.to || filters.overdue || filters.discrepancy;
+
 
   const header = (
     <div className="space-y-2">
@@ -223,7 +224,7 @@ export const TransfersView = ({ data }: Props) => {
 
       {isLoading ? (
         <InsufficientData icon={ArrowLeftRight} title="Transfer kayıtları yükleniyor." />
-      ) : transfers.length === 0 ? (
+      ) : total === 0 && !hasActiveFilters ? (
         <div className="space-y-3">
           <InsufficientData
             icon={ArrowLeftRight}
@@ -274,12 +275,13 @@ export const TransfersView = ({ data }: Props) => {
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <p className="ds-body text-foreground truncate">
-                        {nameOfMaterial(t.material_id)}
+                        {t.material_name || nameOfMaterial(t.material_id)}
                         <span className="text-muted-foreground"> · {fmtQty(t.requested_quantity)} {t.unit}</span>
                       </p>
                       <p className="ds-caption text-muted-foreground break-words">
-                        {t.transfer_no} · {nameOfWarehouse(t.source_warehouse_id)} → {nameOfWarehouse(t.dest_warehouse_id)}
+                        {t.transfer_no} · {t.source_warehouse_name || nameOfWarehouse(t.source_warehouse_id)} → {t.dest_warehouse_name || nameOfWarehouse(t.dest_warehouse_id)}
                       </p>
+
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                       {od.overdue && (
@@ -352,15 +354,21 @@ export const TransfersView = ({ data }: Props) => {
             );
           })}
 
-          {pageCount > 1 && (
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <Button variant="outline" className="min-h-[44px]" disabled={page <= 1}
-                onClick={() => patch({ page: page - 1 })}>Önceki</Button>
-              <span className="ds-caption text-muted-foreground">{page} / {pageCount}</span>
-              <Button variant="outline" className="min-h-[44px]" disabled={page >= pageCount}
-                onClick={() => patch({ page: page + 1 })}>Sonraki</Button>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <span className="ds-caption text-muted-foreground">
+              {total} kayıt · sayfa {page} / {pageCount}
+              {isFetching ? " · yükleniyor…" : ""}
+            </span>
+            {pageCount > 1 && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="min-h-[44px]" disabled={page <= 1 || isFetching}
+                  onClick={() => patch({ page: page - 1 })}>Önceki</Button>
+                <Button variant="outline" className="min-h-[44px]" disabled={page >= pageCount || isFetching}
+                  onClick={() => patch({ page: page + 1 })}>Sonraki</Button>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
