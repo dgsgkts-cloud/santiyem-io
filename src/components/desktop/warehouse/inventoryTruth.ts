@@ -428,9 +428,7 @@ export const forecastFromConsumption = (
 ): Forecast => {
   const { hasUnknownMovementTypes = false, today = new Date() } = options;
 
-  if (hasUnknownMovementTypes && !item.stockable === false) {
-    // fall through only for stockable items — handled below
-  }
+
 
   if (item.stockable && item.unitVerdict.ok && hasUnknownMovementTypes)
     return {
