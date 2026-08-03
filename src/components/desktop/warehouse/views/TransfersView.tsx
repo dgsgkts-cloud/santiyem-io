@@ -277,12 +277,13 @@ export const TransfersView = ({ data }: Props) => {
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <p className="ds-body text-foreground truncate">
-                        {nameOfMaterial(t.material_id)}
+                        {t.material_name || nameOfMaterial(t.material_id)}
                         <span className="text-muted-foreground"> · {fmtQty(t.requested_quantity)} {t.unit}</span>
                       </p>
                       <p className="ds-caption text-muted-foreground break-words">
-                        {t.transfer_no} · {nameOfWarehouse(t.source_warehouse_id)} → {nameOfWarehouse(t.dest_warehouse_id)}
+                        {t.transfer_no} · {t.source_warehouse_name || nameOfWarehouse(t.source_warehouse_id)} → {t.dest_warehouse_name || nameOfWarehouse(t.dest_warehouse_id)}
                       </p>
+
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                       {od.overdue && (
