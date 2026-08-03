@@ -104,7 +104,7 @@ export const isDuplicateDocument = (
     (d) =>
       d.doc_type === docType &&
       d.file_size === file.size &&
-      d.file_name.toLocaleLowerCase("tr") === file.name.trim().toLocaleLowerCase("tr"),
+      d.file_name.toLowerCase() === file.name.trim().toLowerCase(),
   );
 
 
