@@ -60,7 +60,17 @@ Deno.serve(async (req) => {
     const subId = url.searchParams.get('subId')
     const planAmount = url.searchParams.get('planAmount')
     const isNative = url.searchParams.get('native') === '1'
+    const sig = url.searchParams.get('sig')
     if (!txnId || !subId) return new Response('Missing params', { status: 400 })
+
+    // Public callback: the txnId/subId/planAmount trio must be signed by
+    // create-trial-payment, so a 1 TL card validation cannot be redirected onto
+    // another pending subscription.
+    const sigValid = await verifyCallbackSignature([txnId, subId, planAmount], sig)
+    if (!sigValid) {
+      console.warn('Rejected trial callback with invalid signature for txn', txnId)
+      return redirectWithStatus('failed', 'Gecersiz odeme dogrulamasi', isNative)
+    }
 
     let token = ''
     if (req.method === 'POST') {
