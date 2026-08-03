@@ -11,6 +11,8 @@ import {
 } from "@/lib/inventory/transferModel";
 import { fmtQty, fmtDateTime } from "./inventoryTruth";
 
+const ts = (v: string) => fmtDateTime(new Date(v));
+
 const ACTION_LABEL_TR: Record<string, string> = {
   created: "Talep oluşturuldu",
   approve: "Onaylandı",
@@ -83,12 +85,12 @@ export const TransferDetailSheet = ({
 
           <section className="rounded-card border border-border/70 bg-background/40 p-3">
             <h3 className="ds-body font-medium text-foreground mb-1.5">Kayıt Bilgileri</h3>
-            <Row label="Talep tarihi" value={fmtDateTime(transfer.requested_at ?? transfer.created_at)} />
+            <Row label="Talep tarihi" value={ts(transfer.requested_at ?? transfer.created_at)} />
             {transfer.required_date && <Row label="İhtiyaç tarihi" value={transfer.required_date} />}
-            {transfer.approved_at && <Row label="Onay" value={fmtDateTime(transfer.approved_at)} />}
-            {transfer.dispatched_at && <Row label="Sevk" value={fmtDateTime(transfer.dispatched_at)} />}
-            {transfer.expected_arrival_at && <Row label="Tahmini varış" value={fmtDateTime(transfer.expected_arrival_at)} />}
-            {transfer.received_at && <Row label="Teslim" value={fmtDateTime(transfer.received_at)} />}
+            {transfer.approved_at && <Row label="Onay" value={ts(transfer.approved_at)} />}
+            {transfer.dispatched_at && <Row label="Sevk" value={ts(transfer.dispatched_at)} />}
+            {transfer.expected_arrival_at && <Row label="Tahmini varış" value={ts(transfer.expected_arrival_at)} />}
+            {transfer.received_at && <Row label="Teslim" value={ts(transfer.received_at)} />}
             {transfer.dispatch_reference && <Row label="Sevk belgesi" value={transfer.dispatch_reference} />}
             {transfer.reason && <Row label="Sebep" value={transfer.reason} />}
             {transfer.rejection_reason && <Row label="Red sebebi" value={transfer.rejection_reason} />}
@@ -117,7 +119,7 @@ export const TransferDetailSheet = ({
                       </p>
                       <p className="ds-caption text-muted-foreground flex items-center gap-1">
                         <Clock className="w-3 h-3 shrink-0" />
-                        {fmtDateTime(e.created_at)}
+                        {ts(e.created_at)}
                       </p>
                       {e.note && <p className="ds-caption text-muted-foreground mt-0.5">{e.note}</p>}
                     </div>
