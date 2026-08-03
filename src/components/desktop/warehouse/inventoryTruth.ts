@@ -276,7 +276,8 @@ export type Forecast =
         | "no_consumption_history"
         | "history_too_short"
         | "too_few_movements"
-        | "no_consumption_rate";
+        | "no_consumption_rate"
+        | "unverified_consumption_data";
       confidence: "insufficient";
       evidence: ForecastEvidence[];
     }
@@ -296,10 +297,11 @@ export const FORECAST_REASON: Record<
 > = {
   non_stock: "Bu malzeme depoda stoklanmaz; tüketimi teslimat kayıtlarından izlenir.",
   unit_invalid: "Malzemenin birimi doğrulanmadığı için tahmin hesaplanamıyor.",
-  no_consumption_history: "Kayıtlı malzeme çıkışı bulunmuyor.",
-  history_too_short: `Anlamlı tahmin için en az ${FORECAST_MIN_HISTORY_DAYS} günlük hareket geçmişi gerekir.`,
-  too_few_movements: `Anlamlı tahmin için en az ${FORECAST_MIN_ISSUE_MOVEMENTS} çıkış hareketi gerekir.`,
-  no_consumption_rate: "Kayıtlı çıkışlardan pozitif bir tüketim hızı hesaplanamadı.",
+  no_consumption_history: "Kayıtlı malzeme tüketimi bulunmuyor.",
+  history_too_short: `Anlamlı tahmin için en az ${FORECAST_MIN_HISTORY_DAYS} günlük tüketim geçmişi gerekir.`,
+  too_few_movements: `Anlamlı tahmin için en az ${FORECAST_MIN_ISSUE_MOVEMENTS} tüketim hareketi gerekir.`,
+  no_consumption_rate: "Kayıtlı tüketimden pozitif bir tüketim hızı hesaplanamadı.",
+  unverified_consumption_data: UNVERIFIED_CONSUMPTION_COPY,
 };
 
 const dayDiff = (a: string, b: string) =>
