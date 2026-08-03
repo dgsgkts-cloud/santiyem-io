@@ -39,6 +39,8 @@ const EVENT_LABEL_TR: Record<string, string> = {
   receive: "Teslim alındı",
   cancel: "İptal edildi",
   return: "Transit sevkiyat kaynağa geri alındı",
+  document_uploaded: "Belge yüklendi",
+  document_deleted: "Belge silindi",
 };
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
