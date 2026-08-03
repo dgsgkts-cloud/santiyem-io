@@ -52,10 +52,11 @@ export const TransfersView = ({ data }: Props) => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
-  const { transfers, isLoading } = useInventoryTransfers();
   const { permissions } = useDepotPermissions();
 
   const filters = useMemo(() => parseTransferFilters(sp), [sp]);
+  const { rows, total, pageCount, page, isLoading, isFetching } = useTransferPage(filters);
+
   const createOpen = sp.get("yeni") === "1";
   const quickId = sp.get("onizleme");
   const actionParam = sp.get("islem") as TransferAction | null;
