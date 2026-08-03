@@ -130,7 +130,12 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Bind the callback query params to THIS checkout — otherwise the public
+    // callback URL would accept any txnId/subId supplied by the payer.
+    const callbackSig = await signCallbackParams([txn.id, sub.id, monthlyPrice])
+
     const buyerId = user.id.replace(/-/g, '').substring(0, 20)
+
     const fullName = (user.user_metadata?.full_name || 'User').replace(/[^\x00-\x7F]/g, 'x')
     const firstName = fullName.split(' ')[0] || 'User'
     const lastName = fullName.split(' ').slice(1).join(' ') || 'App'
