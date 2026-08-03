@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
  * Buckets holding sensitive documents. They are private: objects must be
  * fetched through short-lived signed URLs so storage RLS is actually enforced.
  */
-export const PRIVATE_BUCKETS = ["project-files", "signed-contracts", "site-diary-photos"] as const;
+export const PRIVATE_BUCKETS = [
+  "project-files",
+  "signed-contracts",
+  "site-diary-photos",
+  "transfer-documents",
+] as const;
 export type PrivateBucket = (typeof PRIVATE_BUCKETS)[number];
 
 /**
