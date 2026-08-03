@@ -103,6 +103,29 @@ Deno.serve(async (req) => {
       const paymentId = iyzicoData.paymentId
       const paymentTransactionId = iyzicoData.itemTransactions?.[0]?.paymentTransactionId
 
+      // Bind the confirmed payment to the exact records created at checkout.
+      if (!basketMatchesTransaction(iyzicoData, txnId)) {
+        console.warn('Basket/transaction mismatch', iyzicoData.basketId, txnId)
+        return redirectWithStatus('failed', 'Odeme kaydi eslesmedi', isNative)
+      }
+
+      const { data: txnRow } = await supabaseAdmin.from('payment_transactions')
+        .select('user_id, status').eq('id', txnId).maybeSingle()
+      if (!txnRow) return redirectWithStatus('failed', 'Odeme kaydi bulunamadi', isNative)
+      if (txnRow.status !== 'pending') {
+        console.warn('Trial transaction no longer pending:', txnId, txnRow.status)
+        return redirectWithStatus(txnRow.status === 'success' ? 'success' : 'failed', undefined, isNative)
+      }
+
+      const { data: subRow } = await supabaseAdmin.from('user_subscriptions')
+        .select('user_id, status').eq('id', subId).maybeSingle()
+      if (!subRow || subRow.user_id !== txnRow.user_id || subRow.status !== 'pending') {
+        console.warn('Subscription does not belong to this checkout or is not pending:', subId)
+        return redirectWithStatus('failed', 'Abonelik kaydi eslesmedi', isNative)
+      }
+
+
+
       console.log('Card storage result — cardUserKey:', cardUserKey ? 'EXISTS' : 'MISSING', 'cardToken:', cardToken ? 'EXISTS' : 'MISSING')
 
       // If card info is missing, user didn't check "save my card" — reject trial
