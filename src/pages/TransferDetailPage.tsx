@@ -14,7 +14,7 @@ import { PageShell, SectionCard } from "@/components/ui/responsive";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { useInventoryTransfers, type TransferRow } from "@/hooks/useInventoryTransfers";
+import { useInventoryTransfers, useTransfer, type TransferRow } from "@/hooks/useInventoryTransfers";
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import { useWarehouseData } from "@/components/desktop/warehouse/useWarehouseData";
 import { TransferActionDialog } from "@/components/desktop/warehouse/TransferDialogs";
