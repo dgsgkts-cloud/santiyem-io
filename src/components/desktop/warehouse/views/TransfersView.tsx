@@ -226,7 +226,7 @@ export const TransfersView = ({ data }: Props) => {
 
       {isLoading ? (
         <InsufficientData icon={ArrowLeftRight} title="Transfer kayıtları yükleniyor." />
-      ) : transfers.length === 0 ? (
+      ) : total === 0 && !hasActiveFilters ? (
         <div className="space-y-3">
           <InsufficientData
             icon={ArrowLeftRight}
