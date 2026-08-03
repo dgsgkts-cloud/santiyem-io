@@ -4,7 +4,7 @@
 // yapılır. Kayıt işlemleri sunucu fonksiyonları üzerinden yürür.
 
 import { useRef, useState } from "react";
-import { FileText, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { Download, FileText, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/ui/responsive";
 import { Button } from "@/components/ui/button";
