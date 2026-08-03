@@ -11,8 +11,13 @@
 import { useMemo } from "react";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useInventoryLedger, type StockMovementRow, type WarehouseRow } from "@/hooks/useInventoryLedger";
+import { useInventoryConsumption } from "@/hooks/useInventoryConsumption";
 import {
-  buildInventory, auditInventory, forecastDepletion,
+  toConsumptionEvents, unknownMovementTypes,
+  type ConsumptionEvent,
+} from "@/lib/inventory/consumption";
+import {
+  buildInventory, auditInventory, forecastFromConsumption,
   type InventoryItem, type DataQualityIssue, type Forecast,
 } from "./inventoryTruth";
 import type { Movement, MovementKind, Transfer, Assignment, Count } from "./warehouseConstants";
