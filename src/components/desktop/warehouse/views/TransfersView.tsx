@@ -3,7 +3,7 @@
 // Filtreler URL arama parametrelerinde tutulur (bkz. transferFilters.ts), bu
 // yüzden detay sayfasına gidip geri dönüldüğünde veya sayfa yenilendiğinde
 // arama/durum/depo/tarih/sıralama seçimleri korunur.
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Eye, Plus, Search } from "lucide-react";
 import { SectionCard } from "@/components/ui/responsive";
@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { useInventoryTransfers, type TransferRow } from "@/hooks/useInventoryTransfers";
+import {
+  useInventoryTransfers, useTransferPage,
+  type TransferListRow, type TransferRow,
+} from "@/hooks/useInventoryTransfers";
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import {
   TRANSFER_STAGES, TRANSFER_STATUS_LABEL, TRANSFER_STATUS_TONE, TRANSFER_ACTION_LABEL,
@@ -22,7 +25,7 @@ import {
   type TransferAction, type TransferActor, type TransferStatus,
 } from "@/lib/inventory/transferModel";
 import {
-  DEFAULT_TRANSFER_FILTERS, PAGE_SIZE, TRANSFER_SORT_LABEL, applyTransferFilters,
+  DEFAULT_TRANSFER_FILTERS, TRANSFER_SORT_LABEL,
   parseTransferFilters, serializeTransferFilters,
   type TransferFilterState, type TransferSort,
 } from "@/lib/inventory/transferFilters";
@@ -31,6 +34,7 @@ import { InsufficientData } from "../warehouseUi";
 import { TRUTH_COPY, fmtQty } from "../inventoryTruth";
 import { CreateTransferDialog, TransferActionDialog } from "../TransferDialogs";
 import { TransferDetailSheet } from "../TransferDetailSheet";
+
 
 interface Props { data: WarehouseData }
 
