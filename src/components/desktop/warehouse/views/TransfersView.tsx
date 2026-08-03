@@ -14,10 +14,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import {
-  useInventoryTransfers, useTransferPage,
-  type TransferListRow, type TransferRow,
-} from "@/hooks/useInventoryTransfers";
+import { useTransferPage, type TransferRow } from "@/hooks/useInventoryTransfers";
+
 import { useDepotPermissions } from "@/hooks/useDepotPermissions";
 import {
   TRANSFER_STAGES, TRANSFER_STATUS_LABEL, TRANSFER_STATUS_TONE, TRANSFER_ACTION_LABEL,
