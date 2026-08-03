@@ -2150,15 +2150,20 @@ export type Database = {
         Row: {
           approved_at: string | null
           approver_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           damaged_quantity: number
           dest_warehouse_id: string
           discrepancy_note: string | null
           dispatch_movement_id: string | null
+          dispatch_reference: string | null
           dispatched_at: string | null
           dispatched_quantity: number
           dispatcher_id: string | null
           expected_arrival: string | null
+          expected_arrival_at: string | null
           id: string
           in_transit_quantity: number
           material_id: string
@@ -2169,6 +2174,7 @@ export type Database = {
           received_at: string | null
           received_quantity: number
           receiver_id: string | null
+          rejected_quantity: number
           rejection_reason: string | null
           requested_at: string
           requested_quantity: number
@@ -2186,15 +2192,20 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approver_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           damaged_quantity?: number
           dest_warehouse_id: string
           discrepancy_note?: string | null
           dispatch_movement_id?: string | null
+          dispatch_reference?: string | null
           dispatched_at?: string | null
           dispatched_quantity?: number
           dispatcher_id?: string | null
           expected_arrival?: string | null
+          expected_arrival_at?: string | null
           id?: string
           in_transit_quantity?: number
           material_id: string
@@ -2205,6 +2216,7 @@ export type Database = {
           received_at?: string | null
           received_quantity?: number
           receiver_id?: string | null
+          rejected_quantity?: number
           rejection_reason?: string | null
           requested_at?: string
           requested_quantity: number
@@ -2222,15 +2234,20 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approver_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           damaged_quantity?: number
           dest_warehouse_id?: string
           discrepancy_note?: string | null
           dispatch_movement_id?: string | null
+          dispatch_reference?: string | null
           dispatched_at?: string | null
           dispatched_quantity?: number
           dispatcher_id?: string | null
           expected_arrival?: string | null
+          expected_arrival_at?: string | null
           id?: string
           in_transit_quantity?: number
           material_id?: string
@@ -2241,6 +2258,7 @@ export type Database = {
           received_at?: string | null
           received_quantity?: number
           receiver_id?: string | null
+          rejected_quantity?: number
           rejection_reason?: string | null
           requested_at?: string
           requested_quantity?: number
@@ -5977,6 +5995,10 @@ export type Database = {
     Functions: {
       accept_project_invitation: { Args: { _token: string }; Returns: string }
       add_voice_usage_seconds: { Args: { _seconds: number }; Returns: number }
+      approve_stock_transfer: {
+        Args: { _decision: string; _reason?: string; _transfer_id: string }
+        Returns: Json
+      }
       assert_depot_permission: { Args: { _key: string }; Returns: undefined }
       bulk_upsert_attendance: { Args: { _records: Json }; Returns: number }
       can_access_project: {
@@ -5986,6 +6008,10 @@ export type Database = {
       can_access_team_resource: {
         Args: { _accessor_id: string; _owner_id: string }
         Returns: boolean
+      }
+      cancel_stock_transfer: {
+        Args: { _reason: string; _transfer_id: string }
+        Returns: Json
       }
       check_feature: { Args: { _key: string }; Returns: boolean }
       check_pending_invitations: {
@@ -6048,6 +6074,21 @@ export type Database = {
         Args: { _month: string; _project: string }
         Returns: Json
       }
+      create_stock_transfer: {
+        Args: {
+          _allow_safety_breach?: boolean
+          _dest_warehouse_id: string
+          _material_id: string
+          _notes?: string
+          _project_id?: string
+          _reason?: string
+          _requested_quantity: number
+          _required_at?: string
+          _source_warehouse_id: string
+          _unit?: string
+        }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -6057,6 +6098,18 @@ export type Database = {
         Returns: undefined
       }
       depot_permission: { Args: { _key: string }; Returns: boolean }
+      dispatch_stock_transfer: {
+        Args: {
+          _dispatched_at?: string
+          _dispatched_quantity: number
+          _expected_arrival_at?: string
+          _notes?: string
+          _reference?: string
+          _transfer_id: string
+          _unit?: string
+        }
+        Returns: Json
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -6102,6 +6155,38 @@ export type Database = {
       }
       increment_usage: {
         Args: { _delta?: number; _metric: string; _reason?: string }
+        Returns: number
+      }
+      inv_stock_position: {
+        Args: { _material_id: string; _warehouse_id: string }
+        Returns: {
+          available: number
+          on_hand: number
+          reserved: number
+        }[]
+      }
+      inv_transfer_event: {
+        Args: {
+          _action: string
+          _note: string
+          _owner: string
+          _payload: Json
+          _status: string
+          _transfer_id: string
+        }
+        Returns: string
+      }
+      inv_transfer_notify: {
+        Args: {
+          _body: string
+          _event: string
+          _title: string
+          _transfer_id: string
+        }
+        Returns: undefined
+      }
+      inv_unit_factor: {
+        Args: { _material_id: string; _unit: string }
         Returns: number
       }
       is_member_suspended: { Args: { _user_id: string }; Returns: boolean }
@@ -6276,6 +6361,20 @@ export type Database = {
           read_ct: number
         }[]
       }
+      receive_stock_transfer: {
+        Args: {
+          _accepted_quantity?: number
+          _damaged_quantity?: number
+          _missing_quantity?: number
+          _notes?: string
+          _received_at?: string
+          _reference?: string
+          _rejected_quantity?: number
+          _transfer_id: string
+          _unit?: string
+        }
+        Returns: Json
+      }
       record_signed_upload: {
         Args: {
           _file_name: string
@@ -6304,6 +6403,15 @@ export type Database = {
           public_plan: string
           team_id: string
         }[]
+      }
+      return_stock_transfer: {
+        Args: {
+          _quantity: number
+          _reason: string
+          _transfer_id: string
+          _unit?: string
+        }
+        Returns: Json
       }
       reverse_stock_movement: {
         Args: { _movement_id: string; _reason: string }
