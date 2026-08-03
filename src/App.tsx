@@ -21,6 +21,8 @@ import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
 const SetupPage = lazy(() => import("./pages/Setup"));
+const TransferDetailPage = lazy(() => import("./pages/TransferDetailPage"));
+
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -104,6 +106,9 @@ const App = () => (
               <Route path="/satin-alma/*" element={<HomePage />} />
 
               <Route path="/depo" element={<HomePage />} />
+              {/* Kanonik transfer detay sayfası — bildirim bağlantıları buraya gelir. */}
+              <Route path="/depo/transferler/:transferId" element={<TransferDetailPage />} />
+
               <Route path="/makine-ekipman" element={<HomePage />} />
               <Route path="/raporlar" element={<HomePage />} />
               <Route path="/toplantilar" element={<HomePage />} />

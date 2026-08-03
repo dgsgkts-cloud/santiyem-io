@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
-import type { TransferStatus } from "@/lib/inventory/transferModel";
+import { SERVER_DECISION, type TransferStatus } from "@/lib/inventory/transferModel";
 
 export interface TransferRow {
   id: string;
@@ -175,11 +175,13 @@ export const useInventoryTransfers = () => {
     mutationFn: (i: { transferId: string; decision: "approve" | "reject" | "revise"; reason?: string | null }) =>
       rpc("approve_stock_transfer", {
         _transfer_id: i.transferId,
-        _decision: i.decision,
+        // Sunucu 'request_revision' bekler; UI aksiyon adı 'revise'.
+        _decision: SERVER_DECISION[i.decision],
         _reason: i.reason ?? null,
       }),
     onSuccess: invalidate,
   });
+
 
   const dispatchTransfer = useMutation({
     mutationFn: (i: {

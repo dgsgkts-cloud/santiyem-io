@@ -2,6 +2,7 @@
 // Combines: Notifications, Approval Center, Global Activity, My Work,
 // Pinned Items, Smart Reminders. Reuses existing data via hooks.
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -59,6 +60,7 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
   const [filter, setFilter] = useState<NotifFilter>("all");
   const [query, setQuery] = useState("");
 
+  const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning, loading: notifLoading } = useNotifications();
   const { projects } = useProjects();
   const { payments = [] } = useCashPayments();
@@ -200,6 +202,12 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
     const destinationOk = hasValidDestination(n);
     if (!destinationOk) {
       toast.info("İlgili kayıt artık mevcut değil.");
+      return;
+    }
+    if (n.link) {
+      // Kalıcı kayıt bildirimi — kanonik rota açılır (yenilemede kaybolmaz).
+      navigate(n.link);
+      onClose();
       return;
     }
     if (n.targetTab === "projects" && n.targetProjectId) onNavigate?.("projects", n.targetProjectId);

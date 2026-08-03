@@ -69,9 +69,33 @@ export const TRANSFER_ACTION_LABEL: Record<TransferAction, string> = {
   revise: "Revizyon İste",
   dispatch: "Sevk Et",
   receive: "Teslim Al",
-  cancel: "İptal Et",
-  return: "Kaynağa İade",
+  cancel: "Sevk Öncesi İptal",
+  // return_stock_transfer yalnızca YOLDA olan miktarı kaynak depoya geri yazar.
+  // Hedef depoya kabul edilmiş stok bu işlemle geri alınamaz.
+  return: "Transit Sevkiyatı Kaynağa Geri Al",
 };
+
+/** Kullanıcıya gösterilen açıklamalar — RPC'nin gerçek davranışını anlatır. */
+export const TRANSFER_ACTION_EXPLANATION: Record<TransferAction, string> = {
+  approve: "Onaydan sonra miktar kaynak depoda rezerve edilir; fiziksel stok sevkte düşer.",
+  reject: "Red sebebi talep sahibine bildirim olarak iletilir.",
+  revise: "Talep, düzeltilmek üzere talep sahibine geri döner (durum yeniden 'Talep Edildi' olur).",
+  dispatch: "Sevk edilen miktar kaynak depodan düşer ve yolda (transit) stoğa geçer.",
+  receive: "Yalnızca kabul edilen miktar hedef depoya girer. Hasarlı, eksik ve reddedilen miktarlar uyuşmazlık olarak kaydedilir.",
+  cancel: "Sevk başlamadan önce iptal edilebilir. Stok hareketi oluşmaz.",
+  return: "Yalnızca yolda (transit) olan miktar kaynak depoya geri yazılır. Hedef depoya kabul edilmiş stok bu işlemle geri alınamaz.",
+};
+
+/**
+ * Sunucu `approve_stock_transfer` yalnızca bu karar adlarını kabul eder.
+ * UI aksiyon adı ile sunucu karar adı birebir aynı değildir.
+ */
+export const SERVER_DECISION: Record<"approve" | "reject" | "revise", "approve" | "reject" | "request_revision"> = {
+  approve: "approve",
+  reject: "reject",
+  revise: "request_revision",
+};
+
 
 /** Bir transferin işlem kararları için gereken asgari alanlar. */
 export interface TransferDecisionRow {
@@ -219,3 +243,84 @@ export const transferErrorText = (e: unknown): string => {
   if (code) return TRANSFER_ERROR_TR[code];
   return raw.replace(/^.*?:\s?/, "") || "İşlem tamamlanamadı.";
 };
+
+/* ───────────────────────────── miktar zinciri ───────────────────────────── */
+
+export interface QuantityChainRow {
+  key: string;
+  label: string;
+  value: number;
+  /** Uyuşmazlık kalemleri kırmızı gösterilir. */
+  tone?: "default" | "danger" | "transit" | "success";
+}
+
+export interface QuantityChainSource {
+  status: TransferStatus;
+  requested_quantity: number;
+  dispatched_quantity: number;
+  in_transit_quantity: number;
+  received_quantity: number;
+  damaged_quantity: number;
+  missing_quantity: number;
+  rejected_quantity: number;
+  approved_at: string | null;
+}
+
+/** Onaylanan miktar sunucuda ayrı tutulmaz: onay talep edilen miktarın tamamınadır. */
+export const approvedQuantity = (t: QuantityChainSource) =>
+  t.approved_at && t.status !== "rejected" ? t.requested_quantity : 0;
+
+/** Henüz sevk edilmemiş miktar. */
+export const remainingQuantity = (t: QuantityChainSource) =>
+  Math.max(t.requested_quantity - t.dispatched_quantity, 0);
+
+/** Detay ekranında açıkça listelenen miktar zinciri (tooltip içinde saklanmaz). */
+export const quantityChain = (t: QuantityChainSource): QuantityChainRow[] => [
+  { key: "requested", label: "Talep Edilen", value: t.requested_quantity },
+  { key: "approved", label: "Onaylanan", value: approvedQuantity(t) },
+  { key: "dispatched", label: "Sevk Edilen", value: t.dispatched_quantity },
+  { key: "transit", label: "Transit", value: t.in_transit_quantity, tone: "transit" },
+  { key: "received", label: "Kabul Edilen", value: t.received_quantity, tone: "success" },
+  { key: "damaged", label: "Hasarlı", value: t.damaged_quantity, tone: "danger" },
+  { key: "missing", label: "Eksik", value: t.missing_quantity, tone: "danger" },
+  { key: "rejected", label: "Reddedilen", value: t.rejected_quantity, tone: "danger" },
+  { key: "remaining", label: "Kalan", value: remainingQuantity(t) },
+];
+
+/* ─────────────────────────────── gecikme ────────────────────────────────── */
+
+export interface OverdueSource {
+  status: TransferStatus;
+  required_date: string | null;
+  expected_arrival_at: string | null;
+  received_quantity: number;
+  requested_quantity: number;
+}
+
+export interface OverdueInfo {
+  overdue: boolean;
+  /** Gün cinsinden gecikme (negatif ise henüz vadesi gelmemiş). */
+  days: number;
+  reference: "required_date" | "expected_arrival" | null;
+}
+
+const DAY = 86_400_000;
+
+/**
+ * Gecikme yalnızca kapanmamış transferler için hesaplanır. Referans olarak
+ * ihtiyaç tarihi, yoksa tahmini varış zamanı kullanılır. Tarih yoksa gecikme
+ * iddia edilmez.
+ */
+export const overdueInfo = (t: OverdueSource, now: Date = new Date()): OverdueInfo => {
+  if (TERMINAL_STATUSES.includes(t.status)) return { overdue: false, days: 0, reference: null };
+  const ref = t.required_date
+    ? { at: new Date(`${t.required_date}T23:59:59`), reference: "required_date" as const }
+    : t.expected_arrival_at
+      ? { at: new Date(t.expected_arrival_at), reference: "expected_arrival" as const }
+      : null;
+  if (!ref || Number.isNaN(ref.at.getTime())) return { overdue: false, days: 0, reference: null };
+  const days = Math.floor((now.getTime() - ref.at.getTime()) / DAY);
+  return { overdue: days > 0, days, reference: ref.reference };
+};
+
+export const isOverdue = (t: OverdueSource, now?: Date) => overdueInfo(t, now).overdue;
