@@ -7,6 +7,7 @@ import { useSiteDiary, DiaryEntry, CrewRow, MaterialRow, MachineRow } from "@/ho
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useUser } from "@/contexts/UserContext";
 import PullToRefresh from "@/components/PullToRefresh";
+import PrivateImage from "@/components/storage/PrivateImage";
 import { Capacitor } from "@capacitor/core";
 import { Plus, ChevronLeft, Calendar, Camera, Sun, Cloud, CloudRain, Snowflake, CloudFog, CloudSun, Edit, Trash2, FileText, Users, Wrench, Package, AlertTriangle, CheckCircle, XCircle, Eye, FileDown, X, QrCode, HardHat, BookOpen, ChevronDown } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, isSameDay, subDays, startOfWeek, endOfWeek, isYesterday, isThisWeek, isWithinInterval } from "date-fns";
