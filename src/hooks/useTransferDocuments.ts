@@ -65,6 +65,19 @@ export const fmtFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+/** Uzantı ↔ MIME eşlemesi — sunucudaki kontrolün aynısı. */
+export const MIME_EXTENSIONS: Record<string, string[]> = {
+  "application/pdf": ["pdf"],
+  "image/jpeg": ["jpg", "jpeg"],
+  "image/png": ["png"],
+  "image/webp": ["webp"],
+};
+
+export const fileExtension = (name: string): string => {
+  const m = /\.([A-Za-z0-9]+)$/.exec(name.trim());
+  return m ? m[1].toLowerCase() : "";
+};
+
 /** İstemci tarafı ön kontrol; asıl doğrulama sunucudadır. */
 export const validateTransferFile = (file: File): string | null => {
   if (!(ALLOWED_TRANSFER_DOC_TYPES as readonly string[]).includes(file.type)) {
@@ -72,8 +85,28 @@ export const validateTransferFile = (file: File): string | null => {
   }
   if (file.size <= 0) return "Dosya boş görünüyor.";
   if (file.size > MAX_TRANSFER_DOC_BYTES) return "Dosya boyutu 20 MB'ı aşamaz.";
+  const ext = fileExtension(file.name);
+  if (!ext) return "Dosya adında uzantı bulunmuyor.";
+  if (!MIME_EXTENSIONS[file.type].includes(ext)) {
+    return "Dosya uzantısı dosya türü ile uyuşmuyor.";
+  }
+  if (/[\u0000-\u001f/\\]/.test(file.name)) return "Dosya adı geçersiz karakter içeriyor.";
   return null;
 };
+
+/** Aynı ad, tür ve boyuttaki aktif belge ikinci kez kaydedilemez. */
+export const isDuplicateDocument = (
+  documents: { file_name: string; file_size: number; doc_type: string }[],
+  file: { name: string; size: number },
+  docType: string,
+): boolean =>
+  documents.some(
+    (d) =>
+      d.doc_type === docType &&
+      d.file_size === file.size &&
+      d.file_name.toLocaleLowerCase("tr") === file.name.trim().toLocaleLowerCase("tr"),
+  );
+
 
 export const useTransferDocuments = (transferId: string | undefined, ownerId?: string | null) => {
   const { user } = useUser();
