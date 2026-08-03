@@ -356,15 +356,21 @@ export const TransfersView = ({ data }: Props) => {
             );
           })}
 
-          {pageCount > 1 && (
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <Button variant="outline" className="min-h-[44px]" disabled={page <= 1}
-                onClick={() => patch({ page: page - 1 })}>Önceki</Button>
-              <span className="ds-caption text-muted-foreground">{page} / {pageCount}</span>
-              <Button variant="outline" className="min-h-[44px]" disabled={page >= pageCount}
-                onClick={() => patch({ page: page + 1 })}>Sonraki</Button>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <span className="ds-caption text-muted-foreground">
+              {total} kayıt · sayfa {page} / {pageCount}
+              {isFetching ? " · yükleniyor…" : ""}
+            </span>
+            {pageCount > 1 && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="min-h-[44px]" disabled={page <= 1 || isFetching}
+                  onClick={() => patch({ page: page - 1 })}>Önceki</Button>
+                <Button variant="outline" className="min-h-[44px]" disabled={page >= pageCount || isFetching}
+                  onClick={() => patch({ page: page + 1 })}>Sonraki</Button>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
