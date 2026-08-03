@@ -202,6 +202,12 @@ const NotificationCenter = ({ open, onClose, onNavigate }: Props) => {
       toast.info("İlgili kayıt artık mevcut değil.");
       return;
     }
+    if (n.link) {
+      // Kalıcı kayıt bildirimi — kanonik rota açılır (yenilemede kaybolmaz).
+      navigate(n.link);
+      onClose();
+      return;
+    }
     if (n.targetTab === "projects" && n.targetProjectId) onNavigate?.("projects", n.targetProjectId);
     else onNavigate?.(n.targetTab);
     onClose();

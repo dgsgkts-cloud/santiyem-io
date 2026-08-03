@@ -248,7 +248,7 @@ export function useNotifications() {
     });
 
     return result;
-  }, [reminders, milestones, projects]);
+  }, [reminders, milestones, projects, records]);
 
   const readSet = useMemo(() => new Set(readKeys), [readKeys]);
 
