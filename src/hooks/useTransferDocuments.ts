@@ -140,6 +140,10 @@ export const useTransferDocuments = (transferId: string | undefined, ownerId?: s
 
       const clientError = validateTransferFile(file);
       if (clientError) throw new Error(clientError);
+      if (isDuplicateDocument(documents, file, docType)) {
+        throw new Error("Bu belge zaten yüklenmiş: aynı ad, tür ve boyutta aktif bir kayıt var.");
+      }
+
 
       const path = `${owner}/${transferId}/${Date.now()}_${sanitizeFileName(file.name)}`;
       const { error: upErr } = await supabase.storage
