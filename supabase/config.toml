@@ -21,3 +21,5 @@ project_id = "ubwdrsflqjirhrfbdwac"
     verify_jwt = false
 
 
+  [functions.e2e-teardown]
+    verify_jwt = false
