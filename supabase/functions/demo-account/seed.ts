@@ -132,7 +132,8 @@ export async function seedDemoTenant(sb: SB, userId: string) {
 
   /* ── Attendance (puantaj) — last 12 working days ──────── */
   const attendance: any[] = [];
-  for (let d = 1; d <= 12; d++) {
+  // Includes today (d = 0) so "bugün kaç kişi sahada" answers from real rows.
+  for (let d = 0; d <= 12; d++) {
     const date = day(-d);
     if (new Date(date).getDay() === 0) continue;
     PERSONNEL.forEach((p, i) => {
