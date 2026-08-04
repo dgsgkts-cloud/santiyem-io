@@ -17,4 +17,7 @@ project_id = "ubwdrsflqjirhrfbdwac"
     verify_jwt = false
   [functions.communication-dispatcher]
     verify_jwt = false
+  [functions.submit-ekb-lead]
+    verify_jwt = false
+
 
