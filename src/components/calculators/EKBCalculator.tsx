@@ -73,20 +73,23 @@ export default function EKBCalculator() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("ekb_basvurulari" as any).insert({
-      ad_soyad: formData.ad_soyad.trim(),
-      telefon: formData.telefon.trim(),
-      il_ilce: formData.il_ilce.trim(),
-      bina_tipi: formData.bina_tipi,
-      mesaj: formData.mesaj.trim() || null,
-    } as any);
+    const { data, error } = await supabase.functions.invoke("submit-ekb-lead", {
+      body: {
+        ad_soyad: formData.ad_soyad.trim(),
+        telefon: formData.telefon.trim(),
+        il_ilce: formData.il_ilce.trim(),
+        bina_tipi: formData.bina_tipi,
+        mesaj: formData.mesaj.trim() || null,
+      },
+    });
     setSubmitting(false);
-    if (error) {
+    if (error || !(data as any)?.success) {
       toast.error("Gönderilemedi, lütfen tekrar deneyin.");
     } else {
       setFormSubmitted(true);
     }
   };
+
 
   return (
     <div className="space-y-4">
