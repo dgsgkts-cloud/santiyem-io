@@ -948,6 +948,75 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_accounts: {
+        Row: {
+          access_days: number
+          company_name: string
+          created_at: string
+          email: string
+          expires_at: string | null
+          first_login_at: string | null
+          id: string
+          is_active: boolean
+          is_demo_account: boolean
+          last_login_at: string | null
+          reset_count: number
+          seeded_at: string | null
+          team_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_days?: number
+          company_name?: string
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          first_login_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo_account?: boolean
+          last_login_at?: string | null
+          reset_count?: number
+          seeded_at?: string | null
+          team_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_days?: number
+          company_name?: string
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          first_login_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_demo_account?: boolean
+          last_login_at?: string | null
+          reset_count?: number
+          seeded_at?: string | null
+          team_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_accounts_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "office_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_accounts_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_push_tokens: {
         Row: {
           created_at: string
@@ -6265,6 +6334,22 @@ export type Database = {
         Args: { _document_id: string; _reason?: string }
         Returns: boolean
       }
+      demo_account_state: { Args: never; Returns: Json }
+      demo_admin_update: {
+        Args: {
+          _extend_days?: number
+          _is_active?: boolean
+          _restart?: boolean
+          _user: string
+        }
+        Returns: Json
+      }
+      demo_purge_stock_movements: { Args: { _user: string }; Returns: number }
+      demo_register_login: { Args: never; Returns: Json }
+      demo_row_to_json: {
+        Args: { d: Database["public"]["Tables"]["demo_accounts"]["Row"] }
+        Returns: Json
+      }
       depot_permission: { Args: { _key: string }; Returns: boolean }
       dispatch_stock_transfer: {
         Args: {
@@ -6357,6 +6442,7 @@ export type Database = {
         Args: { _material_id: string; _unit: string }
         Returns: number
       }
+      is_demo_user: { Args: { _user?: string }; Returns: boolean }
       is_member_suspended: { Args: { _user_id: string }; Returns: boolean }
       is_project_manager_or_owner: {
         Args: { _project: string; _user: string }
@@ -6370,6 +6456,7 @@ export type Database = {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
       }
+      is_santiyem_admin: { Args: { _user?: string }; Returns: boolean }
       list_attendance_by_qr_range: {
         Args: { _from_date: string; _to_date: string; _token: string }
         Returns: {
