@@ -10,9 +10,11 @@ import {
   loadSetupProgress, completionPercent, TOTAL_SETUP_STEPS, isSetupComplete,
   type SetupProgress,
 } from "@/lib/setupProgress";
+import { useDemoStateOnly } from "@/hooks/useDemoAccount";
 
 export const WorkspaceSetupCard = () => {
   const navigate = useNavigate();
+  const { data: demo } = useDemoStateOnly();
   const [progress, setProgress] = useState<SetupProgress>(() => loadSetupProgress());
 
   useEffect(() => {
@@ -27,6 +29,8 @@ export const WorkspaceSetupCard = () => {
 
   // Hide entirely once the user has finished the onboarding.
   if (isSetupComplete()) return null;
+  // Demo account: the workspace is pre-seeded, so no setup wizard is shown.
+  if (demo?.isDemo) return null;
 
   const completedCount = progress.completed.length;
   const pct = completionPercent(progress);
