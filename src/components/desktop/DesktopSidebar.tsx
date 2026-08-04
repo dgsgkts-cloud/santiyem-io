@@ -43,6 +43,8 @@ const NAV_SECTIONS = [
     label: "OPERASYON",
     items: [
       { id: "dashboard" as Tab, label: "Ana Sayfa", icon: LayoutDashboard },
+      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare, accent: true },
+      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3, accent: true },
       { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
       { id: "materials" as Tab, label: "Malzeme", icon: Package },
@@ -67,26 +69,20 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: "YAPAY ZEKA",
-    items: [
-      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
-      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3 },
-    ],
-  },
-  {
     label: "İLETİŞİM",
     items: [
       { id: "meetings" as Tab, label: "Toplantılar", icon: Users },
       { id: "communication" as Tab, label: "İletişim", icon: Radio },
     ],
   },
+
   {
     label: "",
     items: [
       { id: "settings" as Tab, label: "Ayarlar", icon: Settings },
     ],
   },
-] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean }> }>;
+] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean; accent?: boolean }> }>;
 
 void isNativeApp;
 
@@ -257,6 +253,13 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 const Icon = item.icon;
                 const decision = guard.check(item.id as GuardTab);
                 const isLocked = gatesReady && !decision.ok;
+                const accent = !!(item as any).accent && !isLocked;
+                const idleBg = accent ? "hsl(var(--primary) / 0.06)" : "transparent";
+                const idleColor = isLocked
+                  ? "hsl(var(--muted-foreground) / 0.55)"
+                  : accent
+                    ? "hsl(var(--primary))"
+                    : "hsl(var(--muted-foreground))";
 
                 const btn = (
                   <button
@@ -266,34 +269,35 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     style={{
                       height: 42,
                       borderRadius: 13,
-                      background: isActive ? "hsl(var(--primary) / 0.18)" : "transparent",
-                      color: isLocked
-                        ? "hsl(var(--muted-foreground) / 0.55)"
-                        : isActive
-                          ? "hsl(var(--primary))"
-                          : "hsl(var(--muted-foreground))",
+                      background: isActive ? "hsl(var(--primary) / 0.18)" : idleBg,
+                      color: isActive && !isLocked ? "hsl(var(--primary))" : idleColor,
                       justifyContent: collapsed ? "center" : "flex-start",
                       padding: collapsed ? 0 : "0 12px",
                       gap: collapsed ? 0 : 12,
                       boxShadow: isActive
                         ? "inset 0 0 0 1px hsl(var(--primary) / 0.32), 0 1px 2px hsl(var(--primary) / 0.12)"
-                        : "none",
-                      fontWeight: isActive ? 600 : 500,
+                        : accent
+                          ? "inset 0 0 0 1px hsl(var(--primary) / 0.18)"
+                          : "none",
+                      fontWeight: isActive || accent ? 600 : 500,
                     }}
                     onMouseEnter={(e) => {
                       if (isActive) return;
-                      e.currentTarget.style.background = "hsl(var(--muted) / 0.6)";
+                      e.currentTarget.style.background = accent
+                        ? "hsl(var(--primary) / 0.14)"
+                        : "hsl(var(--muted) / 0.6)";
                       e.currentTarget.style.color = isLocked
                         ? "hsl(var(--muted-foreground))"
-                        : "hsl(var(--foreground))";
+                        : accent
+                          ? "hsl(var(--primary))"
+                          : "hsl(var(--foreground))";
                     }}
                     onMouseLeave={(e) => {
                       if (isActive) return;
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = isLocked
-                        ? "hsl(var(--muted-foreground) / 0.55)"
-                        : "hsl(var(--muted-foreground))";
+                      e.currentTarget.style.background = idleBg;
+                      e.currentTarget.style.color = idleColor;
                     }}
+
                   >
                     {isActive && !isLocked && (
                       <span
