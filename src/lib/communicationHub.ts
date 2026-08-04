@@ -3,6 +3,7 @@
 // through here instead of talking to a provider directly.
 
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode, interceptExternalSend } from "@/lib/demoMode";
 
 export type CommChannel = "whatsapp" | "email" | "sms" | "push" | "teams" | "slack";
 export type EmailProviderName =
@@ -57,14 +58,43 @@ async function call(action: string, payload: Record<string, unknown>) {
   return data;
 }
 
+/**
+ * Demo accounts never reach a real provider: the message is stored as a draft
+ * (so history stays truthful) and the UI shows a preview instead.
+ */
+const demoIntercept = async (input: CreateMessageInput) => {
+  interceptExternalSend({
+    channel: input.channel,
+    recipient: input.recipient,
+    recipientName: input.recipient_name,
+    subject: input.subject,
+    body: input.body,
+  });
+  return await call("create", { ...input, auto_send: false });
+};
+
+const demoBlockSend = async (id: string) => {
+  const info: any = await call("preview", { id }).catch(() => null);
+  const msg = info?.message ?? info ?? {};
+  interceptExternalSend({
+    channel: msg.channel ?? "email",
+    recipient: msg.recipient ?? "—",
+    recipientName: msg.recipient_name,
+    subject: msg.subject,
+    body: msg.body ?? "",
+  });
+  return { ok: true, demo: true };
+};
+
 export const communicationHub = {
-  create: (input: CreateMessageInput) => call("create", { ...input }),
+  create: (input: CreateMessageInput) =>
+    isDemoMode() ? demoIntercept(input) : call("create", { ...input }),
   preview: (id: string) => call("preview", { id }),
-  send: (id: string) => call("send", { id }),
-  retry: (id: string) => call("retry", { id }),
+  send: (id: string) => (isDemoMode() ? demoBlockSend(id) : call("send", { id })),
+  retry: (id: string) => (isDemoMode() ? demoBlockSend(id) : call("retry", { id })),
   cancel: (id: string) => call("cancel", { id }),
   /** Sprint 34.1 — safe manual retry: requeues through the dispatcher. */
-  requeue: (id: string) => call("requeue", { id }),
+  requeue: (id: string) => (isDemoMode() ? demoBlockSend(id) : call("requeue", { id })),
   attempts: (id: string) => call("attempts", { id }),
   schedule: (id: string, scheduled_at: string) => call("schedule", { id, scheduled_at }),
   status: (id: string) => call("status", { id }),

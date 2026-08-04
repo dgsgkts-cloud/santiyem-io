@@ -3,6 +3,7 @@ import { Sparkles, Loader2, CheckCircle2, Trash2, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DemoDataPanel from "./DemoDataPanel";
+import DemoAccountAdminPanel from "@/components/demo/DemoAccountAdminPanel";
 
 const MsyPremiumDemoCard = () => {
   const [busy, setBusy] = useState<null | "load" | "remove">(null);
@@ -138,6 +139,7 @@ const DemoDataTab = () => {
 
   return (
     <div className="space-y-5 lg:space-y-6">
+      <DemoAccountAdminPanel />
       <MsyPremiumDemoCard />
       <div className="border-t border-border" />
       <DemoDataPanel />

@@ -95,6 +95,8 @@ const isSubscriptionExpired = (
   role: UserRole,
   sub: ReturnType<typeof useSubscriptionStatus>["data"],
 ): boolean => {
+  // Internal demo entitlement — never billed, never expired by subscription.
+  if (plan === "demo_full_access") return false;
   // Super admin never has an expired subscription.
   if (role === "admin") return false;
   // A real paid plan on the profile trumps trial state.
@@ -165,6 +167,8 @@ export const useAccessGuard = (): AccessGuard => {
       const label = getTabLabel(tab);
       // Super admin bypass — always ok.
       if (isAdmin) return { ok: true, reason: "ok", label };
+      // Demo entitlement: all completed modules open, no setup/subscription gate.
+      if (plan === "demo_full_access") return { ok: true, reason: "ok", label };
       // Ambiguous while loading — treat as allowed to avoid false locks.
       if (!ready) return { ok: true, reason: "ok", label };
 
