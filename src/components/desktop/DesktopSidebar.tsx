@@ -112,10 +112,10 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const planLabel =
     plan === "pro" ? "Profesyonel" : plan === "team" ? "Ekip" : plan === "enterprise" ? "Kurumsal"
     : plan === "plus" ? "Plus" : plan === "office_pro" ? "Kurumsal Pro" : plan === "office_free" ? "Kurumsal"
-    : plan === "office_custom" ? "Özel" : "Ücretsiz";
+    : plan === "office_custom" ? "Özel" : plan === "demo_full_access" ? "Demo Hesabı" : "Ücretsiz";
   const planTone =
     plan === "pro" || plan === "plus" || plan === "team" ? "ds-chip-warning"
-    : plan === "enterprise" || isOfficePlan(plan) ? "ds-chip-info" : "ds-chip-neutral";
+    : plan === "enterprise" || plan === "demo_full_access" || isOfficePlan(plan) ? "ds-chip-info" : "ds-chip-neutral";
 
   return (
     <aside
