@@ -19,5 +19,8 @@ project_id = "ubwdrsflqjirhrfbdwac"
     verify_jwt = false
   [functions.submit-ekb-lead]
     verify_jwt = false
+  [functions.e2e-admin]
+    verify_jwt = false
+
 
 
