@@ -43,6 +43,8 @@ const NAV_SECTIONS = [
     label: "OPERASYON",
     items: [
       { id: "dashboard" as Tab, label: "Ana Sayfa", icon: LayoutDashboard },
+      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare, accent: true },
+      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3, accent: true },
       { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
       { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
       { id: "materials" as Tab, label: "Malzeme", icon: Package },
@@ -67,19 +69,13 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: "YAPAY ZEKA",
-    items: [
-      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare },
-      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3 },
-    ],
-  },
-  {
     label: "İLETİŞİM",
     items: [
       { id: "meetings" as Tab, label: "Toplantılar", icon: Users },
       { id: "communication" as Tab, label: "İletişim", icon: Radio },
     ],
   },
+
   {
     label: "",
     items: [
