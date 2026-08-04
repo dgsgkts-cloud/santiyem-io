@@ -82,7 +82,7 @@ const NAV_SECTIONS = [
       { id: "settings" as Tab, label: "Ayarlar", icon: Settings },
     ],
   },
-] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean }> }>;
+] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean; accent?: boolean }> }>;
 
 void isNativeApp;
 
