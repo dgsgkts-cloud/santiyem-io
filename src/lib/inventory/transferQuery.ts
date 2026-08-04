@@ -52,8 +52,33 @@ export interface TransferQueryLike {
 }
 
 export interface TransferQuerySource {
-  from(table: string): { select(cols: string, opts?: { count?: "exact" }): TransferQueryLike };
+  from(table: string): {
+    select(cols: string, opts?: { count?: "exact"; head?: boolean }): TransferQueryLike;
+  };
 }
+
+/**
+ * PostgREST, istenen sayfa aralığı toplam kayıt sayısının ötesindeyse satır
+ * döndürmek yerine HTTP 416 / `PGRST103` hatası verir. Bu durumda liste
+ * boş kalmasın diye toplam kayıt sayısı ayrı bir sayım isteğiyle alınır ve
+ * sayfa numarası normalize edilir.
+ */
+export const RANGE_NOT_SATISFIABLE = "PGRST103" as const;
+
+export const isRangeNotSatisfiable = (error: unknown): boolean => {
+  const e = error as { code?: string; message?: string } | null;
+  if (!e) return false;
+  return e.code === RANGE_NOT_SATISFIABLE || /range not satisfiable/i.test(e.message ?? "");
+};
+
+/** Hata mesajındaki ("... there are only N rows") toplam kayıt sayısı. */
+export const totalFromRangeError = (error: unknown): number | null => {
+  const e = error as { details?: string; message?: string } | null;
+  const text = `${e?.details ?? ""} ${e?.message ?? ""}`;
+  const m = text.match(/there are only (\d+) rows/i);
+  return m ? Number(m[1]) : null;
+};
+
 
 /**
  * Sıralama her zaman kararlıdır: seçilen anahtarın ardından
@@ -72,11 +97,13 @@ export const applySort = (q: TransferQueryLike, sort: TransferFilterState["sort"
 export const buildTransferListQuery = (
   source: TransferQuerySource,
   f: TransferFilterState,
-  opts: { now?: Date; pageSize?: number; page?: number } = {},
+  opts: { now?: Date; pageSize?: number; page?: number; countOnly?: boolean } = {},
 ): TransferQueryLike => {
   const size = opts.pageSize ?? PAGE_SIZE;
   const nowIso = (opts.now ?? new Date()).toISOString();
-  let q: TransferQueryLike = source.from(TRANSFER_LIST_VIEW).select("*", { count: "exact" });
+  let q: TransferQueryLike = source
+    .from(TRANSFER_LIST_VIEW)
+    .select("*", opts.countOnly ? { count: "exact", head: true } : { count: "exact" });
 
   if (f.bucket === "pending") q = q.in("status", PENDING_STATUSES as readonly string[]);
   if (f.bucket === "transit") q = q.gt("in_transit_quantity", 0);
@@ -98,6 +125,8 @@ export const buildTransferListQuery = (
   if (needle) q = q.ilike("search_text", `%${needle}%`);
 
   q = applySort(q, f.sort);
+  if (opts.countOnly) return q;
   const { from, to } = pageRange(opts.page ?? f.page, size);
   return q.range(from, to);
 };
+

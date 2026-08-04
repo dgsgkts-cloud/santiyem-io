@@ -12,7 +12,9 @@ import { useUser } from "@/contexts/UserContext";
 import { SERVER_DECISION, type TransferStatus } from "@/lib/inventory/transferModel";
 import {
   buildTransferListQuery, normalizePage, pageCountOf,
+  isRangeNotSatisfiable, totalFromRangeError,
 } from "@/lib/inventory/transferQuery";
+
 import { PAGE_SIZE, type TransferFilterState } from "@/lib/inventory/transferFilters";
 
 
@@ -136,11 +138,33 @@ export const useTransferPage = (filters: TransferFilterState) => {
         return { data: (data ?? []) as any[], count: Number(count) || 0 };
       };
 
-      let res = await run(filters.page);
-      const total = res.count;
+      /** Yalnızca toplam kayıt sayısı (satır gövdesi indirilmez). */
+      const countOnly = async () => {
+        const q = buildTransferListQuery(db, filters, { countOnly: true });
+        const { error, count } = await (q as any);
+        if (error) throw error;
+        return Number(count) || 0;
+      };
+
+      let res: { data: any[]; count: number };
+      let total: number;
+      try {
+        res = await run(filters.page);
+        total = res.count;
+      } catch (err) {
+        // Aralık dışı sayfa: PostgREST satır döndürmek yerine 416 verir.
+        // Toplam kayıt sayısı ayrı sayımla alınır ve sayfa normalize edilir.
+        if (!isRangeNotSatisfiable(err)) throw err;
+        total = totalFromRangeError(err) ?? (await countOnly());
+        res = await run(normalizePage(filters.page, total));
+      }
+
       const normalizedPage = normalizePage(filters.page, total);
       // Kayıt silindiğinde / durum değiştiğinde boşalan sayfa son sayfaya iner.
-      if (normalizedPage !== filters.page) res = await run(normalizedPage);
+      if (normalizedPage !== filters.page && res.data.length === 0 && total > 0) {
+        res = await run(normalizedPage);
+      }
+
 
       return {
         rows: res.data.map((r) => ({
