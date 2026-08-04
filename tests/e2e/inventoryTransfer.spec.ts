@@ -94,7 +94,7 @@ test.describe("Depo → Transferler yaşam döngüsü", () => {
 
   test("belge yükleme alanı transfer detayında bulunur", async ({ page }) => {
     const ids = lifecycleIds();
-    const id = ids.completed ?? Object.values(ids)[0];
+    const id = ids.received ?? Object.values(ids)[0];
     test.skip(!id, "Seed edilmiş transfer kaydı yok.");
     await page.goto(`${APP}/depo/transferler/${id}`);
     await expect(page.getByText("Belgeler").first()).toBeVisible();
@@ -177,7 +177,7 @@ test.describe("Depo → Transferler sunucu tarafı sayfalama", () => {
   test("mobilde belge işlemleri hover olmadan erişilebilir", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const ids = lifecycleIds();
-    const id = ids.completed ?? Object.values(ids)[0];
+    const id = ids.received ?? Object.values(ids)[0];
     test.skip(!id, "Seed edilmiş transfer kaydı yok.");
     await page.goto(`${APP}/depo/transferler/${id}`);
     await expect(page.getByText("Belgeler").first()).toBeVisible();
