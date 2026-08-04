@@ -639,6 +639,7 @@ const PLAN_INFO: Record<string, { emoji: string; name: string; price: string; su
   office_free: { emoji: "🏢", name: "Kurumsal Ücretsiz", price: "Ücretsiz", sub: "" },
   office_pro: { emoji: "🏢", name: "Kurumsal Pro", price: "2.499₺/ay", sub: "" },
   office_custom: { emoji: "🏢", name: "Özel Kurumsal", price: "Özel", sub: "" },
+  demo_full_access: { emoji: "🎬", name: "Demo Hesabı", price: "Demo", sub: "Tanıtım amaçlı tam erişim" },
 };
 
 const UPGRADE_CARDS = [
