@@ -113,7 +113,7 @@ const PLAN_LABELS: Record<LicensePlan, string> = {
   business: "Business",
   enterprise: "Enterprise",
   trial: "Trial",
-  demo: "Demo",
+  demo: "Demo Hesabı",
   super_admin: "Super Admin",
 };
 
@@ -176,6 +176,8 @@ export function resolveLicensePlan(
   sub: { status?: string | null; trial_end?: string | null; plan_name?: string | null } | null | undefined,
 ): LicensePlan {
   if (role === "admin") return "super_admin";
+  // Investor/partner demo entitlement — full access, never billed.
+  if (plan === "demo_full_access") return "demo";
 
   const status = (sub?.status || "").toLowerCase();
   const now = Date.now();
@@ -252,7 +254,7 @@ export function useLicense(): LicenseSnapshot {
       ? buildFeatureFlags("super_admin")
       : buildFeatureFlags(licensePlan);
 
-    const hasFeature = (f: LicenseFeature) => isSuperAdmin || features[f] === true;
+    const hasFeature = (f: LicenseFeature) => isSuperAdmin || isDemo || features[f] === true;
     const isWithinLimit = (key: keyof LicenseLimits, current: number) => {
       if (isSuperAdmin || isDemo) return true;
       const max = limits[key];
@@ -290,7 +292,7 @@ export const PLAN_META: Record<LicensePlan, { label: string; color: string; bg: 
   business:    { label: "Business",    color: "#FF9B4A", bg: "rgba(255,107,43,0.12)",  border: "rgba(255,107,43,0.4)" },
   enterprise:  { label: "Enterprise",  color: "#C084FC", bg: "rgba(192,132,252,0.14)", border: "rgba(192,132,252,0.4)" },
   trial:       { label: "Trial",       color: "#FACC15", bg: "rgba(250,204,21,0.12)",  border: "rgba(250,204,21,0.4)" },
-  demo:        { label: "Demo",        color: "#22D3EE", bg: "rgba(34,211,238,0.12)",  border: "rgba(34,211,238,0.4)" },
+  demo:        { label: "Demo Hesabı",      color: "#22D3EE", bg: "rgba(34,211,238,0.12)",  border: "rgba(34,211,238,0.4)" },
   super_admin: { label: "Super Admin", color: "#FFD166", bg: "rgba(255,209,102,0.14)", border: "rgba(255,209,102,0.5)" },
 };
 
