@@ -42,6 +42,9 @@ const FleetPage = lazy(() => import("@/components/desktop/FleetPage"));
 const ReportsPage = lazy(() => import("@/components/desktop/ReportsPage"));
 import LockedPage from "@/components/desktop/LockedPage";
 import { useAccessGuard, useAccessSnapshotSync } from "@/lib/accessControl";
+import { useDemoAccount } from "@/hooks/useDemoAccount";
+import DemoBadge from "@/components/demo/DemoBadge";
+import DemoExpiredScreen from "@/components/demo/DemoExpiredScreen";
 
 const TabFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -321,6 +324,8 @@ const Index = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, isRead, hasValidDestination, bulkRunning } = useNotifications();
   const guard = useAccessGuard();
   useAccessSnapshotSync();
+  const demo = useDemoAccount();
+  const isDemoPlan = demo.isDemo || plan === "demo_full_access";
 
   // Persist active tab
   useEffect(() => {
@@ -344,6 +349,8 @@ const Index = () => {
   useEffect(() => {
     if (!user || projectsLoading) return;
     if (isAdmin) return;
+    // Demo account: open the dashboard directly — no wizard, no onboarding.
+    if (isDemoPlan) return;
     if (!isFirstRunDone() && projects.length === 0) {
       setShowFirstRun(true);
       return;
@@ -354,7 +361,7 @@ const Index = () => {
     } else if (user && shouldShowThemeModal()) {
       setShowThemeModal(true);
     }
-  }, [user, isAdmin, projects.length, projectsLoading]);
+  }, [user, isAdmin, isDemoPlan, projects.length, projectsLoading]);
 
   // Initialize push notifications (native only, respects user preference)
   useEffect(() => {
@@ -574,11 +581,15 @@ const Index = () => {
     goToTab(tab);
   };
 
+  // Demo period ended / deactivated — block the app, keep the account.
+  if (demo.isDemo && demo.blocked) return <DemoExpiredScreen />;
+
   // Desktop layout
   if (isLg) {
     return (
       <div className="flex h-dvh bg-background">
         <CommandPalette />
+        <DemoBadge />
         <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
         <OnboardingModal open={showOnboarding} onClose={handleOnboardingClose} />
         <ThemeSelectionModal open={showThemeModal} onClose={() => setShowThemeModal(false)} />
@@ -668,6 +679,7 @@ const Index = () => {
   return (
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background md:[padding-bottom:env(safe-area-inset-bottom,0px)]">
       <FirstRunWizard open={showFirstRun} onClose={handleFirstRunClose} />
+      <DemoBadge />
       {/* ── MOBILE HEADER ── */}
       <header
         className="lg:hidden sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md shrink-0"

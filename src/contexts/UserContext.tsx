@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-export type PlanType = "free" | "pro" | "team" | "enterprise" | "plus" | "office_free" | "office_pro" | "office_custom";
+export type PlanType = "free" | "pro" | "team" | "enterprise" | "plus" | "office_free" | "office_pro" | "office_custom" | "demo_full_access";
 export type UserRole = "free" | "pro" | "office" | "admin";
 
 interface UsageLimits {
@@ -20,9 +20,9 @@ const FREE_LIMITS: UsageLimits = {
 };
 
 // Helper to check plan tiers
-export const isTeamOrAbove = (plan: PlanType) => plan === "team" || plan === "enterprise" || plan === "office_pro" || plan === "office_custom";
+export const isTeamOrAbove = (plan: PlanType) => plan === "team" || plan === "enterprise" || plan === "office_pro" || plan === "office_custom" || plan === "demo_full_access";
 export const isProOrAbove = (plan: PlanType) => plan === "pro" || isTeamOrAbove(plan);
-export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan === "office_pro" || plan === "office_custom" || plan === "team" || plan === "enterprise";
+export const isOfficePlan = (plan: PlanType) => plan === "office_free" || plan === "office_pro" || plan === "office_custom" || plan === "team" || plan === "enterprise" || plan === "demo_full_access";
 export const isIndividualPlan = (plan: PlanType) => plan === "free" || plan === "plus" || plan === "pro";
 
 // Feature access helpers

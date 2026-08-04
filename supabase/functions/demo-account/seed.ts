@@ -132,7 +132,8 @@ export async function seedDemoTenant(sb: SB, userId: string) {
 
   /* ── Attendance (puantaj) — last 12 working days ──────── */
   const attendance: any[] = [];
-  for (let d = 1; d <= 12; d++) {
+  // Includes today (d = 0) so "bugün kaç kişi sahada" answers from real rows.
+  for (let d = 0; d <= 12; d++) {
     const date = day(-d);
     if (new Date(date).getDay() === 0) continue;
     PERSONNEL.forEach((p, i) => {
@@ -193,6 +194,7 @@ export async function seedDemoTenant(sb: SB, userId: string) {
         contact_person: s.contact_person,
         phone: s.phone,
         project_id: P.antakya.id,
+        project_ids: [P.antakya.id],
         contract_amount: 0,
         description: "Tedarikçi",
       })),
@@ -223,6 +225,7 @@ export async function seedDemoTenant(sb: SB, userId: string) {
         subcontractor_id: S[s.key],
         project_id: P[s.projectKey].id,
         amount: pl.amount,
+        payment_date: day(pl.offset),
         planned_date: day(pl.offset),
         status: "pending",
         payment_method: "Banka Havalesi",
@@ -603,7 +606,7 @@ export async function seedDemoTenant(sb: SB, userId: string) {
       },
       {
         user_id: userId, transfer_no: "TRF-2026-003", material_id: M.cimento, unit: "ton",
-        requested_quantity: 14, in_transit_quantity: 0, unit_cost: 3850,
+        requested_quantity: 14, dispatched_quantity: 0, received_quantity: 0, in_transit_quantity: 0, unit_cost: 3850,
         source_warehouse_id: W.merkez, dest_warehouse_id: W.saha,
         project_id: P.arsuz.id, requester_id: userId,
         requested_at: ts(-1), required_date: day(4), status: "pending_approval", reason: "Şap imalatı",

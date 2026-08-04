@@ -17,6 +17,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 
 import NativeSetup from "@/components/NativeSetup";
 import { VoiceOrb } from "@/components/voice/VoiceOrb";
+import DemoMessagePreview from "@/components/demo/DemoMessagePreview";
 import { ActionExecutorProvider } from "@/hooks/useActionExecutor";
 
 const ConstructionMode = lazy(() => import("./pages/ConstructionMode"));
@@ -142,6 +143,7 @@ const App = () => (
           </Suspense>
           {!Capacitor.isNativePlatform() && <CookieBanner />}
           <VoiceOrb />
+          <DemoMessagePreview />
           <DeepLinkHandler />
           <NativeSetup />
         </BrowserRouter>
