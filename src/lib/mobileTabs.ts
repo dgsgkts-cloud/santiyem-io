@@ -18,8 +18,8 @@ export interface MobileTab {
 // Şantiye Günlüğü moved to the drawer; AI replaces the floating microphone.
 const FULL_TABS: MobileTab[] = [
   { id: "dashboard", label: "Ana Sayfa", icon: Home },
-  { id: "projects", label: "Projeler", icon: FolderOpen },
   { id: "chat", label: "AI", icon: Sparkles },
+  { id: "projects", label: "Projeler", icon: FolderOpen },
   { id: "settings", label: "Profil", icon: User },
 ];
 
