@@ -272,10 +272,20 @@ const Index = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { role: primaryRole } = usePrimaryProjectRole();
   const allowedDrawerIds = getAllowedDrawerIdsForRole(primaryRole);
-  const visibleDrawerGroups = DRAWER_GROUPS.map((g) => ({
-    title: g.title,
-    items: allowedDrawerIds ? g.items.filter((it) => allowedDrawerIds.has(String(it.id))) : g.items,
-  })).filter((g) => g.items.length > 0);
+  // Same six areas as desktop; role-restricted sub-areas are hidden.
+  const visibleNavAreas = NAV_AREAS
+    .map((a) => ({
+      ...a,
+      children: (a.children ?? []).filter(
+        (c) => !allowedDrawerIds || allowedDrawerIds.has(String(c.tab)),
+      ),
+    }))
+    .filter((a) =>
+      a.tab
+        ? !allowedDrawerIds || allowedDrawerIds.has(String(a.tab))
+        : a.children.length > 0,
+    );
+  const [openNavGroups, setOpenNavGroups] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
