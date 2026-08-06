@@ -59,11 +59,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   RotateCcw, MessageSquare,
-  Calculator, Paintbrush, CalendarClock, Menu, X,
+  Calculator, Paintbrush, CalendarClock, Menu, X, ChevronDown,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
   Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards,
   BarChart3, Radio
 } from "lucide-react";
+import {
+  NAV_AREAS, isAreaActive, isLeafActive, searchToQuery, type NavSearch,
+} from "@/lib/navConfig";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
 import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
