@@ -560,25 +560,26 @@ const Index = () => {
     setIsTyping(false);
   };
 
-  const goToTab = useCallback((rawTab: Tab) => {
+  const goToTab = useCallback((rawTab: Tab, search?: NavSearch) => {
     const tab = coerceTab(rawTab);
     const path = TAB_TO_PATH[tab];
-    if (path && location.pathname !== path) {
-      navigate(path);
+    const query = searchToQuery(search);
+    if (path && (location.pathname !== path || query)) {
+      navigate(`${path}${query}`);
     } else {
       setActiveTab(tab);
     }
   }, [navigate, location.pathname]);
 
-  const handleDrawerNav = (id: string) => {
+  const handleDrawerNav = (id: string, search?: NavSearch) => {
     if (NAVIGABLE_TABS.includes(id as Tab)) {
-      goToTab(id as Tab);
+      goToTab(id as Tab, search);
     }
     setDrawerOpen(false);
   };
 
-  const handleDesktopTabChange = (tab: Tab) => {
-    goToTab(tab);
+  const handleDesktopTabChange = (tab: Tab, search?: NavSearch) => {
+    goToTab(tab, search);
   };
 
   // Demo period ended / deactivated — block the app, keep the account.
