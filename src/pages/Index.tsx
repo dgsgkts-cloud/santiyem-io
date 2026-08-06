@@ -59,11 +59,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   RotateCcw, MessageSquare,
-  Calculator, Paintbrush, CalendarClock, Menu, X,
+  Calculator, Paintbrush, CalendarClock, Menu, X, ChevronDown,
   Home, FolderOpen, Camera, Zap, FileText, BookOpen,
   Lightbulb, Settings, LogOut, User, Plus, Bell, HardHat, Package, WalletCards,
   BarChart3, Radio
 } from "lucide-react";
+import {
+  NAV_AREAS, isAreaActive, isLeafActive, searchToQuery, type NavSearch,
+} from "@/lib/navConfig";
 import { useNotifications } from "@/hooks/useNotifications";
 import { streamChat } from "@/lib/streamChat";
 import { useMemoryExtractor } from "@/hooks/useMemoryExtractor";
@@ -166,52 +169,15 @@ const BRAIN_SECTION_TO_TAB: Record<string, Tab> = {
   "documents": "company-docs",
 };
 
-// Mobile drawer menu — grouped navigation (SPRINT 40)
+// Mobile drawer menu — mirrors the desktop information architecture exactly
+// (see src/lib/navConfig.ts). Six primary areas, accordion sub-groups.
 type DrawerItem = { id: Tab | string; label: string; icon: React.ElementType };
 
-const DRAWER_GROUPS: { title: string; items: DrawerItem[] }[] = [
-  {
-    title: "ANA",
-    items: [
-      { id: "dashboard", label: "Ana Sayfa", icon: Home },
-      { id: "chat", label: "AI Asistan", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "OPERASYON",
-    items: [
-      { id: "projects", label: "Projeler", icon: FolderOpen },
-      { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
-      { id: "personnel", label: "Personel & Puantaj", icon: HardHat },
-      { id: "materials", label: "Malzeme Takibi", icon: Package },
-    ],
-  },
-  {
-    title: "FİNANS",
-    items: [
-      { id: "hakedis", label: "Hakediş", icon: FileText },
-      { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
-      { id: "contracts", label: "Sözleşmeler", icon: FileText },
-      { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
-    ],
-  },
-  {
-    title: "İLETİŞİM",
-    items: [
-      { id: "communication", label: "İletişim Merkezi", icon: Radio },
-      { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "ANALİZ",
-    items: [
-      { id: "reports", label: "Raporlar", icon: BarChart3 },
-      { id: "settings", label: "Ayarlar", icon: Settings },
-    ],
-  },
-];
+const DRAWER_ITEMS: DrawerItem[] = NAV_AREAS.flatMap((a) => [
+  ...(a.tab ? [{ id: a.tab, label: a.label, icon: a.icon }] : []),
+  ...(a.children ?? []).map((c) => ({ id: c.tab, label: c.label, icon: c.icon })),
+]);
 
-const DRAWER_ITEMS: DrawerItem[] = DRAWER_GROUPS.flatMap((g) => g.items);
 
 
 const TAB_TITLES: Record<string, string> = {
@@ -309,10 +275,20 @@ const Index = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { role: primaryRole } = usePrimaryProjectRole();
   const allowedDrawerIds = getAllowedDrawerIdsForRole(primaryRole);
-  const visibleDrawerGroups = DRAWER_GROUPS.map((g) => ({
-    title: g.title,
-    items: allowedDrawerIds ? g.items.filter((it) => allowedDrawerIds.has(String(it.id))) : g.items,
-  })).filter((g) => g.items.length > 0);
+  // Same six areas as desktop; role-restricted sub-areas are hidden.
+  const visibleNavAreas = NAV_AREAS
+    .map((a) => ({
+      ...a,
+      children: (a.children ?? []).filter(
+        (c) => !allowedDrawerIds || allowedDrawerIds.has(String(c.tab)),
+      ),
+    }))
+    .filter((a) =>
+      a.tab
+        ? !allowedDrawerIds || allowedDrawerIds.has(String(a.tab))
+        : a.children.length > 0,
+    );
+  const [openNavGroups, setOpenNavGroups] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
   const [isLg, setIsLg] = useState(isDesktop);
@@ -560,25 +536,26 @@ const Index = () => {
     setIsTyping(false);
   };
 
-  const goToTab = useCallback((rawTab: Tab) => {
+  const goToTab = useCallback((rawTab: Tab, search?: NavSearch) => {
     const tab = coerceTab(rawTab);
     const path = TAB_TO_PATH[tab];
-    if (path && location.pathname !== path) {
-      navigate(path);
+    const query = searchToQuery(search);
+    if (path && (location.pathname !== path || query)) {
+      navigate(`${path}${query}`);
     } else {
       setActiveTab(tab);
     }
   }, [navigate, location.pathname]);
 
-  const handleDrawerNav = (id: string) => {
+  const handleDrawerNav = (id: string, search?: NavSearch) => {
     if (NAVIGABLE_TABS.includes(id as Tab)) {
-      goToTab(id as Tab);
+      goToTab(id as Tab, search);
     }
     setDrawerOpen(false);
   };
 
-  const handleDesktopTabChange = (tab: Tab) => {
-    goToTab(tab);
+  const handleDesktopTabChange = (tab: Tab, search?: NavSearch) => {
+    goToTab(tab, search);
   };
 
   // Demo period ended / deactivated — block the app, keep the account.
@@ -906,34 +883,64 @@ const Index = () => {
           className="flex-1 min-h-0 px-3 py-3"
           style={{ overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
         >
-          {visibleDrawerGroups.map((group) => (
-            <div key={group.title} className="mb-4 last:mb-0">
-              <p className="px-3 mb-1 text-[10px] font-semibold tracking-[0.12em] text-white/35">
-                {group.title}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleDrawerNav(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
-                        isActive
-                          ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
-                          : "text-white/70 hover:text-white hover:bg-white/[0.04]"
-                      }`}
-                      style={{ minHeight: "44px" }}
-                    >
-                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
-                      <span className={`text-[14px] ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
-                    </button>
-                  );
-                })}
+          {visibleNavAreas.map((area) => {
+            const AreaIcon = area.icon;
+            const areaActive = area.tab ? activeTab === area.tab : isAreaActive(area, activeTab);
+            const hasChildren = area.children.length > 0;
+            const open = openNavGroups[area.id] ?? isAreaActive(area, activeTab);
+            return (
+              <div key={area.id} className="mb-1 last:mb-0">
+                <button
+                  onClick={() => {
+                    if (hasChildren) {
+                      setOpenNavGroups((s) => ({ ...s, [area.id]: !open }));
+                    } else {
+                      handleDrawerNav(String(area.tab));
+                    }
+                  }}
+                  aria-expanded={hasChildren ? open : undefined}
+                  className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
+                    areaActive
+                      ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                      : "text-white/70 hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                  style={{ minHeight: "48px" }}
+                >
+                  <AreaIcon className="w-[18px] h-[18px] shrink-0" strokeWidth={areaActive ? 2.2 : 1.8} />
+                  <span className={`text-[15px] ${areaActive ? "font-semibold" : "font-medium"}`}>{area.label}</span>
+                  {hasChildren && (
+                    <ChevronDown
+                      className="w-4 h-4 ml-auto shrink-0 transition-transform duration-200 opacity-60"
+                      style={{ transform: open ? "rotate(180deg)" : "none" }}
+                    />
+                  )}
+                </button>
+                {hasChildren && open && (
+                  <div className="ml-6 pl-3 mt-1 mb-2 border-l border-white/[0.08] space-y-0.5">
+                    {area.children.map((leaf) => {
+                      const LeafIcon = leaf.icon;
+                      const leafActive = isLeafActive(leaf, activeTab, location.search);
+                      return (
+                        <button
+                          key={leaf.id}
+                          onClick={() => handleDrawerNav(leaf.tab, leaf.search)}
+                          className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
+                            leafActive
+                              ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                              : "text-white/60 hover:text-white hover:bg-white/[0.04]"
+                          }`}
+                          style={{ minHeight: "44px" }}
+                        >
+                          <LeafIcon className="w-4 h-4 shrink-0" strokeWidth={leafActive ? 2.2 : 1.8} />
+                          <span className={`text-[13.5px] ${leafActive ? "font-semibold" : "font-normal"}`}>{leaf.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </nav>
 
 
