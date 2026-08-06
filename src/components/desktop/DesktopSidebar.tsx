@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { useUser, isOfficePlan } from "@/contexts/UserContext";
 import { useAccessGuard, type GuardTab } from "@/lib/accessControl";
-import { useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard, MessageSquare, FolderKanban, Receipt,
-  BookOpen, Wallet, HardHat, BarChart3,
-  Settings, LogOut, ChevronLeft, ChevronRight, Lock, Package, FileSpreadsheet,
-  ShoppingCart, Warehouse, Truck, FileSignature, Users, Radio,
-} from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Settings, LogOut, ChevronLeft, ChevronRight, ChevronDown, Lock } from "lucide-react";
 import { BrandHomeLink } from "@/components/brand/BrandHomeLink";
 import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { useDisplayName } from "@/hooks/useDisplayName";
+import {
+  NAV_AREAS, isAreaActive, isLeafActive, type NavArea, type NavLeaf, type NavSearch,
+} from "@/lib/navConfig";
 
 // Localized role labels — extend as new roles are added
 const ROLE_LABELS: Record<string, string> = {
@@ -26,63 +24,12 @@ const ROLE_LABELS: Record<string, string> = {
   viewer: "İzleyici",
 };
 
-type Tab =
-  | "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
-  | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials"
-  | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "fleet"
-  | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs";
+type Tab = string;
 
 interface DesktopSidebarProps {
   activeTab: Tab;
-  onTabChange: (tab: Tab) => void;
+  onTabChange: (tab: Tab, search?: NavSearch) => void;
 }
-
-// Sprint 35 — Premium sidebar. Modules grouped by mental model, not by feature age.
-const NAV_SECTIONS = [
-  {
-    label: "OPERASYON",
-    items: [
-      { id: "dashboard" as Tab, label: "Ana Sayfa", icon: LayoutDashboard },
-      { id: "chat" as Tab, label: "AI Asistan", icon: MessageSquare, accent: true },
-      { id: "reports" as Tab, label: "AI Analizleri", icon: BarChart3, accent: true },
-      { id: "projects" as Tab, label: "Projeler", icon: FolderKanban },
-      { id: "site-diary" as Tab, label: "Şantiye Günlüğü", icon: BookOpen },
-      { id: "materials" as Tab, label: "Malzeme", icon: Package },
-      { id: "personnel" as Tab, label: "Personel", icon: HardHat },
-    ],
-  },
-  {
-    label: "TEDARİK",
-    items: [
-      { id: "procurement" as Tab, label: "Satın Alma", icon: ShoppingCart },
-      { id: "warehouse" as Tab, label: "Depo & Envanter", icon: Warehouse },
-      { id: "fleet" as Tab, label: "Makine & Ekipman", icon: Truck },
-    ],
-  },
-  {
-    label: "FİNANS",
-    items: [
-      { id: "payments-kasa" as Tab, label: "Kasa", icon: Wallet },
-      { id: "hakedis" as Tab, label: "Hakediş", icon: Receipt },
-      { id: "e-invoices" as Tab, label: "Faturalar", icon: FileSpreadsheet },
-      { id: "contracts" as Tab, label: "Sözleşmeler", icon: FileSignature },
-    ],
-  },
-  {
-    label: "İLETİŞİM",
-    items: [
-      { id: "meetings" as Tab, label: "Toplantılar", icon: Users },
-      { id: "communication" as Tab, label: "İletişim", icon: Radio },
-    ],
-  },
-
-  {
-    label: "",
-    items: [
-      { id: "settings" as Tab, label: "Ayarlar", icon: Settings },
-    ],
-  },
-] as Array<{ label: string; items: Array<{ id: Tab; label: string; icon: React.ElementType; soon?: boolean; accent?: boolean }> }>;
 
 void isNativeApp;
 
@@ -91,9 +38,12 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const guard = useAccessGuard();
   const gatesReady = !user || profileLoaded;
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebarCollapsed") === "true"; } catch { return false; }
   });
+  // Accordion state — the group owning the active tab stays open.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
@@ -112,6 +62,64 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
   const planTone =
     plan === "pro" || plan === "plus" || plan === "team" ? "ds-chip-warning"
     : plan === "enterprise" || plan === "demo_full_access" || isOfficePlan(plan) ? "ds-chip-info" : "ds-chip-neutral";
+
+  // Hide only what the role is not permitted to see; plan/setup gates stay
+  // visible with a lock so the user can still discover the module.
+  const leafVisible = (leaf: NavLeaf) =>
+    !gatesReady || guard.check(leaf.tab as GuardTab).reason !== "role-forbidden";
+
+  const areas: NavArea[] = NAV_AREAS
+    .map((a) => (a.children ? { ...a, children: a.children.filter(leafVisible) } : a))
+    .filter((a) => (a.children ? a.children.length > 0 : true));
+
+  const isGroupOpen = (area: NavArea) =>
+    openGroups[area.id] ?? isAreaActive(area, activeTab);
+
+  const toggleGroup = (area: NavArea) => {
+    if (collapsed) {
+      setCollapsed(false);
+      setOpenGroups((s) => ({ ...s, [area.id]: true }));
+      return;
+    }
+    setOpenGroups((s) => ({ ...s, [area.id]: !isGroupOpen(area) }));
+  };
+
+  const rowStyle = (active: boolean, accent: boolean, locked: boolean, depth: 0 | 1) => ({
+    height: depth === 0 ? 42 : 36,
+    borderRadius: depth === 0 ? 13 : 11,
+    background: active ? "hsl(var(--primary) / 0.18)" : accent ? "hsl(var(--primary) / 0.06)" : "transparent",
+    color: locked
+      ? "hsl(var(--muted-foreground) / 0.55)"
+      : active || accent
+        ? "hsl(var(--primary))"
+        : "hsl(var(--muted-foreground))",
+    justifyContent: collapsed ? "center" : "flex-start",
+    padding: collapsed ? 0 : depth === 0 ? "0 12px" : "0 12px 0 14px",
+    gap: collapsed ? 0 : 12,
+    boxShadow: active
+      ? "inset 0 0 0 1px hsl(var(--primary) / 0.32), 0 1px 2px hsl(var(--primary) / 0.12)"
+      : accent
+        ? "inset 0 0 0 1px hsl(var(--primary) / 0.18)"
+        : "none",
+    fontWeight: active || accent ? 600 : 500,
+  }) as React.CSSProperties;
+
+  const withHover = (active: boolean, accent: boolean, locked: boolean) => ({
+    onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (active) return;
+      e.currentTarget.style.background = accent ? "hsl(var(--primary) / 0.14)" : "hsl(var(--muted) / 0.6)";
+      e.currentTarget.style.color = locked
+        ? "hsl(var(--muted-foreground))"
+        : accent ? "hsl(var(--primary))" : "hsl(var(--foreground))";
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (active) return;
+      e.currentTarget.style.background = accent ? "hsl(var(--primary) / 0.06)" : "transparent";
+      e.currentTarget.style.color = locked
+        ? "hsl(var(--muted-foreground) / 0.55)"
+        : accent ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))";
+    },
+  });
 
   return (
     <aside
@@ -174,8 +182,6 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         </span>
       </BrandHomeLink>
 
-
-
       {/* Compact user card — no KPIs, health cards or quota counters in navigation */}
       <div className="shrink-0" style={{ padding: collapsed ? "0 12px 20px" : "0 14px 22px" }}>
         {collapsed ? (
@@ -227,7 +233,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
         )}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation — six primary areas, accordion sub-groups */}
       <nav
         className="flex-1"
         style={{
@@ -235,100 +241,116 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           overflow: "visible auto",
           display: "flex",
           flexDirection: "column",
-          gap: 22,
+          gap: 6,
         }}
       >
+        {areas.map((area) => {
+          const Icon = area.icon;
+          const decision = guard.check((area.tab ?? area.children![0].tab) as GuardTab);
+          const isLocked = gatesReady && !!area.tab && !decision.ok;
+          const active = area.tab ? activeTab === area.tab : isAreaActive(area, activeTab);
+          const accent = !!area.accent && !isLocked;
+          const open = isGroupOpen(area);
 
-        {NAV_SECTIONS.map((section, si) => (
-          <div key={section.label || `s-${si}`}>
-            {!collapsed && section.label && (
-              <p className="ds-label px-3" style={{ fontSize: 10, opacity: 0.7, marginBottom: 9 }}>
-                {section.label}
-              </p>
-            )}
-            {collapsed && si > 0 && <div className="h-px bg-border/60 mx-2 mb-3" />}
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              {section.items.map((item) => {
-                const isActive = activeTab === item.id;
-                const Icon = item.icon;
-                const decision = guard.check(item.id as GuardTab);
-                const isLocked = gatesReady && !decision.ok;
-                const accent = !!(item as any).accent && !isLocked;
-                const idleBg = accent ? "hsl(var(--primary) / 0.06)" : "transparent";
-                const idleColor = isLocked
-                  ? "hsl(var(--muted-foreground) / 0.55)"
-                  : accent
-                    ? "hsl(var(--primary))"
-                    : "hsl(var(--muted-foreground))";
+          const areaBtn = (
+            <button
+              onClick={() => {
+                if (!gatesReady) return;
+                if (area.children) toggleGroup(area);
+                else onTabChange(area.tab!);
+              }}
+              aria-expanded={area.children ? open : undefined}
+              className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
+              style={rowStyle(active, accent, isLocked, 0)}
+              {...withHover(active, accent, isLocked)}
+            >
+              {active && !isLocked && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full"
+                  style={{ width: 3, height: 22, background: "hsl(var(--primary))" }}
+                />
+              )}
+              <Icon className="w-[18px] h-[18px] shrink-0" />
+              {!collapsed && <span className="ds-body-strong whitespace-nowrap">{area.label}</span>}
+              {!collapsed && isLocked && <Lock className="w-3.5 h-3.5 ml-auto shrink-0 opacity-70" />}
+              {!collapsed && area.children && (
+                <ChevronDown
+                  className="w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-200"
+                  style={{ transform: open ? "rotate(180deg)" : "none", opacity: 0.7 }}
+                />
+              )}
+            </button>
+          );
 
-                const btn = (
-                  <button
-                    key={item.id}
-                    onClick={() => { if (gatesReady) onTabChange(item.id); }}
-                    className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
-                    style={{
-                      height: 42,
-                      borderRadius: 13,
-                      background: isActive ? "hsl(var(--primary) / 0.18)" : idleBg,
-                      color: isActive && !isLocked ? "hsl(var(--primary))" : idleColor,
-                      justifyContent: collapsed ? "center" : "flex-start",
-                      padding: collapsed ? 0 : "0 12px",
-                      gap: collapsed ? 0 : 12,
-                      boxShadow: isActive
-                        ? "inset 0 0 0 1px hsl(var(--primary) / 0.32), 0 1px 2px hsl(var(--primary) / 0.12)"
-                        : accent
-                          ? "inset 0 0 0 1px hsl(var(--primary) / 0.18)"
-                          : "none",
-                      fontWeight: isActive || accent ? 600 : 500,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (isActive) return;
-                      e.currentTarget.style.background = accent
-                        ? "hsl(var(--primary) / 0.14)"
-                        : "hsl(var(--muted) / 0.6)";
-                      e.currentTarget.style.color = isLocked
-                        ? "hsl(var(--muted-foreground))"
-                        : accent
-                          ? "hsl(var(--primary))"
-                          : "hsl(var(--foreground))";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (isActive) return;
-                      e.currentTarget.style.background = idleBg;
-                      e.currentTarget.style.color = idleColor;
-                    }}
+          return (
+            <div key={area.id}>
+              {collapsed ? (
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>{areaBtn}</TooltipTrigger>
+                  <TooltipContent side="right">{area.label}</TooltipContent>
+                </Tooltip>
+              ) : (
+                areaBtn
+              )}
 
-                  >
-                    {isActive && !isLocked && (
-                      <span
-                        className="absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full"
-                        style={{ width: 3, height: 22, background: "hsl(var(--primary))" }}
-                      />
-                    )}
-                    <Icon className="w-[18px] h-[18px] shrink-0" />
-                    {!collapsed && <span className="ds-body-strong whitespace-nowrap">{item.label}</span>}
-                    {!collapsed && isLocked && <Lock className="w-3.5 h-3.5 ml-auto shrink-0 opacity-70" />}
-                    {!collapsed && (item as any).soon && !isLocked && (
-                      <span className="ds-chip ds-chip-neutral ml-auto shrink-0" style={{ height: 18, fontSize: 9 }}>
-                        Yakında
-                      </span>
-                    )}
-                  </button>
-                );
-
-                if (collapsed) {
-                  return (
-                    <Tooltip key={item.id} delayDuration={0}>
-                      <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                      <TooltipContent side="right">{item.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return btn;
-              })}
+              {!collapsed && area.children && open && (
+                <div
+                  className="ml-[18px] pl-3 border-l border-border/60"
+                  style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4, marginBottom: 4 }}
+                >
+                  {area.children.map((leaf) => {
+                    const LeafIcon = leaf.icon;
+                    const leafDecision = guard.check(leaf.tab as GuardTab);
+                    const leafLocked = gatesReady && !leafDecision.ok;
+                    const leafActive = isLeafActive(leaf, activeTab, location.search);
+                    return (
+                      <button
+                        key={leaf.id}
+                        onClick={() => { if (gatesReady) onTabChange(leaf.tab, leaf.search); }}
+                        className="ds-press ds-focus-ring w-full flex items-center overflow-hidden"
+                        style={rowStyle(leafActive, false, leafLocked, 1)}
+                        {...withHover(leafActive, false, leafLocked)}
+                      >
+                        <LeafIcon className="w-4 h-4 shrink-0" />
+                        <span className="ds-caption whitespace-nowrap" style={{ fontSize: 12.5 }}>{leaf.label}</span>
+                        {leafLocked && <Lock className="w-3 h-3 ml-auto shrink-0 opacity-70" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
+
+        {/* Ayarlar */}
+        <div style={{ marginTop: 10 }}>
+          {collapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onTabChange("settings")}
+                  className="ds-press ds-focus-ring w-full flex items-center overflow-hidden"
+                  style={rowStyle(activeTab === "settings", false, false, 0)}
+                  {...withHover(activeTab === "settings", false, false)}
+                >
+                  <Settings className="w-[18px] h-[18px] shrink-0" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Ayarlar</TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={() => onTabChange("settings")}
+              className="ds-press ds-focus-ring w-full flex items-center overflow-hidden"
+              style={rowStyle(activeTab === "settings", false, false, 0)}
+              {...withHover(activeTab === "settings", false, false)}
+            >
+              <Settings className="w-[18px] h-[18px] shrink-0" />
+              <span className="ds-body-strong whitespace-nowrap">Ayarlar</span>
+            </button>
+          )}
+        </div>
       </nav>
 
       {/* Footer */}
