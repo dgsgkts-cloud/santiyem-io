@@ -59,7 +59,7 @@ export const NAV_AREAS: NavArea[] = [
     icon: ShoppingCart,
     children: [
       { id: "pr-requests", label: "Talepler", icon: ClipboardList, tab: "procurement", search: { sekme: "talepler" } },
-      { id: "pr-approvals", label: "Onaylar", icon: CheckCircle2, tab: "procurement", search: { sekme: "talepler", durum: "pending_approval" } },
+      { id: "pr-approvals", label: "Onaylar", icon: CheckCircle2, tab: "procurement", search: { sekme: "talepler", durum: "Onay Bekliyor" } },
       { id: "pr-orders", label: "Siparişler", icon: ShoppingCart, tab: "procurement", search: { sekme: "siparisler" } },
       { id: "pr-deliveries", label: "Teslimatlar", icon: Truck, tab: "procurement", search: { sekme: "teslimatlar" } },
       { id: "pr-suppliers", label: "Tedarikçiler & Taşeronlar", icon: Building2, tab: "procurement", search: { sekme: "tedarikciler" } },
