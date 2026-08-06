@@ -880,34 +880,64 @@ const Index = () => {
           className="flex-1 min-h-0 px-3 py-3"
           style={{ overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
         >
-          {visibleDrawerGroups.map((group) => (
-            <div key={group.title} className="mb-4 last:mb-0">
-              <p className="px-3 mb-1 text-[10px] font-semibold tracking-[0.12em] text-white/35">
-                {group.title}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleDrawerNav(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
-                        isActive
-                          ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
-                          : "text-white/70 hover:text-white hover:bg-white/[0.04]"
-                      }`}
-                      style={{ minHeight: "44px" }}
-                    >
-                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
-                      <span className={`text-[14px] ${isActive ? "font-semibold" : "font-normal"}`}>{item.label}</span>
-                    </button>
-                  );
-                })}
+          {visibleNavAreas.map((area) => {
+            const AreaIcon = area.icon;
+            const areaActive = area.tab ? activeTab === area.tab : isAreaActive(area, activeTab);
+            const hasChildren = area.children.length > 0;
+            const open = openNavGroups[area.id] ?? isAreaActive(area, activeTab);
+            return (
+              <div key={area.id} className="mb-1 last:mb-0">
+                <button
+                  onClick={() => {
+                    if (hasChildren) {
+                      setOpenNavGroups((s) => ({ ...s, [area.id]: !open }));
+                    } else {
+                      handleDrawerNav(String(area.tab));
+                    }
+                  }}
+                  aria-expanded={hasChildren ? open : undefined}
+                  className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
+                    areaActive
+                      ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                      : "text-white/70 hover:text-white hover:bg-white/[0.04]"
+                  }`}
+                  style={{ minHeight: "48px" }}
+                >
+                  <AreaIcon className="w-[18px] h-[18px] shrink-0" strokeWidth={areaActive ? 2.2 : 1.8} />
+                  <span className={`text-[15px] ${areaActive ? "font-semibold" : "font-medium"}`}>{area.label}</span>
+                  {hasChildren && (
+                    <ChevronDown
+                      className="w-4 h-4 ml-auto shrink-0 transition-transform duration-200 opacity-60"
+                      style={{ transform: open ? "rotate(180deg)" : "none" }}
+                    />
+                  )}
+                </button>
+                {hasChildren && open && (
+                  <div className="ml-6 pl-3 mt-1 mb-2 border-l border-white/[0.08] space-y-0.5">
+                    {area.children.map((leaf) => {
+                      const LeafIcon = leaf.icon;
+                      const leafActive = isLeafActive(leaf, activeTab, location.search);
+                      return (
+                        <button
+                          key={leaf.id}
+                          onClick={() => handleDrawerNav(leaf.tab, leaf.search)}
+                          className={`w-full flex items-center gap-3 px-3 rounded-lg transition-all duration-200 active:scale-[0.98] ${
+                            leafActive
+                              ? "bg-[#FF6B2B]/12 text-[#FF6B2B]"
+                              : "text-white/60 hover:text-white hover:bg-white/[0.04]"
+                          }`}
+                          style={{ minHeight: "44px" }}
+                        >
+                          <LeafIcon className="w-4 h-4 shrink-0" strokeWidth={leafActive ? 2.2 : 1.8} />
+                          <span className={`text-[13.5px] ${leafActive ? "font-semibold" : "font-normal"}`}>{leaf.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </nav>
 
 
