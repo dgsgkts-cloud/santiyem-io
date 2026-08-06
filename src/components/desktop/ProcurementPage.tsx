@@ -95,6 +95,21 @@ export default function ProcurementPage() {
   const actorName =
     user?.user_metadata?.full_name || user?.email || "Yetkili Kullanıcı";
 
+  // Sidebar deep links (?sekme=…&durum=…) open the right sub-view directly.
+  const sekme = params.get("sekme");
+  const durum = params.get("durum");
+  useEffect(() => {
+    const SLUG_TO_SUBTAB: Record<string, ProcurementSubTab> = {
+      panel: "dashboard", talepler: "requests", teklifler: "rfq",
+      siparisler: "orders", teslimatlar: "deliveries",
+      tedarikciler: "suppliers", analitik: "analytics",
+    };
+    const next = sekme ? SLUG_TO_SUBTAB[sekme] : undefined;
+    if (next) setTab(next);
+    if (durum) setRequestStatusFilter(durum);
+  }, [sekme, durum]);
+
+
   // Analitik + CEO Modu share one filter state, encoded in the URL so a
   // drill-down survives refresh, browser back and cross-tab navigation.
   const analyticsFilters = useMemo(
