@@ -166,52 +166,15 @@ const BRAIN_SECTION_TO_TAB: Record<string, Tab> = {
   "documents": "company-docs",
 };
 
-// Mobile drawer menu — grouped navigation (SPRINT 40)
+// Mobile drawer menu — mirrors the desktop information architecture exactly
+// (see src/lib/navConfig.ts). Six primary areas, accordion sub-groups.
 type DrawerItem = { id: Tab | string; label: string; icon: React.ElementType };
 
-const DRAWER_GROUPS: { title: string; items: DrawerItem[] }[] = [
-  {
-    title: "ANA",
-    items: [
-      { id: "dashboard", label: "Ana Sayfa", icon: Home },
-      { id: "chat", label: "AI Asistan", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "OPERASYON",
-    items: [
-      { id: "projects", label: "Projeler", icon: FolderOpen },
-      { id: "site-diary", label: "Şantiye Günlüğü", icon: BookOpen },
-      { id: "personnel", label: "Personel & Puantaj", icon: HardHat },
-      { id: "materials", label: "Malzeme Takibi", icon: Package },
-    ],
-  },
-  {
-    title: "FİNANS",
-    items: [
-      { id: "hakedis", label: "Hakediş", icon: FileText },
-      { id: "payments-kasa", label: "Ödemeler & Kasa", icon: WalletCards },
-      { id: "contracts", label: "Sözleşmeler", icon: FileText },
-      { id: "e-invoices", label: "E-Fatura / E-Arşiv", icon: FileText },
-    ],
-  },
-  {
-    title: "İLETİŞİM",
-    items: [
-      { id: "communication", label: "İletişim Merkezi", icon: Radio },
-      { id: "meetings", label: "Toplantı Merkezi", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "ANALİZ",
-    items: [
-      { id: "reports", label: "Raporlar", icon: BarChart3 },
-      { id: "settings", label: "Ayarlar", icon: Settings },
-    ],
-  },
-];
+const DRAWER_ITEMS: DrawerItem[] = NAV_AREAS.flatMap((a) => [
+  ...(a.tab ? [{ id: a.tab, label: a.label, icon: a.icon }] : []),
+  ...(a.children ?? []).map((c) => ({ id: c.tab, label: c.label, icon: c.icon })),
+]);
 
-const DRAWER_ITEMS: DrawerItem[] = DRAWER_GROUPS.flatMap((g) => g.items);
 
 
 const TAB_TITLES: Record<string, string> = {
