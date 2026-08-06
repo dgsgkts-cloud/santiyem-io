@@ -82,6 +82,19 @@ const PaymentsKasaPage = () => {
   const [txQuery, setTxQuery] = useState("");
   const [txKind, setTxKind] = useState<string>("all");
 
+  // Sidebar deep links (?sekme=ozet|hareketler|hesaplar|raporlar&tur=income|expense)
+  const [sp] = useSearchParams();
+  const sekme = sp.get("sekme");
+  const tur = sp.get("tur");
+  useEffect(() => {
+    const SLUG_TO_TAB: Record<string, string> = {
+      ozet: "overview", hareketler: "transactions", hesaplar: "kasa", raporlar: "reports",
+    };
+    if (sekme && SLUG_TO_TAB[sekme]) setActiveTab(SLUG_TO_TAB[sekme]);
+    if (tur === "income" || tur === "expense") setTxKind(tur);
+  }, [sekme, tur]);
+
+
   const [reportDateFrom, setReportDateFrom] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 3);
     return d.toISOString().slice(0, 10);
