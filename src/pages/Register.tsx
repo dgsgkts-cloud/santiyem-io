@@ -47,6 +47,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isLg, setIsLg] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
