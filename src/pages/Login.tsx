@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,9 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 import { LoginHero } from "@/components/auth/LoginHero";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
+
+const CAPTCHA_ERROR = "Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.";
 
 const Login = () => {
   useSEO({ title: "Giriş Yap | Şantiyem" });
@@ -20,6 +23,8 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLg, setIsLg] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -31,11 +36,30 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Turnstile token yoksa istek hiç gönderilmez.
+    if (!captchaToken) {
+      toast.error(CAPTCHA_ERROR);
+      turnstileRef.current?.reset();
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken },
+    });
     setLoading(false);
+    // Token tek kullanımlık: her denemeden sonra yeni challenge alınır.
+    turnstileRef.current?.reset();
     if (error) {
-      toast.error(error.message === "Invalid login credentials" ? "E-posta veya şifre hatalı." : error.message);
+      const raw = (error.message || "").toLowerCase();
+      if (raw.includes("captcha")) {
+        toast.error(CAPTCHA_ERROR);
+      } else if (raw.includes("invalid login credentials")) {
+        toast.error("E-posta veya şifre hatalı.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       navigate("/");
     }
@@ -47,6 +71,7 @@ const Login = () => {
     });
     if (error) toast.error("Google ile giriş yapılamadı.");
   };
+
 
   const formContent = (
     <div className="w-full max-w-[400px]" style={isLg ? {} : undefined}>
