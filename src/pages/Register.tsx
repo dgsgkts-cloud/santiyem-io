@@ -62,6 +62,8 @@ const Register = () => {
     if (form.password.length < 8) { toast.error("Şifre en az 8 karakter olmalıdır."); return; }
     if (form.password !== form.passwordConfirm) { toast.error("Şifreler eşleşmiyor."); return; }
     if (!form.terms) { toast.error("Kullanım şartlarını kabul etmeniz gerekiyor."); return; }
+    // Turnstile token yoksa istek hiç gönderilmez.
+    if (!captchaToken) { toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin."); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.signUp({
@@ -70,12 +72,19 @@ const Register = () => {
       options: {
         data: { full_name: form.fullName, title: form.title, city: form.city },
         emailRedirectTo: window.location.origin,
+        captchaToken,
       },
     });
     setLoading(false);
+    // Token tek kullanımlık — her denemeden sonra yeni challenge alınır.
+    turnstileRef.current?.reset();
 
     if (error) {
-      toast.error(error.message);
+      if (error.message.toLowerCase().includes("captcha")) {
+        toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       setSuccess(true);
     }
