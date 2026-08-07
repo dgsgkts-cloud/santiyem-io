@@ -192,7 +192,15 @@ const Register = () => {
             </label>
           </div>
 
-          <button type="submit" disabled={loading}
+          {/* Cloudflare Turnstile — sunucu tarafı doğrulama Supabase Auth CAPTCHA korumasıyla yapılır */}
+          <TurnstileWidget
+            ref={turnstileRef}
+            className="flex justify-center pt-1"
+            onToken={setCaptchaToken}
+            onError={() => toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.")}
+          />
+
+          <button type="submit" disabled={loading || !captchaToken}
             className="w-full rounded-lg text-[14px] font-semibold text-white transition-colors disabled:opacity-50"
             style={{ height: 40, backgroundColor: "#FF6B2B" }}>
             {loading ? "Oluşturuluyor..." : "Ücretsiz Hesap Oluştur"}
