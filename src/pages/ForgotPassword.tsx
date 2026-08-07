@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 import { AlertCircle, Mail, CheckCircle2 } from "lucide-react";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,6 +15,8 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   const validate = (value: string): string | null => {
     const trimmed = value.trim();
@@ -35,15 +38,25 @@ const ForgotPassword = () => {
     const validationError = validate(trimmedEmail);
     setEmailError(validationError);
     if (validationError) return;
+    // Turnstile token yoksa istek hiç gönderilmez.
+    if (!captchaToken) {
+      toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.");
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
+      captchaToken,
     });
     setLoading(false);
+    // Token tek kullanımlık — her denemeden sonra yeni challenge alınır.
+    turnstileRef.current?.reset();
     if (error) {
       const msg = error.message.toLowerCase();
-      if (msg.includes("user not found") || msg.includes("not found") || msg.includes("user")) {
+      if (msg.includes("captcha")) {
+        toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.");
+      } else if (msg.includes("user not found") || msg.includes("not found") || msg.includes("user")) {
         setEmailError("Bu e-posta adresiyle kayıtlı bir hesap bulunamadı.");
       } else if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
         toast.error("Çok fazla istek gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.");
@@ -117,7 +130,14 @@ const ForgotPassword = () => {
                   </div>
                 )}
               </div>
-              <Button type="submit" disabled={loading} className="w-full h-11 font-semibold"
+              {/* Cloudflare Turnstile — sunucu tarafı doğrulama Supabase Auth CAPTCHA korumasıyla yapılır */}
+              <TurnstileWidget
+                ref={turnstileRef}
+                className="flex justify-center"
+                onToken={setCaptchaToken}
+                onError={() => toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.")}
+              />
+              <Button type="submit" disabled={loading || !captchaToken} className="w-full h-11 font-semibold"
                 style={{ backgroundColor: "#FF6B2B" }}>
                 {loading ? "Gönderiliyor..." : "Sıfırlama Linki Gönder"}
               </Button>

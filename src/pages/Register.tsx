@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
 import { useSEO } from "@/hooks/useSEO";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isLg, setIsLg] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     const mql = window.matchMedia("(min-width: 1024px)");
@@ -62,6 +65,8 @@ const Register = () => {
     if (form.password.length < 8) { toast.error("Şifre en az 8 karakter olmalıdır."); return; }
     if (form.password !== form.passwordConfirm) { toast.error("Şifreler eşleşmiyor."); return; }
     if (!form.terms) { toast.error("Kullanım şartlarını kabul etmeniz gerekiyor."); return; }
+    // Turnstile token yoksa istek hiç gönderilmez.
+    if (!captchaToken) { toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin."); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.signUp({
@@ -70,12 +75,19 @@ const Register = () => {
       options: {
         data: { full_name: form.fullName, title: form.title, city: form.city },
         emailRedirectTo: window.location.origin,
+        captchaToken,
       },
     });
     setLoading(false);
+    // Token tek kullanımlık — her denemeden sonra yeni challenge alınır.
+    turnstileRef.current?.reset();
 
     if (error) {
-      toast.error(error.message);
+      if (error.message.toLowerCase().includes("captcha")) {
+        toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       setSuccess(true);
     }
@@ -180,7 +192,15 @@ const Register = () => {
             </label>
           </div>
 
-          <button type="submit" disabled={loading}
+          {/* Cloudflare Turnstile — sunucu tarafı doğrulama Supabase Auth CAPTCHA korumasıyla yapılır */}
+          <TurnstileWidget
+            ref={turnstileRef}
+            className="flex justify-center pt-1"
+            onToken={setCaptchaToken}
+            onError={() => toast.error("Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.")}
+          />
+
+          <button type="submit" disabled={loading || !captchaToken}
             className="w-full rounded-lg text-[14px] font-semibold text-white transition-colors disabled:opacity-50"
             style={{ height: 40, backgroundColor: "#FF6B2B" }}>
             {loading ? "Oluşturuluyor..." : "Ücretsiz Hesap Oluştur"}
