@@ -134,12 +134,19 @@ const Login = () => {
               Şifremi Unuttum
             </Link>
           </div>
+          {/* Cloudflare Turnstile — sunucu tarafı doğrulama Supabase Auth CAPTCHA korumasıyla yapılır */}
+          <TurnstileWidget
+            ref={turnstileRef}
+            onToken={setCaptchaToken}
+            onError={() => toast.error(CAPTCHA_ERROR)}
+            className="flex justify-center [&>*]:max-w-full"
+          />
 
-
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={loading || !captchaToken}
             className="w-full rounded-lg text-[14px] font-semibold text-white transition-colors disabled:opacity-50"
             style={{ height: 40, backgroundColor: "#FF6B2B" }}>
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+
           </button>
         </form>
 
