@@ -1,16 +1,17 @@
-// SPRINT 42 — Single source of truth for the primary navigation information
+// SPRINT 43 — Single source of truth for the primary navigation information
 // architecture. Desktop sidebar and the mobile drawer both render this tree so
 // the two surfaces can never drift.
 //
-// Only six top-level areas are exposed. Everything else stays reachable through
-// its existing route, deep link, or in-context entry point — no route, page,
-// data or feature is removed here.
+// Only the areas below are exposed. Everything else (Hatırlatmalar, Makine &
+// Ekipman, Zimmet, Onaylar, Malzeme Kartları, RFQ, Finans Raporları, Çekler)
+// stays fully functional through its existing route, deep link or in-context
+// entry point — no route, page, data, hook or permission is removed here.
 
 import {
   LayoutDashboard, MessageSquare, FolderKanban, HardHat, Wallet,
-  ShoppingCart, BookOpen, CalendarClock, Warehouse, Truck, Users,
-  ClipboardList, CheckCircle2, Package, Send, Receipt, FileSpreadsheet,
-  BarChart3, ArrowUpRight, ArrowDownLeft, Building2, Plug, type LucideIcon,
+  ShoppingCart, BookOpen, Warehouse, Truck, ClipboardList,
+  Receipt, FileSpreadsheet, BarChart3, ArrowLeftRight, Building2,
+  CheckSquare, Plug, type LucideIcon,
 } from "lucide-react";
 
 
@@ -46,12 +47,12 @@ export const NAV_AREAS: NavArea[] = [
     label: "Operasyon",
     icon: HardHat,
     children: [
-      { id: "ops-diary", label: "Şantiye Günlükleri", icon: BookOpen, tab: "site-diary" },
-      { id: "ops-reminders", label: "Takvim & Hatırlatmalar", icon: CalendarClock, tab: "reminders" },
+      // Görevler proje bağlamında yaşıyor: proje listesinden ilgili projenin
+      // Görev Panosu'na girilir (çalışan tek entry point).
+      { id: "ops-tasks", label: "Görevler / İşler", icon: CheckSquare, tab: "projects" },
+      { id: "ops-field", label: "Saha", icon: BookOpen, tab: "site-diary" },
       { id: "ops-personnel", label: "Ekip & Puantaj", icon: HardHat, tab: "personnel" },
       { id: "ops-warehouse", label: "Depo & Envanter", icon: Warehouse, tab: "warehouse" },
-      { id: "ops-fleet", label: "Makine, Ekipman & Zimmet", icon: Truck, tab: "fleet" },
-      { id: "ops-meetings", label: "Toplantılar", icon: Users, tab: "meetings" },
     ],
   },
   {
@@ -60,12 +61,9 @@ export const NAV_AREAS: NavArea[] = [
     icon: ShoppingCart,
     children: [
       { id: "pr-requests", label: "Talepler", icon: ClipboardList, tab: "procurement", search: { sekme: "talepler" } },
-      { id: "pr-approvals", label: "Onaylar", icon: CheckCircle2, tab: "procurement", search: { sekme: "talepler", durum: "Onay Bekliyor" } },
       { id: "pr-orders", label: "Siparişler", icon: ShoppingCart, tab: "procurement", search: { sekme: "siparisler" } },
       { id: "pr-deliveries", label: "Teslimatlar", icon: Truck, tab: "procurement", search: { sekme: "teslimatlar" } },
-      { id: "pr-suppliers", label: "Tedarikçiler & Taşeronlar", icon: Building2, tab: "procurement", search: { sekme: "tedarikciler" } },
-      { id: "pr-rfq", label: "Teklifler (RFQ)", icon: Send, tab: "procurement", search: { sekme: "teklifler" } },
-      { id: "pr-materials", label: "Malzeme Kartları", icon: Package, tab: "materials" },
+      { id: "pr-suppliers", label: "Tedarikçiler", icon: Building2, tab: "procurement", search: { sekme: "tedarikciler" } },
     ],
   },
   {
@@ -74,12 +72,10 @@ export const NAV_AREAS: NavArea[] = [
     icon: Wallet,
     children: [
       { id: "fi-overview", label: "Genel Bakış", icon: BarChart3, tab: "payments-kasa", search: { sekme: "ozet" } },
-      { id: "fi-payments", label: "Ödemeler", icon: ArrowUpRight, tab: "payments-kasa", search: { sekme: "hareketler", tur: "expense" } },
-      { id: "fi-collections", label: "Tahsilatlar", icon: ArrowDownLeft, tab: "payments-kasa", search: { sekme: "hareketler", tur: "income" } },
+      { id: "fi-transactions", label: "Ödeme & Tahsilat", icon: ArrowLeftRight, tab: "payments-kasa", search: { sekme: "hareketler" } },
+      { id: "fi-hakedis", label: "Hakediş", icon: Receipt, tab: "hakedis" },
       { id: "fi-accounts", label: "Hesaplar", icon: Wallet, tab: "payments-kasa", search: { sekme: "hesaplar" } },
-      { id: "fi-hakedis", label: "Hakedişler", icon: Receipt, tab: "hakedis" },
-      { id: "fi-invoices", label: "Faturalar & Çekler", icon: FileSpreadsheet, tab: "e-invoices" },
-      { id: "fi-reports", label: "Raporlar", icon: BarChart3, tab: "payments-kasa", search: { sekme: "raporlar" } },
+      { id: "fi-invoices", label: "Faturalar", icon: FileSpreadsheet, tab: "e-invoices" },
     ],
   },
   { id: "integrations", label: "Entegrasyonlar", icon: Plug, tab: "integrations" },

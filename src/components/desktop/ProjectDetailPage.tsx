@@ -40,6 +40,7 @@ import ProjectHakedisSection from "./project-detail/ProjectHakedisSection";
 import ProjectFilesSection from "./project-detail/ProjectFilesSection";
 import ProjectCashFlowSection from "./project-detail/ProjectCashFlowSection";
 import ProjectNotesSection from "./project-detail/ProjectNotesSection";
+import ProjectEquipmentSection from "./project-detail/ProjectEquipmentSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
 import CollapsibleSection from "./projects/CollapsibleSection";
@@ -404,6 +405,12 @@ const ProjectDetailPage = ({
             {user && (
               <CollapsibleSection title="Görev Panosu">
                 <TaskBoard projectId={p.id} />
+              </CollapsibleSection>
+            )}
+
+            {user && (
+              <CollapsibleSection title="Makine & Ekipman">
+                <ProjectEquipmentSection projectId={p.id} canEdit={!!user} />
               </CollapsibleSection>
             )}
 
