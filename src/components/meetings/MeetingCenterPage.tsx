@@ -735,14 +735,22 @@ function Actions({
                   <p className="text-sm font-medium">{a.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {meetingTitle(a.meeting_id)}
-                    {a.assignee_name ? ` · ${a.assignee_name}` : ""}
+                    {a.assignee_name ? ` · ${a.assignee_name}` : " · sorumlu belirtilmedi"}
                     {a.due_date ? ` · ${a.due_date}` : ""}
                   </p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border ${prioColor[a.priority] || ""}`}>
-                  {a.priority}
+                  {PRIORITY_LABEL[a.priority] || a.priority}
                 </span>
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">
+                  {confidenceTone(a.confidence).label}
+                </span>
+              </div>
+              {a.source_quote && (
+                <p className="text-xs text-muted-foreground italic border-l-2 border-border pl-2">"{a.source_quote}"</p>
+              )}
               <div className="flex gap-2 pt-2">
                 <Button size="sm" onClick={() => approve(a, true)} className="gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Onayla & Bildir</Button>
                 <Button size="sm" variant="secondary" onClick={() => approve(a, false)}>Sadece Onayla</Button>
@@ -752,6 +760,7 @@ function Actions({
           ))
         )}
       </Section>
+
 
       <Section title="Göreve Dönüştürüldü" count={groups.converted.length}>
         {groups.converted.length === 0 ? <OpsEmpty icon="✅" title="Henüz göreve dönüşen aksiyon yok" description="Onayladığınız aksiyonlar ilgili projenin görev panosunda açılır." /> : (
