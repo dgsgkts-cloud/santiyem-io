@@ -40,6 +40,7 @@ import ProjectHakedisSection from "./project-detail/ProjectHakedisSection";
 import ProjectFilesSection from "./project-detail/ProjectFilesSection";
 import ProjectCashFlowSection from "./project-detail/ProjectCashFlowSection";
 import ProjectNotesSection from "./project-detail/ProjectNotesSection";
+import ProjectEquipmentSection from "./project-detail/ProjectEquipmentSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
 import CollapsibleSection from "./projects/CollapsibleSection";
