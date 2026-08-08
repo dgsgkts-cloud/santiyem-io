@@ -33,6 +33,13 @@ export const SUB_TABS: {
   { id: "analytics", label: "Analitik", icon: TrendingUp },
 ];
 
+/**
+ * RFQ kullanıcı arayüzünden gizlendi (route, veri ve kod korunuyor; sadece
+ * sekme çubuğunda görünmüyor). Deep link ?sekme=teklifler hâlâ çalışır.
+ */
+const HIDDEN_SUB_TABS = new Set<ProcurementSubTab>(["rfq"]);
+
+
 interface Props {
   tab: ProcurementSubTab;
   onChange: (t: ProcurementSubTab) => void;
