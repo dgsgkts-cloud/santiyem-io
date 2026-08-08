@@ -40,6 +40,7 @@ const ProcurementPage = lazy(() => import("@/components/desktop/ProcurementPage"
 const WarehousePage = lazy(() => import("@/components/desktop/WarehousePage"));
 const FleetPage = lazy(() => import("@/components/desktop/FleetPage"));
 const ReportsPage = lazy(() => import("@/components/desktop/ReportsPage"));
+const IntegrationsPage = lazy(() => import("@/components/desktop/IntegrationsPage"));
 import LockedPage from "@/components/desktop/LockedPage";
 import { useAccessGuard, useAccessSnapshotSync } from "@/lib/accessControl";
 import { useDemoAccount } from "@/hooks/useDemoAccount";
