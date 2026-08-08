@@ -32,6 +32,7 @@ export function useMeetingRecorder({ meetingId, language = "tr", onTranscript }:
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const pausedRef = useRef(false);
+  const audioPrefixRef = useRef<string | null>(null);
 
   const pickMime = () => {
     const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
@@ -41,12 +42,31 @@ export function useMeetingRecorder({ meetingId, language = "tr", onTranscript }:
     return "";
   };
 
+  /**
+   * Her segment hem yazıya çevrilir hem de `meeting-audio` kovasına saklanır.
+   * Segmentler bağımsız birer dosya olduğu için kayıt sonradan bölüm bölüm
+   * dinlenebilir ve tarayıcı kapansa bile ses kaybolmaz.
+   */
   const uploadChunk = useCallback(
     async (blob: Blob, seq: number, offsetMs: number) => {
       try {
         if (blob.size < 2048) return;
         const { data: sess } = await supabase.auth.getSession();
         const jwt = sess?.session?.access_token;
+        const uid = sess?.session?.user?.id;
+
+        if (uid) {
+          const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+          const path = `${uid}/${meetingId}/seg_${String(seq).padStart(4, "0")}.${ext}`;
+          void supabase.storage
+            .from("meeting-audio")
+            .upload(path, blob, { contentType: blob.type || "audio/webm", upsert: true })
+            .then(({ error }) => {
+              if (error) console.warn("audio segment upload failed", error.message);
+              else audioPrefixRef.current = `${uid}/${meetingId}`;
+            });
+        }
+
         const form = new FormData();
         form.append("file", blob, `chunk_${seq}.webm`);
         form.append("meeting_id", meetingId);
@@ -164,10 +184,14 @@ export function useMeetingRecorder({ meetingId, language = "tr", onTranscript }:
     setIsRecording(false);
     setIsPaused(false);
     // let the last segment upload finish
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 1200));
+    return audioPrefixRef.current;
   }, []);
 
   useEffect(() => () => { void stop(); }, [stop]);
 
-  return { isRecording, isPaused, elapsed, level, error, start, pause, resume, stop };
+  return {
+    isRecording, isPaused, elapsed, level, error, start, pause, resume, stop,
+    getAudioPrefix: () => audioPrefixRef.current,
+  };
 }
