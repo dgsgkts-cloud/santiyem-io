@@ -868,29 +868,41 @@ serve(async (req) => {
               top.forEach(([n, h], i) => lines.push(`${i + 1}. ${n} · +${h.toFixed(1)} sa`));
             }
           } else if (intent === "MEETING_SUMMARY") {
+            // Column names must match the meetings schema: started_at (not meeting_date),
+            // decisions (not key_decisions), assignee_name (not owner).
             let mq = sb.from("meetings")
-              .select("id, title, meeting_date, meeting_type, project_id, status")
-              .eq("user_id", uid).order("meeting_date", { ascending: false }).limit(5);
+              .select("id, title, started_at, meeting_type, project_id, status, pipeline_stage")
+              .eq("user_id", uid).order("started_at", { ascending: false }).limit(5);
             if (projectIdFilter) mq = mq.eq("project_id", projectIdFilter);
             const { data: meets } = await mq;
             const mrows = (meets || []) as any[];
             lines.push(`SON TOPLANTILAR (${mrows.length}):`);
             for (const meet of mrows) {
-              lines.push(`- ${meet.meeting_date} · ${meet.title} · ${meet.meeting_type || "-"} · ${meet.status}`);
+              lines.push(`- ${String(meet.started_at || "").slice(0, 10)} · ${meet.title} · ${meet.meeting_type || "-"} · ${meet.status}`);
             }
             if (mrows.length) {
               const [analysis, actions] = await Promise.all([
-                sb.from("meeting_analyses").select("meeting_id, summary, key_decisions, risks").in("meeting_id", mrows.map(m => m.id)),
-                sb.from("meeting_action_items").select("meeting_id, title, owner, due_date, status").in("meeting_id", mrows.map(m => m.id)).order("due_date", { ascending: true }),
+                sb.from("meeting_analyses").select("meeting_id, summary, decisions, risks, open_questions").in("meeting_id", mrows.map(m => m.id)),
+                sb.from("meeting_action_items").select("meeting_id, title, assignee_name, due_date, status, source_quote").in("meeting_id", mrows.map(m => m.id)).order("due_date", { ascending: true }),
               ]);
               const latest = mrows[0];
               const la = (analysis.data || []).find((a: any) => a.meeting_id === latest.id);
               if (la?.summary) { lines.push(`\nEN SON TOPLANTI ÖZETİ (${latest.title}):`); lines.push(String(la.summary).slice(0, 600)); }
-              const openActions = (actions.data || []).filter((a: any) => a.status !== "done");
+              const decisions = Array.isArray(la?.decisions) ? la.decisions : [];
+              if (decisions.length) {
+                lines.push(`\nKARARLAR:`);
+                decisions.slice(0, 8).forEach((d: any) => lines.push(`- ${d?.title || ""}${d?.detail ? ` · ${d.detail}` : ""}`));
+              }
+              const openQs = Array.isArray(la?.open_questions) ? la.open_questions : [];
+              if (openQs.length) {
+                lines.push(`\nAÇIK KONULAR:`);
+                openQs.slice(0, 8).forEach((q: any) => lines.push(`- ${typeof q === "string" ? q : q?.question || ""}`));
+              }
+              const openActions = (actions.data || []).filter((a: any) => !["done", "rejected"].includes(a.status));
               if (openActions.length) {
                 lines.push(`\nAÇIK AKSİYON MADDELERİ (${openActions.length}):`);
                 openActions.slice(0, 15).forEach((a: any) =>
-                  lines.push(`- ${a.title} · sorumlu: ${a.owner || "-"} · termin: ${a.due_date || "-"} · durum: ${a.status}`)
+                  lines.push(`- ${a.title} · sorumlu: ${a.assignee_name || "-"} · termin: ${a.due_date || "-"} · durum: ${a.status}`)
                 );
               }
             }
