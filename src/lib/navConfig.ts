@@ -82,7 +82,9 @@ export const NAV_AREAS: NavArea[] = [
       { id: "fi-reports", label: "Raporlar", icon: BarChart3, tab: "payments-kasa", search: { sekme: "raporlar" } },
     ],
   },
+  { id: "integrations", label: "Entegrasyonlar", icon: Plug, tab: "integrations" },
 ];
+
 
 /** All tabs referenced by the visible menu. */
 export const NAV_MENU_TABS = new Set<string>(
