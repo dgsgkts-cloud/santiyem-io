@@ -15,7 +15,7 @@ export type GuardTab =
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts"
   | "materials" | "e-invoices" | "personnel" | "meetings" | "communication"
   | "reports" | "procurement" | "warehouse" | "fleet" | "render"
-  | "integrations";
+  | "integrations" | "tasks";
 
 export type LockReason =
   | "ok"
@@ -39,7 +39,7 @@ const ALWAYS_ALLOWED: GuardTab[] = [
  * these render the "Kurulum gerekli" screen instead of their real UI.
  */
 const SETUP_REQUIRED: GuardTab[] = [
-  "projects", "hakedis", "site-diary", "materials", "personnel", "meetings",
+  "projects", "tasks", "hakedis", "site-diary", "materials", "personnel", "meetings",
   "communication", "reports", "contracts",
 ];
 
@@ -60,7 +60,7 @@ const TAB_LABELS: Record<GuardTab, string> = {
   meetings: "Toplantı Merkezi", communication: "İletişim Merkezi",
   reports: "Raporlar", procurement: "Satın Alma",
   warehouse: "Depo & Envanter", fleet: "Makine & Ekipman",
-  render: "Render", integrations: "Entegrasyonlar",
+  render: "Render", integrations: "Entegrasyonlar", tasks: "Görevler / İşler",
 };
 
 export const getTabLabel = (t: GuardTab) => TAB_LABELS[t] || t;

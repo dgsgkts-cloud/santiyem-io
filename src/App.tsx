@@ -106,6 +106,7 @@ const App = () => (
               {/* Order & delivery detail deep links render the same shell. */}
               <Route path="/satin-alma/*" element={<HomePage />} />
 
+              <Route path="/gorevler" element={<HomePage />} />
               <Route path="/depo" element={<HomePage />} />
               {/* Kanonik transfer detay sayfası — bildirim bağlantıları buraya gelir. */}
               <Route path="/depo/transferler/:transferId" element={<TransferDetailPage />} />
