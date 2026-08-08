@@ -2830,6 +2830,7 @@ export type Database = {
         Row: {
           assignee_name: string | null
           assignee_user_id: string | null
+          confidence: number | null
           created_at: string
           created_task_id: string | null
           description: string | null
@@ -2839,6 +2840,8 @@ export type Database = {
           notified_at: string | null
           notified_channels: string[]
           priority: string
+          source_quote: string | null
+          speaker_label: string | null
           status: string
           title: string
           updated_at: string
@@ -2847,6 +2850,7 @@ export type Database = {
         Insert: {
           assignee_name?: string | null
           assignee_user_id?: string | null
+          confidence?: number | null
           created_at?: string
           created_task_id?: string | null
           description?: string | null
@@ -2856,6 +2860,8 @@ export type Database = {
           notified_at?: string | null
           notified_channels?: string[]
           priority?: string
+          source_quote?: string | null
+          speaker_label?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -2864,6 +2870,7 @@ export type Database = {
         Update: {
           assignee_name?: string | null
           assignee_user_id?: string | null
+          confidence?: number | null
           created_at?: string
           created_task_id?: string | null
           description?: string | null
@@ -2873,6 +2880,8 @@ export type Database = {
           notified_at?: string | null
           notified_channels?: string[]
           priority?: string
+          source_quote?: string | null
+          speaker_label?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -2898,9 +2907,11 @@ export type Database = {
           model: string | null
           next_meeting: Json | null
           numbers: Json
+          open_questions: Json
           prompt_version: string | null
           questions: Json
           risks: Json
+          speakers: Json
           summary: string | null
           user_id: string
         }
@@ -2913,9 +2924,11 @@ export type Database = {
           model?: string | null
           next_meeting?: Json | null
           numbers?: Json
+          open_questions?: Json
           prompt_version?: string | null
           questions?: Json
           risks?: Json
+          speakers?: Json
           summary?: string | null
           user_id: string
         }
@@ -2928,9 +2941,11 @@ export type Database = {
           model?: string | null
           next_meeting?: Json | null
           numbers?: Json
+          open_questions?: Json
           prompt_version?: string | null
           questions?: Json
           risks?: Json
+          speakers?: Json
           summary?: string | null
           user_id?: string
         }
@@ -3005,6 +3020,7 @@ export type Database = {
           is_final: boolean
           meeting_id: string
           seq: number
+          speaker_confidence: number | null
           speaker_label: string | null
           started_at_ms: number
           text: string
@@ -3017,6 +3033,7 @@ export type Database = {
           is_final?: boolean
           meeting_id: string
           seq?: number
+          speaker_confidence?: number | null
           speaker_label?: string | null
           started_at_ms?: number
           text: string
@@ -3029,6 +3046,7 @@ export type Database = {
           is_final?: boolean
           meeting_id?: string
           seq?: number
+          speaker_confidence?: number | null
           speaker_label?: string | null
           started_at_ms?: number
           text?: string
@@ -3055,7 +3073,10 @@ export type Database = {
           location: string | null
           meeting_type: string
           metadata: Json
+          pipeline_error: string | null
+          pipeline_stage: string
           project_id: string | null
+          speaker_map: Json
           started_at: string | null
           status: string
           tags: string[]
@@ -3074,7 +3095,10 @@ export type Database = {
           location?: string | null
           meeting_type?: string
           metadata?: Json
+          pipeline_error?: string | null
+          pipeline_stage?: string
           project_id?: string | null
+          speaker_map?: Json
           started_at?: string | null
           status?: string
           tags?: string[]
@@ -3093,7 +3117,10 @@ export type Database = {
           location?: string | null
           meeting_type?: string
           metadata?: Json
+          pipeline_error?: string | null
+          pipeline_stage?: string
           project_id?: string | null
+          speaker_map?: Json
           started_at?: string | null
           status?: string
           tags?: string[]

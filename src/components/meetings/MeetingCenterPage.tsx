@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useMeetingRecorder } from "@/hooks/useMeetingRecorder";
 import { generateMeetingPdf } from "@/lib/meetingPdf";
+import MeetingDetailSheet from "@/components/meetings/MeetingDetailSheet";
+import { PRIORITY_LABEL, confidenceTone, toTaskPriority } from "@/lib/meetings/meetingModel";
 import { toast } from "sonner";
 import {
   Mic, Square, Pause, Play, Loader2, Calendar, Users, ListChecks, FileText,
@@ -44,6 +46,11 @@ type ActionItem = {
   priority: string;
   status: string;
   description: string | null;
+  source_quote: string | null;
+  speaker_label: string | null;
+  confidence: number | null;
+  assignee_user_id: string | null;
+  created_task_id: string | null;
 };
 
 type Analysis = {
@@ -183,7 +190,14 @@ export default function MeetingCenterPage() {
             projectName={projectName}
           />
         ) : activeSection === "new" ? (
-          <NewMeeting projects={projects} onDone={(id) => { void load(); const m = meetings.find((x) => x.id === id); if (m) setSelectedMeeting(m); }} />
+          <NewMeeting
+            projects={projects}
+            onDone={async (id) => {
+              const { data } = await supabase.from("meetings").select("*").eq("id", id).maybeSingle();
+              if (data) setSelectedMeeting(data as any);
+              void load();
+            }}
+          />
         ) : activeSection === "history" ? (
           <History
             meetings={filteredMeetings}
@@ -208,9 +222,10 @@ export default function MeetingCenterPage() {
       </div>
 
       {selectedMeeting && (
-        <MeetingDetail
-          meeting={selectedMeeting}
-          projects={projects}
+        <MeetingDetailSheet
+          meetingId={selectedMeeting.id}
+          fallbackTitle={selectedMeeting.title}
+          projectName={projectName(selectedMeeting.project_id)}
           onClose={() => { setSelectedMeeting(null); void load(); }}
         />
       )}
@@ -403,35 +418,44 @@ function NewMeeting({
     }
   };
 
+  /**
+   * Kaydı bitirir: ses saklanır, boru hattı arka planda çalışır ve kullanıcı
+   * beklemek zorunda kalmadan detay ekranında aşamaları canlı izler.
+   */
   const finish = async () => {
     if (!meetingId) return;
-    await recorder.stop();
+    const id = meetingId;
     setAnalyzing(true);
     try {
+      const audioPrefix = await recorder.stop();
       await supabase
         .from("meetings")
         .update({
           status: "processing",
+          pipeline_stage: "transcribing",
+          pipeline_error: null,
           ended_at: new Date().toISOString(),
           duration_seconds: recorder.elapsed,
-        })
-        .eq("id", meetingId);
+          ...(audioPrefix ? { audio_path: audioPrefix } : {}),
+        } as any)
+        .eq("id", id);
+
       const { data: sess } = await supabase.auth.getSession();
       const jwt = sess?.session?.access_token;
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/meeting-analyze`, {
+      // Beklemeden tetikle — durum takibi detay ekranında yapılır.
+      void fetch(`${SUPABASE_URL}/functions/v1/meeting-analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt ?? ""}` },
-        body: JSON.stringify({ meeting_id: meetingId }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.detail || json?.error || "AI analiz hatası");
-      toast.success(`Toplantı analiz edildi (${json?.action_item_count ?? 0} aksiyon önerildi)`);
-      onDone(meetingId);
+        body: JSON.stringify({ meeting_id: id }),
+      }).catch(() => {});
+
+      toast.success("Toplantı kaydedildi · AI analiz hazırlanıyor");
+      onDone(id);
       setMeetingId(null);
       setLiveLines([]);
       setTitle(""); setLocation(""); setParticipants([]);
     } catch (e: any) {
-      toast.error(e?.message || "Analiz başarısız");
+      toast.error(e?.message || "Toplantı kapatılamadı");
     } finally {
       setAnalyzing(false);
     }
@@ -748,191 +772,5 @@ function Section({ title, count, children }: { title: string; count?: number; ch
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// Meeting Detail (drawer)
-// ─────────────────────────────────────────────────────────
-function MeetingDetail({
-  meeting, projects, onClose,
-}: {
-  meeting: Meeting;
-  projects: Array<{ id: string; name: string }>;
-  onClose: () => void;
-}) {
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [transcript, setTranscript] = useState<Array<{ id: string; seq: number; text: string; started_at_ms: number }>>([]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [loading, setLoading] = useState(true);
+// Detay görünümü artık MeetingDetailSheet (AI aksiyon motoru) tarafından sağlanıyor.
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setLoading(true);
-      const [{ data: a }, { data: t }, { data: p }] = await Promise.all([
-        supabase.from("meeting_analyses").select("*").eq("meeting_id", meeting.id).maybeSingle(),
-        supabase.from("meeting_transcripts").select("id,seq,text,started_at_ms").eq("meeting_id", meeting.id).order("seq"),
-        supabase.from("meeting_participants").select("id,display_name,company,role").eq("meeting_id", meeting.id),
-      ]);
-      if (!alive) return;
-      setAnalysis((a as any) || null);
-      setTranscript((t as any) || []);
-      setParticipants((p as any) || []);
-      setLoading(false);
-    })();
-    return () => { alive = false; };
-  }, [meeting.id]);
-
-  const projectName = projects.find((p) => p.id === meeting.project_id)?.name || null;
-
-  const rerun = async () => {
-    toast.info("AI yeniden analiz ediyor...");
-    const { data: sess } = await supabase.auth.getSession();
-    const jwt = sess?.session?.access_token;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/meeting-analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt ?? ""}` },
-      body: JSON.stringify({ meeting_id: meeting.id }),
-    });
-    if (!res.ok) { toast.error("Analiz başarısız"); return; }
-    toast.success("Analiz güncellendi");
-    // reload
-    const { data: a } = await supabase.from("meeting_analyses").select("*").eq("meeting_id", meeting.id).maybeSingle();
-    setAnalysis((a as any) || null);
-  };
-
-  return (
-    <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="pr-6">{meeting.title}</SheetTitle>
-          <p className="text-xs text-muted-foreground">
-            {meeting.started_at && new Date(meeting.started_at).toLocaleString("tr-TR")}
-            {projectName ? ` · ${projectName}` : ""}
-            {meeting.duration_seconds ? ` · ${fmtTime(meeting.duration_seconds)}` : ""}
-          </p>
-        </SheetHeader>
-
-        <div className="flex gap-2 mt-4">
-          <Button size="sm" variant="secondary" onClick={rerun} className="gap-2">
-            <Sparkles className="w-3.5 h-3.5" /> Yeniden Analiz Et
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="gap-2"
-            onClick={() => generateMeetingPdf({ meeting, analysis, participants, projectName })}
-          >
-            <Download className="w-3.5 h-3.5" /> PDF İndir
-          </Button>
-        </div>
-
-        {loading ? (
-          <div className="mt-6 space-y-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="ds-skeleton h-16 rounded-xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 space-y-6">
-            {participants.length > 0 && (
-              <DetailSection title="Katılımcılar" icon={Users}>
-                <div className="flex flex-wrap gap-1.5">
-                  {participants.map((p, i) => (
-                    <Badge key={i} variant="secondary">{p.display_name}</Badge>
-                  ))}
-                </div>
-              </DetailSection>
-            )}
-
-            {analysis?.summary && (
-              <DetailSection title="Özet" icon={FileText}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{analysis.summary}</p>
-              </DetailSection>
-            )}
-
-            {!!analysis?.decisions?.length && (
-              <DetailSection title="Kararlar" icon={CheckCircle2}>
-                <ul className="space-y-2">
-                  {analysis.decisions.map((d: any, i: number) => (
-                    <li key={i} className="text-sm">
-                      <p className="font-medium">{d.title}</p>
-                      {d.detail && <p className="text-xs text-muted-foreground mt-0.5">{d.detail}</p>}
-                    </li>
-                  ))}
-                </ul>
-              </DetailSection>
-            )}
-
-            {!!analysis?.action_items?.length && (
-              <DetailSection title="Aksiyon Maddeleri" icon={ListChecks}>
-                <ul className="space-y-2">
-                  {analysis.action_items.map((a: any, i: number) => (
-                    <li key={i} className="text-sm border border-border rounded-md p-3">
-                      <p className="font-medium">{a.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {a.assignee ? `Sorumlu: ${a.assignee}` : "Sorumlu belirtilmedi"}
-                        {a.due_date ? ` · Son tarih: ${a.due_date}` : ""}
-                        {a.priority ? ` · ${a.priority}` : ""}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </DetailSection>
-            )}
-
-            {!!analysis?.risks?.length && (
-              <DetailSection title="Riskler" icon={AlertTriangle}>
-                <ul className="space-y-1.5">
-                  {analysis.risks.map((r: any, i: number) => (
-                    <li key={i} className="text-sm">
-                      • {r.title}
-                      {r.impact && <span className="text-xs text-muted-foreground ml-2">[{r.impact}]</span>}
-                    </li>
-                  ))}
-                </ul>
-              </DetailSection>
-            )}
-
-            {!!analysis?.questions?.length && (
-              <DetailSection title="Açık Sorular" icon={MessageSquare}>
-                <ul className="space-y-1 text-sm">
-                  {analysis.questions.map((q: string, i: number) => <li key={i}>• {q}</li>)}
-                </ul>
-              </DetailSection>
-            )}
-
-            {transcript.length > 0 && (
-              <DetailSection title={`Transkript (${transcript.length})`} icon={FileText}>
-                <div className="space-y-2 max-h-[400px] overflow-y-auto text-sm">
-                  {transcript.map((t) => (
-                    <div key={t.id}>
-                      <span className="text-xs text-muted-foreground mr-2">
-                        {fmtTime(Math.round(t.started_at_ms / 1000))}
-                      </span>
-                      {t.text}
-                    </div>
-                  ))}
-                </div>
-              </DetailSection>
-            )}
-
-            {!analysis && transcript.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-6">Bu toplantı için henüz analiz yok.</p>
-            )}
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function DetailSection({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold">{title}</h3>
-      </div>
-      <div className="pl-6">{children}</div>
-    </div>
-  );
-}
