@@ -47,7 +47,7 @@ interface Props {
 
 export const ProcurementTabs = ({ tab, onChange }: Props) => (
   <div className="flex items-center gap-1 mb-4 border-b border-border overflow-x-auto no-scrollbar">
-    {SUB_TABS.map((s) => (
+    {SUB_TABS.filter((s) => !HIDDEN_SUB_TABS.has(s.id) || s.id === tab).map((s) => (
       <button
         key={s.id}
         onClick={() => onChange(s.id)}
