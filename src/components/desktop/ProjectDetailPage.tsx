@@ -409,6 +409,12 @@ const ProjectDetailPage = ({
             )}
 
             {user && (
+              <CollapsibleSection title="Makine & Ekipman">
+                <ProjectEquipmentSection projectId={p.id} canEdit={!!user} />
+              </CollapsibleSection>
+            )}
+
+            {user && (
               <CollapsibleSection
                 title={
                   <span className="flex items-center gap-2">
