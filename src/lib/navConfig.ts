@@ -10,8 +10,9 @@ import {
   LayoutDashboard, MessageSquare, FolderKanban, HardHat, Wallet,
   ShoppingCart, BookOpen, CalendarClock, Warehouse, Truck, Users,
   ClipboardList, CheckCircle2, Package, Send, Receipt, FileSpreadsheet,
-  BarChart3, ArrowUpRight, ArrowDownLeft, Building2, type LucideIcon,
+  BarChart3, ArrowUpRight, ArrowDownLeft, Building2, Plug, type LucideIcon,
 } from "lucide-react";
+
 
 /** Query params applied on top of the destination tab route. */
 export type NavSearch = Record<string, string>;
