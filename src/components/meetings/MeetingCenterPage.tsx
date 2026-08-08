@@ -661,6 +661,7 @@ function Actions({
 }) {
   const meetingTitle = (id: string) => meetings.find((m) => m.id === id)?.title || "—";
 
+  /** Aksiyonu onaylar ve mevcut görev sistemine yazar (kaynak alıntı görev notuna işlenir). */
   const approve = async (a: ActionItem, notify: boolean) => {
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -668,16 +669,22 @@ function Actions({
       const meeting = meetings.find((m) => m.id === a.meeting_id);
       let taskId: string | null = null;
       if (meeting?.project_id && uid) {
+        const context = [
+          `Toplantı: ${meeting.title}`,
+          a.assignee_name ? `Sorumlu: ${a.assignee_name}` : null,
+          a.source_quote ? `Toplantıdan: "${a.source_quote}"` : null,
+        ].filter(Boolean).join("\n");
         const { data: task, error } = await supabase
           .from("tasks")
           .insert({
             created_by: uid,
             title: a.title,
-            description: a.description || `Toplantı: ${meeting?.title || ""}${a.assignee_name ? ` · Sorumlu: ${a.assignee_name}` : ""}`,
+            description: [a.description, context].filter(Boolean).join("\n\n"),
             project_id: meeting.project_id,
             due_date: a.due_date,
-            priority: a.priority,
+            priority: toTaskPriority(a.priority),
             status: "todo",
+            assigned_to: a.assignee_user_id || null,
           } as any)
           .select("id")
           .single();
@@ -697,7 +704,7 @@ function Actions({
           action: { label: "WhatsApp Aç", onClick: () => window.open(`https://wa.me/?text=${msg}`, "_blank") },
         });
       }
-      toast.success("Görev oluşturuldu");
+      toast.success(taskId ? "Görev oluşturuldu" : "Aksiyon onaylandı");
       await onRefresh();
     } catch (e: any) {
       toast.error(e?.message || "Görev oluşturulamadı");
