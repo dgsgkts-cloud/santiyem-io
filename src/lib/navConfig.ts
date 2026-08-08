@@ -47,9 +47,9 @@ export const NAV_AREAS: NavArea[] = [
     label: "Operasyon",
     icon: HardHat,
     children: [
-      // Görevler proje bağlamında yaşıyor: proje listesinden ilgili projenin
-      // Görev Panosu'na girilir (çalışan tek entry point).
-      { id: "ops-tasks", label: "Görevler / İşler", icon: CheckSquare, tab: "projects" },
+      // Şirket geneli görev merkezi (/gorevler). Proje bağlamındaki Görev
+      // Panosu ayrı entry point olarak korunur.
+      { id: "ops-tasks", label: "Görevler / İşler", icon: CheckSquare, tab: "tasks" },
       { id: "ops-field", label: "Saha", icon: BookOpen, tab: "site-diary" },
       { id: "ops-personnel", label: "Ekip & Puantaj", icon: HardHat, tab: "personnel" },
       { id: "ops-warehouse", label: "Depo & Envanter", icon: Warehouse, tab: "warehouse" },

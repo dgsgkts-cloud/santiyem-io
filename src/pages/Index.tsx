@@ -41,6 +41,7 @@ const WarehousePage = lazy(() => import("@/components/desktop/WarehousePage"));
 const FleetPage = lazy(() => import("@/components/desktop/FleetPage"));
 const ReportsPage = lazy(() => import("@/components/desktop/ReportsPage"));
 const IntegrationsPage = lazy(() => import("@/components/desktop/IntegrationsPage"));
+const TasksCenterPage = lazy(() => import("@/components/desktop/TasksCenterPage"));
 import LockedPage from "@/components/desktop/LockedPage";
 import { useAccessGuard, useAccessSnapshotSync } from "@/lib/accessControl";
 import { useDemoAccount } from "@/hooks/useDemoAccount";
@@ -100,7 +101,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 
-type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "fleet" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs" | "integrations";
+type Tab = "chat" | "render" | "reminders" | "pricing" | "daily" | "dashboard" | "projects" | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts" | "materials" | "e-invoices" | "personnel" | "meetings" | "communication" | "reports" | "procurement" | "warehouse" | "fleet" | "company-memory" | "company-kb" | "ai-decisions" | "decision-history" | "company-docs" | "integrations" | "tasks";
 
 // Sprint 15.2 Production Polish — Company Brain sekmeleri sadeleşen menüden
 // kaldırıldı. Eski derin linkler geldiğinde kullanıcıyı sessizce Dashboard'a
@@ -151,6 +152,7 @@ const NAVIGABLE_TABS: Tab[] = [
   "decision-history",
   "company-docs",
   "integrations",
+  "tasks",
 ];
 
 const COMPANY_BRAIN_TABS = new Set<Tab>([
@@ -205,6 +207,7 @@ const TAB_TITLES: Record<string, string> = {
   fleet: "Makine & Ekipman",
   settings: "Ayarlar",
   integrations: "Entegrasyonlar",
+  tasks: "Görevler / İşler",
   "company-memory": "🧠 Company Memory",
   "company-kb": "🧠 Knowledge Base",
   "ai-decisions": "🧠 AI Decisions",
@@ -235,6 +238,7 @@ const TAB_TO_PATH: Record<string, string> = {
   daily: "/gunluk-bilgi",
   settings: "/settings",
   integrations: "/entegrasyonlar",
+  tasks: "/gorevler",
   reports: "/raporlar",
   meetings: "/toplantilar",
   "company-memory": "/company-brain/memory",
@@ -396,8 +400,19 @@ const Index = () => {
         else setActiveTab(tab as Tab);
       }
     };
+    // Görev merkezinden proje adına tıklanınca ilgili projeye geç.
+    const openProject = (e: Event) => {
+      const id = (e as CustomEvent).detail as string;
+      if (!id) return;
+      setSelectedProjectId(id);
+      navigate(TAB_TO_PATH.projects);
+    };
     window.addEventListener("navigate-tab", handler);
-    return () => window.removeEventListener("navigate-tab", handler);
+    window.addEventListener("open-project", openProject);
+    return () => {
+      window.removeEventListener("navigate-tab", handler);
+      window.removeEventListener("open-project", openProject);
+    };
   }, [navigate]);
 
 
@@ -633,6 +648,7 @@ const Index = () => {
                       description="Şirket Belleği ve AI Karar Geçmişi modülleri yeniden tasarlanıyor. Bu sürede AI Copilot üzerinden aynı bilgilere erişebilirsiniz."
                     />
                   );
+                  if (activeTab === "tasks") return <TasksCenterPage />;
                   if (activeTab === "integrations") return <IntegrationsPage />;
                   if (activeTab === "settings") return <DesktopSettingsPage />;
                   if (activeTab === "pricing") return <div className="bg-background"><PricingPanel /></div>;
@@ -1030,6 +1046,8 @@ const Index = () => {
             <MeetingCenterPage />
           ) : activeTab === "communication" ? (
             <CommunicationCenterPage />
+          ) : activeTab === "tasks" ? (
+            <TasksCenterPage />
           ) : activeTab === "integrations" ? (
             <IntegrationsPage />
           ) : activeTab === "settings" ? (
