@@ -14,7 +14,8 @@ export type GuardTab =
   | "chat" | "reminders" | "pricing" | "daily" | "dashboard" | "projects"
   | "hakedis" | "settings" | "site-diary" | "payments-kasa" | "contracts"
   | "materials" | "e-invoices" | "personnel" | "meetings" | "communication"
-  | "reports" | "procurement" | "warehouse" | "fleet" | "render";
+  | "reports" | "procurement" | "warehouse" | "fleet" | "render"
+  | "integrations";
 
 export type LockReason =
   | "ok"
@@ -30,6 +31,7 @@ export type LockReason =
  */
 const ALWAYS_ALLOWED: GuardTab[] = [
   "dashboard", "settings", "pricing", "chat", "reminders", "daily", "render",
+  "integrations",
 ];
 
 /**
@@ -58,7 +60,7 @@ const TAB_LABELS: Record<GuardTab, string> = {
   meetings: "Toplantı Merkezi", communication: "İletişim Merkezi",
   reports: "Raporlar", procurement: "Satın Alma",
   warehouse: "Depo & Envanter", fleet: "Makine & Ekipman",
-  render: "Render",
+  render: "Render", integrations: "Entegrasyonlar",
 };
 
 export const getTabLabel = (t: GuardTab) => TAB_LABELS[t] || t;
