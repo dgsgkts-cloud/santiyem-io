@@ -8,10 +8,10 @@
 
 import { useEffect, useState } from "react";
 import { Check, Loader2, Mic } from "lucide-react";
-import { queryMicPermission, type MicPermissionState } from "@/lib/voice/micPermission";
+import { queryMicPermission, type MicPermission } from "@/lib/voice/micPermission";
 
 export function VoiceSettingsTab() {
-  const [permission, setPermission] = useState<MicPermissionState>("unknown");
+  const [permission, setPermission] = useState<MicPermission>("unknown");
   const [deviceLabel, setDeviceLabel] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
