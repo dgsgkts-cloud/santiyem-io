@@ -7,6 +7,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createWakeWordEngine } from "@/lib/voice/wake";
+import { queryMicPermission, onMicPermissionChange } from "@/lib/voice/micPermission";
+
 import type {
   WakeWordEngine,
   WakeWordEvent,
