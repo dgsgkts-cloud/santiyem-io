@@ -36,6 +36,12 @@ export interface UseVoiceEngineResult {
   micLevel: number;
   /** 0..1 realtime energy of the assistant's voice. */
   outputLevel: number;
+  /**
+   * Live audio levels sampled without React state, so animations can run at
+   * 60fps without re-rendering the component tree.
+   */
+  levels: React.MutableRefObject<{ mic: number; output: number }>;
+
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   /** Full teardown so a retry can build a fresh session. */
