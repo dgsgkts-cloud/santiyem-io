@@ -755,7 +755,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       type: "conversation.item.create",
       item: { type: "message", role: "user", content: [{ type: "input_text", text: clean }] },
     });
-    this.sendEvent({ type: "response.create" });
+    this.requestResponse();
+
     this.setState("thinking");
   }
 
