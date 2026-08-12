@@ -69,12 +69,23 @@ const SESSION_READY_FALLBACK_MS = 800;
 // ---- controlled barge-in tuning -------------------------------------------
 /** Microphone level polling interval while the assistant speaks. */
 const BARGE_IN_SAMPLE_MS = 50;
-/** Continuous voice activity required before an interruption is accepted. */
-const BARGE_IN_SUSTAIN_MS = 350;
-/** Level (0..1) that counts as voice rather than room noise / echo. */
-const BARGE_IN_LEVEL = 0.16;
+/**
+ * Continuous voice activity required before an interruption is accepted.
+ * A short "hmm", cough or keyboard tap never lasts this long, so it can
+ * never cut the answer off.
+ */
+const BARGE_IN_SUSTAIN_MS = 650;
+/** Absolute floor: below this nothing is ever treated as speech. */
+const BARGE_IN_MIN_LEVEL = 0.1;
+/** Speech must exceed the measured noise floor by this factor. */
+const BARGE_IN_NOISE_FACTOR = 2.6;
+/** …and by at least this absolute margin. */
+const BARGE_IN_NOISE_MARGIN = 0.07;
 /** After this window without sustained speech the barge-in attempt is dropped. */
-const BARGE_IN_WINDOW_MS = 1500;
+const BARGE_IN_WINDOW_MS = 2000;
+/** Exponential smoothing applied to the ambient noise floor estimate. */
+const NOISE_FLOOR_ALPHA = 0.05;
+
 
 
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
