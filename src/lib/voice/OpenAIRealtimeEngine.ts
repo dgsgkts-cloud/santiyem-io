@@ -698,7 +698,18 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         output: JSON.stringify(result),
       },
     });
+    this.requestResponse();
+  }
+
+  /** Single entry point for response.create, so no turn is generated twice. */
+  private requestResponse() {
+    if (this.responseCreatePending || this.activeResponseId) {
+      rtLog("response.create skipped — one is already in flight");
+      return;
+    }
+    this.responseCreatePending = true;
     this.sendEvent({ type: "response.create" });
+
   }
 
   private sendEvent(payload: Record<string, unknown>) {
