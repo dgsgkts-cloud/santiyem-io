@@ -61,8 +61,11 @@ const Login = () => {
         toast.error(error.message);
       }
     } else {
-      navigate("/");
+      // Her başarılı girişte Ana Sayfa — kayıtlı son sekme/yönlendirme yok sayılır.
+      clearNavigationState();
+      navigate(HOME_ROUTE, { replace: true });
     }
+
   };
 
   const handleGoogleLogin = async () => {
