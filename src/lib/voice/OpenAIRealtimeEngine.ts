@@ -483,6 +483,14 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       this.noEventTimer = null;
     }
 
+    // Late events from a response we already cancelled must never leak into
+    // the next answer (stale audio / transcript deltas).
+    const eventResponseId = this.eventResponseId(evt);
+    if (eventResponseId && this.cancelledResponseIds.has(eventResponseId)) {
+      rtLog(`ignored stale event from cancelled response ${eventResponseId}`, type);
+      return;
+    }
+
     switch (type) {
       case "session.created":
         // The realtime session exists — this is the real readiness signal.
@@ -502,20 +510,40 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
 
       case "input_audio_buffer.speech_started":
-        // Barge-in: kill assistant audio instantly and resume listening.
-        if (this.speaking || this.state === "speaking") this.stopPlayback();
         this.metrics.markTurnStart();
-        this.goListening();
+        if (this.speaking || this.state === "speaking") {
+          // NOT an interruption yet: a cough, keyboard click or door noise
+          // fires this too. Only sustained speech may cut the answer off.
+          this.beginBargeInWatch();
+        } else {
+          this.goListening();
+        }
         break;
+      case "input_audio_buffer.speech_stopped":
+        // Transient noise ended before it qualified as a real barge-in.
+        if (this.interruptionPending) this.cancelBargeInWatch();
+        break;
+
+      case "response.created":
+        this.responseCreatePending = false;
+        this.activeResponseId = eventResponseId;
+        break;
+      case "response.output_item.added": {
+        const item = evt.item as { id?: string } | undefined;
+        if (item?.id) this.lastAssistantItemId = item.id;
+        break;
+      }
 
       case "output_audio_buffer.started":
         this.speaking = true;
+        this.playbackStartedAt = Date.now();
         this.metrics.markFirstAudio();
         this.setState("speaking");
         break;
       case "output_audio_buffer.stopped":
       case "output_audio_buffer.cleared":
         this.speaking = false;
+        this.playbackStartedAt = null;
         break;
       case "conversation.item.input_audio_transcription.delta":
         this.metrics.markFirstTranscript();
@@ -560,16 +588,76 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
       case "response.done":
         this.speaking = false;
+        this.playbackStartedAt = null;
+        this.activeResponseId = null;
+        this.responseCreatePending = false;
+        this.cancelBargeInWatch();
         this.metrics.resetTurn();
         if (this.state !== "listening") this.goListening();
         break;
       case "error":
+        this.responseCreatePending = false;
         this.emitError("server_error", JSON.stringify(evt.error ?? evt).slice(0, 300));
         break;
       default:
         break;
     }
   }
+
+  /** Extracts the response id an event belongs to, if any. */
+  private eventResponseId(evt: Record<string, unknown>): string | null {
+    const direct = evt.response_id;
+    if (typeof direct === "string" && direct) return direct;
+    const nested = (evt.response as { id?: string } | undefined)?.id;
+    return typeof nested === "string" && nested ? nested : null;
+  }
+
+  // ---------- controlled barge-in -----------------------------------------
+
+  /**
+   * Watches the local microphone level while the assistant speaks. A real
+   * interruption is only accepted after ~350ms of continuous voice activity,
+   * so transient noise (and the assistant's own echo) never cuts the answer.
+   */
+  private beginBargeInWatch() {
+    if (this.bargeInTimer !== null) return;
+    this.interruptionPending = true;
+    this.bargeInSamples = 0;
+    this.bargeInElapsed = 0;
+    this.bargeInTimer = window.setInterval(() => {
+      if (this.closing || (!this.speaking && this.state !== "speaking")) {
+        this.cancelBargeInWatch();
+        return;
+      }
+      this.bargeInElapsed += BARGE_IN_SAMPLE_MS;
+      const level = this.getMicLevel();
+      if (level >= BARGE_IN_LEVEL) {
+        this.bargeInSamples += 1;
+        if (this.bargeInSamples * BARGE_IN_SAMPLE_MS >= BARGE_IN_SUSTAIN_MS) {
+          rtLog("barge-in confirmed — sustained speech while speaking");
+          this.confirmInterrupt();
+        }
+        return;
+      }
+      // A short dip is tolerated; a real gap resets the counter.
+      this.bargeInSamples = Math.max(0, this.bargeInSamples - 1);
+      if (this.bargeInElapsed >= BARGE_IN_WINDOW_MS) {
+        rtLog("barge-in rejected — activity was transient noise");
+        this.cancelBargeInWatch();
+      }
+    }, BARGE_IN_SAMPLE_MS);
+  }
+
+  private cancelBargeInWatch() {
+    if (this.bargeInTimer !== null) {
+      window.clearInterval(this.bargeInTimer);
+      this.bargeInTimer = null;
+    }
+    this.bargeInSamples = 0;
+    this.bargeInElapsed = 0;
+    this.interruptionPending = false;
+  }
+
 
   /** "Dinliyorum" is only ever shown once the realtime session is ready. */
   private goListening() {
