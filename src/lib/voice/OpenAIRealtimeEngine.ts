@@ -238,13 +238,13 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       this.attachOutputMeter(e.streams[0]);
     };
 
-    // Uplink: microphone.
+    // Uplink: microphone. This is the ONLY getUserMedia call in the voice
+    // stack, and it runs solely because the user started a session.
     let mic: MediaStream;
     try {
-      mic = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      });
+      mic = await navigator.mediaDevices.getUserMedia({ audio: MIC_AUDIO_CONSTRAINTS });
     } catch (err) {
+
       throw new Error(`audio_device_unavailable: ${err instanceof Error ? err.message : String(err)}`);
     }
     this.micStream = mic;
