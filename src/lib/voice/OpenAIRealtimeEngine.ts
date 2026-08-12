@@ -66,6 +66,17 @@ const NO_EVENT_TIMEOUT_MS = 5000;
 /** Fallback if `session.updated` never arrives after `session.created`. */
 const SESSION_READY_FALLBACK_MS = 800;
 
+// ---- controlled barge-in tuning -------------------------------------------
+/** Microphone level polling interval while the assistant speaks. */
+const BARGE_IN_SAMPLE_MS = 50;
+/** Continuous voice activity required before an interruption is accepted. */
+const BARGE_IN_SUSTAIN_MS = 350;
+/** Level (0..1) that counts as voice rather than room noise / echo. */
+const BARGE_IN_LEVEL = 0.16;
+/** After this window without sustained speech the barge-in attempt is dropped. */
+const BARGE_IN_WINDOW_MS = 1500;
+
+
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   readonly provider: VoiceProviderId = "openai-realtime";
 
