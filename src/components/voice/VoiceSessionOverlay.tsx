@@ -21,6 +21,8 @@ import {
   saveVoiceTranscript,
 } from "@/lib/voice/voiceTranscriptStore";
 import type { TranscriptChunk } from "@/lib/voice/voiceTypes";
+import { queryMicPermission, onMicPermissionChange } from "@/lib/voice/micPermission";
+
 import "@/styles/voice.css";
 
 
