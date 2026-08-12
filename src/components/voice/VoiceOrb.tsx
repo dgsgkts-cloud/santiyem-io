@@ -18,6 +18,8 @@ import { VoiceExperience } from "./VoiceExperience";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { supabase } from "@/integrations/supabase/client";
+import { queryMicPermission } from "@/lib/voice/micPermission";
+
 import "@/styles/voice.css";
 
 type BriefCard = {
