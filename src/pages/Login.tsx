@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 import { LoginHero } from "@/components/auth/LoginHero";
 import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
+import { HOME_ROUTE, clearNavigationState } from "@/lib/homeRoute";
+
 
 const CAPTCHA_ERROR = "Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.";
 
@@ -61,14 +63,19 @@ const Login = () => {
         toast.error(error.message);
       }
     } else {
-      navigate("/");
+      // Her başarılı girişte Ana Sayfa — kayıtlı son sekme/yönlendirme yok sayılır.
+      clearNavigationState();
+      navigate(HOME_ROUTE, { replace: true });
     }
+
   };
 
   const handleGoogleLogin = async () => {
+    clearNavigationState();
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
+
     if (error) toast.error("Google ile giriş yapılamadı.");
   };
 
