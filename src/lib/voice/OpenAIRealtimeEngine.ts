@@ -92,6 +92,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private lastBytesSent = 0;
   private silentUplinkChecks = 0;
 
+  // ---- interruption / response bookkeeping --------------------------------
+  /** Id of the response currently being generated (null when none). */
+  private activeResponseId: string | null = null;
+  /** Responses we cancelled — every late event from them is ignored. */
+  private cancelledResponseIds = new Set<string>();
+  /** Latest assistant audio item, needed for conversation.item.truncate. */
+  private lastAssistantItemId: string | null = null;
+  /** Wall clock at which the current assistant playback started. */
+  private playbackStartedAt: number | null = null;
+  /** Prevents duplicate response.create while one is already in flight. */
+  private responseCreatePending = false;
+  /** Sustained-speech watch used to confirm a real barge-in. */
+  private bargeInTimer: number | null = null;
+  private bargeInSamples = 0;
+  private bargeInElapsed = 0;
+  private interruptionPending = false;
+
+
   getMetrics() { return this.metrics.snapshot(); }
 
 
