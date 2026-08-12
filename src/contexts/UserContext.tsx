@@ -203,7 +203,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Eski kullanıcının gezinme durumu (son sekme vb.) temizlenir.
+    clearNavigationState();
     await supabase.auth.signOut();
+
     setUser(null);
     setProfile(null);
     setPlanState("free");
