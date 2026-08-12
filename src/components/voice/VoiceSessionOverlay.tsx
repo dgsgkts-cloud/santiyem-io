@@ -436,8 +436,6 @@ export function VoiceSessionOverlay({
   })();
 
   const isSpeaking = phase === "speaking";
-  const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
-  const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
 
   // Mute toggle: subtle mobile haptic + a short visual confirmation.
   const micToastTimer = useRef<number | null>(null);
@@ -629,7 +627,7 @@ export function VoiceSessionOverlay({
           </div>
         ) : (
           <>
-            <VoiceReactiveOrb phase={phase} level={level} fallbackMotion={noAnalyser} />
+            <VoiceReactiveOrb phase={phase} levels={voice.levels} muted={muted} />
 
             <div className="flex flex-col items-center gap-2 text-center">
               <p
