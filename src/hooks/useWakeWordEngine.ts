@@ -60,9 +60,21 @@ export function useWakeWordEngine({
   useEffect(() => onMicOwnerChange(setMicOwner), []);
   const sessionOwnsMic = micOwner === "voice_session";
 
+  // --- permission gate ---------------------------------------------------
+  // Background detection may NEVER raise the browser permission prompt: it
+  // starts only when the microphone is already granted, and stops again the
+  // moment the user revokes it.
+  const [micGranted, setMicGranted] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void queryMicPermission().then((p) => { if (alive) setMicGranted(p === "granted"); });
+    const off = onMicPermissionChange((p) => setMicGranted(p === "granted"));
+    return () => { alive = false; off(); };
+  }, []);
+
   // --- engine lifecycle -------------------------------------------------
   useEffect(() => {
-    if (!enabled || sessionOwnsMic) return;
+    if (!enabled || sessionOwnsMic || !micGranted) return;
     // Refused while a conversation holds the microphone.
     if (!claimMic("wake_word")) return;
 
@@ -84,7 +96,8 @@ export function useWakeWordEngine({
       releaseMic("wake_word");
       setState("stopped");
     };
-  }, [enabled, provider, language, phrasesKey, sessionOwnsMic]);
+  }, [enabled, provider, language, phrasesKey, sessionOwnsMic, micGranted]);
+
 
   // --- automatic pause / resume ----------------------------------------
   const shouldPause = guards.paused || suspended || sessionOwnsMic;
