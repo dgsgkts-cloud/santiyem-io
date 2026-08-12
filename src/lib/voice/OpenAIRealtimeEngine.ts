@@ -256,11 +256,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
           audio: {
             input: {
               transcription: { model: "gpt-4o-mini-transcribe", language: this.config.language ?? "tr" },
-              turn_detection: { type: "semantic_vad", interrupt_response: true },
+              // Provider-side noise reduction: room/laptop microphones by
+              // default, close-talk only when explicitly configured.
+              noise_reduction: { type: this.config.micProximity ?? "far_field" },
+              // Semantic VAD with low eagerness: a short pause is not a turn
+              // end. `interrupt_response: false` stops any single VAD start
+              // event from killing the answer — real barge-in is confirmed
+              // client-side (see confirmInterrupt) and then cancelled explicitly.
+              turn_detection: {
+                type: "semantic_vad",
+                eagerness: "low",
+                create_response: true,
+                interrupt_response: false,
+              },
             },
           },
         },
       });
+
     };
     dc.onmessage = (e) => this.handleServerEvent(e.data);
     dc.onerror = (e) => rtLog("data channel ERROR", e);
