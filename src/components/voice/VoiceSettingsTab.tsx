@@ -69,7 +69,11 @@ export function VoiceSettingsTab() {
           </div>
           <span
             className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-              permission === "denied" ? "text-amber-500" : "text-emerald-500"
+              permission === "granted"
+                ? "text-emerald-500"
+                : permission === "denied"
+                  ? "text-amber-500"
+                  : "text-muted-foreground"
             }`}
           >
             {permission === "granted" && <Check className="h-3.5 w-3.5" />}
