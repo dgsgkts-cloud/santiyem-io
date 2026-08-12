@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { clearNavigationState } from "@/lib/homeRoute";
+
 
 export type PlanType = "free" | "pro" | "team" | "enterprise" | "plus" | "office_free" | "office_pro" | "office_custom" | "demo_full_access";
 export type UserRole = "free" | "pro" | "office" | "admin";
