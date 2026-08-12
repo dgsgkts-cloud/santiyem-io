@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { BaseVoiceEngine } from "./BaseVoiceEngine";
 import { OPENAI_REALTIME } from "./voiceConfig";
+import { MIC_AUDIO_CONSTRAINTS } from "./micPermission";
+
 import { setVoiceDiagnostics } from "./voiceDiagnostics";
 import { VoiceMetricsTracker } from "./voiceMetrics";
 import { isVoiceErrorRetryable } from "./voiceTypes";
@@ -64,6 +66,17 @@ const NO_EVENT_TIMEOUT_MS = 5000;
 /** Fallback if `session.updated` never arrives after `session.created`. */
 const SESSION_READY_FALLBACK_MS = 800;
 
+// ---- controlled barge-in tuning -------------------------------------------
+/** Microphone level polling interval while the assistant speaks. */
+const BARGE_IN_SAMPLE_MS = 50;
+/** Continuous voice activity required before an interruption is accepted. */
+const BARGE_IN_SUSTAIN_MS = 350;
+/** Level (0..1) that counts as voice rather than room noise / echo. */
+const BARGE_IN_LEVEL = 0.16;
+/** After this window without sustained speech the barge-in attempt is dropped. */
+const BARGE_IN_WINDOW_MS = 1500;
+
+
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   readonly provider: VoiceProviderId = "openai-realtime";
 
@@ -91,6 +104,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private statsTimer: number | null = null;
   private lastBytesSent = 0;
   private silentUplinkChecks = 0;
+
+  // ---- interruption / response bookkeeping --------------------------------
+  /** Id of the response currently being generated (null when none). */
+  private activeResponseId: string | null = null;
+  /** Responses we cancelled — every late event from them is ignored. */
+  private cancelledResponseIds = new Set<string>();
+  /** Latest assistant audio item, needed for conversation.item.truncate. */
+  private lastAssistantItemId: string | null = null;
+  /** Wall clock at which the current assistant playback started. */
+  private playbackStartedAt: number | null = null;
+  /** Prevents duplicate response.create while one is already in flight. */
+  private responseCreatePending = false;
+  /** Sustained-speech watch used to confirm a real barge-in. */
+  private bargeInTimer: number | null = null;
+  private bargeInSamples = 0;
+  private bargeInElapsed = 0;
+  private interruptionPending = false;
+
 
   getMetrics() { return this.metrics.snapshot(); }
 
@@ -220,13 +251,13 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       this.attachOutputMeter(e.streams[0]);
     };
 
-    // Uplink: microphone.
+    // Uplink: microphone. This is the ONLY getUserMedia call in the voice
+    // stack, and it runs solely because the user started a session.
     let mic: MediaStream;
     try {
-      mic = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      });
+      mic = await navigator.mediaDevices.getUserMedia({ audio: MIC_AUDIO_CONSTRAINTS });
     } catch (err) {
+
       throw new Error(`audio_device_unavailable: ${err instanceof Error ? err.message : String(err)}`);
     }
     this.micStream = mic;
@@ -256,11 +287,24 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
           audio: {
             input: {
               transcription: { model: "gpt-4o-mini-transcribe", language: this.config.language ?? "tr" },
-              turn_detection: { type: "semantic_vad", interrupt_response: true },
+              // Provider-side noise reduction: room/laptop microphones by
+              // default, close-talk only when explicitly configured.
+              noise_reduction: { type: this.config.micProximity ?? "far_field" },
+              // Semantic VAD with low eagerness: a short pause is not a turn
+              // end. `interrupt_response: false` stops any single VAD start
+              // event from killing the answer — real barge-in is confirmed
+              // client-side (see confirmInterrupt) and then cancelled explicitly.
+              turn_detection: {
+                type: "semantic_vad",
+                eagerness: "low",
+                create_response: true,
+                interrupt_response: false,
+              },
             },
           },
         },
       });
+
     };
     dc.onmessage = (e) => this.handleServerEvent(e.data);
     dc.onerror = (e) => rtLog("data channel ERROR", e);
@@ -450,6 +494,14 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       this.noEventTimer = null;
     }
 
+    // Late events from a response we already cancelled must never leak into
+    // the next answer (stale audio / transcript deltas).
+    const eventResponseId = this.eventResponseId(evt);
+    if (eventResponseId && this.cancelledResponseIds.has(eventResponseId)) {
+      rtLog(`ignored stale event from cancelled response ${eventResponseId}`, type);
+      return;
+    }
+
     switch (type) {
       case "session.created":
         // The realtime session exists — this is the real readiness signal.
@@ -469,20 +521,40 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
 
       case "input_audio_buffer.speech_started":
-        // Barge-in: kill assistant audio instantly and resume listening.
-        if (this.speaking || this.state === "speaking") this.stopPlayback();
         this.metrics.markTurnStart();
-        this.goListening();
+        if (this.speaking || this.state === "speaking") {
+          // NOT an interruption yet: a cough, keyboard click or door noise
+          // fires this too. Only sustained speech may cut the answer off.
+          this.beginBargeInWatch();
+        } else {
+          this.goListening();
+        }
         break;
+      case "input_audio_buffer.speech_stopped":
+        // Transient noise ended before it qualified as a real barge-in.
+        if (this.interruptionPending) this.cancelBargeInWatch();
+        break;
+
+      case "response.created":
+        this.responseCreatePending = false;
+        this.activeResponseId = eventResponseId;
+        break;
+      case "response.output_item.added": {
+        const item = evt.item as { id?: string } | undefined;
+        if (item?.id) this.lastAssistantItemId = item.id;
+        break;
+      }
 
       case "output_audio_buffer.started":
         this.speaking = true;
+        this.playbackStartedAt = Date.now();
         this.metrics.markFirstAudio();
         this.setState("speaking");
         break;
       case "output_audio_buffer.stopped":
       case "output_audio_buffer.cleared":
         this.speaking = false;
+        this.playbackStartedAt = null;
         break;
       case "conversation.item.input_audio_transcription.delta":
         this.metrics.markFirstTranscript();
@@ -527,16 +599,76 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
       case "response.done":
         this.speaking = false;
+        this.playbackStartedAt = null;
+        this.activeResponseId = null;
+        this.responseCreatePending = false;
+        this.cancelBargeInWatch();
         this.metrics.resetTurn();
         if (this.state !== "listening") this.goListening();
         break;
       case "error":
+        this.responseCreatePending = false;
         this.emitError("server_error", JSON.stringify(evt.error ?? evt).slice(0, 300));
         break;
       default:
         break;
     }
   }
+
+  /** Extracts the response id an event belongs to, if any. */
+  private eventResponseId(evt: Record<string, unknown>): string | null {
+    const direct = evt.response_id;
+    if (typeof direct === "string" && direct) return direct;
+    const nested = (evt.response as { id?: string } | undefined)?.id;
+    return typeof nested === "string" && nested ? nested : null;
+  }
+
+  // ---------- controlled barge-in -----------------------------------------
+
+  /**
+   * Watches the local microphone level while the assistant speaks. A real
+   * interruption is only accepted after ~350ms of continuous voice activity,
+   * so transient noise (and the assistant's own echo) never cuts the answer.
+   */
+  private beginBargeInWatch() {
+    if (this.bargeInTimer !== null) return;
+    this.interruptionPending = true;
+    this.bargeInSamples = 0;
+    this.bargeInElapsed = 0;
+    this.bargeInTimer = window.setInterval(() => {
+      if (this.closing || (!this.speaking && this.state !== "speaking")) {
+        this.cancelBargeInWatch();
+        return;
+      }
+      this.bargeInElapsed += BARGE_IN_SAMPLE_MS;
+      const level = this.getMicLevel();
+      if (level >= BARGE_IN_LEVEL) {
+        this.bargeInSamples += 1;
+        if (this.bargeInSamples * BARGE_IN_SAMPLE_MS >= BARGE_IN_SUSTAIN_MS) {
+          rtLog("barge-in confirmed — sustained speech while speaking");
+          this.confirmInterrupt();
+        }
+        return;
+      }
+      // A short dip is tolerated; a real gap resets the counter.
+      this.bargeInSamples = Math.max(0, this.bargeInSamples - 1);
+      if (this.bargeInElapsed >= BARGE_IN_WINDOW_MS) {
+        rtLog("barge-in rejected — activity was transient noise");
+        this.cancelBargeInWatch();
+      }
+    }, BARGE_IN_SAMPLE_MS);
+  }
+
+  private cancelBargeInWatch() {
+    if (this.bargeInTimer !== null) {
+      window.clearInterval(this.bargeInTimer);
+      this.bargeInTimer = null;
+    }
+    this.bargeInSamples = 0;
+    this.bargeInElapsed = 0;
+    this.interruptionPending = false;
+  }
+
 
   /** "Dinliyorum" is only ever shown once the realtime session is ready. */
   private goListening() {
@@ -566,7 +698,18 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         output: JSON.stringify(result),
       },
     });
+    this.requestResponse();
+  }
+
+  /** Single entry point for response.create, so no turn is generated twice. */
+  private requestResponse() {
+    if (this.responseCreatePending || this.activeResponseId) {
+      rtLog("response.create skipped — one is already in flight");
+      return;
+    }
+    this.responseCreatePending = true;
     this.sendEvent({ type: "response.create" });
+
   }
 
   private sendEvent(payload: Record<string, unknown>) {
@@ -612,23 +755,54 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       type: "conversation.item.create",
       item: { type: "message", role: "user", content: [{ type: "input_text", text: clean }] },
     });
-    this.sendEvent({ type: "response.create" });
+    this.requestResponse();
+
     this.setState("thinking");
   }
 
+  /** Explicit user interruption (tap): no noise verification needed. */
   interrupt() {
-    this.stopPlayback();
+    this.confirmInterrupt();
   }
 
-  /** Cancel in-flight response, flush queued audio, resume listening. */
-  private stopPlayback() {
-    this.sendEvent({ type: "response.cancel" });
+  /**
+   * Accepts an interruption and keeps client and server in sync:
+   * cancel the response, flush queued output audio, then truncate the
+   * assistant item at the exact point the user actually heard so the model's
+   * conversation state matches reality on the next turn.
+   */
+  private confirmInterrupt() {
+    this.cancelBargeInWatch();
+    const heardMs = this.playbackStartedAt ? Math.max(0, Date.now() - this.playbackStartedAt) : 0;
+
+    if (this.activeResponseId) {
+      // Every later event from this response is stale from now on.
+      this.cancelledResponseIds.add(this.activeResponseId);
+      this.sendEvent({ type: "response.cancel", response_id: this.activeResponseId });
+    } else {
+      this.sendEvent({ type: "response.cancel" });
+    }
     this.sendEvent({ type: "output_audio_buffer.clear" });
+
+    if (this.lastAssistantItemId) {
+      this.sendEvent({
+        type: "conversation.item.truncate",
+        item_id: this.lastAssistantItemId,
+        content_index: 0,
+        audio_end_ms: heardMs,
+      });
+    }
+
+    this.activeResponseId = null;
+    this.lastAssistantItemId = null;
+    this.playbackStartedAt = null;
+    this.responseCreatePending = false;
     this.assistantBuffer = "";
     this.speaking = false;
     this.setState("interrupted");
     this.goListening();
   }
+
 
 
   private attachLevelMeter(stream: MediaStream) {
@@ -673,19 +847,29 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
 
   private async teardown() {
     this.clearTimers();
+    this.cancelBargeInWatch();
     this.sessionReady = false;
+    // Reset per-session response bookkeeping so a reconnect starts clean.
+    this.activeResponseId = null;
+    this.lastAssistantItemId = null;
+    this.playbackStartedAt = null;
+    this.responseCreatePending = false;
+    this.cancelledResponseIds.clear();
+    this.assistantBuffer = "";
     if (this.dc) this.dc.onclose = null;
     try { this.dc?.close(); } catch { /* noop */ }
     try { this.pc?.getSenders().forEach((s) => s.track?.stop()); } catch { /* noop */ }
     try { this.pc?.close(); } catch { /* noop */ }
     try { this.micStream?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
     try { this.audioEl?.pause(); } catch { /* noop */ }
+    if (this.audioEl) this.audioEl.srcObject = null;
     try { void this.audioCtx?.close(); } catch { /* noop */ }
     this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
     this.outAnalyser = null; this.outBuf = null;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
     rtLog("teardown complete");
   }
+
 
 }
 

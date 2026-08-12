@@ -18,6 +18,8 @@ import { VoiceExperience } from "./VoiceExperience";
 import { VoiceErrorBoundary } from "./VoiceErrorBoundary";
 import { VoiceOrbVisual, type OrbState } from "./VoiceOrbVisual";
 import { supabase } from "@/integrations/supabase/client";
+import { queryMicPermission } from "@/lib/voice/micPermission";
+
 import "@/styles/voice.css";
 
 type BriefCard = {
@@ -263,14 +265,16 @@ export function VoiceOrb() {
       {showPermission && (
         <MicPermissionScreen
           onRetry={() => {
-            setShowPermission(false);
-            navigator.mediaDevices?.getUserMedia({ audio: true })
-              .then((s) => s.getTracks().forEach((t) => t.stop()))
-              .catch(() => setShowPermission(true));
+            // Re-read the live permission state instead of opening a throwaway
+            // mic stream; capture happens only when a session starts.
+            void queryMicPermission().then((p) => {
+              setShowPermission(p === "denied");
+            });
           }}
           onCancel={() => setShowPermission(false)}
         />
       )}
+
 
       <button
         onClick={() => { setPending({}); sessionModeRef.current = "manual"; setSessionMode("manual"); setOpen(true); }}

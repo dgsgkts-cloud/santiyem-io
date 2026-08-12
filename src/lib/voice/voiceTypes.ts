@@ -119,6 +119,13 @@ export interface VoiceEngineConfig {
   /** 0..1 output volume. */
   volume?: number;
   language?: string;
+  /**
+   * Microphone placement, used for OpenAI input noise reduction.
+   * Room/laptop microphones = far_field (default); an explicitly selected
+   * headset / close-talk microphone = near_field.
+   */
+  micProximity?: "far_field" | "near_field";
+
   /** Auto reconnect attempts before the session ends in an error state. */
   maxReconnects?: number;
 }
