@@ -550,7 +550,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
       case "input_audio_buffer.speech_stopped":
         // Transient noise ended before it qualified as a real barge-in.
-        if (this.interruptionPending) this.cancelBargeInWatch();
+        if (this.interruptionPending) this.rejectBargeIn();
         break;
 
       case "response.created":
@@ -906,6 +906,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private async teardown() {
     this.clearTimers();
     this.cancelBargeInWatch();
+    if (this.noiseFloorTimer !== null) {
+      window.clearInterval(this.noiseFloorTimer);
+      this.noiseFloorTimer = null;
+    }
     this.sessionReady = false;
     // Reset per-session response bookkeeping so a reconnect starts clean.
     this.activeResponseId = null;
