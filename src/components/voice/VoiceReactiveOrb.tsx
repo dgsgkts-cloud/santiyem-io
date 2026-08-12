@@ -1,14 +1,16 @@
 // ============================================================
-// Central Şantiyem AI voice orb — premium, phase-aware visual.
-// Reacts to REAL audio energy (mic while listening, playback while
-// speaking) supplied by the engine's Web Audio analysers. Falls back
-// to a calm breathing motion when no level data is available and
-// respects prefers-reduced-motion.
+// Şantiyem AI voice visualization — minimal, calm, premium.
 //
-// Purely presentational: no transport, no engine, no state machine.
+// A small (~72px) neutral core with a very soft glow and one thin
+// fluid halo that follows real audio energy. No big flat orange disc:
+// the brand colour appears only as a faint accent in the glow.
+//
+// Performance: the animation never touches React state. A single rAF
+// loop smooths the level from a ref and writes CSS custom properties
+// on the root element, so nothing above it re-renders.
 // ============================================================
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export type VoicePhase =
   | "idle"
@@ -24,201 +26,165 @@ export type VoicePhase =
   | "ending"
   | "error";
 
-
 interface Props {
   phase: VoicePhase;
-  /** 0..1 real audio level for the active direction. */
-  level: number;
-  /** true when the engine reports no analyser data at all. */
-  fallbackMotion?: boolean;
+  /** Live levels ref: `{ mic, output }`, both 0..1. */
+  levels?: React.MutableRefObject<{ mic: number; output: number }>;
+  /** Static fallback level when no analyser data exists. */
+  level?: number;
+  muted?: boolean;
 }
 
+/** Phases that breathe on their own instead of following audio. */
+const BREATHING: readonly VoicePhase[] = [
+  "idle",
+  "requesting_permission",
+  "mic_setup",
+  "connecting",
+  "ready",
+  "thinking",
+];
+
 const usePrefersReducedMotion = () => {
-  const [reduced, setReduced] = useState(false);
+  const ref = useRef(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const on = () => setReduced(mq.matches);
+    ref.current = mq.matches;
+    const on = () => { ref.current = mq.matches; };
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
-  return reduced;
+  return ref;
 };
 
-/** Phases where the orb breathes on its own instead of following audio. */
-const BREATHING_PHASES: readonly VoicePhase[] = [
-  "connecting",
-  "mic_setup",
-  "requesting_permission",
-  "ready",
-  "thinking",
-  "idle",
-];
-
-const WAVE_BARS = 28;
-
-export function VoiceReactiveOrb({ phase, level, fallbackMotion = false }: Props) {
+export function VoiceReactiveOrb({ phase, levels, level = 0, muted = false }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
-  // Smoothed level so the orb never jitters between frames.
-  const [smooth, setSmooth] = useState(0);
-  // Slow rotation used by the thinking / speaking energy layers.
-  const [spin, setSpin] = useState(0);
-  const target = useRef(0);
-  target.current = Math.max(0, Math.min(1, level));
 
-  const breathing = fallbackMotion || BREATHING_PHASES.includes(phase);
+  // Keep the latest inputs in refs: the loop must not restart per render.
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
+  const staticLevel = useRef(level);
+  staticLevel.current = level;
 
   useEffect(() => {
-    if (reduced) { setSmooth(0); setSpin(0); return; }
     let raf = 0;
-    let cur = 0;
+    let smooth = 0;
+    let drift = 0;
     const t0 = performance.now();
+
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
+      const el = rootRef.current;
+      if (!el) return;
+
+      const p = phaseRef.current;
+      const isSpeaking = p === "speaking";
+      const isListening = p === "listening" || p === "interrupted";
+      const live = levels?.current;
+      const raw = mutedRef.current
+        ? 0
+        : isSpeaking
+          ? (live?.output ?? staticLevel.current)
+          : isListening
+            ? (live?.mic ?? staticLevel.current)
+            : 0;
+
+      // Self-driven breathing when there is nothing to react to.
       const elapsed = t - t0;
-      // Calm breathing keeps the orb alive when analysers are silent.
-      const breathe = breathing
-        ? ((Math.sin(elapsed / (phase === "thinking" ? 520 : 900)) + 1) / 2) *
-          (phase === "thinking" ? 0.34 : 0.26)
-        : 0;
-      const want = Math.max(target.current, breathe);
-      cur += (want - cur) * 0.16;
-      setSmooth(cur);
-      setSpin((elapsed / 42) % 360);
+      const breathe =
+        !reduced.current && (BREATHING.includes(p) || (raw === 0 && !mutedRef.current))
+          ? ((Math.sin(elapsed / (p === "thinking" ? 900 : 2600)) + 1) / 2) * 0.22
+          : 0;
+
+      const want = reduced.current ? 0 : Math.max(Math.min(raw, 1), breathe);
+      // Exponential smoothing — no sudden scale jumps, ever.
+      smooth += (want - smooth) * (isSpeaking ? 0.12 : 0.09);
+      drift = (elapsed / 90) % 360;
+
+      // Deliberately small motion range: 1.00 → ~1.07.
+      el.style.setProperty("--vo-scale", (1 + smooth * 0.07).toFixed(4));
+      el.style.setProperty("--vo-halo", (1 + smooth * 0.16).toFixed(4));
+      el.style.setProperty("--vo-glow", (0.16 + smooth * 0.4).toFixed(3));
+      el.style.setProperty("--vo-spin", `${drift.toFixed(1)}deg`);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [reduced, breathing, phase]);
+  }, [levels, reduced]);
 
-  const isSpeaking = phase === "speaking";
-  const isListening = phase === "listening";
-  const isThinking = phase === "thinking";
   const isError = phase === "error";
-
-  const scale = reduced
-    ? 1
-    : 1 + smooth * (isListening || isSpeaking ? 0.13 : 0.05) - (isThinking ? 0.04 : 0);
-  const glow = 0.26 + smooth * 0.5;
-
-  // Deterministic bar offsets so the wave looks organic but never random
-  // between renders.
-  const barPhases = useMemo(
-    () => Array.from({ length: WAVE_BARS }, (_, i) => Math.sin(i * 1.7) * 0.5 + 0.5),
-    [],
-  );
 
   return (
     <div
-      className="relative flex items-center justify-center"
-      style={{
-        width: "clamp(200px, 68vw, 288px)",
-        height: "clamp(200px, 68vw, 288px)",
-      }}
+      ref={rootRef}
       aria-hidden
+      className="relative flex items-center justify-center"
+      style={
+        {
+          width: "clamp(140px, 44vw, 180px)",
+          height: "clamp(140px, 44vw, 180px)",
+          "--vo-scale": 1,
+          "--vo-halo": 1,
+          "--vo-glow": 0.16,
+          "--vo-spin": "0deg",
+        } as React.CSSProperties
+      }
     >
-      {/* Ambient aurora — soft depth behind everything. */}
+      {/* Soft ambient glow — faint brand accent only. */}
       <div
-        className="absolute -inset-[18%] rounded-full transition-opacity duration-500"
+        className="absolute inset-0 rounded-full"
         style={{
-          background:
-            "radial-gradient(circle, hsl(var(--primary) / 0.22) 0%, hsl(var(--primary) / 0.06) 52%, transparent 74%)",
-          opacity: isError ? 0.18 : 0.5 + smooth * 0.4,
-          transform: `scale(${1 + smooth * 0.1})`,
-          filter: "blur(2px)",
+          background: isError
+            ? "radial-gradient(circle, hsl(0 0% 100% / 0.05) 0%, transparent 68%)"
+            : "radial-gradient(circle, hsl(var(--primary) / 0.16) 0%, hsl(210 60% 60% / 0.06) 42%, transparent 70%)",
+          opacity: isError ? 0.5 : "var(--vo-glow)" as unknown as number,
+          transform: "scale(var(--vo-halo))",
+          filter: "blur(10px)",
+          willChange: "transform, opacity",
         }}
       />
 
-      {/* Speaking energy — a ring of audio bars around the core. */}
-      {isSpeaking && !reduced && (
-        <div
-          className="absolute inset-0"
-          style={{ transform: `rotate(${spin * 0.35}deg)` }}
-        >
-          {barPhases.map((p, i) => {
-            const angle = (360 / WAVE_BARS) * i;
-            const energy = Math.max(0.18, smooth * (0.55 + p * 0.9));
-            return (
-              <span
-                key={i}
-                className="absolute left-1/2 top-1/2 rounded-full"
-                style={{
-                  width: 2.5,
-                  height: `${16 + energy * 34}px`,
-                  background: `hsl(var(--primary) / ${0.25 + energy * 0.6})`,
-                  transformOrigin: "center top",
-                  transform: `rotate(${angle}deg) translateY(38%)`,
-                  transition: "height 90ms linear",
-                }}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {/* Thinking — slow conic sweep, calm rather than busy. */}
-      {isThinking && !reduced && (
-        <div
-          className="absolute rounded-full"
-          style={{
-            inset: "6%",
-            background:
-              "conic-gradient(from 0deg, transparent 0deg, hsl(var(--primary) / 0.32) 90deg, transparent 190deg)",
-            transform: `rotate(${spin}deg)`,
-            maskImage: "radial-gradient(circle, transparent 58%, black 62%)",
-            WebkitMaskImage: "radial-gradient(circle, transparent 58%, black 62%)",
-          }}
-        />
-      )}
-
-      {/* Reactive outer ring. */}
+      {/* Thin fluid halo — the only element that visibly moves with audio. */}
       <div
-        className="absolute rounded-full border"
+        className="absolute rounded-full"
         style={{
-          inset: "10%",
-          borderColor: isError
-            ? "hsl(0 0% 100% / 0.10)"
-            : `hsl(var(--primary) / ${0.14 + smooth * 0.46})`,
-          transform: `scale(${scale})`,
-          transition: reduced ? "none" : "transform 90ms linear",
+          inset: "22%",
+          border: `1px solid ${isError ? "hsl(0 0% 100% / 0.08)" : "hsl(0 0% 100% / 0.14)"}`,
+          transform: "scale(var(--vo-halo)) rotate(var(--vo-spin))",
+          maskImage:
+            "conic-gradient(from 0deg, transparent 0deg, black 70deg, black 250deg, transparent 340deg)",
+          WebkitMaskImage:
+            "conic-gradient(from 0deg, transparent 0deg, black 70deg, black 250deg, transparent 340deg)",
+          willChange: "transform",
         }}
       />
 
-      {/* Second, thinner ring — depth + a listening "halo". */}
-      <div
-        className="absolute rounded-full border"
-        style={{
-          inset: "20%",
-          borderColor: isError
-            ? "hsl(0 0% 100% / 0.06)"
-            : `hsl(var(--primary) / ${0.10 + smooth * 0.3})`,
-          transform: `scale(${1 + smooth * (isListening ? 0.08 : 0.03)})`,
-          transition: reduced ? "none" : "transform 120ms linear",
-        }}
-      />
-
-      {/* Core. */}
+      {/* Core — small, neutral, glassy. */}
       <div
         className="relative rounded-full"
         style={{
-          width: "54%",
-          height: "54%",
-          transform: `scale(${scale})`,
-          transition: reduced ? "none" : "transform 90ms linear",
+          width: 76,
+          height: 76,
+          transform: "scale(var(--vo-scale))",
+          willChange: "transform",
           background: isError
-            ? "radial-gradient(circle at 34% 28%, hsl(0 0% 100% / 0.12), hsl(220 26% 10%) 76%)"
-            : "radial-gradient(circle at 32% 26%, hsl(30 100% 78%) 0%, hsl(var(--primary)) 54%, hsl(16 88% 24%) 100%)",
+            ? "radial-gradient(circle at 34% 28%, hsl(0 0% 100% / 0.10), hsl(220 24% 12%) 78%)"
+            : muted
+              ? "radial-gradient(circle at 32% 26%, hsl(0 0% 100% / 0.16) 0%, hsl(220 22% 16%) 76%)"
+              : "radial-gradient(circle at 32% 26%, hsl(0 0% 100% / 0.34) 0%, hsl(24 40% 30% / 0.55) 46%, hsl(220 26% 12%) 100%)",
           boxShadow: isError
             ? "inset 0 0 0 1px hsl(0 0% 100% / 0.08)"
-            : `0 0 ${30 + smooth * 66}px ${2 + smooth * 9}px hsl(var(--primary) / ${glow})`,
+            : "inset 0 0 0 1px hsl(0 0% 100% / 0.10), 0 0 32px 2px hsl(var(--primary) / 0.18)",
         }}
       >
-        {/* Glass highlight for a premium, physical feel. */}
         <div
           className="absolute inset-0 rounded-full"
           style={{
             background:
-              "radial-gradient(circle at 30% 24%, hsl(0 0% 100% / 0.28) 0%, transparent 46%)",
-            opacity: isError ? 0.25 : 0.9,
+              "radial-gradient(circle at 30% 24%, hsl(0 0% 100% / 0.22) 0%, transparent 52%)",
+            opacity: isError ? 0.3 : 0.9,
           }}
         />
       </div>
