@@ -281,6 +281,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       label: t.label, enabled: t.enabled, muted: t.muted, state: t.readyState,
     })));
     this.attachLevelMeter(mic);
+    this.startNoiseFloorTracking();
+
     for (const track of mic.getTracks()) pc.addTrack(track, mic);
 
     // Transport is up next — token + WebRTC handshake.
