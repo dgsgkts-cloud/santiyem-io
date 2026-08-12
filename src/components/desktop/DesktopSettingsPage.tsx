@@ -22,7 +22,7 @@ const TABS = [
   { id: "appearance", label: "Görünüm", icon: Palette },
   { id: "company", label: "Firma Profili", icon: Building2 },
   { id: "notifications", label: "Bildirimler", icon: Bell },
-  { id: "voice", label: "AI Sesi", icon: Mic },
+  { id: "voice", label: "Sesli Asistan", icon: Mic },
   { id: "subscription", label: "Abonelik", icon: CreditCard },
   { id: "plan", label: "Plan ve Kullanım", icon: Gauge },
   { id: "org", label: "Kuruluş", icon: Building },
