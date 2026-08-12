@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { SantiyemAuthLockup } from "@/components/brand/SantiyemLogo";
 import { LoginHero } from "@/components/auth/LoginHero";
 import { TurnstileWidget, type TurnstileHandle } from "@/components/auth/TurnstileWidget";
+import { HOME_ROUTE, clearNavigationState } from "@/lib/homeRoute";
+
 
 const CAPTCHA_ERROR = "Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.";
 
