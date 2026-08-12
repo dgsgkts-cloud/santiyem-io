@@ -11,7 +11,7 @@ import { Check, Loader2, Mic } from "lucide-react";
 import { queryMicPermission, type MicPermission } from "@/lib/voice/micPermission";
 
 export function VoiceSettingsTab() {
-  const [permission, setPermission] = useState<MicPermission>("unknown");
+  const [permission, setPermission] = useState<MicPermission>("prompt");
   const [deviceLabel, setDeviceLabel] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function VoiceSettingsTab() {
   };
 
   const statusText =
-    permission === "granted" ? "Hazır" : permission === "denied" ? "İzin verilmedi" : "İzin isteniyor";
+    permission === "granted" ? "Hazır" : permission === "denied" ? "İzin verilmedi" : "İzin görüşme başlarken istenir";
 
   return (
     <div className="space-y-5">
