@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { BaseVoiceEngine } from "./BaseVoiceEngine";
 import { OPENAI_REALTIME } from "./voiceConfig";
+import { MIC_AUDIO_CONSTRAINTS } from "./micPermission";
+
 import { setVoiceDiagnostics } from "./voiceDiagnostics";
 import { VoiceMetricsTracker } from "./voiceMetrics";
 import { isVoiceErrorRetryable } from "./voiceTypes";
