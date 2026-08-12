@@ -139,24 +139,29 @@ export function VoiceSessionOverlay({
     setAskingPermission(true);
     try {
       if (isRetry) await voice.reset();
-      let probe: MediaStream | null = null;
-      try {
-        probe = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch {
+      // No probe stream here: a second getUserMedia only fights the engine's
+      // own capture and re-triggers the browser prompt. The live permission
+      // state decides, never a cached flag.
+      const permission = await queryMicPermission();
+      if (permission === "denied") {
         setAskingPermission(false);
         setMicBlocked(true);
         return;
-      } finally {
-        // Always release the probe stream — only one mic stream may live.
-        probe?.getTracks().forEach((t) => t.stop());
       }
       setMicBlocked(false);
       setAskingPermission(false);
       setPreparing(true);
       try {
+        // "granted" connects silently; "prompt"/"unsupported" lets the engine's
+        // single getUserMedia raise the browser dialog exactly once.
         await voice.connect();
-      } catch {
-        setFailed(true);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/permission|notallowed|denied|audio_device_unavailable/i.test(msg)) {
+          setMicBlocked(true);
+        } else {
+          setFailed(true);
+        }
       } finally {
         setPreparing(false);
       }
@@ -164,6 +169,7 @@ export function VoiceSessionOverlay({
       startingRef.current = false;
     }
   }, [voice]);
+
 
   useEffect(() => {
     if (startedRef.current || !autoStart) return;
