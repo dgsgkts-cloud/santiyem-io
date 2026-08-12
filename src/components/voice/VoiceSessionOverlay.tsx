@@ -181,6 +181,14 @@ export function VoiceSessionOverlay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart]);
 
+  // Permission revoked from the browser UI mid-session: reflect it live
+  // instead of trusting any stored flag.
+  useEffect(() => onMicPermissionChange((p) => {
+    if (p === "denied") setMicBlocked(true);
+    else if (p === "granted") setMicBlocked(false);
+  }), []);
+
+
   // "Hazırlanıyor" appears only when preparation is slow (~700ms+).
   useEffect(() => {
     if (!preparing) { setShowPreparing(false); return; }
