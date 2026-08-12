@@ -1,147 +1,98 @@
 // ============================================================
 // src/components/voice/VoiceSettingsTab.tsx
-// Sprint 32.2 — "AI Sesi" settings surface.
-// Purely client-side preferences (localStorage), no schema impact.
+// Sesli Asistan — tek davranış, tek ekran. Teknik voice mode
+// seçimi (bas-konuş / sürekli dinleme / uyandırma kelimesi)
+// kullanıcıya sunulmaz. Mikrofon yalnızca kullanıcı açıkça
+// "Mikrofonu Test Et" derse veya sesli görüşme başlarsa açılır.
 // ============================================================
 
-import { Mic, Radio, MessageSquare, ShieldCheck, BatteryMedium } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { useVoiceSettings } from "@/hooks/useVoiceSettings";
-import { DEFAULT_WAKE_WORD, type VoiceMode } from "@/lib/voice/voiceSettings";
-import { wakeWordSupported } from "@/lib/voice/wake";
-
-const MODES: {
-  id: VoiceMode;
-  label: string;
-  desc: string;
-  icon: typeof Mic;
-  battery: string;
-  batteryTone: string;
-}[] = [
-  {
-    id: "push-to-talk",
-    label: "Bas Konuş",
-    desc: "Mikrofon yalnızca butona dokunduğunuzda açılır. Varsayılan ve en gizli seçenek.",
-    icon: Mic,
-    battery: "Çok düşük pil kullanımı",
-    batteryTone: "text-emerald-500",
-  },
-  {
-    id: "always-listening",
-    label: "Sürekli Dinleme",
-    desc: "Uygulama açıkken uyandırma kelimesini bekler. Eller serbest çalışma için idealdir.",
-    icon: Radio,
-    battery: "Daha yüksek pil kullanımı",
-    batteryTone: "text-amber-500",
-  },
-];
+import { useEffect, useState } from "react";
+import { Check, Loader2, Mic } from "lucide-react";
+import { queryMicPermission, type MicPermissionState } from "@/lib/voice/micPermission";
 
 export function VoiceSettingsTab() {
-  const { settings, update } = useVoiceSettings();
-  const supported = wakeWordSupported();
-  const alwaysListening = settings.mode === "always-listening";
+  const [permission, setPermission] = useState<MicPermissionState>("unknown");
+  const [deviceLabel, setDeviceLabel] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
+
+  // Read-only permission probe — never opens a microphone stream.
+  useEffect(() => {
+    let alive = true;
+    void queryMicPermission().then((p) => { if (alive) setPermission(p); });
+    return () => { alive = false; };
+  }, []);
+
+  const runTest = async () => {
+    setTesting(true);
+    setTestError(null);
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      const track = stream.getAudioTracks()[0];
+      setDeviceLabel(track?.label?.trim() || "Varsayılan Mikrofon");
+      setPermission("granted");
+    } catch {
+      setTestError("Mikrofona erişilemedi. Tarayıcı ayarlarından izin verin.");
+      setPermission("denied");
+    } finally {
+      // Session dışında hiçbir track açık kalmaz.
+      stream?.getTracks().forEach((t) => t.stop());
+      setTesting(false);
+    }
+  };
+
+  const statusText =
+    permission === "granted" ? "Hazır" : permission === "denied" ? "İzin verilmedi" : "İzin isteniyor";
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">AI Sesi</h2>
+        <h2 className="text-lg font-semibold text-foreground">Sesli Asistan</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Şantiyem AI ile nasıl konuşacağınızı seçin. Tercihleriniz yalnızca bu cihazda saklanır.
+          Sesli görüşmelerinizde kullanılacak ses ve mikrofon tercihlerini yönetin.
         </p>
       </div>
 
-      {/* Mode selection */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {MODES.map((m) => {
-          const Icon = m.icon;
-          const active = settings.mode === m.id;
-          const disabled = m.id === "always-listening" && !supported;
-          return (
-            <button
-              key={m.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => update({ mode: m.id })}
-              className={`rounded-xl border p-4 text-left transition-colors ${
-                active
-                  ? "border-primary/60 bg-primary/5"
-                  : "border-border bg-card hover:border-primary/30"
-              } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
-            >
-              <div className="flex items-center gap-2">
-                <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                <span className="text-sm font-semibold text-foreground">{m.label}</span>
-                {active && (
-                  <span className="ml-auto rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
-                    Aktif
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{m.desc}</p>
-              <p className={`mt-2 flex items-center gap-1.5 text-[11px] font-medium ${m.batteryTone}`}>
-                <BatteryMedium className="h-3.5 w-3.5" /> {m.battery}
-              </p>
-              {disabled && (
-                <p className="mt-2 text-[11px] text-amber-500">
-                  Bu tarayıcı sürekli dinlemeyi desteklemiyor.
-                </p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Wake word */}
       <div className="rounded-xl border border-border bg-card p-4">
-        <p className="text-sm font-semibold text-foreground">Uyandırma Kelimesi</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sürekli dinleme açıkken bu kelimeyi söyleyerek konuşmayı başlatırsınız.
-        </p>
-        <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
-          <Mic className="h-3.5 w-3.5 text-primary" />
-          <span className="text-sm font-medium text-foreground">"{settings.wakeWord}"</span>
-        </div>
-        {settings.wakeWord !== DEFAULT_WAKE_WORD && (
-          <button
-            type="button"
-            onClick={() => update({ wakeWord: DEFAULT_WAKE_WORD })}
-            className="ml-3 text-xs text-primary hover:underline"
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Mic className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Mikrofon</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {deviceLabel ?? "Varsayılan Mikrofon"}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+              permission === "denied" ? "text-amber-500" : "text-emerald-500"
+            }`}
           >
-            Varsayılana dön
-          </button>
-        )}
-      </div>
-
-      {/* Conversation mode */}
-      <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
-        <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">Sohbet Modu</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Açıkken uyandırma kelimesini bir kez söylemeniz yeterlidir; konuşma sessizlik
-            oluşana kadar devam eder. Kapalıyken her istek için tekrar uyandırmanız gerekir.
-          </p>
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-500">
-            <BatteryMedium className="h-3.5 w-3.5" /> Oturum süresini uzatabilir
-          </p>
+            {permission === "granted" && <Check className="h-3.5 w-3.5" />}
+            {statusText}
+          </span>
         </div>
-        <Switch
-          checked={settings.conversationMode}
-          onCheckedChange={(v) => update({ conversationMode: v })}
-          disabled={!alwaysListening}
-          aria-label="Sohbet Modu"
-        />
+
+        <button
+          type="button"
+          onClick={runTest}
+          disabled={testing}
+          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/40 disabled:opacity-60"
+        >
+          {testing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          Mikrofonu Test Et
+        </button>
+
+        {testError && <p className="mt-2 text-xs text-amber-500">{testError}</p>}
       </div>
 
-      {/* Privacy note */}
-      <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Uyandırma kelimesi tamamen cihazınızda algılanır; kelime duyulmadan hiçbir ses
-          kaydedilmez veya sunucuya gönderilmez. Yazı yazarken, sekme arka plana alındığında
-          veya bir pencere açıkken dinleme otomatik olarak duraklatılır.
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Mikrofon yalnızca sesli görüşme başlattığınızda kullanılır.
+      </p>
     </div>
   );
 }
