@@ -748,19 +748,49 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
     this.setState("thinking");
   }
 
+  /** Explicit user interruption (tap): no noise verification needed. */
   interrupt() {
-    this.stopPlayback();
+    this.confirmInterrupt();
   }
 
-  /** Cancel in-flight response, flush queued audio, resume listening. */
-  private stopPlayback() {
-    this.sendEvent({ type: "response.cancel" });
+  /**
+   * Accepts an interruption and keeps client and server in sync:
+   * cancel the response, flush queued output audio, then truncate the
+   * assistant item at the exact point the user actually heard so the model's
+   * conversation state matches reality on the next turn.
+   */
+  private confirmInterrupt() {
+    this.cancelBargeInWatch();
+    const heardMs = this.playbackStartedAt ? Math.max(0, Date.now() - this.playbackStartedAt) : 0;
+
+    if (this.activeResponseId) {
+      // Every later event from this response is stale from now on.
+      this.cancelledResponseIds.add(this.activeResponseId);
+      this.sendEvent({ type: "response.cancel", response_id: this.activeResponseId });
+    } else {
+      this.sendEvent({ type: "response.cancel" });
+    }
     this.sendEvent({ type: "output_audio_buffer.clear" });
+
+    if (this.lastAssistantItemId) {
+      this.sendEvent({
+        type: "conversation.item.truncate",
+        item_id: this.lastAssistantItemId,
+        content_index: 0,
+        audio_end_ms: heardMs,
+      });
+    }
+
+    this.activeResponseId = null;
+    this.lastAssistantItemId = null;
+    this.playbackStartedAt = null;
+    this.responseCreatePending = false;
     this.assistantBuffer = "";
     this.speaking = false;
     this.setState("interrupted");
     this.goListening();
   }
+
 
 
   private attachLevelMeter(stream: MediaStream) {
