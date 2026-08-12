@@ -3,18 +3,16 @@
 // Sesli Asistan — tek davranış, tek ekran. Teknik voice mode
 // seçimi (bas-konuş / sürekli dinleme / uyandırma kelimesi)
 // kullanıcıya sunulmaz. Mikrofon yalnızca kullanıcı açıkça
-// "Mikrofonu Test Et" derse veya sesli görüşme başlarsa açılır.
+// açılır: mikrofon YALNIZCA sesli görüşme başlatıldığında açılır.
+// Bu ekran mikrofon durumunu sadece Permissions API üzerinden okur.
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, Mic } from "lucide-react";
+import { Check, Mic } from "lucide-react";
 import { queryMicPermission, type MicPermission } from "@/lib/voice/micPermission";
 
 export function VoiceSettingsTab() {
   const [permission, setPermission] = useState<MicPermission>("prompt");
-  const [deviceLabel, setDeviceLabel] = useState<string | null>(null);
-  const [testing, setTesting] = useState(false);
-  const [testError, setTestError] = useState<string | null>(null);
 
   // Read-only permission probe — never opens a microphone stream.
   useEffect(() => {
@@ -22,27 +20,6 @@ export function VoiceSettingsTab() {
     void queryMicPermission().then((p) => { if (alive) setPermission(p); });
     return () => { alive = false; };
   }, []);
-
-  const runTest = async () => {
-    setTesting(true);
-    setTestError(null);
-    let stream: MediaStream | null = null;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      });
-      const track = stream.getAudioTracks()[0];
-      setDeviceLabel(track?.label?.trim() || "Varsayılan Mikrofon");
-      setPermission("granted");
-    } catch {
-      setTestError("Mikrofona erişilemedi. Tarayıcı ayarlarından izin verin.");
-      setPermission("denied");
-    } finally {
-      // Session dışında hiçbir track açık kalmaz.
-      stream?.getTracks().forEach((t) => t.stop());
-      setTesting(false);
-    }
-  };
 
   const statusText =
     permission === "granted" ? "Hazır" : permission === "denied" ? "İzin verilmedi" : "İzin görüşme başlarken istenir";
@@ -63,7 +40,7 @@ export function VoiceSettingsTab() {
             <div>
               <p className="text-sm font-semibold text-foreground">Mikrofon</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {deviceLabel ?? "Varsayılan Mikrofon"}
+                Varsayılan Mikrofon
               </p>
             </div>
           </div>
@@ -81,21 +58,12 @@ export function VoiceSettingsTab() {
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={runTest}
-          disabled={testing}
-          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary/40 disabled:opacity-60"
-        >
-          {testing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          Mikrofonu Test Et
-        </button>
-
-        {testError && <p className="mt-2 text-xs text-amber-500">{testError}</p>}
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Mikrofon yalnızca sesli görüşme başlattığınızda kullanılır.
+        {permission === "denied"
+          ? "Mikrofon izni tarayıcı ayarlarından açılmalıdır. Bu ekran izin isteğinde bulunmaz."
+          : "Mikrofon yalnızca sesli görüşme başlattığınızda açılır."}
       </p>
     </div>
   );
