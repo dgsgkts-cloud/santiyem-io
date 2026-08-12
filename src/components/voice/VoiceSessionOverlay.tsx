@@ -680,19 +680,16 @@ export function VoiceSessionOverlay({
 
           <div className="flex items-center justify-center gap-8">
             <div className="relative flex items-center justify-center">
-              {/* Subtle mic activity indicator */}
+              {/* Calm mic ring — the central visual carries the audio energy,
+                  so this stays static instead of pulsing twice. */}
               {!muted && (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute rounded-full border border-primary/40 transition-[transform,opacity] duration-200"
-                  style={{
-                    height: 64,
-                    width: 64,
-                    transform: `scale(${1 + Math.min(level, 1) * 0.28})`,
-                    opacity: 0.15 + Math.min(level, 1) * 0.55,
-                  }}
+                  className="pointer-events-none absolute rounded-full border border-primary/25"
+                  style={{ height: 64, width: 64 }}
                 />
               )}
+
               <button
                 type="button"
                 onClick={toggleMute}
