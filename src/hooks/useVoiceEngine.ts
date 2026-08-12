@@ -36,6 +36,12 @@ export interface UseVoiceEngineResult {
   micLevel: number;
   /** 0..1 realtime energy of the assistant's voice. */
   outputLevel: number;
+  /**
+   * Live audio levels sampled without React state, so animations can run at
+   * 60fps without re-rendering the component tree.
+   */
+  levels: React.MutableRefObject<{ mic: number; output: number }>;
+
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   /** Full teardown so a retry can build a fresh session. */
@@ -61,6 +67,8 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
   const [metrics, setMetrics] = useState<VoiceMetrics>(EMPTY_METRICS);
   const [micLevel, setMicLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
+  /** Frame-rate levels for the visualization — never triggers a render. */
+  const levels = useRef({ mic: 0, output: 0 });
   /** Bumped after a teardown so listeners rebind to the new engine. */
   const [engineEpoch, setEngineEpoch] = useState(0);
 
@@ -106,19 +114,32 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
   }, [engineEpoch]);
 
   // --- live audio levels (drive the orb animation) ---------------------
+  // Written into a ref every frame; React state is updated at a low rate and
+  // only for the (internal) debug panel, so the overlay does not re-render
+  // dozens of times per second.
   useEffect(() => {
     const live = state === "listening" || state === "speaking" || state === "thinking" || state === "ready";
-    if (!live) { setMicLevel(0); setOutputLevel(0); return; }
+    if (!live) {
+      levels.current = { mic: 0, output: 0 };
+      setMicLevel(0); setOutputLevel(0);
+      return;
+    }
     let raf = 0;
-    let last = 0;
+    let lastState = 0;
+    const debug = isVoiceDebugEnabled();
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
-      if (t - last < 55) return; // ~18fps is plenty and stays cheap
-      last = t;
       const e = engineRef.current;
       if (!e) return;
-      setMicLevel(e.getMicLevel?.() ?? 0);
-      setOutputLevel(e.getOutputLevel?.() ?? 0);
+      levels.current = {
+        mic: e.getMicLevel?.() ?? 0,
+        output: e.getOutputLevel?.() ?? 0,
+      };
+      if (debug && t - lastState > 200) {
+        lastState = t;
+        setMicLevel(levels.current.mic);
+        setOutputLevel(levels.current.output);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -178,6 +199,7 @@ export function useVoiceEngine(config: VoiceEngineConfig = {}): UseVoiceEngineRe
     metrics,
     micLevel,
     outputLevel,
+    levels,
     connect,
     disconnect,
     reset,

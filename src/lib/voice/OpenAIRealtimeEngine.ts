@@ -69,12 +69,23 @@ const SESSION_READY_FALLBACK_MS = 800;
 // ---- controlled barge-in tuning -------------------------------------------
 /** Microphone level polling interval while the assistant speaks. */
 const BARGE_IN_SAMPLE_MS = 50;
-/** Continuous voice activity required before an interruption is accepted. */
-const BARGE_IN_SUSTAIN_MS = 350;
-/** Level (0..1) that counts as voice rather than room noise / echo. */
-const BARGE_IN_LEVEL = 0.16;
+/**
+ * Continuous voice activity required before an interruption is accepted.
+ * A short "hmm", cough or keyboard tap never lasts this long, so it can
+ * never cut the answer off.
+ */
+const BARGE_IN_SUSTAIN_MS = 650;
+/** Absolute floor: below this nothing is ever treated as speech. */
+const BARGE_IN_MIN_LEVEL = 0.1;
+/** Speech must exceed the measured noise floor by this factor. */
+const BARGE_IN_NOISE_FACTOR = 2.6;
+/** …and by at least this absolute margin. */
+const BARGE_IN_NOISE_MARGIN = 0.07;
 /** After this window without sustained speech the barge-in attempt is dropped. */
-const BARGE_IN_WINDOW_MS = 1500;
+const BARGE_IN_WINDOW_MS = 2000;
+/** Exponential smoothing applied to the ambient noise floor estimate. */
+const NOISE_FLOOR_ALPHA = 0.05;
+
 
 
 export class OpenAIRealtimeEngine extends BaseVoiceEngine {
@@ -121,6 +132,11 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private bargeInSamples = 0;
   private bargeInElapsed = 0;
   private interruptionPending = false;
+  /** Rolling estimate of the ambient microphone noise floor (0..1). */
+  private noiseFloor = 0.02;
+  /** Continuously updated while a session is live, cheap and lock-free. */
+  private noiseFloorTimer: number | null = null;
+
 
 
   getMetrics() { return this.metrics.snapshot(); }
@@ -265,6 +281,8 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       label: t.label, enabled: t.enabled, muted: t.muted, state: t.readyState,
     })));
     this.attachLevelMeter(mic);
+    this.startNoiseFloorTracking();
+
     for (const track of mic.getTracks()) pc.addTrack(track, mic);
 
     // Transport is up next — token + WebRTC handshake.
@@ -532,7 +550,7 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
         break;
       case "input_audio_buffer.speech_stopped":
         // Transient noise ended before it qualified as a real barge-in.
-        if (this.interruptionPending) this.cancelBargeInWatch();
+        if (this.interruptionPending) this.rejectBargeIn();
         break;
 
       case "response.created":
@@ -626,15 +644,45 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   // ---------- controlled barge-in -----------------------------------------
 
   /**
+   * Tracks the ambient noise floor while nobody is deliberately talking, so
+   * the barge-in threshold is relative to the real room instead of a fixed
+   * constant. Runs only for the lifetime of a session.
+   */
+  private startNoiseFloorTracking() {
+    if (this.noiseFloorTimer !== null) return;
+    this.noiseFloor = 0.02;
+    this.noiseFloorTimer = window.setInterval(() => {
+      if (this.muted) return;
+      const level = this.getMicLevel();
+      // Only quiet samples may raise the floor; loud speech must not poison it.
+      const target = Math.min(level, this.noiseFloor * 1.6 + 0.01);
+      this.noiseFloor += (target - this.noiseFloor) * NOISE_FLOOR_ALPHA;
+      this.noiseFloor = Math.max(0.005, Math.min(0.35, this.noiseFloor));
+    }, 120);
+  }
+
+  /** Level a sample must beat to count as real speech in this room. */
+  private get bargeInThreshold(): number {
+    return Math.max(
+      BARGE_IN_MIN_LEVEL,
+      this.noiseFloor * BARGE_IN_NOISE_FACTOR,
+      this.noiseFloor + BARGE_IN_NOISE_MARGIN,
+    );
+  }
+
+  /**
    * Watches the local microphone level while the assistant speaks. A real
-   * interruption is only accepted after ~350ms of continuous voice activity,
-   * so transient noise (and the assistant's own echo) never cuts the answer.
+   * interruption is only accepted after ~650ms of continuous voice activity
+   * clearly above the measured noise floor, so short sounds ("hmm", a cough,
+   * a keyboard tap, speaker echo) never cut the answer off.
    */
   private beginBargeInWatch() {
     if (this.bargeInTimer !== null) return;
+    if (this.muted) return; // muted mic can never interrupt
     this.interruptionPending = true;
     this.bargeInSamples = 0;
     this.bargeInElapsed = 0;
+    const threshold = this.bargeInThreshold;
     this.bargeInTimer = window.setInterval(() => {
       if (this.closing || (!this.speaking && this.state !== "speaking")) {
         this.cancelBargeInWatch();
@@ -642,10 +690,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       }
       this.bargeInElapsed += BARGE_IN_SAMPLE_MS;
       const level = this.getMicLevel();
-      if (level >= BARGE_IN_LEVEL) {
+      if (level >= threshold) {
         this.bargeInSamples += 1;
         if (this.bargeInSamples * BARGE_IN_SAMPLE_MS >= BARGE_IN_SUSTAIN_MS) {
-          rtLog("barge-in confirmed — sustained speech while speaking");
+          rtLog("barge-in confirmed — sustained speech while speaking", { level, threshold });
           this.confirmInterrupt();
         }
         return;
@@ -653,11 +701,21 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       // A short dip is tolerated; a real gap resets the counter.
       this.bargeInSamples = Math.max(0, this.bargeInSamples - 1);
       if (this.bargeInElapsed >= BARGE_IN_WINDOW_MS) {
-        rtLog("barge-in rejected — activity was transient noise");
-        this.cancelBargeInWatch();
+        rtLog("barge-in rejected — activity was transient noise", { level, threshold });
+        this.rejectBargeIn();
       }
     }, BARGE_IN_SAMPLE_MS);
   }
+
+  /**
+   * The candidate was noise: keep the answer playing AND drop the captured
+   * audio so a "hmm" never resurfaces as a separate user turn afterwards.
+   */
+  private rejectBargeIn() {
+    this.cancelBargeInWatch();
+    this.sendEvent({ type: "input_audio_buffer.clear" });
+  }
+
 
   private cancelBargeInWatch() {
     if (this.bargeInTimer !== null) {
@@ -848,6 +906,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private async teardown() {
     this.clearTimers();
     this.cancelBargeInWatch();
+    if (this.noiseFloorTimer !== null) {
+      window.clearInterval(this.noiseFloorTimer);
+      this.noiseFloorTimer = null;
+    }
     this.sessionReady = false;
     // Reset per-session response bookkeeping so a reconnect starts clean.
     this.activeResponseId = null;

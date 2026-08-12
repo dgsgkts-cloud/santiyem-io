@@ -436,8 +436,6 @@ export function VoiceSessionOverlay({
   })();
 
   const isSpeaking = phase === "speaking";
-  const level = isSpeaking ? voice.outputLevel : muted ? 0 : voice.micLevel;
-  const noAnalyser = level === 0 && (phase === "listening" || phase === "speaking");
 
   // Mute toggle: subtle mobile haptic + a short visual confirmation.
   const micToastTimer = useRef<number | null>(null);
@@ -629,7 +627,7 @@ export function VoiceSessionOverlay({
           </div>
         ) : (
           <>
-            <VoiceReactiveOrb phase={phase} level={level} fallbackMotion={noAnalyser} />
+            <VoiceReactiveOrb phase={phase} levels={voice.levels} muted={muted} />
 
             <div className="flex flex-col items-center gap-2 text-center">
               <p
@@ -682,19 +680,16 @@ export function VoiceSessionOverlay({
 
           <div className="flex items-center justify-center gap-8">
             <div className="relative flex items-center justify-center">
-              {/* Subtle mic activity indicator */}
+              {/* Calm mic ring — the central visual carries the audio energy,
+                  so this stays static instead of pulsing twice. */}
               {!muted && (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute rounded-full border border-primary/40 transition-[transform,opacity] duration-200"
-                  style={{
-                    height: 64,
-                    width: 64,
-                    transform: `scale(${1 + Math.min(level, 1) * 0.28})`,
-                    opacity: 0.15 + Math.min(level, 1) * 0.55,
-                  }}
+                  className="pointer-events-none absolute rounded-full border border-primary/25"
+                  style={{ height: 64, width: 64 }}
                 />
               )}
+
               <button
                 type="button"
                 onClick={toggleMute}

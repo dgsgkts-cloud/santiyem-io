@@ -1,107 +1,101 @@
 // ============================================================
-// Live transcript for the voice overlay — deliberately NOT a chat.
-// The current exchange (your last line + the assistant's last line) is
-// the focus at full opacity; the exchange before it stays as a single
-// dimmed, clamped echo line and everything older is dropped. Sits above
-// the controls in its own bounded, internally scrolling region.
+// Live voice caption — deliberately NOT a chat.
+//
+// Text arrives as soft word-group chunks: each new chunk fades in
+// (opacity 0→1, translateY 4px→0, ~220ms) instead of animating per
+// character. Interim text sits at a lower opacity and settles to full
+// opacity when it becomes final. The container has a fixed height so
+// the layout never shifts while the assistant talks.
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TranscriptChunk } from "@/lib/voice/voiceTypes";
 
 interface Props {
   transcripts: TranscriptChunk[];
 }
 
-/** Treat "within 24px of the bottom" as still following the live text. */
-const STICK_THRESHOLD_PX = 24;
+/** Words per soft chunk — groups feel calm, single words feel jumpy. */
+const CHUNK_WORDS = 4;
 
-/** Overlay canvas colour — used for the soft scroll fades. */
-const CANVAS = "#070B14";
+/** Splits text into stable word groups so chunk keys never change. */
+function toChunks(text: string): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  for (let i = 0; i < words.length; i += CHUNK_WORDS) {
+    out.push(words.slice(i, i + CHUNK_WORDS).join(" "));
+  }
+  return out;
+}
+
+/** Keeps the visible caption to the last ~2 lines of content. */
+const MAX_VISIBLE_CHUNKS = 6;
 
 export function VoiceCaptions({ transcripts }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const stickRef = useRef(true);
-  const [scrollable, setScrollable] = useState(false);
+  const lastUser = [...transcripts].reverse().find((t) => t.role === "user" && t.text.trim());
+  const lastAI = [...transcripts].reverse().find((t) => t.role === "assistant" && t.text.trim());
 
-  const onScroll = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    stickRef.current =
-      el.scrollHeight - el.scrollTop - el.clientHeight <= STICK_THRESHOLD_PX;
-  }, []);
+  // The assistant's line is the focus; the user's last line is a quiet echo.
+  const active = lastAI ?? lastUser;
+  const isAssistant = Boolean(lastAI);
 
-  const lastUser = [...transcripts].reverse().find((t) => t.role === "user");
-  const lastAI = [...transcripts].reverse().find((t) => t.role === "assistant");
+  const chunks = useMemo(() => {
+    const all = toChunks(active?.text ?? "");
+    return all.slice(Math.max(0, all.length - MAX_VISIBLE_CHUNKS));
+  }, [active?.text]);
 
-  // One dimmed echo of the previous exchange keeps context without
-  // turning the screen into a message history.
-  const currentIds = new Set([lastUser?.id, lastAI?.id].filter(Boolean));
-  const previous = [...transcripts]
-    .reverse()
-    .find((t) => !currentIds.has(t.id) && t.text.trim().length > 0);
-
-  // Auto-follow the newest line whenever the transcript grows.
+  // Chunks already shown must not re-animate on every delta.
+  const seen = useRef<Set<string>>(new Set());
+  const [, force] = useState(0);
+  const idPrefix = `${active?.role ?? "x"}:${active?.id ?? "x"}`;
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    setScrollable(el.scrollHeight > el.clientHeight + 1);
-    if (!stickRef.current) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [transcripts, lastUser?.text, lastAI?.text]);
+    let added = false;
+    chunks.forEach((c, i) => {
+      const key = `${idPrefix}#${i}:${c}`;
+      if (!seen.current.has(key)) { seen.current.add(key); added = true; }
+    });
+    if (seen.current.size > 400) seen.current = new Set();
+    if (added) force((n) => n + 1);
+  }, [chunks, idPrefix]);
 
-  if (!lastUser && !lastAI) return null;
+  if (!active) return null;
 
   return (
-    <div className="relative mx-auto w-full max-w-md">
+    <div className="mx-auto w-full max-w-md">
+      {/* Fixed height: two lines of caption, so nothing below ever moves. */}
       <div
-        ref={ref}
-        onScroll={onScroll}
         aria-live="polite"
-        className="w-full overflow-y-auto overscroll-contain px-1 py-1 text-center [-webkit-overflow-scrolling:touch]"
-        style={{ maxHeight: "min(30vh, 220px)", scrollbarWidth: "none" }}
+        className="flex items-end justify-center overflow-hidden text-center"
+        style={{ height: 56 }}
       >
-        {previous && (
-          <p
-            key={previous.id}
-            className="line-clamp-1 whitespace-pre-wrap break-words text-[13px] leading-snug text-white/20 transition-opacity duration-500"
-          >
-            {previous.text}
-          </p>
-        )}
-        {lastUser && (
-          <p
-            key={lastUser.id}
-            className="mt-1.5 animate-fade-in whitespace-pre-wrap break-words text-[15px] leading-snug text-white/50 transition-opacity duration-300"
-          >
-            {lastUser.text}
-          </p>
-        )}
-        {lastAI && (
-          <p
-            key={lastAI.id}
-            className="mt-2 animate-fade-in whitespace-pre-wrap break-words text-[17px] font-medium leading-snug tracking-tight text-white transition-opacity duration-300"
-          >
-            {lastAI.text}
-          </p>
-        )}
+        <p
+          className="whitespace-pre-wrap break-words transition-opacity duration-500"
+          style={{
+            fontSize: isAssistant ? 16.5 : 15,
+            lineHeight: "24px",
+            letterSpacing: "-0.005em",
+            color: isAssistant ? "hsl(0 0% 100% / 0.92)" : "hsl(0 0% 100% / 0.5)",
+            opacity: active.final ? 1 : 0.82,
+          }}
+        >
+          {chunks.map((c, i) => (
+            <span
+              key={`${idPrefix}#${i}:${c}`}
+              className="voice-caption-chunk"
+              style={{ display: "inline" }}
+            >
+              {c}
+              {i < chunks.length - 1 ? " " : ""}
+            </span>
+          ))}
+        </p>
       </div>
 
-      {/* Soft fades so long text visibly scrolls inside the region
-          instead of appearing to slide behind the controls. */}
-      {scrollable && (
-        <>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-7"
-            style={{ background: `linear-gradient(to bottom, ${CANVAS}, transparent)` }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-7"
-            style={{ background: `linear-gradient(to top, ${CANVAS}, transparent)` }}
-          />
-        </>
+      {/* Quiet echo of what the user said, one clamped line. */}
+      {isAssistant && lastUser && (
+        <p className="mt-1 line-clamp-1 text-center text-[13px] leading-snug text-white/25 transition-opacity duration-500">
+          {lastUser.text}
+        </p>
       )}
     </div>
   );
