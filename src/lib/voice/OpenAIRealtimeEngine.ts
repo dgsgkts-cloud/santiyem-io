@@ -132,6 +132,11 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   private bargeInSamples = 0;
   private bargeInElapsed = 0;
   private interruptionPending = false;
+  /** Rolling estimate of the ambient microphone noise floor (0..1). */
+  private noiseFloor = 0.02;
+  /** Continuously updated while a session is live, cheap and lock-free. */
+  private noiseFloorTimer: number | null = null;
+
 
 
   getMetrics() { return this.metrics.snapshot(); }
