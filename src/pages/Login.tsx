@@ -71,9 +71,11 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
+    clearNavigationState();
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
+
     if (error) toast.error("Google ile giriş yapılamadı.");
   };
 
