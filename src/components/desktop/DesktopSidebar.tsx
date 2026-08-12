@@ -255,7 +255,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           const areaBtn = (
             <button
               onClick={() => {
-                if (!gatesReady) return;
+                // Navigation is NEVER gated on a background profile refresh —
+                // permission enforcement happens in the route guard downstream.
                 if (area.children) toggleGroup(area);
                 else onTabChange(area.tab!);
               }}
@@ -306,7 +307,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                     return (
                       <button
                         key={leaf.id}
-                        onClick={() => { if (gatesReady) onTabChange(leaf.tab, leaf.search); }}
+                        onClick={() => onTabChange(leaf.tab, leaf.search)}
                         className="ds-press ds-focus-ring w-full flex items-center overflow-hidden"
                         style={rowStyle(leafActive, false, leafLocked, 1)}
                         {...withHover(leafActive, false, leafLocked)}
