@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { clearNavigationState } from "@/lib/homeRoute";
@@ -63,6 +63,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  /** Last user whose profile was already resolved once in this tab. */
+  const knownUserRef = useRef<string | null>(null);
   const [plan, setPlanState] = useState<PlanType>("free");
   const [role, setRole] = useState<UserRole>("free");
   const [usage, setUsage] = useState<UsageLimits>({ ...FREE_LIMITS });
@@ -111,11 +113,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const nextUser = session?.user ?? null;
+      setUser((prev) => (prev?.id === nextUser?.id ? prev : nextUser));
       if (session?.user) {
-        setProfileLoaded(false);
+        // Only the FIRST resolve for a given user may show the loading state.
+        // A token refresh (tab refocus, silent renew) must not flip the app
+        // back into "profile loading", or UI gated on it appears frozen.
+        setProfileLoaded((prev) => (knownUserRef.current === session.user.id ? prev : false));
+        knownUserRef.current = session.user.id;
         setTimeout(() => fetchProfile(session.user.id), 0);
       } else {
+        knownUserRef.current = null;
         setProfile(null);
         setPlanState("free");
         setRole("free");
@@ -125,9 +133,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      setUser((prev) => (prev?.id === session?.user?.id ? prev : session?.user ?? null));
       if (session?.user) {
-        setProfileLoaded(false);
+        setProfileLoaded((prev) => (knownUserRef.current === session.user.id ? prev : false));
+        knownUserRef.current = session.user.id;
         fetchProfile(session.user.id);
       } else {
         setProfileLoaded(true);
