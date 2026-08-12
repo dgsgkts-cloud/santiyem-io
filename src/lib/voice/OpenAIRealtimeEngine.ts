@@ -642,15 +642,45 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
   // ---------- controlled barge-in -----------------------------------------
 
   /**
+   * Tracks the ambient noise floor while nobody is deliberately talking, so
+   * the barge-in threshold is relative to the real room instead of a fixed
+   * constant. Runs only for the lifetime of a session.
+   */
+  private startNoiseFloorTracking() {
+    if (this.noiseFloorTimer !== null) return;
+    this.noiseFloor = 0.02;
+    this.noiseFloorTimer = window.setInterval(() => {
+      if (this.muted) return;
+      const level = this.getMicLevel();
+      // Only quiet samples may raise the floor; loud speech must not poison it.
+      const target = Math.min(level, this.noiseFloor * 1.6 + 0.01);
+      this.noiseFloor += (target - this.noiseFloor) * NOISE_FLOOR_ALPHA;
+      this.noiseFloor = Math.max(0.005, Math.min(0.35, this.noiseFloor));
+    }, 120);
+  }
+
+  /** Level a sample must beat to count as real speech in this room. */
+  private get bargeInThreshold(): number {
+    return Math.max(
+      BARGE_IN_MIN_LEVEL,
+      this.noiseFloor * BARGE_IN_NOISE_FACTOR,
+      this.noiseFloor + BARGE_IN_NOISE_MARGIN,
+    );
+  }
+
+  /**
    * Watches the local microphone level while the assistant speaks. A real
-   * interruption is only accepted after ~350ms of continuous voice activity,
-   * so transient noise (and the assistant's own echo) never cuts the answer.
+   * interruption is only accepted after ~650ms of continuous voice activity
+   * clearly above the measured noise floor, so short sounds ("hmm", a cough,
+   * a keyboard tap, speaker echo) never cut the answer off.
    */
   private beginBargeInWatch() {
     if (this.bargeInTimer !== null) return;
+    if (this.muted) return; // muted mic can never interrupt
     this.interruptionPending = true;
     this.bargeInSamples = 0;
     this.bargeInElapsed = 0;
+    const threshold = this.bargeInThreshold;
     this.bargeInTimer = window.setInterval(() => {
       if (this.closing || (!this.speaking && this.state !== "speaking")) {
         this.cancelBargeInWatch();
@@ -658,10 +688,10 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       }
       this.bargeInElapsed += BARGE_IN_SAMPLE_MS;
       const level = this.getMicLevel();
-      if (level >= BARGE_IN_LEVEL) {
+      if (level >= threshold) {
         this.bargeInSamples += 1;
         if (this.bargeInSamples * BARGE_IN_SAMPLE_MS >= BARGE_IN_SUSTAIN_MS) {
-          rtLog("barge-in confirmed — sustained speech while speaking");
+          rtLog("barge-in confirmed — sustained speech while speaking", { level, threshold });
           this.confirmInterrupt();
         }
         return;
@@ -669,11 +699,21 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
       // A short dip is tolerated; a real gap resets the counter.
       this.bargeInSamples = Math.max(0, this.bargeInSamples - 1);
       if (this.bargeInElapsed >= BARGE_IN_WINDOW_MS) {
-        rtLog("barge-in rejected — activity was transient noise");
-        this.cancelBargeInWatch();
+        rtLog("barge-in rejected — activity was transient noise", { level, threshold });
+        this.rejectBargeIn();
       }
     }, BARGE_IN_SAMPLE_MS);
   }
+
+  /**
+   * The candidate was noise: keep the answer playing AND drop the captured
+   * audio so a "hmm" never resurfaces as a separate user turn afterwards.
+   */
+  private rejectBargeIn() {
+    this.cancelBargeInWatch();
+    this.sendEvent({ type: "input_audio_buffer.clear" });
+  }
+
 
   private cancelBargeInWatch() {
     if (this.bargeInTimer !== null) {
