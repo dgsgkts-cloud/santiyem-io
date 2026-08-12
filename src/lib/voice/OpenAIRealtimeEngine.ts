@@ -847,19 +847,29 @@ export class OpenAIRealtimeEngine extends BaseVoiceEngine {
 
   private async teardown() {
     this.clearTimers();
+    this.cancelBargeInWatch();
     this.sessionReady = false;
+    // Reset per-session response bookkeeping so a reconnect starts clean.
+    this.activeResponseId = null;
+    this.lastAssistantItemId = null;
+    this.playbackStartedAt = null;
+    this.responseCreatePending = false;
+    this.cancelledResponseIds.clear();
+    this.assistantBuffer = "";
     if (this.dc) this.dc.onclose = null;
     try { this.dc?.close(); } catch { /* noop */ }
     try { this.pc?.getSenders().forEach((s) => s.track?.stop()); } catch { /* noop */ }
     try { this.pc?.close(); } catch { /* noop */ }
     try { this.micStream?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
     try { this.audioEl?.pause(); } catch { /* noop */ }
+    if (this.audioEl) this.audioEl.srcObject = null;
     try { void this.audioCtx?.close(); } catch { /* noop */ }
     this.analyser = null; this.levelBuf = null; this.audioCtx = null; this.speaking = false;
     this.outAnalyser = null; this.outBuf = null;
     this.dc = null; this.pc = null; this.micStream = null; this.audioEl = null;
     rtLog("teardown complete");
   }
+
 
 }
 
