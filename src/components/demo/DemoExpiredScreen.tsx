@@ -26,7 +26,7 @@ export const DemoExpiredScreen = () => {
         </p>
       </div>
       <button
-        onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/giris"; })}
+        onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/login"; })}
         className="flex h-11 items-center gap-2 rounded-lg border border-border px-5 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
       >
         <LogOut className="h-4 w-4" /> Çıkış yap
