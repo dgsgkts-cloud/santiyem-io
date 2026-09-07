@@ -262,6 +262,13 @@ export default function ProjectDetailMobile({ project: p, onBack, onUpdate }: Pr
         )}
       </div>
 
+      {/* Proje Kârlılığı — Profit Intelligence (mobil, genel bakış altında) */}
+      {view === "overview" && user && (
+        <div className="pt-5">
+          <ProjectProfitPanel projectId={current.id} />
+        </div>
+      )}
+
       {/* Project overflow sheet */}
       <MobileActionSheet
         open={overflowOpen}
