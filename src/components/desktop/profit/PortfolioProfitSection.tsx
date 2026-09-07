@@ -110,9 +110,34 @@ export default function PortfolioProfitSection({
         >
           İlk Projeyi Hazırla
         </button>
+
+        {projects.length > 0 && (
+          <ul className="mt-4 divide-y divide-border/60 border-t border-border/60">
+            {projects.slice(0, 5).map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => onProjectSelect?.(p.id)}
+                  className="w-full text-left py-3 flex items-center gap-3 transition-opacity hover:opacity-80"
+                  style={{ minHeight: 56 }}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14px] font-medium text-foreground truncate">{p.name}</span>
+                    <span className="block text-[12px] text-muted-foreground">
+                      Kârlılık analizi henüz hazır değil —{" "}
+                      <span className="text-primary font-medium">Projeyi Hazırla</span>
+                    </span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     );
   }
+
 
   const erosion = totals.profit_erosion;
   const activeReady = totals.ready_count;
