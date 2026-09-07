@@ -150,6 +150,7 @@ export default function PortfolioProfitSection({
           </ul>
         )}
       </section>
+      </>
     );
   }
 
