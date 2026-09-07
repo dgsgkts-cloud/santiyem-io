@@ -1,0 +1,12 @@
+REVOKE ALL ON FUNCTION public.pi_sync_project_expense(uuid) FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_sync_subcontractor_payment(uuid) FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_sync_purchase_order(uuid) FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_sync_purchase_invoice(uuid) FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_backfill_all() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_trg_project_expense() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_trg_subcontractor_payment() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_trg_purchase_order() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_trg_purchase_order_item() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.pi_trg_purchase_invoice() FROM anon, authenticated, public;
+REVOKE ALL ON FUNCTION public.reconcile_project_financial_sources(text) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.reconcile_project_financial_sources(text) TO authenticated;
