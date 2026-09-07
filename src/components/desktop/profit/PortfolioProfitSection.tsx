@@ -168,6 +168,7 @@ export default function PortfolioProfitSection({
 
   return (
     <div className="flex flex-col gap-4 md:gap-5">
+      {wizard}
       {/* 1 — Portföy durumu */}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 lg:p-7">
         <p className="ds-caption uppercase tracking-wide text-muted-foreground mb-4 md:mb-5">
