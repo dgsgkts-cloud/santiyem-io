@@ -84,7 +84,12 @@ export default function ProfitHeadline({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         {[
           { key: "revenue", label: PROFIT_LABELS.revenue, value: f.forecast_revenue },
-          { key: "budget", label: PROFIT_LABELS.budget, value: f.original_budget },
+          {
+            key: "budget",
+            label: PROFIT_LABELS.budget,
+            value: f.original_budget,
+            missing: !hasBudget,
+          },
           { key: "spent", label: PROFIT_LABELS.spent, value: f.actual_cost },
           { key: "eac", label: PROFIT_LABELS.eac, value: f.eac },
         ].map((c) => (
