@@ -41,32 +41,43 @@ export default function ProfitHeadline({
             </p>
           </div>
 
-          <div className="min-w-0 space-y-4 sm:border-l sm:border-border/70 sm:pl-6">
-            <div>
-              <ProfitInfoLabel
-                label={PROFIT_LABELS.originalProfit}
-                hint={PROFIT_TOOLTIPS.originalProfit}
-                className="text-[12px] text-muted-foreground"
-              />
-              <p className="text-[17px] font-semibold text-foreground truncate">
-                {formatCurrencyFull(f.original_expected_profit)}
+          {hasBudget ? (
+            <div className="min-w-0 space-y-4 sm:border-l sm:border-border/70 sm:pl-6">
+              <div>
+                <ProfitInfoLabel
+                  label={PROFIT_LABELS.originalProfit}
+                  hint={PROFIT_TOOLTIPS.originalProfit}
+                  className="text-[12px] text-muted-foreground"
+                />
+                <p className="text-[17px] font-semibold text-foreground truncate">
+                  {formatCurrencyFull(f.original_expected_profit)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[12px] text-muted-foreground">{PROFIT_LABELS.erosion}</p>
+                <p
+                  className="text-[17px] font-semibold flex items-center gap-1.5 truncate"
+                  style={{ color: tone }}
+                >
+                  <DeltaIcon className="w-4 h-4 shrink-0" />
+                  {flat ? "Değişim yok" : deltaText}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="min-w-0 sm:border-l sm:border-border/70 sm:pl-6">
+              <p className="text-[12px] text-muted-foreground">{PROFIT_LABELS.originalProfit}</p>
+              <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
+                Başlangıç bütçesi girilmediği için karşılaştırma yapılamıyor.
               </p>
             </div>
-            <div>
-              <p className="text-[12px] text-muted-foreground">{PROFIT_LABELS.erosion}</p>
-              <p
-                className="text-[17px] font-semibold flex items-center gap-1.5 truncate"
-                style={{ color: tone }}
-              >
-                <DeltaIcon className="w-4 h-4 shrink-0" />
-                {flat ? "Değişim yok" : deltaText}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         <p className="mt-5 text-[13px] leading-relaxed text-muted-foreground max-w-[70ch]">
-          {profitStatusSentence(erosion, deltaText)}
+          {hasBudget
+            ? profitStatusSentence(erosion, deltaText)
+            : "Bu rakam bugüne kadarki maliyetler ve bekleyen siparişlere göre hesaplandı; başlangıç bütçesi eklendiğinde kâr kaybını da görebilirsiniz."}
         </p>
       </div>
 
