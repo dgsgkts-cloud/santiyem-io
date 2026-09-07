@@ -9,7 +9,9 @@ import { PROFIT_LABELS, PROFIT_TOOLTIPS, profitStatusSentence } from "./profitLa
  * Ana karar alanı: tahmini final kâr, başlangıç beklentisi ve fark.
  * Tüm rakamlar Profit Engine'den gelir; burada hesap yapılmaz.
  */
-export default function ProfitHeadline({ f }: { f: ProjectFinancials }) {
+export default function ProfitHeadline({
+  f, hasBudget = true,
+}: { f: ProjectFinancials; hasBudget?: boolean }) {
   const erosion = f.profit_erosion;
   const up = erosion < 0;
   const flat = erosion === 0;
