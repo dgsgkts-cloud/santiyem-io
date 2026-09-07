@@ -132,7 +132,7 @@ export default function PortfolioProfitSection({
               <li key={p.id}>
                 <button
                   type="button"
-                  onClick={() => onProjectSelect?.(p.id)}
+                  onClick={() => setSetupTarget({ id: p.id, name: p.name })}
                   className="w-full text-left py-3 flex items-center gap-3 transition-opacity hover:opacity-80"
                   style={{ minHeight: 56 }}
                 >
