@@ -94,6 +94,8 @@ export const fetchCostCodeFinancials = async (projectId: string): Promise<CostCo
     uncommitted_remaining_forecast: num(r.uncommitted_remaining_forecast),
     eac: num(r.eac),
     budget_variance: num(r.budget_variance),
+    has_progress: r.has_progress === true,
+    is_uncoded: r.is_uncoded === true,
   }));
 };
 
