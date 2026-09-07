@@ -80,6 +80,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import EmptyState from "./EmptyState";
 import PinnedInsights from "@/components/canvas/PinnedInsights";
+import PortfolioProfitSection from "@/components/desktop/profit/PortfolioProfitSection";
+
 import {
   PageShell,
   SectionCard,
@@ -803,6 +805,11 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
 
         {/* Zone C — Attention */}
         <CriticalAlertsCard items={alertItems} loading={!loaded} />
+
+        {/* Zone C2 — Portföy Kârlılığı (Profit Intelligence, salt-okuma) */}
+        <PortfolioProfitSection onProjectSelect={onProjectSelect} />
+
+
 
         {/* Zone D — Executive overview (KPI group: row 1 + row 2, 16px row gap) */}
         <div className="flex flex-col gap-3 md:gap-4">
