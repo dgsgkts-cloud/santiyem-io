@@ -120,7 +120,7 @@ export default function PortfolioProfitSection({
         </p>
         <button
           type="button"
-          onClick={() => projects[0] && onProjectSelect?.(projects[0].id)}
+          onClick={() => projects[0] && setSetupTarget({ id: projects[0].id, name: projects[0].name })}
           className="mt-4 h-11 px-4 rounded-lg bg-primary text-primary-foreground text-[14px] font-medium hover:opacity-90 transition-opacity"
         >
           İlk Projeyi Hazırla
