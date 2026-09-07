@@ -286,7 +286,7 @@ export default function PortfolioProfitSection({
                 <li key={p.id}>
                   <button
                     type="button"
-                    onClick={() => onProjectSelect?.(p.id)}
+                    onClick={() => openProject(p)}
                     className="w-full text-left py-3 flex items-center gap-3 transition-opacity hover:opacity-80 active:scale-[0.997]"
                     style={{ minHeight: 60 }}
                   >
