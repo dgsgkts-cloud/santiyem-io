@@ -50,6 +50,18 @@ export default function PortfolioProfitSection({
   const { data, isLoading, error } = usePortfolioFinancials();
   const [filter, setFilter] = useState<"all" | "active" | "risky">("active");
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+  const openProject = (p: PortfolioProjectRow) =>
+    p.is_ready ? onProjectSelect?.(p.id) : setSetupTarget({ id: p.id, name: p.name });
+  const wizard = setupTarget ? (
+    <ProjectSetupWizard
+      open
+      projectId={setupTarget.id}
+      projectName={setupTarget.name}
+      onClose={() => setSetupTarget(null)}
+      onFinished={() => onProjectSelect?.(setupTarget.id)}
+    />
+  ) : null;
 
   const projects = data?.projects ?? [];
   const totals = data?.totals;
