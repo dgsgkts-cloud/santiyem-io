@@ -44,6 +44,7 @@ import ProjectEquipmentSection from "./project-detail/ProjectEquipmentSection";
 import ProjectDeleteSection from "./project-detail/ProjectDeleteSection";
 import { useProjectDetailData } from "./project-detail/useProjectDetailData";
 import CollapsibleSection from "./projects/CollapsibleSection";
+import ProjectProfitPanel from "./profit/ProjectProfitPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ProjectDetailMobile from "@/components/mobile/project-detail/ProjectDetailMobile";
 
@@ -313,6 +314,9 @@ const ProjectDetailPage = ({
 
         {!ceoMode && (
           <>
+            {/* Proje Kârlılığı — Profit Intelligence */}
+            {user && <ProjectProfitPanel projectId={p.id} />}
+
             <ProjectInfoCards project={p} />
             <ProjectTaskSummary project={p} />
 

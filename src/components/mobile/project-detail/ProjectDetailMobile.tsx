@@ -26,6 +26,7 @@ import MobileProjectOverview, { IssueItem, TodayItem } from "./MobileProjectOver
 import MobileProjectModules, { ModuleGroup, ModuleRow } from "./MobileProjectModules";
 import MobileActionSheet from "./MobileActionSheet";
 import EditProjectModal, { EditProjectData } from "@/components/desktop/EditProjectModal";
+import ProjectProfitPanel from "@/components/desktop/profit/ProjectProfitPanel";
 
 interface Props {
   project: Project;
@@ -261,6 +262,13 @@ export default function ProjectDetailMobile({ project: p, onBack, onUpdate }: Pr
           <MobileProjectModules groups={groups} onOpen={openModule} />
         )}
       </div>
+
+      {/* Proje Kârlılığı — Profit Intelligence (mobil, genel bakış altında) */}
+      {view === "overview" && user && (
+        <div className="pt-5">
+          <ProjectProfitPanel projectId={current.id} />
+        </div>
+      )}
 
       {/* Project overflow sheet */}
       <MobileActionSheet
