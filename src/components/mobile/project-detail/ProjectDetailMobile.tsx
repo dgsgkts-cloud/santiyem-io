@@ -26,6 +26,7 @@ import MobileProjectOverview, { IssueItem, TodayItem } from "./MobileProjectOver
 import MobileProjectModules, { ModuleGroup, ModuleRow } from "./MobileProjectModules";
 import MobileActionSheet from "./MobileActionSheet";
 import EditProjectModal, { EditProjectData } from "@/components/desktop/EditProjectModal";
+import ProjectProfitPanel from "@/components/desktop/profit/ProjectProfitPanel";
 
 interface Props {
   project: Project;
