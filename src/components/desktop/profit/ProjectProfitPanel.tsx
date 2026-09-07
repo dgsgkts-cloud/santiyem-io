@@ -51,7 +51,7 @@ export default function ProjectProfitPanel({ projectId }: { projectId: string })
 
   return (
     <div className="space-y-4 lg:space-y-5 min-w-0">
-      <ProfitHeadline f={fin} />
+      <ProfitHeadline f={fin} hasBudget={!noBudget} />
 
       {noBudget && (
         <Notice
