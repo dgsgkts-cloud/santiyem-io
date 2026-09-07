@@ -7212,9 +7212,20 @@ export type Database = {
       }
       normalize_phone: { Args: { _p: string }; Returns: string }
       pi_backfill_all: { Args: never; Returns: Json }
+      pi_project_setup_summary: { Args: { _project_id: string }; Returns: Json }
       pi_resolve_cost_code: {
         Args: { _code: string; _project_id: string }
         Returns: string
+      }
+      pi_setup_project_budget: {
+        Args: {
+          _forecast_revenue?: number
+          _items?: Json
+          _original_revenue?: number
+          _project_id: string
+          _total_budget?: number
+        }
+        Returns: Json
       }
       pi_sync_project_expense: {
         Args: { _expense_id: string }
