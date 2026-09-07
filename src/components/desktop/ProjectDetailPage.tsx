@@ -314,6 +314,9 @@ const ProjectDetailPage = ({
 
         {!ceoMode && (
           <>
+            {/* Proje Kârlılığı — Profit Intelligence */}
+            {user && <ProjectProfitPanel projectId={p.id} />}
+
             <ProjectInfoCards project={p} />
             <ProjectTaskSummary project={p} />
 
