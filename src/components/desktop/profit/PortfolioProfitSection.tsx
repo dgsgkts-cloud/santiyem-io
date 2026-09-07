@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronRight, Loader2, Minus } from "lucide-react";
 import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 import { usePortfolioFinancials, type PortfolioProjectRow, type PortfolioRiskRow } from "@/hooks/usePortfolioFinancials";
 import ProfitInfoLabel from "./ProfitInfoLabel";
+import ProjectSetupWizard from "./setup/ProjectSetupWizard";
 import { PROFIT_LABELS, PROFIT_TOOLTIPS, SEVERITY_META, riskTitle, severityOf, sortRisks } from "./profitLabels";
 
 /**
