@@ -7232,6 +7232,7 @@ export type Database = {
         Args: { _payment_id: string }
         Returns: undefined
       }
+      portfolio_financials: { Args: never; Returns: Json }
       post_goods_receipt: {
         Args: {
           _manual?: boolean
