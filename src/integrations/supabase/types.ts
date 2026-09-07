@@ -6500,21 +6500,6 @@ export type Database = {
           },
         ]
       }
-      zz_pi_log: {
-        Row: {
-          step: string | null
-          val: Json | null
-        }
-        Insert: {
-          step?: string | null
-          val?: Json | null
-        }
-        Update: {
-          step?: string | null
-          val?: Json | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       inventory_balances: {
