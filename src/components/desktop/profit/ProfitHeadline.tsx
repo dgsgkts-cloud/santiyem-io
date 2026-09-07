@@ -100,9 +100,13 @@ export default function ProfitHeadline({
                 hint={PROFIT_TOOLTIPS[c.key]}
                 className="text-[12px] text-muted-foreground"
               />
-              <p className="mt-1.5 text-[19px] font-semibold text-foreground truncate">
-                {formatCurrencyFull(c.value)}
-              </p>
+              {"missing" in c && c.missing ? (
+                <p className="mt-1.5 text-[13px] text-muted-foreground">Henüz girilmedi</p>
+              ) : (
+                <p className="mt-1.5 text-[19px] font-semibold text-foreground truncate">
+                  {formatCurrencyFull(c.value)}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
