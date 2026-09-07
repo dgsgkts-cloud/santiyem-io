@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.effective_risk_thresholds(uuid) TO PUBLIC;
