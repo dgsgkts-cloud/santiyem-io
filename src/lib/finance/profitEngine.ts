@@ -40,6 +40,10 @@ export interface CostCodeFinancials {
   uncommitted_remaining_forecast: number;
   eac: number;
   budget_variance: number;
+  /** True only when a real progress measurement exists for this cost code. */
+  has_progress: boolean;
+  /** Virtual "Kodlanmamış Maliyet" row: costs not mapped to any cost code. */
+  is_uncoded: boolean;
 }
 
 const num = (v: unknown) => (v === null || v === undefined ? 0 : Number(v));
