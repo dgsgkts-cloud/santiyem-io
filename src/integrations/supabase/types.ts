@@ -5553,7 +5553,10 @@ export type Database = {
           forecast_profit_drop_amount: number
           forecast_profit_drop_pct: number
           id: string
+          minimum_cost_code_count: number
+          minimum_profit_erosion_amount: number
           profit_concentration_pct: number
+          require_progress_record: boolean
           snapshot_lookback_days: number
           unit_price_variance_pct: number
           updated_at: string
@@ -5568,7 +5571,10 @@ export type Database = {
           forecast_profit_drop_amount?: number
           forecast_profit_drop_pct?: number
           id?: string
+          minimum_cost_code_count?: number
+          minimum_profit_erosion_amount?: number
           profit_concentration_pct?: number
+          require_progress_record?: boolean
           snapshot_lookback_days?: number
           unit_price_variance_pct?: number
           updated_at?: string
@@ -5583,7 +5589,10 @@ export type Database = {
           forecast_profit_drop_amount?: number
           forecast_profit_drop_pct?: number
           id?: string
+          minimum_cost_code_count?: number
+          minimum_profit_erosion_amount?: number
           profit_concentration_pct?: number
+          require_progress_record?: boolean
           snapshot_lookback_days?: number
           unit_price_variance_pct?: number
           updated_at?: string
@@ -6491,6 +6500,21 @@ export type Database = {
           },
         ]
       }
+      zz_pi_log: {
+        Row: {
+          step: string | null
+          val: Json | null
+        }
+        Insert: {
+          step?: string | null
+          val?: Json | null
+        }
+        Update: {
+          step?: string | null
+          val?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       inventory_balances: {
@@ -6895,6 +6919,8 @@ export type Database = {
           eac: number
           etc: number
           etc_is_manual: boolean
+          has_progress: boolean
+          is_uncoded: boolean
           latest_unit_price: number
           name: string
           original_budget: number
@@ -6977,7 +7003,10 @@ export type Database = {
           forecast_profit_drop_amount: number
           forecast_profit_drop_pct: number
           id: string
+          minimum_cost_code_count: number
+          minimum_profit_erosion_amount: number
           profit_concentration_pct: number
+          require_progress_record: boolean
           snapshot_lookback_days: number
           unit_price_variance_pct: number
           updated_at: string
@@ -7197,6 +7226,27 @@ export type Database = {
         Returns: number
       }
       normalize_phone: { Args: { _p: string }; Returns: string }
+      pi_backfill_all: { Args: never; Returns: Json }
+      pi_resolve_cost_code: {
+        Args: { _code: string; _project_id: string }
+        Returns: string
+      }
+      pi_sync_project_expense: {
+        Args: { _expense_id: string }
+        Returns: undefined
+      }
+      pi_sync_purchase_invoice: {
+        Args: { _invoice_id: string }
+        Returns: undefined
+      }
+      pi_sync_purchase_order: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      pi_sync_subcontractor_payment: {
+        Args: { _payment_id: string }
+        Returns: undefined
+      }
       post_goods_receipt: {
         Args: {
           _manual?: boolean
@@ -7274,6 +7324,10 @@ export type Database = {
           _transfer_id: string
           _unit?: string
         }
+        Returns: Json
+      }
+      reconcile_project_financial_sources: {
+        Args: { _project_id: string }
         Returns: Json
       }
       record_signed_upload: {
