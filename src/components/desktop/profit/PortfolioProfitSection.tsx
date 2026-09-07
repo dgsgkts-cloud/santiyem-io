@@ -108,6 +108,8 @@ export default function PortfolioProfitSection({
   // İlk giriş deneyimi — hiçbir proje analize hazır değil
   if (totals.ready_count === 0) {
     return (
+      <>
+      {wizard}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 lg:p-6">
         <h2 className="text-[17px] font-semibold text-foreground">
           Projelerinizin kâr durumunu tek ekrandan takip edin.
