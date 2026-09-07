@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronRight, Loader2, Minus } from "lucide-react";
 import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 import { usePortfolioFinancials, type PortfolioProjectRow, type PortfolioRiskRow } from "@/hooks/usePortfolioFinancials";
 import ProfitInfoLabel from "./ProfitInfoLabel";
+import ProjectSetupWizard from "./setup/ProjectSetupWizard";
 import { PROFIT_LABELS, PROFIT_TOOLTIPS, SEVERITY_META, riskTitle, severityOf, sortRisks } from "./profitLabels";
 
 /**
@@ -49,6 +50,18 @@ export default function PortfolioProfitSection({
   const { data, isLoading, error } = usePortfolioFinancials();
   const [filter, setFilter] = useState<"all" | "active" | "risky">("active");
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+  const openProject = (p: PortfolioProjectRow) =>
+    p.is_ready ? onProjectSelect?.(p.id) : setSetupTarget({ id: p.id, name: p.name });
+  const wizard = setupTarget ? (
+    <ProjectSetupWizard
+      open
+      projectId={setupTarget.id}
+      projectName={setupTarget.name}
+      onClose={() => setSetupTarget(null)}
+      onFinished={() => onProjectSelect?.(setupTarget.id)}
+    />
+  ) : null;
 
   const projects = data?.projects ?? [];
   const totals = data?.totals;
@@ -95,6 +108,8 @@ export default function PortfolioProfitSection({
   // İlk giriş deneyimi — hiçbir proje analize hazır değil
   if (totals.ready_count === 0) {
     return (
+      <>
+      {wizard}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 lg:p-6">
         <h2 className="text-[17px] font-semibold text-foreground">
           Projelerinizin kâr durumunu tek ekrandan takip edin.
@@ -105,7 +120,7 @@ export default function PortfolioProfitSection({
         </p>
         <button
           type="button"
-          onClick={() => projects[0] && onProjectSelect?.(projects[0].id)}
+          onClick={() => projects[0] && setSetupTarget({ id: projects[0].id, name: projects[0].name })}
           className="mt-4 h-11 px-4 rounded-lg bg-primary text-primary-foreground text-[14px] font-medium hover:opacity-90 transition-opacity"
         >
           İlk Projeyi Hazırla
@@ -117,7 +132,7 @@ export default function PortfolioProfitSection({
               <li key={p.id}>
                 <button
                   type="button"
-                  onClick={() => onProjectSelect?.(p.id)}
+                  onClick={() => setSetupTarget({ id: p.id, name: p.name })}
                   className="w-full text-left py-3 flex items-center gap-3 transition-opacity hover:opacity-80"
                   style={{ minHeight: 56 }}
                 >
@@ -135,6 +150,7 @@ export default function PortfolioProfitSection({
           </ul>
         )}
       </section>
+      </>
     );
   }
 
@@ -152,6 +168,7 @@ export default function PortfolioProfitSection({
 
   return (
     <div className="flex flex-col gap-4 md:gap-5">
+      {wizard}
       {/* 1 — Portföy durumu */}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 lg:p-7">
         <p className="ds-caption uppercase tracking-wide text-muted-foreground mb-4 md:mb-5">
@@ -270,7 +287,7 @@ export default function PortfolioProfitSection({
                 <li key={p.id}>
                   <button
                     type="button"
-                    onClick={() => onProjectSelect?.(p.id)}
+                    onClick={() => openProject(p)}
                     className="w-full text-left py-3 flex items-center gap-3 transition-opacity hover:opacity-80 active:scale-[0.997]"
                     style={{ minHeight: 60 }}
                   >
