@@ -1,17 +1,14 @@
-// SPRINT 43 — Single source of truth for the primary navigation information
+// SPRINT 44 — Single source of truth for the primary navigation information
 // architecture. Desktop sidebar and the mobile drawer both render this tree so
 // the two surfaces can never drift.
 //
-// Only the areas below are exposed. Everything else (Hatırlatmalar, Makine &
-// Ekipman, Zimmet, Onaylar, Malzeme Kartları, RFQ, Finans Raporları, Çekler)
-// stays fully functional through its existing route, deep link or in-context
-// entry point — no route, page, data, hook or permission is removed here.
+// New product direction: Construction Profit Intelligence. The menu shows only
+// the four things a company owner needs at a glance. Every other module keeps
+// working through its existing route, deep link or in-project entry point — no
+// route, page, table, data, hook or permission is removed here.
 
 import {
-  LayoutDashboard, MessageSquare, FolderKanban, HardHat, Wallet,
-  ShoppingCart, BookOpen, Warehouse, Truck, ClipboardList,
-  Receipt, FileSpreadsheet, BarChart3, ArrowLeftRight, Building2,
-  CheckSquare, Plug, type LucideIcon,
+  LayoutDashboard, FolderKanban, AlertTriangle, Plug, type LucideIcon,
 } from "lucide-react";
 
 
@@ -34,49 +31,21 @@ export interface NavArea {
   icon: LucideIcon;
   /** Direct destination when the area has no children. */
   tab?: string;
+  /** Optional sub-view selector for a childless area. */
+  search?: NavSearch;
   children?: NavLeaf[];
   accent?: boolean;
 }
 
 export const NAV_AREAS: NavArea[] = [
   { id: "dashboard", label: "Ana Sayfa", icon: LayoutDashboard, tab: "dashboard" },
-  { id: "chat", label: "AI Asistan", icon: MessageSquare, tab: "chat", accent: true },
   { id: "projects", label: "Projeler", icon: FolderKanban, tab: "projects" },
   {
-    id: "operations",
-    label: "Operasyon",
-    icon: HardHat,
-    children: [
-      // Şirket geneli görev merkezi (/gorevler). Proje bağlamındaki Görev
-      // Panosu ayrı entry point olarak korunur.
-      { id: "ops-tasks", label: "Görevler / İşler", icon: CheckSquare, tab: "tasks" },
-      { id: "ops-field", label: "Saha", icon: BookOpen, tab: "site-diary" },
-      { id: "ops-personnel", label: "Ekip & Puantaj", icon: HardHat, tab: "personnel" },
-      { id: "ops-warehouse", label: "Depo & Envanter", icon: Warehouse, tab: "warehouse" },
-    ],
-  },
-  {
-    id: "procurement",
-    label: "Satın Alma",
-    icon: ShoppingCart,
-    children: [
-      { id: "pr-requests", label: "Talepler", icon: ClipboardList, tab: "procurement", search: { sekme: "talepler" } },
-      { id: "pr-orders", label: "Siparişler", icon: ShoppingCart, tab: "procurement", search: { sekme: "siparisler" } },
-      { id: "pr-deliveries", label: "Teslimatlar", icon: Truck, tab: "procurement", search: { sekme: "teslimatlar" } },
-      { id: "pr-suppliers", label: "Tedarikçiler", icon: Building2, tab: "procurement", search: { sekme: "tedarikciler" } },
-    ],
-  },
-  {
-    id: "finance",
-    label: "Finans",
-    icon: Wallet,
-    children: [
-      { id: "fi-overview", label: "Genel Bakış", icon: BarChart3, tab: "payments-kasa", search: { sekme: "ozet" } },
-      { id: "fi-transactions", label: "Ödeme & Tahsilat", icon: ArrowLeftRight, tab: "payments-kasa", search: { sekme: "hareketler" } },
-      { id: "fi-hakedis", label: "Hakediş", icon: Receipt, tab: "hakedis" },
-      { id: "fi-accounts", label: "Hesaplar", icon: Wallet, tab: "payments-kasa", search: { sekme: "hesaplar" } },
-      { id: "fi-invoices", label: "Faturalar", icon: FileSpreadsheet, tab: "e-invoices" },
-    ],
+    id: "risks",
+    label: "Riskler",
+    icon: AlertTriangle,
+    tab: "dashboard",
+    search: { bolum: "riskler" },
   },
   { id: "integrations", label: "Entegrasyonlar", icon: Plug, tab: "integrations" },
 ];
@@ -90,6 +59,12 @@ export const NAV_MENU_TABS = new Set<string>(
 export const searchToQuery = (search?: NavSearch) =>
   search && Object.keys(search).length ? `?${new URLSearchParams(search).toString()}` : "";
 
+const searchMatches = (search: NavSearch | undefined, currentSearch: string) => {
+  const params = new URLSearchParams(currentSearch);
+  if (!search) return !params.get("bolum");
+  return Object.entries(search).every(([k, v]) => params.get(k) === v);
+};
+
 /** A leaf is active when its tab matches and every declared param matches. */
 export const isLeafActive = (leaf: NavLeaf, activeTab: string, currentSearch: string) => {
   if (leaf.tab !== activeTab) return false;
@@ -99,5 +74,6 @@ export const isLeafActive = (leaf: NavLeaf, activeTab: string, currentSearch: st
 };
 
 /** An area is active when it (or any child) points at the active tab. */
-export const isAreaActive = (area: NavArea, activeTab: string) =>
-  area.tab === activeTab || (area.children ?? []).some((c) => c.tab === activeTab);
+export const isAreaActive = (area: NavArea, activeTab: string, currentSearch = "") =>
+  (area.tab === activeTab && searchMatches(area.search, currentSearch)) ||
+  (area.children ?? []).some((c) => c.tab === activeTab);

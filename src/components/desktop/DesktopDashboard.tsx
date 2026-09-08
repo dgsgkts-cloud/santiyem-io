@@ -214,6 +214,15 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
     document.title = "Dashboard • Şantiyem";
   }, []);
 
+  // "Riskler" menü girişi ana sayfadaki portföy risk bölümüne götürür.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("bolum") !== "riskler") return;
+    const t = window.setTimeout(() => {
+      document.getElementById("portfolio-risks")?.scrollIntoView({ block: "start" });
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, []);
+
 
   const [totalHakedis, setTotalHakedis] = useState(0);
   const [pendingHakedis, setPendingHakedis] = useState(0);
@@ -806,8 +815,10 @@ const DesktopDashboard = ({ onTabChange, onSend, onProjectSelect }: DesktopDashb
         {/* Zone C — Attention */}
         <CriticalAlertsCard items={alertItems} loading={!loaded} />
 
-        {/* Zone C2 — Portföy Kârlılığı (Profit Intelligence, salt-okuma) */}
-        <PortfolioProfitSection onProjectSelect={onProjectSelect} />
+        {/* Zone C2 — Portföy Kârlılığı ve Riskler (Profit Intelligence, salt-okuma) */}
+        <div id="portfolio-risks" style={{ scrollMarginTop: 16 }}>
+          <PortfolioProfitSection onProjectSelect={onProjectSelect} />
+        </div>
 
 
 

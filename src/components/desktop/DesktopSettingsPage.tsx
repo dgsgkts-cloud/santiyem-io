@@ -16,20 +16,14 @@ import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_S
 import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
 import { VoiceSettingsTab } from "@/components/voice/VoiceSettingsTab";
 
-const TABS = [
+// Sadeleştirilmiş ayarlar: kişisel + şirket bilgileri tek Profil sayfasında,
+// yanında Kurulum Merkezi, Ekip ve küçük bir Plan bölümü. Kaldırılan sekmelerin
+// hiçbir verisi, servisi veya backend'i silinmedi.
+const BASE_TABS = [
   { id: "profile", label: "Profil", icon: User },
   { id: "setup", label: "Kurulum Merkezi", icon: Rocket },
-  { id: "appearance", label: "Görünüm", icon: Palette },
-  { id: "company", label: "Firma Profili", icon: Building2 },
-  { id: "notifications", label: "Bildirimler", icon: Bell },
-  { id: "voice", label: "Sesli Asistan", icon: Mic },
-  { id: "subscription", label: "Abonelik", icon: CreditCard },
-  { id: "plan", label: "Plan ve Kullanım", icon: Gauge },
-  { id: "org", label: "Kuruluş", icon: Building },
   { id: "team", label: "Ekip", icon: Users },
-  { id: "security", label: "Güvenlik", icon: Shield },
-  { id: "demo", label: "Demo Veri", icon: Sparkles },
-  { id: "about", label: "Hakkında", icon: Info },
+  { id: "plan", label: "Plan", icon: Gauge },
 ];
 
 /** About page — the single large brand lockup. */
@@ -48,15 +42,22 @@ const AboutTab = () => (
 );
 
 const DesktopSettingsPage = () => {
-  const { user, profile, plan } = useUser();
+  const { user, profile, plan, isAdmin } = useUser();
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== "undefined" && window.location.hash === "#setup") return "setup";
     return "profile";
   });
 
+  // Demo veri araçları yalnızca demo/yönetici hesabında görünür; gerçek
+  // müşterinin proje verileriyle demo veri karışmaz.
+  const showDemoTools = isAdmin || plan === "demo_full_access";
+  const TABS = showDemoTools
+    ? [...BASE_TABS, { id: "demo", label: "Demo Veri", icon: Sparkles }]
+    : BASE_TABS;
+
   useEffect(() => {
     const handler = () => setActiveTab("setup");
-    const subHandler = () => setActiveTab("subscription");
+    const subHandler = () => setActiveTab("plan");
     window.addEventListener("open-workspace-setup", handler);
     window.addEventListener("open-subscription-tab", subHandler);
     return () => {

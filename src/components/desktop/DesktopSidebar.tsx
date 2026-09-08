@@ -8,6 +8,7 @@ import { SantiyemMark } from "@/components/brand/SantiyemLogo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isNativeApp } from "@/lib/nativeGuards";
 import { useDisplayName } from "@/hooks/useDisplayName";
+import ThemeToggleRow from "@/components/ThemeToggleRow";
 import {
   NAV_AREAS, isAreaActive, isLeafActive, type NavArea, type NavLeaf, type NavSearch,
 } from "@/lib/navConfig";
@@ -73,7 +74,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
     .filter((a) => (a.children ? a.children.length > 0 : true));
 
   const isGroupOpen = (area: NavArea) =>
-    openGroups[area.id] ?? isAreaActive(area, activeTab);
+    openGroups[area.id] ?? isAreaActive(area, activeTab, location.search);
 
   const toggleGroup = (area: NavArea) => {
     if (collapsed) {
@@ -248,7 +249,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
           const Icon = area.icon;
           const decision = guard.check((area.tab ?? area.children![0].tab) as GuardTab);
           const isLocked = gatesReady && !!area.tab && !decision.ok;
-          const active = area.tab ? activeTab === area.tab : isAreaActive(area, activeTab);
+          const active = isAreaActive(area, activeTab, location.search);
           const accent = !!area.accent && !isLocked;
           const open = isGroupOpen(area);
 
@@ -258,7 +259,7 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
                 // Navigation is NEVER gated on a background profile refresh —
                 // permission enforcement happens in the route guard downstream.
                 if (area.children) toggleGroup(area);
-                else onTabChange(area.tab!);
+                else onTabChange(area.tab!, area.search);
               }}
               aria-expanded={area.children ? open : undefined}
               className="ds-press ds-focus-ring w-full flex items-center relative overflow-hidden"
@@ -355,16 +356,8 @@ const DesktopSidebar = ({ activeTab, onTabChange }: DesktopSidebarProps) => {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto shrink-0 border-t border-sidebar-border" style={{ padding: collapsed ? 12 : 12 }}>
-        {plan === "free" && !collapsed && !isNativeApp() && (
-          <button
-            onClick={() => onTabChange("pricing")}
-            className="ds-press ds-focus-ring w-full mb-2 ds-body-strong text-primary-foreground"
-            style={{ height: 40, borderRadius: "var(--radius-control-md)", background: "hsl(var(--primary))" }}
-          >
-            Planı Yükselt
-          </button>
-        )}
+      <div className="mt-auto shrink-0 border-t border-sidebar-border flex flex-col gap-1" style={{ padding: 12 }}>
+        <ThemeToggleRow compact={collapsed} />
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
