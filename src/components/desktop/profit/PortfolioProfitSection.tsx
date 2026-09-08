@@ -96,6 +96,12 @@ export default function PortfolioProfitSection({
 
   const risks = useMemo(() => sortRisks(data?.risks ?? []).slice(0, 5), [data?.risks]);
 
+  const projectNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    projects.forEach((p) => { map[p.id] = p.name; });
+    return map;
+  }, [projects]);
+
   if (isLoading) {
     return (
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 flex items-center justify-center gap-2 text-[13px] text-muted-foreground">
