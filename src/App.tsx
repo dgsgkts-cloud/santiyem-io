@@ -120,6 +120,7 @@ const App = () => (
               <Route path="/iletisim-merkezi" element={<HomePage />} />
               <Route path="/company-brain/:section" element={<HomePage />} />
               <Route path="/gunluk-bilgi" element={<HomePage />} />
+              <Route path="/admin" element={<AdminPanel />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
