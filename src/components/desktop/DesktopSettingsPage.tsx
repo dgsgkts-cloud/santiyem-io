@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
 import FirstRunWizard from "./FirstRunWizard";
+import SetupChecklist from "./SetupChecklist";
 import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
 import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
 import { VoiceSettingsTab } from "@/components/voice/VoiceSettingsTab";
