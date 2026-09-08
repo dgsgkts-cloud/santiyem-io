@@ -73,22 +73,31 @@ export const useSubscriptionStatus = () => {
     enabled: !!user,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_subscriptions")
-        .select("status, trial_end, plan_name, current_period_end")
+        .select("status, trial_end, plan_name, next_payment_date")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      return data as {
-        status?: string | null;
-        trial_end?: string | null;
-        plan_name?: string | null;
-        current_period_end?: string | null;
-      } | null;
+      if (error) throw error;
+      return data
+        ? ({
+            status: data.status,
+            trial_end: data.trial_end,
+            plan_name: data.plan_name,
+            current_period_end: data.next_payment_date,
+          } as {
+            status?: string | null;
+            trial_end?: string | null;
+            plan_name?: string | null;
+            current_period_end?: string | null;
+          })
+        : null;
     },
   });
 };
+
 
 const PAID_STATUSES = new Set(["active", "trialing", "cancelled"]);
 

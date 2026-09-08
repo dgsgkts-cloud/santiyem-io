@@ -6,7 +6,7 @@ import type { CostCodeFinancials } from "@/lib/finance/profitEngine";
 import CostItemDetailSheet from "./CostItemDetailSheet";
 
 /** Bütçesinin üzerine çıkan kalemleri finansal etkisine göre listeler. */
-const overrun = (c: CostCodeFinancials) => Math.max(0, -c.budget_variance);
+const overrun = (c: CostCodeFinancials) => Math.max(0, c.budget_variance);
 
 function Row({ item, onOpen }: { item: CostCodeFinancials; onOpen: () => void }) {
   const diff = overrun(item);
