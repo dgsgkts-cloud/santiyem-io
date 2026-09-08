@@ -100,7 +100,7 @@ const DesktopSettingsPage = () => {
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
         >
           {activeTab === "profile" && <ProfileTab />}
-          {activeTab === "setup" && <WorkspaceSetupTab />}
+          {activeTab === "setup" && <SetupChecklist />}
           {activeTab === "team" && <TeamManagement />}
           {activeTab === "plan" && (
             <div className="space-y-6">
