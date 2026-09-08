@@ -45,6 +45,8 @@ const SantiyeGiris = lazy(() => import("./pages/SantiyeGiris"));
 const EkipTakip = lazy(() => import("./pages/EkipTakip"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
+// Dahili ekip paneli — müşteri navigasyonunda görünmez, yetki sunucuda kontrol edilir.
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 
 // Sprint 17.2 — sensible defaults so opening the same widget on two tabs of
 // the app doesn't refetch identical queries. 60s stale window matches the
