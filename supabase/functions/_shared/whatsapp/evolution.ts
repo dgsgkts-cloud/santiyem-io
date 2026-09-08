@@ -38,7 +38,6 @@ export function buildInstanceName(ownerId: string): string {
 export function mapState(raw?: string | null): ConnectionStatus {
   switch (String(raw ?? "").toLowerCase()) {
     case "open":
-ようcase_unused:
       return "connected";
     case "connecting":
       return "connecting";
@@ -167,7 +166,7 @@ export function mapMessageStatus(raw?: string | null): "sent" | "delivered" | "r
     case "PLAYED":
       return "read";
     case "ERROR":
-											 	return "failed";
+      return "failed";
     default:
       return null;
   }
