@@ -12,24 +12,19 @@ import { toast } from "sonner";
 import { getCompanyProfile, saveCompanyProfile, CompanyProfile } from "@/lib/companyProfile";
 import { supabase } from "@/integrations/supabase/client";
 import FirstRunWizard from "./FirstRunWizard";
+import SetupChecklist from "./SetupChecklist";
 import { loadSetupProgress, resetSetupProgress, completionPercent, TOTAL_SETUP_STEPS } from "@/lib/setupProgress";
 import { SubscriptionCenter } from "@/components/licensing/SubscriptionCenter";
 import { VoiceSettingsTab } from "@/components/voice/VoiceSettingsTab";
 
-const TABS = [
+// Sadeleştirilmiş ayarlar: kişisel + şirket bilgileri tek Profil sayfasında,
+// yanında Kurulum Merkezi, Ekip ve küçük bir Plan bölümü. Kaldırılan sekmelerin
+// hiçbir verisi, servisi veya backend'i silinmedi.
+const BASE_TABS = [
   { id: "profile", label: "Profil", icon: User },
   { id: "setup", label: "Kurulum Merkezi", icon: Rocket },
-  { id: "appearance", label: "Görünüm", icon: Palette },
-  { id: "company", label: "Firma Profili", icon: Building2 },
-  { id: "notifications", label: "Bildirimler", icon: Bell },
-  { id: "voice", label: "Sesli Asistan", icon: Mic },
-  { id: "subscription", label: "Abonelik", icon: CreditCard },
-  { id: "plan", label: "Plan ve Kullanım", icon: Gauge },
-  { id: "org", label: "Kuruluş", icon: Building },
   { id: "team", label: "Ekip", icon: Users },
-  { id: "security", label: "Güvenlik", icon: Shield },
-  { id: "demo", label: "Demo Veri", icon: Sparkles },
-  { id: "about", label: "Hakkında", icon: Info },
+  { id: "plan", label: "Plan", icon: Gauge },
 ];
 
 /** About page — the single large brand lockup. */
@@ -48,20 +43,30 @@ const AboutTab = () => (
 );
 
 const DesktopSettingsPage = () => {
-  const { user, profile, plan } = useUser();
+  const { user, profile, plan, isAdmin } = useUser();
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== "undefined" && window.location.hash === "#setup") return "setup";
     return "profile";
   });
 
+  // Demo veri araçları yalnızca demo/yönetici hesabında görünür; gerçek
+  // müşterinin proje verileriyle demo veri karışmaz.
+  const showDemoTools = isAdmin || plan === "demo_full_access";
+  const TABS = showDemoTools
+    ? [...BASE_TABS, { id: "demo", label: "Demo Veri", icon: Sparkles }]
+    : BASE_TABS;
+
   useEffect(() => {
     const handler = () => setActiveTab("setup");
-    const subHandler = () => setActiveTab("subscription");
+    const subHandler = () => setActiveTab("plan");
+    const profileHandler = () => setActiveTab("profile");
     window.addEventListener("open-workspace-setup", handler);
     window.addEventListener("open-subscription-tab", subHandler);
+    window.addEventListener("open-profile-tab", profileHandler);
     return () => {
       window.removeEventListener("open-workspace-setup", handler);
       window.removeEventListener("open-subscription-tab", subHandler);
+      window.removeEventListener("open-profile-tab", profileHandler);
     };
   }, []);
 
@@ -93,52 +98,133 @@ const DesktopSettingsPage = () => {
           })}
         </div>
 
-        {/* Content */}
-        <div className="rounded-xl p-4 lg:p-6 bg-card border border-border">
-          {activeTab === "profile" && (
-            <div className="space-y-5 lg:space-y-6">
-              <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Profil Bilgileri</h3>
-                <p className="text-[11px] lg:text-[12px] text-muted-foreground">Kişisel bilgilerinizi güncelleyin</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
-                <FormField label="Ad Soyad" value={profile?.full_name || ""} />
-                <FormField label="Unvan" value={profile?.title || ""} />
-                <FormField label="İl" value={profile?.city || ""} />
-                <FormField label="E-posta" value={user?.email || ""} />
-              </div>
-              <div className="flex justify-end pt-4" style={{ borderTop: "1px solid #1E2732" }}>
-                <button className="px-4 rounded-lg text-[13px] font-semibold text-white" style={{ height: 36, backgroundColor: "#FF6B2B" }}>
-                  Kaydet
-                </button>
-              </div>
-            </div>
-          )}
-          {activeTab === "about" && <AboutTab />}
-          {activeTab === "setup" && <WorkspaceSetupTab />}
-          {activeTab === "appearance" && <AppearanceTab />}
-          {activeTab === "company" && <CompanyProfileTab />}
-          {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "voice" && <VoiceSettingsTab />}
-          {activeTab === "subscription" && (
-            <div className="space-y-6">
-              <SubscriptionCenter />
-              <div className="pt-6 border-t border-border">
-                <SubscriptionTab plan={plan} />
-              </div>
-            </div>
-          )}
-          {activeTab === "plan" && <PlanLimitsPanel />}
-          {activeTab === "org" && <OrgAdminPanel />}
+        {/* Content — Kaydet butonları için altta güvenli boşluk bırakılır */}
+        <div
+          className="rounded-xl p-4 lg:p-6 bg-card border border-border"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
+        >
+          {activeTab === "profile" && <ProfileTab />}
+          {activeTab === "setup" && <SetupChecklist />}
           {activeTab === "team" && <TeamManagement />}
-          {activeTab === "security" && (
-            <div className="text-center py-8 lg:py-12">
-              <p className="text-[13px] lg:text-[14px] text-muted-foreground">Bu bölüm yakında aktif olacaktır.</p>
+          {activeTab === "plan" && (
+            <div className="space-y-6">
+              <PlanLimitsPanel />
+              <div className="pt-6 border-t border-border">
+                <SubscriptionCenter />
+              </div>
             </div>
           )}
           {activeTab === "demo" && <DemoDataTab />}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ─── Profil: kişisel bilgiler + şirket bilgileri + hesap ───
+const ProfileTab = () => {
+  const { user, profile, refreshProfile } = useUser() as ReturnType<typeof useUser> & {
+    refreshProfile?: () => void;
+  };
+  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [title, setTitle] = useState(profile?.title || "");
+  const [city, setCity] = useState(profile?.city || "");
+  const [phone, setPhone] = useState<string>((user?.user_metadata?.phone as string) || "");
+  const [saving, setSaving] = useState(false);
+  const [pwSending, setPwSending] = useState(false);
+
+  useEffect(() => {
+    setFullName(profile?.full_name || "");
+    setTitle(profile?.title || "");
+    setCity(profile?.city || "");
+  }, [profile?.full_name, profile?.title, profile?.city]);
+
+  const savePersonal = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: fullName.trim() || null, title: title.trim() || null, city: city.trim() || null })
+      .eq("user_id", user.id);
+    if (!error && phone !== (user.user_metadata?.phone || "")) {
+      await supabase.auth.updateUser({ data: { phone } });
+    }
+    setSaving(false);
+    if (error) { toast.error("Bilgileriniz kaydedilemedi"); return; }
+    refreshProfile?.();
+    toast.success("Kişisel bilgileriniz güncellendi");
+  };
+
+  const sendPasswordReset = async () => {
+    if (!user?.email) return;
+    setPwSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setPwSending(false);
+    if (error) { toast.error("Şifre değiştirme bağlantısı gönderilemedi"); return; }
+    toast.success("Şifre değiştirme bağlantısı e-postanıza gönderildi");
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Kişisel bilgiler */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Kişisel Bilgiler</h3>
+          <p className="text-[12px] text-muted-foreground">Adınız ve iletişim bilgileriniz</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <CompanyField label="Ad Soyad" value={fullName} onChange={setFullName} />
+          <CompanyField label="Telefon Numarası" value={phone} onChange={setPhone} placeholder="+90 5XX XXX XX XX" />
+          <CompanyField label="Unvan" value={title} onChange={setTitle} placeholder="İnşaat Mühendisi" />
+          <CompanyField label="İl" value={city} onChange={setCity} />
+          <div className="sm:col-span-2">
+            <label className="text-[11px] font-medium mb-1.5 block text-muted-foreground">E-posta</label>
+            <input
+              value={user?.email || ""}
+              readOnly
+              className="w-full rounded-lg px-3 text-[13px] outline-none bg-muted/40 text-muted-foreground"
+              style={{ height: 36 }}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={savePersonal}
+            disabled={saving}
+            className="px-4 rounded-lg text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            style={{ height: 40, minHeight: 40, backgroundColor: "hsl(var(--primary))" }}
+          >
+            {saving ? "Kaydediliyor…" : "Kaydet"}
+          </button>
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Şirket bilgileri */}
+      <CompanyProfileTab />
+
+      <div className="h-px bg-border" />
+
+      {/* Hesap */}
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Hesap</h3>
+          <p className="text-[12px] text-muted-foreground">
+            Şifrenizi değiştirmek için e-postanıza güvenli bir bağlantı gönderiyoruz.
+          </p>
+        </div>
+        <button
+          onClick={sendPasswordReset}
+          disabled={pwSending}
+          className="rounded-lg border border-border px-4 text-[13px] font-medium text-foreground hover:border-primary/50 disabled:opacity-60"
+          style={{ height: 44, minHeight: 44 }}
+        >
+          {pwSending ? "Gönderiliyor…" : "Şifre Değiştir"}
+        </button>
+      </section>
     </div>
   );
 };

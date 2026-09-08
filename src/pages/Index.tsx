@@ -48,11 +48,9 @@ import { useDemoAccount } from "@/hooks/useDemoAccount";
 import DemoBadge from "@/components/demo/DemoBadge";
 import DemoExpiredScreen from "@/components/demo/DemoExpiredScreen";
 
-const TabFallback = () => (
-  <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-    <div className="w-6 h-6 border-2 border-t-[#FF6B2B] border-white/10 rounded-full animate-spin" />
-  </div>
-);
+// Sekme geçişlerinde dönen halka yerine sessiz bir boşluk: ekranlar
+// çoğunlukla anında geldiği için spinner parlaması rahatsız ediyordu.
+const TabFallback = () => <div className="flex-1 min-h-[60vh]" />;
 
 
 
@@ -82,6 +80,7 @@ import { isNativeApp } from "@/lib/nativeGuards";
 import { usePrimaryProjectRole } from "@/hooks/usePrimaryProjectRole";
 import { getMobileTabsForRole, getAllowedDrawerIdsForRole } from "@/lib/mobileTabs";
 import { getCompanyProfile } from "@/lib/companyProfile";
+import ThemeToggleRow from "@/components/ThemeToggleRow";
 
 // Sprint 18.4: localized role labels (extend as roles land)
 const ROLE_LABELS: Record<string, string> = {
@@ -915,7 +914,7 @@ const Index = () => {
         >
           {visibleNavAreas.map((area) => {
             const AreaIcon = area.icon;
-            const areaActive = area.tab ? activeTab === area.tab : isAreaActive(area, activeTab);
+            const areaActive = isAreaActive(area, activeTab, location.search);
             const hasChildren = area.children.length > 0;
             const open = openNavGroups[area.id] ?? isAreaActive(area, activeTab);
             return (
@@ -925,7 +924,7 @@ const Index = () => {
                     if (hasChildren) {
                       setOpenNavGroups((s) => ({ ...s, [area.id]: !open }));
                     } else {
-                      handleDrawerNav(String(area.tab));
+                      handleDrawerNav(String(area.tab), area.search);
                     }
                   }}
                   aria-expanded={hasChildren ? open : undefined}
@@ -976,7 +975,8 @@ const Index = () => {
 
         <div className="mx-4 h-px bg-white/[0.06]" />
 
-        <div className="px-3 pt-3 shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+        <div className="px-3 pt-3 shrink-0 space-y-1" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+          <ThemeToggleRow tone="drawer" />
           {user ? (
             <button
               onClick={() => { signOut(); setDrawerOpen(false); }}

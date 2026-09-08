@@ -1,6 +1,6 @@
 import {
   Home, FolderOpen, FileText, BookOpen, Users, CreditCard,
-  CheckSquare, Settings, User, Sparkles, type LucideIcon,
+  CheckSquare, Settings, User, type LucideIcon,
 } from "lucide-react";
 import type { ProjectRole } from "@/lib/projectPermissions";
 
@@ -14,11 +14,10 @@ export interface MobileTab {
   icon: LucideIcon;
 }
 
-// Sprint 41: bottom nav simplified to 4 primary destinations. Hakediş and
-// Şantiye Günlüğü moved to the drawer; AI replaces the floating microphone.
+// Sprint 44: bottom nav mirrors the simplified product direction — home,
+// projects and profile. AI stays contextual inside the screens where it helps.
 const FULL_TABS: MobileTab[] = [
   { id: "dashboard", label: "Ana Sayfa", icon: Home },
-  { id: "chat", label: "AI", icon: Sparkles },
   { id: "projects", label: "Projeler", icon: FolderOpen },
   { id: "settings", label: "Profil", icon: User },
 ];
@@ -35,30 +34,25 @@ const ROLE_TABS: Record<ProjectRole, MobileTab[]> = {
   site_engineer: [
     { id: "projects", label: "Şantiye", icon: FolderOpen },
     { id: "personnel", label: "Puantaj", icon: CheckSquare },
-    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   accountant: [
     { id: "hakedis", label: "Hakediş", icon: FileText },
     { id: "payments-kasa", label: "Kasa", icon: CreditCard },
-    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   subcontractor: [
     { id: "projects", label: "Ekibim", icon: Users },
     { id: "payments-kasa", label: "Ödemelerim", icon: CreditCard },
-    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   worker: [
     { id: "personnel", label: "Yoklama", icon: CheckSquare },
-    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
   landowner: [
     { id: "projects", label: "Proje", icon: FolderOpen },
     { id: "site-diary", label: "Günlük", icon: BookOpen },
-    { id: "chat", label: "AI", icon: Sparkles },
     { id: "settings", label: "Profil", icon: Settings },
   ],
 
