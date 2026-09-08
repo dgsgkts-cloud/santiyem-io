@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_project_insights: {
+        Row: {
+          confidence: string
+          cost_code_id: string | null
+          created_at: string
+          data_as_of: string
+          expires_at: string | null
+          financial_impact: number | null
+          fingerprint: string
+          generated_at: string
+          id: string
+          insight_type: string
+          metadata: Json
+          model_version: string | null
+          priority: number
+          project_id: string | null
+          recommended_action: string | null
+          related_risk_ids: string[]
+          scope: string
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: string
+          cost_code_id?: string | null
+          created_at?: string
+          data_as_of?: string
+          expires_at?: string | null
+          financial_impact?: number | null
+          fingerprint: string
+          generated_at?: string
+          id?: string
+          insight_type: string
+          metadata?: Json
+          model_version?: string | null
+          priority?: number
+          project_id?: string | null
+          recommended_action?: string | null
+          related_risk_ids?: string[]
+          scope?: string
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: string
+          cost_code_id?: string | null
+          created_at?: string
+          data_as_of?: string
+          expires_at?: string | null
+          financial_impact?: number | null
+          fingerprint?: string
+          generated_at?: string
+          id?: string
+          insight_type?: string
+          metadata?: Json
+          model_version?: string | null
+          priority?: number
+          project_id?: string | null
+          recommended_action?: string | null
+          related_risk_ids?: string[]
+          scope?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           created_at: string
