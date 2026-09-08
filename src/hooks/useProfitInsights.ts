@@ -61,8 +61,8 @@ export const useProfitInsights = (
     },
   });
 
-  const run = useMutation({
-    mutationFn: async (force = false) => {
+  const run = useMutation<{ ok?: boolean; reason?: string; summary?: string }, Error, boolean>({
+    mutationFn: async (force: boolean) => {
       const { data, error } = await supabase.functions.invoke("profit-agent", {
         body: { scope, project_id: projectId ?? undefined, force },
       });
