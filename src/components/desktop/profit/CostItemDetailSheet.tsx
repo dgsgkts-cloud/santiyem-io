@@ -18,7 +18,7 @@ export default function CostItemDetailSheet({
       ]
     : [];
 
-  const over = (item?.budget_variance ?? 0) < 0;
+  const over = (item?.budget_variance ?? 0) > 0;
 
   return (
     <Sheet open={!!item} onOpenChange={(o) => { if (!o) onClose(); }}>
