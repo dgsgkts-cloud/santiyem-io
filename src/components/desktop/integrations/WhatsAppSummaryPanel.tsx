@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWhatsAppSummary, type WhatsAppRecipient } from "@/hooks/useWhatsAppSummary";
 import { useProjects } from "@/hooks/useProjects";
+import WhatsAppConnectionCard from "./WhatsAppConnectionCard";
 
 /**
  * WhatsApp Yönetici Özeti ayarları — kasıtlı olarak sade.
@@ -92,9 +93,9 @@ export default function WhatsAppSummaryPanel() {
     setBusyId(r.id);
     try {
       const res = await sendTest.mutateAsync(r.id);
-      if (res.fallback_url) {
-        toast.info("WhatsApp bağlantısı henüz kurulmadığı için mesaj bağlantısı açıldı.");
-        window.open(res.fallback_url, "_blank", "noopener");
+      if (res.not_connected) {
+        toast.error("Önce WhatsApp hesabınızı bağlayın.");
+        if (res.fallback_url) window.open(res.fallback_url, "_blank", "noopener");
       } else if (res.ok) toast.success(`Deneme özeti ${r.display_name} kişisine gönderildi`);
       else toast.error(res.error || "Deneme özeti gönderilemedi");
     } catch (e) {
@@ -123,13 +124,8 @@ export default function WhatsAppSummaryPanel() {
         </span>
       </div>
 
-      {status?.connection === "not_connected" && (
-        <p className="text-[12.5px] leading-relaxed text-muted-foreground rounded-lg border border-dashed border-border p-3">
-          WhatsApp iş hesabı bağlantısı henüz tamamlanmadı. Alıcılarınızı şimdi ekleyebilirsiniz;
-          bağlantı tamamlandığında özetler otomatik gönderilmeye başlar. Bağlantıya kadar deneme
-          özeti WhatsApp uygulamanızda hazır mesaj olarak açılır.
-        </p>
-      )}
+      {/* Kendi WhatsApp hesabınızı bağlama */}
+      <WhatsAppConnectionCard />
 
       {/* Alıcılar */}
       <div className="space-y-2">
