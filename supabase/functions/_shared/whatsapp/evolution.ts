@@ -23,8 +23,12 @@ export interface EvolutionQr {
   pairing_code: string | null;
 }
 
-const base = () => (Deno.env.get("EVOLUTION_API_URL") || "").replace(/\/+$/, "");
-const key = () => Deno.env.get("EVOLUTION_API_KEY") || "";
+// Testlerde (Deno dışında) de import edilebilmesi için ortam erişimi korumalı.
+const env = (name: string): string =>
+  (globalThis as any).Deno?.env?.get?.(name) ?? "";
+
+const base = () => env("EVOLUTION_API_URL").replace(/\/+$/, "");
+const key = () => env("EVOLUTION_API_KEY");
 
 export const evolutionConfigured = () => !!base() && !!key();
 
