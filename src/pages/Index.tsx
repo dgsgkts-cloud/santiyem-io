@@ -48,11 +48,9 @@ import { useDemoAccount } from "@/hooks/useDemoAccount";
 import DemoBadge from "@/components/demo/DemoBadge";
 import DemoExpiredScreen from "@/components/demo/DemoExpiredScreen";
 
-const TabFallback = () => (
-  <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-    <div className="w-6 h-6 border-2 border-t-[#FF6B2B] border-white/10 rounded-full animate-spin" />
-  </div>
-);
+// Sekme geçişlerinde dönen halka yerine sessiz bir boşluk: ekranlar
+// çoğunlukla anında geldiği için spinner parlaması rahatsız ediyordu.
+const TabFallback = () => <div className="flex-1 min-h-[60vh]" />;
 
 
 
