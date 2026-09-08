@@ -155,7 +155,7 @@ const ProfileTab = () => {
     if (!user?.email) return;
     setPwSending(true);
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/sifre-sifirla`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setPwSending(false);
     if (error) { toast.error("Şifre değiştirme bağlantısı gönderilemedi"); return; }
