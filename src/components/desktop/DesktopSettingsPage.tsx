@@ -94,47 +94,20 @@ const DesktopSettingsPage = () => {
           })}
         </div>
 
-        {/* Content */}
-        <div className="rounded-xl p-4 lg:p-6 bg-card border border-border">
-          {activeTab === "profile" && (
-            <div className="space-y-5 lg:space-y-6">
-              <div>
-                <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Profil Bilgileri</h3>
-                <p className="text-[11px] lg:text-[12px] text-muted-foreground">Kişisel bilgilerinizi güncelleyin</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
-                <FormField label="Ad Soyad" value={profile?.full_name || ""} />
-                <FormField label="Unvan" value={profile?.title || ""} />
-                <FormField label="İl" value={profile?.city || ""} />
-                <FormField label="E-posta" value={user?.email || ""} />
-              </div>
-              <div className="flex justify-end pt-4" style={{ borderTop: "1px solid #1E2732" }}>
-                <button className="px-4 rounded-lg text-[13px] font-semibold text-white" style={{ height: 36, backgroundColor: "#FF6B2B" }}>
-                  Kaydet
-                </button>
-              </div>
-            </div>
-          )}
-          {activeTab === "about" && <AboutTab />}
+        {/* Content — Kaydet butonları için altta güvenli boşluk bırakılır */}
+        <div
+          className="rounded-xl p-4 lg:p-6 bg-card border border-border"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
+        >
+          {activeTab === "profile" && <ProfileTab />}
           {activeTab === "setup" && <WorkspaceSetupTab />}
-          {activeTab === "appearance" && <AppearanceTab />}
-          {activeTab === "company" && <CompanyProfileTab />}
-          {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "voice" && <VoiceSettingsTab />}
-          {activeTab === "subscription" && (
-            <div className="space-y-6">
-              <SubscriptionCenter />
-              <div className="pt-6 border-t border-border">
-                <SubscriptionTab plan={plan} />
-              </div>
-            </div>
-          )}
-          {activeTab === "plan" && <PlanLimitsPanel />}
-          {activeTab === "org" && <OrgAdminPanel />}
           {activeTab === "team" && <TeamManagement />}
-          {activeTab === "security" && (
-            <div className="text-center py-8 lg:py-12">
-              <p className="text-[13px] lg:text-[14px] text-muted-foreground">Bu bölüm yakında aktif olacaktır.</p>
+          {activeTab === "plan" && (
+            <div className="space-y-6">
+              <PlanLimitsPanel />
+              <div className="pt-6 border-t border-border">
+                <SubscriptionCenter />
+              </div>
             </div>
           )}
           {activeTab === "demo" && <DemoDataTab />}
