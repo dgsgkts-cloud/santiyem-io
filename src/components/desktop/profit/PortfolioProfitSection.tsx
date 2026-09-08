@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronRight, Loader2, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Loader2, MessageCircle, Minus } from "lucide-react";
 import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 import { usePortfolioFinancials, type PortfolioProjectRow, type PortfolioRiskRow } from "@/hooks/usePortfolioFinancials";
 import ProfitInfoLabel from "./ProfitInfoLabel";
 import PortfolioInsightsCard from "./PortfolioInsightsCard";
 import ProjectSetupWizard from "./setup/ProjectSetupWizard";
+import WhatsAppSummaryDialog from "../integrations/WhatsAppSummaryDialog";
 import { PROFIT_LABELS, PROFIT_TOOLTIPS, SEVERITY_META, riskTitle, severityOf, sortRisks } from "./profitLabels";
 
 /**
@@ -52,6 +53,7 @@ export default function PortfolioProfitSection({
   const [filter, setFilter] = useState<"all" | "active" | "risky">("active");
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [setupTarget, setSetupTarget] = useState<{ id: string; name: string } | null>(null);
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
   const openProject = (p: PortfolioProjectRow) =>
     p.is_ready ? onProjectSelect?.(p.id) : setSetupTarget({ id: p.id, name: p.name });
   const wizard = setupTarget ? (
@@ -178,9 +180,20 @@ export default function PortfolioProfitSection({
       {wizard}
       {/* 1 — Portföy durumu */}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5 lg:p-7">
-        <p className="ds-caption uppercase tracking-wide text-muted-foreground mb-4 md:mb-5">
-          Portföy Kârlılığı
-        </p>
+        <div className="flex items-center justify-between gap-3 mb-4 md:mb-5">
+          <p className="ds-caption uppercase tracking-wide text-muted-foreground">
+            Portföy Kârlılığı
+          </p>
+          <button
+            type="button"
+            onClick={() => setWhatsappOpen(true)}
+            className="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-border text-[12.5px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors shrink-0"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            WhatsApp Özeti
+          </button>
+        </div>
+        <WhatsAppSummaryDialog open={whatsappOpen} onOpenChange={setWhatsappOpen} />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-6">
           <div className="sm:col-span-2 min-w-0">

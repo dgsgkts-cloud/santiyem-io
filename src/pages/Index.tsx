@@ -311,6 +311,15 @@ const Index = () => {
   const demo = useDemoAccount();
   const isDemoPlan = demo.isDemo || plan === "demo_full_access";
 
+  // WhatsApp özeti gibi dış bağlantılar: /projeler?proje=<id> doğrudan projeyi açar.
+  useEffect(() => {
+    const pid = new URLSearchParams(location.search).get("proje");
+    if (!pid) return;
+    setSelectedProjectId(pid);
+    setActiveTab(coerceTab("projects"));
+    navigate(location.pathname, { replace: true });
+  }, [location.search]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Persist active tab
   useEffect(() => {
     try {
