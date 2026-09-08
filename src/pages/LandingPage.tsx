@@ -1,18 +1,19 @@
 import { useSEO } from "@/hooks/useSEO";
-import LandingV3 from "@/components/landing/v3/LandingV3";
+import LandingV4 from "@/components/landing/v4/LandingV4";
 
 const LandingPage = () => {
   // Turkish-only metadata: must stay identical to the static index.html head
   // so crawlers never see a mixed-language or duplicated homepage title.
+  // Yeni konumlandırma: Construction Profit Intelligence / proje kârlılığı.
   useSEO({
-    title: "Şantiyem AI | Yapay Zekâ Destekli Şantiye Yönetimi",
+    title: "Şantiyem AI | Proje Kârlılığı ve İnşaat Maliyet Takibi",
     description:
-      "Projeleri, saha operasyonlarını, finansı, hakedişleri, personeli ve stokları tek platformdan yönetin. Şantiyem AI verilerinizi analiz eder, riskleri gösterir ve aksiyonları hızlandırır.",
+      "Şantiyem AI inşaat projelerinizin final maliyetini ve kârını sürekli tahmin eder. Bütçe takibi, gerçekleşen maliyet ve satın alma verilerinizden kâr kaybını sorun büyümeden gösterir.",
     socialDescription:
-      "Projeleri, saha operasyonlarını, finansı, hakedişleri, personeli ve stokları tek platformdan yönetin.",
+      "Projelerinizin final maliyetini ve kârını sürekli tahmin eder, kârı eriten riskleri siz sormadan gösterir.",
     canonicalPath: "/",
   });
-  return <LandingV3 />;
+  return <LandingV4 />;
 };
 
 export default LandingPage;
