@@ -117,6 +117,114 @@ const DesktopSettingsPage = () => {
   );
 };
 
+// ─── Profil: kişisel bilgiler + şirket bilgileri + hesap ───
+const ProfileTab = () => {
+  const { user, profile, refreshProfile } = useUser() as ReturnType<typeof useUser> & {
+    refreshProfile?: () => void;
+  };
+  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [title, setTitle] = useState(profile?.title || "");
+  const [city, setCity] = useState(profile?.city || "");
+  const [phone, setPhone] = useState<string>((user?.user_metadata?.phone as string) || "");
+  const [saving, setSaving] = useState(false);
+  const [pwSending, setPwSending] = useState(false);
+
+  useEffect(() => {
+    setFullName(profile?.full_name || "");
+    setTitle(profile?.title || "");
+    setCity(profile?.city || "");
+  }, [profile?.full_name, profile?.title, profile?.city]);
+
+  const savePersonal = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: fullName.trim() || null, title: title.trim() || null, city: city.trim() || null })
+      .eq("user_id", user.id);
+    if (!error && phone !== (user.user_metadata?.phone || "")) {
+      await supabase.auth.updateUser({ data: { phone } });
+    }
+    setSaving(false);
+    if (error) { toast.error("Bilgileriniz kaydedilemedi"); return; }
+    refreshProfile?.();
+    toast.success("Kişisel bilgileriniz güncellendi");
+  };
+
+  const sendPasswordReset = async () => {
+    if (!user?.email) return;
+    setPwSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/sifre-sifirla`,
+    });
+    setPwSending(false);
+    if (error) { toast.error("Şifre değiştirme bağlantısı gönderilemedi"); return; }
+    toast.success("Şifre değiştirme bağlantısı e-postanıza gönderildi");
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Kişisel bilgiler */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Kişisel Bilgiler</h3>
+          <p className="text-[12px] text-muted-foreground">Adınız ve iletişim bilgileriniz</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <CompanyField label="Ad Soyad" value={fullName} onChange={setFullName} />
+          <CompanyField label="Telefon Numarası" value={phone} onChange={setPhone} placeholder="+90 5XX XXX XX XX" />
+          <CompanyField label="Unvan" value={title} onChange={setTitle} placeholder="İnşaat Mühendisi" />
+          <CompanyField label="İl" value={city} onChange={setCity} />
+          <div className="sm:col-span-2">
+            <label className="text-[11px] font-medium mb-1.5 block text-muted-foreground">E-posta</label>
+            <input
+              value={user?.email || ""}
+              readOnly
+              className="w-full rounded-lg px-3 text-[13px] outline-none bg-muted/40 text-muted-foreground"
+              style={{ height: 36 }}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={savePersonal}
+            disabled={saving}
+            className="px-4 rounded-lg text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            style={{ height: 40, minHeight: 40, backgroundColor: "hsl(var(--primary))" }}
+          >
+            {saving ? "Kaydediliyor…" : "Kaydet"}
+          </button>
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Şirket bilgileri */}
+      <CompanyProfileTab />
+
+      <div className="h-px bg-border" />
+
+      {/* Hesap */}
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-[15px] lg:text-[16px] font-semibold mb-1 text-foreground">Hesap</h3>
+          <p className="text-[12px] text-muted-foreground">
+            Şifrenizi değiştirmek için e-postanıza güvenli bir bağlantı gönderiyoruz.
+          </p>
+        </div>
+        <button
+          onClick={sendPasswordReset}
+          disabled={pwSending}
+          className="rounded-lg border border-border px-4 text-[13px] font-medium text-foreground hover:border-primary/50 disabled:opacity-60"
+          style={{ height: 44, minHeight: 44 }}
+        >
+          {pwSending ? "Gönderiliyor…" : "Şifre Değiştir"}
+        </button>
+      </section>
+    </div>
+  );
+};
+
 // ─── Workspace Setup Tab (Sprint 20) ───
 const WorkspaceSetupTab = () => {
   const [progress, setProgress] = useState(() => loadSetupProgress());
