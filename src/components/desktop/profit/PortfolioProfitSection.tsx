@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronRight, Loader2, Minus } from "lucide-react";
 import { formatCurrencyFull, formatCurrencyShort } from "@/lib/formatCurrency";
 import { usePortfolioFinancials, type PortfolioProjectRow, type PortfolioRiskRow } from "@/hooks/usePortfolioFinancials";
 import ProfitInfoLabel from "./ProfitInfoLabel";
+import PortfolioInsightsCard from "./PortfolioInsightsCard";
 import ProjectSetupWizard from "./setup/ProjectSetupWizard";
 import { PROFIT_LABELS, PROFIT_TOOLTIPS, SEVERITY_META, riskTitle, severityOf, sortRisks } from "./profitLabels";
 
@@ -94,6 +95,12 @@ export default function PortfolioProfitSection({
   }, [projects]);
 
   const risks = useMemo(() => sortRisks(data?.risks ?? []).slice(0, 5), [data?.risks]);
+
+  const projectNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    projects.forEach((p) => { map[p.id] = p.name; });
+    return map;
+  }, [projects]);
 
   if (isLoading) {
     return (
@@ -236,6 +243,9 @@ export default function PortfolioProfitSection({
           </div>
         ))}
       </div>
+
+      {/* Şantiyem AI — Bugün (proaktif özet) */}
+      <PortfolioInsightsCard projectNames={projectNames} onProjectSelect={onProjectSelect} />
 
       {/* 5 — Bugün dikkat gerektirenler (mobilde proje listesinden önce) */}
       <section className="rounded-card border border-border/80 bg-card shadow-card p-5">

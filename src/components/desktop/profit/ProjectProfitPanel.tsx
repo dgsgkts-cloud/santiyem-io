@@ -4,6 +4,7 @@ import {
   useCostCodeFinancials, useForecastSnapshots, useProjectFinancials, useProjectRisks,
 } from "@/hooks/useProjectFinancials";
 import ProfitHeadline from "./ProfitHeadline";
+import ProfitInsightsSection from "./ProfitInsightsSection";
 import ProfitDrainSection from "./ProfitDrainSection";
 import ProfitRiskSection, { type RiskRow } from "./ProfitRiskSection";
 import ProfitTrendChart from "./ProfitTrendChart";
@@ -65,6 +66,8 @@ export default function ProjectProfitPanel({
       )}
 
       <ProfitHeadline f={fin} hasBudget={!noBudget} />
+
+      <ProfitInsightsSection projectId={projectId} />
 
       {noBudget && (
         <Notice
