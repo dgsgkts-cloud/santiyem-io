@@ -48,7 +48,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     description:
       "Görev, ödeme, tahsilat, teslimat ve diğer operasyonel bildirimleri WhatsApp üzerinden yönetin.",
     category: "messaging",
-    provider: "Evolution API",
+    provider: "WhatsApp Business",
     status: "not_connected",
     icon: MessageCircle,
     isAvailable: true,
