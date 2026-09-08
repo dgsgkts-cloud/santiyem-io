@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       ai_project_insights: {
         Row: {
           confidence: string
@@ -4195,6 +4225,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -7091,6 +7142,48 @@ export type Database = {
     Functions: {
       accept_project_invitation: { Args: { _token: string }; Returns: string }
       add_voice_usage_seconds: { Args: { _seconds: number }; Returns: number }
+      admin_ai_operations: { Args: { _limit?: number }; Returns: Json }
+      admin_audit_list: { Args: { _limit?: number }; Returns: Json }
+      admin_companies: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: Json
+      }
+      admin_company_detail: { Args: { _unit_id: string }; Returns: Json }
+      admin_log_action: {
+        Args: {
+          _action: string
+          _metadata?: Json
+          _target_id?: string
+          _target_type?: string
+        }
+        Returns: string
+      }
+      admin_overview: { Args: never; Returns: Json }
+      admin_projects: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: Json
+      }
+      admin_system_health: { Args: never; Returns: Json }
+      admin_unit_map: {
+        Args: never
+        Returns: {
+          kind: string
+          member_id: string
+          owner_id: string
+          unit_created_at: string
+          unit_id: string
+          unit_name: string
+        }[]
+      }
+      admin_users: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: Json
+      }
+      admin_whatsapp: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: Json
+      }
+      admin_whoami: { Args: never; Returns: boolean }
       approve_stock_transfer: {
         Args: { _decision: string; _reason?: string; _transfer_id: string }
         Returns: Json
@@ -7364,6 +7457,7 @@ export type Database = {
       }
       is_demo_user: { Args: { _user?: string }; Returns: boolean }
       is_member_suspended: { Args: { _user_id: string }; Returns: boolean }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_project_manager_or_owner: {
         Args: { _project: string; _user: string }
         Returns: boolean
