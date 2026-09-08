@@ -115,6 +115,24 @@ serve(async (req) => {
               error: s.errors ? JSON.stringify(s.errors) : null,
             });
           }
+
+          // Yönetici özeti gönderim kayıtları da aynı durumla güncellenir.
+          const summaryPatch: Record<string, unknown> = {};
+          if (statusRaw === "sent") { summaryPatch.status = "sent"; summaryPatch.sent_at = timestamp; }
+          else if (statusRaw === "delivered") { summaryPatch.status = "delivered"; summaryPatch.delivered_at = timestamp; }
+          else if (statusRaw === "read") { summaryPatch.status = "read"; summaryPatch.read_at = timestamp; }
+          else if (statusRaw === "failed") {
+            summaryPatch.status = "failed";
+            summaryPatch.failed_at = timestamp;
+            const err = s.errors?.[0];
+            summaryPatch.failure_reason = err ? `[${err.code}] ${err.title || err.message || "Bilinmeyen hata"}` : "Gönderim başarısız";
+          }
+          if (Object.keys(summaryPatch).length > 0) {
+            await sb
+              .from("whatsapp_message_logs")
+              .update(summaryPatch)
+              .eq("provider_message_id", providerId);
+          }
         }
 
         // ---- Inbound messages: log only (future feature) ----

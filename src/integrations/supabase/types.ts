@@ -6513,6 +6513,140 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_message_logs: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          message_type: string
+          payload_snapshot: Json
+          period_key: string
+          provider: string | null
+          provider_message_id: string | null
+          read_at: string | null
+          recipient_id: string | null
+          recipient_label: string | null
+          related_project_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          message_type: string
+          payload_snapshot?: Json
+          period_key: string
+          provider?: string | null
+          provider_message_id?: string | null
+          read_at?: string | null
+          recipient_id?: string | null
+          recipient_label?: string | null
+          related_project_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          message_type?: string
+          payload_snapshot?: Json
+          period_key?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          read_at?: string | null
+          recipient_id?: string | null
+          recipient_label?: string | null
+          related_project_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_message_logs_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_summary_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_summary_recipients: {
+        Row: {
+          business_scoped_user_id: string | null
+          created_at: string
+          display_name: string
+          external_recipient_id: string | null
+          id: string
+          is_active: boolean
+          opt_in: boolean
+          opt_in_at: string | null
+          phone_number: string | null
+          preferred_time: string
+          project_ids: string[]
+          provider: string
+          summary_frequency: string
+          summary_scope: string
+          timezone: string
+          updated_at: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          business_scoped_user_id?: string | null
+          created_at?: string
+          display_name: string
+          external_recipient_id?: string | null
+          id?: string
+          is_active?: boolean
+          opt_in?: boolean
+          opt_in_at?: string | null
+          phone_number?: string | null
+          preferred_time?: string
+          project_ids?: string[]
+          provider?: string
+          summary_frequency?: string
+          summary_scope?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Update: {
+          business_scoped_user_id?: string | null
+          created_at?: string
+          display_name?: string
+          external_recipient_id?: string | null
+          id?: string
+          is_active?: boolean
+          opt_in?: boolean
+          opt_in_at?: string | null
+          phone_number?: string | null
+          preferred_time?: string
+          project_ids?: string[]
+          provider?: string
+          summary_frequency?: string
+          summary_scope?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
       worker_attendance: {
         Row: {
           check_in: string
@@ -7514,6 +7648,10 @@ export type Database = {
           project_name: string
           user_id: string
         }[]
+      }
+      whatsapp_summary_snapshot: {
+        Args: { _project_ids?: string[]; _user_id: string }
+        Returns: Json
       }
       worker_check_in:
         | {

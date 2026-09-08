@@ -8,6 +8,7 @@ import {
   INTEGRATIONS, UPCOMING_INTEGRATIONS, STATUS_LABELS, CATEGORY_LABELS,
   countConnected, countAvailable, type IntegrationDef,
 } from "@/lib/integrationsConfig";
+import WhatsAppSummaryDialog from "./integrations/WhatsAppSummaryDialog";
 
 const StatusBadge = ({ status }: { status: IntegrationDef["status"] }) => {
   const tone =
@@ -77,6 +78,9 @@ const IntegrationCard = ({
 
 export default function IntegrationsPage() {
   const [setupFor, setSetupFor] = useState<IntegrationDef | null>(null);
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const openIntegration = (i: IntegrationDef) =>
+    i.id === "whatsapp" ? setWhatsappOpen(true) : setSetupFor(i);
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
@@ -108,7 +112,7 @@ export default function IntegrationsPage() {
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {INTEGRATIONS.map((i) => (
-            <IntegrationCard key={i.id} integration={i} onConnect={setSetupFor} />
+            <IntegrationCard key={i.id} integration={i} onConnect={openIntegration} />
           ))}
         </div>
       </section>
@@ -138,6 +142,8 @@ export default function IntegrationsPage() {
           })}
         </div>
       </section>
+
+      <WhatsAppSummaryDialog open={whatsappOpen} onOpenChange={setWhatsappOpen} />
 
       <Dialog open={!!setupFor} onOpenChange={(o) => !o && setSetupFor(null)}>
         <DialogContent className="sm:max-w-[440px]">
