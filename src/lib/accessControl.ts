@@ -98,24 +98,6 @@ export const useSubscriptionStatus = () => {
   });
 };
 
-const UNUSED_OLD_QUERY = async () => {
-  {
-    {
-      const data = null as any;
-      return data as never;
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data as {
-        status?: string | null;
-        trial_end?: string | null;
-        plan_name?: string | null;
-        current_period_end?: string | null;
-      } | null;
-    },
-  });
-};
 
 const PAID_STATUSES = new Set(["active", "trialing", "cancelled"]);
 
