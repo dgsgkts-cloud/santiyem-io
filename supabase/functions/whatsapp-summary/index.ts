@@ -20,12 +20,7 @@ import {
   type SummaryKind,
   type SummarySnapshot,
 } from "../_shared/whatsapp/summary.ts";
-import {
-  MANAGER_SUMMARY_TEMPLATE,
-  preferTemplate,
-  whatsappMessaging,
-  type MessagingRecipient,
-} from "../_shared/whatsapp/provider.ts";
+import { evolution, evolutionConfigured, toJid } from "../_shared/whatsapp/evolution.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,6 +74,35 @@ async function loadPayload(sb: any, userId: string, kind: SummaryKind, projectId
 
 /* ----------------------------------------------------------------- send */
 
+/** Bağlı (connected) Evolution bağlantısını bulur. */
+async function connectedConnection(sb: any, userId: string) {
+  const { data } = await sb
+    .from("whatsapp_connections")
+    .select("id,instance_name,connection_status,connected_number")
+    .eq("user_id", userId)
+    .eq("connection_status", "connected")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
+/**
+ * Merkezî outbound rate limiter — WhatsApp hesabını gereksiz otomasyona
+ * maruz bırakmamak için bağlantı başına saatlik gönderim sınırı.
+ */
+const OUTBOUND_HOURLY_LIMIT = 20;
+
+async function withinRateLimit(sb: any, userId: string) {
+  const since = new Date(Date.now() - 3_600_000).toISOString();
+  const { count } = await sb
+    .from("whatsapp_message_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", since);
+  return (count ?? 0) < OUTBOUND_HOURLY_LIMIT;
+}
+
 async function sendSummary(
   sb: any,
   userId: string,
@@ -103,32 +127,34 @@ async function sendSummary(
   const { payload } = await loadPayload(sb, userId, kind, projectIds.length ? projectIds : null);
   const body = renderSummaryMessage(payload);
 
-  const target: MessagingRecipient = {
-    provider: recipient.provider,
-    external_recipient_id: recipient.external_recipient_id,
-    phone_number: recipient.phone_number,
-    business_scoped_user_id: recipient.business_scoped_user_id,
-    display_name: recipient.display_name,
-  };
+  const jid = toJid(recipient.phone_number ?? recipient.external_recipient_id);
+  const connection = await connectedConnection(sb, userId);
 
-  let outcome;
-  if (preferTemplate()) {
-    outcome = await whatsappMessaging.sendTemplate(target, {
-      name: MANAGER_SUMMARY_TEMPLATE.name,
-      language: MANAGER_SUMMARY_TEMPLATE.language,
-      bodyParams: [body],
-    });
-    // Şablon reddedilirse serbest metne düş (pencere içindeyse çalışır).
-    if (!outcome.ok) outcome = await whatsappMessaging.sendMessage(target, body);
-  } else {
-    outcome = await whatsappMessaging.sendMessage(target, body);
+  // Bağlantı yoksa gönderim yapılmaz — hazır mesaj bağlantısı yalnızca
+  // kullanıcının kendi elle göndermesi için döner, "gönderildi" sayılmaz.
+  if (!connection || !evolutionConfigured()) {
+    const digits = String(recipient.phone_number ?? "").replace(/\D/g, "");
+    return {
+      sent: false,
+      not_connected: true,
+      error: "Önce WhatsApp hesabınızı bağlayın.",
+      preview: body,
+      fallback_url: digits ? `https://wa.me/${digits}?text=${encodeURIComponent(body)}` : null,
+    };
   }
+  if (!jid) return { sent: false, error: "Geçerli bir telefon numarası gerekli.", preview: body, fallback_url: null };
+  if (!(await withinRateLimit(sb, userId))) {
+    return { sent: false, error: "Saatlik WhatsApp gönderim sınırına ulaşıldı.", preview: body, fallback_url: null };
+  }
+
+  const outcome = await evolution.sendText(connection.instance_name, jid, body);
 
   const now = new Date().toISOString();
   const row = {
     user_id: userId,
     recipient_id: recipient.id,
     recipient_label: recipient.display_name,
+    connection_id: connection.id,
     message_type: kind,
     period_key: pKey,
     // Audit için yeterli, finansal verinin tam kopyası değil.
@@ -139,12 +165,12 @@ async function sendSummary(
       topics: payload.top_topics.map((t) => ({ project: t.project_name, headline: t.headline, impact: t.impact })),
       link: payload.link,
     },
-    provider: outcome.provider,
+    provider: "evolution",
     provider_message_id: outcome.provider_message_id,
-    status: outcome.ok ? (outcome.status === "manual_action_required" ? "queued" : "sent") : "failed",
+    status: outcome.ok ? "sent" : "failed",
     sent_at: outcome.ok ? now : null,
     failed_at: outcome.ok ? null : now,
-    failure_reason: outcome.error,
+    failure_reason: outcome.ok ? null : (outcome.error ?? "Gönderim başarısız"),
   };
 
   await sb.from("whatsapp_message_logs").upsert(row, {
@@ -152,7 +178,7 @@ async function sendSummary(
     ignoreDuplicates: false,
   });
 
-  return { sent: outcome.ok, error: outcome.error, preview: body, fallback_url: outcome.fallback_url ?? null };
+  return { sent: outcome.ok, error: outcome.error, preview: body, fallback_url: null };
 }
 
 /* ------------------------------------------------------------------ cron */
@@ -168,6 +194,12 @@ async function runCron(sb: any) {
     .limit(500);
 
   let sent = 0, skipped = 0, failed = 0;
+  // Bağlantısı olmayan kullanıcılar için hiç gönderim denenmez.
+  const { data: liveConns } = await sb
+    .from("whatsapp_connections")
+    .select("user_id")
+    .eq("connection_status", "connected");
+  const connectedUsers = new Set((liveConns ?? []).map((c: any) => String(c.user_id)));
   for (const r of recipients ?? []) {
     const due = isDue(
       {
@@ -180,7 +212,7 @@ async function runCron(sb: any) {
       },
       now,
     );
-    if (!due.due) { skipped++; continue; }
+    if (!due.due || !connectedUsers.has(String(r.user_id))) { skipped++; continue; }
     try {
       const res = await sendSummary(sb, r.user_id, r, due.kind, periodKey(due.kind, due.zoned, now));
       if ("skipped" in res) skipped++;
@@ -237,12 +269,26 @@ Deno.serve(async (req) => {
         .select("id,message_type,status,sent_at,failed_at,failure_reason,recipient_label,created_at")
         .order("created_at", { ascending: false })
         .limit(5);
-      const configured = whatsappMessaging.isConfigured();
-      const anyFailure = (logs ?? []).some((l: any) => l.status === "failed");
+      const { data: conn } = await userClient
+        .from("whatsapp_connections")
+        .select("id,connection_status,connection_mode,connected_number,connected_at,last_health_check")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       return json({
         // credential DEĞİL, yalnızca durum
-        connection: configured ? (anyFailure ? "error" : "connected") : "not_connected",
-        template_mode: preferTemplate(),
+        connection: conn?.connection_status === "connected" ? "connected" : "not_connected",
+        connection_detail: conn
+          ? {
+              id: conn.id,
+              status: conn.connection_status,
+              mode: conn.connection_mode,
+              connected_number: conn.connected_number,
+              connected_at: conn.connected_at,
+              last_health_check: conn.last_health_check,
+            }
+          : null,
+        available: evolutionConfigured(),
         recipients: recipients ?? [],
         logs: logs ?? [],
       });

@@ -33,7 +33,15 @@ export interface WhatsAppLog {
 
 export interface WhatsAppSummaryStatus {
   connection: "connected" | "not_connected" | "error";
-  template_mode: boolean;
+  available?: boolean;
+  connection_detail?: {
+    id: string;
+    status: string;
+    mode: string;
+    connected_number: string | null;
+    connected_at: string | null;
+    last_health_check: string | null;
+  } | null;
   recipients: WhatsAppRecipient[];
   logs: WhatsAppLog[];
 }
@@ -71,7 +79,7 @@ export const useWhatsAppSummary = (enabled = true) => {
 
   const sendTest = useMutation({
     mutationFn: (recipientId: string) =>
-      call<{ ok: boolean; error?: string; preview?: string; fallback_url?: string | null }>({
+      call<{ ok: boolean; error?: string; preview?: string; not_connected?: boolean; fallback_url?: string | null }>({
         action: "send_test",
         recipient_id: recipientId,
       }),
